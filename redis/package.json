@@ -1,0 +1,32 @@
+{
+  "name": "@recursyve/nestjs-redis",
+  "version": "1.0.0",
+  "description": "Recursyve's NestJs Redis client",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Recursyve/nestjs-librairies/redis"
+  },
+  "author": "Recursyve",
+  "license": "MIT",
+  "peerDependencies": {
+    "@nestjs/common": "^6.0.0",
+    "@nestjs/core": "^6.0.0"
+  },
+  "dependencies": {
+    "ioredis": "^4.14.0"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^6.6.3",
+    "@nestjs/core": "^6.6.3",
+    "gulp": "^4.0.2",
+    "gulp-copy": "^4.0.1",
+    "gulp-sourcemaps": "^2.6.5",
+    "gulp-typescript": "^5.0.1",
+    "rxjs": "^6.5.2",
+    "typescript": "^3.5.3"
+  }
+}
