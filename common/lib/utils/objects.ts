@@ -1,12 +1,12 @@
-export namespace ObjectUtils {
-    export function forEachProperty(
+export class ObjectUtils {
+    public static forEachProperty(
         object: Object,
         valueHandle: (value: any) => any,
         objectHandle?: (object: Object) => void
     ) {
-        for (let property in object) {
+        for (const property in object) {
             if (!object.hasOwnProperty || object.hasOwnProperty(property)) {
-                let value = object[property];
+                const value = object[property];
                 if (value instanceof Array) {
                     for (let i = 0; i < value.length; ++i) {
                         value[i] = valueHandle(value[i]);
@@ -20,10 +20,10 @@ export namespace ObjectUtils {
         }
     }
 
-    export function objectToArrayOfProperties(object: Object, deep = false): any[] {
+    public static objectToArrayOfProperties(object: Object, deep = false): any[] {
         // Convert object properties to array.
-        let properties: any[] = [];
-        forEachProperty(
+        const properties: any[] = [];
+        this.forEachProperty(
             object,
             value => {
                 properties.push(value);
@@ -32,13 +32,13 @@ export namespace ObjectUtils {
             !deep
                 ? null
                 : deepObject => {
-                      properties.push(objectToArrayOfProperties(deepObject));
+                      properties.push(this.objectToArrayOfProperties(deepObject));
                   }
         );
         return properties;
     }
 
-    export function stringBoolsToBools(object: Object) {
+    public static stringBoolsToBools(object: Object) {
         ObjectUtils.forEachProperty(
             object,
             (value: any) => {
@@ -50,7 +50,7 @@ export namespace ObjectUtils {
                 }
                 return value;
             },
-            stringBoolsToBools
+            this.stringBoolsToBools
         );
     }
 }
