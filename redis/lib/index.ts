@@ -15,3 +15,5 @@ export class RedisModule implements OnModuleDestroy {
         await service.disconnect();
     }
 }
+
+export * from "./services/redis.service";

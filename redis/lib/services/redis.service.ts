@@ -31,6 +31,10 @@ export class RedisService {
     }
 
     public lpush(key: string, ...value: string[]): Promise<number> {
+        if (!value.length) {
+            return;
+        }
+
         return this.client.lpush(key, ...value);
     }
 
