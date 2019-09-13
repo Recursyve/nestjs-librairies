@@ -1,0 +1,31 @@
+{
+  "name": "@recursyve/nestjs-data-filter",
+  "version": "1.0.0",
+  "description": "NestJs Datafilter librairy",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Recursyve/nestjs-librairies/data-filter"
+  },
+  "author": "Recursyve",
+  "license": "MIT",
+  "peerDependencies": {
+    "@nestjs/common": "^6.0.0",
+    "@nestjs/core": "^6.0.0"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^6.6.7",
+    "@nestjs/core": "^6.6.7",
+    "@types/moment": "^2.13.0",
+    "@types/node": "^10.14.16",
+    "gulp": "^4.0.2",
+    "gulp-copy": "^4.0.1",
+    "gulp-sourcemaps": "^2.6.5",
+    "gulp-typescript": "^5.0.1",
+    "rxjs": "^6.5.2",
+    "typescript": "^3.6.3"
+  }
+}
