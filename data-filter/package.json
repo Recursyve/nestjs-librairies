@@ -4,7 +4,13 @@
   "description": "NestJs Datafilter librairy",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "watch": "gulp",
+    "build": "gulp build",
+    "build:lib": "gulp build-lib",
+    "lint": "gulp lint",
+    "publish-package": "npm run build:lib && npm publish dist --access public",
+    "publish-package:beta": "npm run publish-package -- --tag beta --access public",
+    "publish-package:dry-run": "npm run publish-package -- --dry-run"
   },
   "repository": {
     "type": "git",
@@ -14,18 +20,25 @@
   "license": "MIT",
   "peerDependencies": {
     "@nestjs/common": "^6.0.0",
-    "@nestjs/core": "^6.0.0"
+    "@nestjs/core": "^6.0.0",
+    "sequelize": "^5.18.4",
+    "sequelize-typescript": "^1.0.0"
+  },
+  "dependencies": {
+    "@recursyve/nestjs-common": "^1.0.2"
   },
   "devDependencies": {
     "@nestjs/common": "^6.6.7",
     "@nestjs/core": "^6.6.7",
     "@types/moment": "^2.13.0",
-    "@types/node": "^10.14.16",
     "gulp": "^4.0.2",
     "gulp-copy": "^4.0.1",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^5.0.1",
+    "reflect-metadata": "^0.1.13",
     "rxjs": "^6.5.2",
+    "sequelize": "^5.18.4",
+    "sequelize-typescript": "^1.0.0",
     "typescript": "^3.6.3"
   }
 }
