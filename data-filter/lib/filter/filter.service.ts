@@ -267,7 +267,7 @@ export class FilterService<Data> {
             return;
         }
 
-        const repoOption = this.repository.generateFindOptions();
+        const repoOption = this.repository.generateFindOptions({});
         options.include = SequelizeUtils.mergeIncludes(
             options.include as IncludeOptions[],
             repoOption.include as IncludeOptions[]
@@ -305,7 +305,7 @@ export class FilterService<Data> {
             return;
         }
 
-        const includes = this.sequelizeModelScanner.getOrderInclude(this.repository.model, order);
+        const includes = this.repository.generateOrderInclude(order);
         if (!includes.length) {
             return;
         }
@@ -349,6 +349,6 @@ export class FilterService<Data> {
                 id: values.map(x => x.id)
             },
             order
-        });
+        }, {});
     }
 }

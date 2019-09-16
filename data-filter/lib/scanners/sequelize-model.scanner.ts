@@ -130,40 +130,6 @@ export class SequelizeModelScanner {
         return [order] as Order;
     }
 
-    public getOrderInclude(model: typeof Model, orderObj: OrderModel): IncludeOptions[] {
-        if (!orderObj || !orderObj.column || orderObj.direction === "") {
-            return [];
-        }
-
-        const objects = orderObj.column.split(".");
-        const column = objects.pop();
-        if (!objects.length) {
-            return [];
-        }
-
-        const result: IncludeOptions[] = [];
-        let includes: IncludeOptions[] = result;
-        for (const obj of objects) {
-            const association = this.findAssociation(model, obj);
-            includes.push({
-                as: association.getAs() as string,
-                model: association.getAssociatedClass(),
-                include: [],
-                required: false,
-                attributes: []
-            });
-
-            if (obj !== objects[objects.length - 1]) {
-                model = includes[0].model as typeof Model;
-                includes = includes[0].include as IncludeOptions[];
-            }
-        }
-
-        includes[0].attributes = [column];
-
-        return result;
-    }
-
     private findAssociation(model: typeof Model, obj: string): BaseAssociation {
         const associations = getAssociations(model.prototype);
 

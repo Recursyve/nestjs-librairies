@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { WhereOptions } from "sequelize";
+import { ProjectionAlias, WhereOptions } from "sequelize";
 import { ATTRIBUTES, EXPORTS, INCLUDE, MODEL, MODEL_ATTRIBUTES, PATH } from "../constant";
 import { AttributesModel } from "../models/attributes.model";
 import { IncludeConfig, IncludeModel, IncludeWhereModel } from "../models/include.model";
@@ -11,7 +11,7 @@ export class DataFilterScanner {
         return Reflect.getMetadata(MODEL, target);
     }
 
-    public getModelAttributes(target: any) {
+    public getModelAttributes(target: any): (string | ProjectionAlias)[] {
         return Reflect.getMetadata(MODEL_ATTRIBUTES, target);
     }
 

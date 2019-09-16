@@ -2,9 +2,18 @@ import { Injectable } from "@nestjs/common";
 import { DefinitionModel } from "./models/definition.model";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
-import { FindAttributeOptions, FindOptions, Identifier, IncludeOptions, Model, WhereOptions } from "sequelize";
+import {
+    FindAttributeOptions,
+    FindOptions,
+    Identifier,
+    IncludeOptions,
+    Model,
+    ProjectionAlias,
+    WhereOptions
+} from "sequelize";
 import { M, SequelizeUtils } from "./sequelize.utils";
 import { SearchAttributesModel } from "./models/search-attributes.model";
+import { OrderModel } from "./models/filter.model";
 
 @Injectable()
 export class DataFilterRepository<Data> {
@@ -88,6 +97,36 @@ export class DataFilterRepository<Data> {
         return {
             include: SequelizeUtils.reduceIncludes(includes)
         };
+    }
+
+    public generateOrderInclude(order: OrderModel): IncludeOptions[] {
+        if (!order || !order.column || order.direction === "") {
+            return [];
+        }
+
+        const objects = order.column.split(".");
+        const column = objects.pop();
+        const definition = this._definitions.find(x => {
+            return (x.attributes as (string | ProjectionAlias)[]).some(attribute => {
+                if (typeof attribute === "string") {
+                    return attribute === column;
+                }
+                const attr = attribute[attribute.length - 1];
+                return attr === column
+            });
+        });
+
+        if (!definition) {
+            return [];
+        }
+
+        if (!definition.path) {
+            return [];
+        }
+        definition.path = this.dataFilterScanner.getPath(this.dataDef, definition.key, {});
+        const additionalIncludes = this.dataFilterScanner.getInclude(this.dataDef, definition.key, {});
+
+        return this.sequelizeModelScanner.getIncludes(this._model, definition.path, additionalIncludes, definition.attributes);
     }
 
     public reduceObject(result: any): Data {
