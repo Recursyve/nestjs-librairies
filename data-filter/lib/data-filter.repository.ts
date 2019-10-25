@@ -106,7 +106,7 @@ export class DataFilterRepository<Data> {
 
         const objects = order.column.split(".");
         const column = objects.pop();
-        const definition = this._definitions.find(x => {
+        const definition = this._definitions.filter(x => x.attributes).find(x => {
             return (x.attributes as (string | ProjectionAlias)[]).some(attribute => {
                 if (typeof attribute === "string") {
                     return attribute === column;

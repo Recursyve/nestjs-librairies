@@ -1,6 +1,6 @@
 {
   "name": "@recursyve/nestjs-common",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Recursyve's NestJs common librairy",
   "main": "index.js",
   "scripts": {
@@ -20,7 +20,9 @@
   "license": "MIT",
   "peerDependencies": {
     "@nestjs/common": "^6.0.0",
-    "@nestjs/core": "^6.0.0"
+    "@nestjs/core": "^6.0.0",
+    "class-transformer": "^0.2.3",
+    "class-validator": "^0.10.0"
   },
   "dependencies": {
     "moment": "^2.24.0"
@@ -30,8 +32,6 @@
     "@nestjs/core": "^6.6.7",
     "@types/moment": "^2.13.0",
     "@types/node": "^10.14.16",
-    "class-transformer": "^0.2.3",
-    "class-validator": "^0.10.0",
     "gulp": "^4.0.2",
     "gulp-copy": "^4.0.1",
     "gulp-sourcemaps": "^2.6.5",

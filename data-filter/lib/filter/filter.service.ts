@@ -18,6 +18,7 @@ import { FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } fr
 import { DataFilterRepository } from "../data-filter.repository";
 import { FilterConfigurationSearchModel } from "./models/filter-configuration-search.model";
 import { FilterResourceValueModel } from "./models/filter-resource-value.model";
+import { IncludeWhereModel } from "../models/include.model";
 
 @Injectable()
 export class FilterService<Data> {
@@ -170,7 +171,10 @@ export class FilterService<Data> {
             }
 
             includes.push(
-                this.sequelizeModelScanner.getIncludes(model, { path: filter.path }, [], { include: [] }),
+                this.sequelizeModelScanner.getIncludes(model, {
+                    path: filter.path,
+                    where: this.generateWhereConditions(filter.where)
+                }, [], { include: [] }),
                 this.getConditionInclude(model, filter.condition)
             );
         }
@@ -350,5 +354,25 @@ export class FilterService<Data> {
             },
             order
         }, {});
+    }
+
+    private generateWhereConditions(model: IncludeWhereModel): WhereOptions {
+        if (!model) {
+            return;
+        }
+
+        const where = {};
+        for (const key in model) {
+            if (!model.hasOwnProperty(key)) {
+                continue;
+            }
+
+            const value = model[key]();
+            if (typeof value !== "undefined") {
+                where[key] = value;
+            }
+        }
+
+        return where;
     }
 }

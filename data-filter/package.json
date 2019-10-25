@@ -1,6 +1,6 @@
 {
   "name": "@recursyve/nestjs-data-filter",
-  "version": "1.0.5",
+  "version": "1.0.9",
   "description": "NestJs Datafilter librairy",
   "main": "index.js",
   "scripts": {
@@ -21,15 +21,14 @@
   "peerDependencies": {
     "@nestjs/common": "^6.0.0",
     "@nestjs/core": "^6.0.0",
+    "@recursyve/nestjs-common": "^1.0.4",
     "sequelize": "^5.18.4",
     "sequelize-typescript": "^1.0.0"
-  },
-  "dependencies": {
-    "@recursyve/nestjs-common": "^1.0.2"
   },
   "devDependencies": {
     "@nestjs/common": "^6.6.7",
     "@nestjs/core": "^6.6.7",
+    "@recursyve/nestjs-common": "^1.0.4",
     "@types/moment": "^2.13.0",
     "gulp": "^4.0.2",
     "gulp-copy": "^4.0.1",

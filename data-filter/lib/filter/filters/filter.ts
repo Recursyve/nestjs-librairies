@@ -6,6 +6,7 @@ import { QueryRuleModel } from "../models/query.model";
 import { SequelizeUtils } from "../../sequelize.utils";
 import { RuleModel } from "../models/rule.model";
 import { FilterUtils } from "../filter.utils";
+import { IncludeWhereModel } from "../../models/include.model";
 
 export type Condition = "and" | "or";
 
@@ -25,6 +26,7 @@ export interface BaseFilterDefinition {
     having?: any;
     condition?: FilterCondition;
     group?: string;
+    where?: IncludeWhereModel;
 }
 
 export interface FilterDefinition extends BaseFilterDefinition {

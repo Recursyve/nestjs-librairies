@@ -1,7 +1,7 @@
 import { FindAttributeOptions, WhereOptions } from "sequelize";
 
 export interface IncludeWhereModel {
-    [key: string]: (option) => unknown;
+    [key: string]: (option?) => unknown;
 }
 
 export interface IncludeConfig {
