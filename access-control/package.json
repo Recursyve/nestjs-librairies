@@ -1,7 +1,7 @@
 {
-  "name": "@recursyve/nestjs-data-filter",
-  "version": "1.0.9",
-  "description": "NestJs DataFilter library",
+  "name": "@recursyve/nestjs-access-control",
+  "version": "1.0.0",
+  "description": "NestJs AccessControl library",
   "main": "index.js",
   "scripts": {
     "watch": "gulp",
@@ -14,22 +14,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Recursyve/nestjs-librairies/data-filter"
+    "url": "https://github.com/Recursyve/nestjs-librairies/access-control"
   },
   "author": "Recursyve",
   "license": "MIT",
   "peerDependencies": {
     "@nestjs/common": "^6.0.0",
     "@nestjs/core": "^6.0.0",
-    "@recursyve/nestjs-common": "^1.0.4",
+    "@nestjs/cqrs": "^6.1.0",
+    "@recursyve/nestjs-redis": "^1.0.2",
     "sequelize": "^5.18.4",
     "sequelize-typescript": "^1.0.0"
   },
   "devDependencies": {
-    "@nestjs/common": "^6.6.7",
-    "@nestjs/core": "^6.6.7",
-    "@recursyve/nestjs-common": "^1.0.4",
-    "@types/moment": "^2.13.0",
+    "@nestjs/common": "^6.11.6",
+    "@nestjs/core": "^6.11.6",
+    "@nestjs/cqrs": "^6.1.0",
+    "@recursyve/nestjs-redis": "^1.0.2",
     "gulp": "^4.0.2",
     "gulp-copy": "^4.0.1",
     "gulp-sourcemaps": "^2.6.5",
@@ -38,6 +39,6 @@
     "rxjs": "^6.5.2",
     "sequelize": "^5.18.4",
     "sequelize-typescript": "^1.0.0",
-    "typescript": "^3.6.3"
+    "typescript": "^3.7.5"
   }
 }
