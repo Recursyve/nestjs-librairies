@@ -1,4 +1,5 @@
 import { DynamicModule, Global, Module, Provider, Type } from "@nestjs/common";
+import { AccessControlModule } from "@recursyve/nestjs-access-control";
 import { DataFilterService } from "./data-filter.service";
 import { BaseFilter } from "./filter/base-filter";
 import { FilterFactory } from "./filter/filter.factory";
@@ -8,6 +9,7 @@ import { createFilterProvider } from "./filter/filter.provider";
 
 @Global()
 @Module({
+    imports: [AccessControlModule],
     providers: [DataFilterScanner, SequelizeModelScanner, DataFilterService],
     exports: [DataFilterScanner, SequelizeModelScanner, DataFilterService]
 })

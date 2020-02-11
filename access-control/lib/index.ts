@@ -1,4 +1,4 @@
-import { DynamicModule, Module, Provider, Type } from "@nestjs/common";
+import { DynamicModule, Global, Module, Provider, Type } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { AccessControlCoreModule } from "./access-control-core.module";
 import { ACCESS_CONTROL_MODELS } from "./constant";
@@ -11,6 +11,7 @@ export interface AccessControlConfig {
     deserializer?: Provider;
 }
 
+@Global()
 @Module({})
 export class AccessControlModule {
     public static forRoot(models: (typeof M)[], option?: AccessControlConfig): DynamicModule {
@@ -34,7 +35,8 @@ export class AccessControlModule {
                     provide: APP_GUARD,
                     useClass: AccessControlGuard
                 }
-            ]
+            ],
+            exports: [UserDeserializer]
         };
     }
 }

@@ -7,6 +7,7 @@ import { SequelizeUtils } from "../../sequelize.utils";
 import { RuleModel } from "../models/rule.model";
 import { FilterUtils } from "../filter.utils";
 import { IncludeWhereModel } from "../../models/include.model";
+import { Users } from "@recursyve/nestjs-access-control";
 
 export type Condition = "and" | "or";
 
@@ -33,7 +34,7 @@ export interface FilterDefinition extends BaseFilterDefinition {
     type: FilterType;
     operators: (FilterOperatorTypes | CustomOperator)[];
 
-    getConfig(key: string): Promise<FilterBaseConfigurationModel>;
+    getConfig(key: string, user?: Users): Promise<FilterBaseConfigurationModel>;
     getWhereOptions(rule: QueryRuleModel): WhereOptions;
     getHavingOptions(rule: QueryRuleModel): WhereOptions;
 }
@@ -67,7 +68,7 @@ export abstract class Filter implements FilterDefinition {
         return this;
     }
 
-    public async getConfig(key: string): Promise<FilterBaseConfigurationModel> {
+    public async getConfig(key: string, user?: Users): Promise<FilterBaseConfigurationModel> {
         return {
             type: this.type,
             group: {
