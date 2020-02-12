@@ -165,6 +165,18 @@ export class SequelizeUtils {
         });
     }
 
+    public static getModelFieldAttributes(model: typeof M, fields: string[]): string[] {
+        const attributes = model.rawAttributes;
+        return fields.map(x => {
+            const attr = attributes[x];
+            if (!attr) {
+                return x;
+            }
+
+            return attr.field ? attr.field : x;
+        })
+    }
+
     public static reduceModelFromPath(model: M, path: string) {
         const steps = path.split(".");
 

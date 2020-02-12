@@ -1,6 +1,6 @@
 {
   "name": "@recursyve/nestjs-data-filter",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "NestJs DataFilter library",
   "main": "index.js",
   "scripts": {
@@ -22,7 +22,7 @@
     "@nestjs/common": "^6.0.0",
     "@nestjs/core": "^6.0.0",
     "@nestjs/cqrs": "^6.1.0",
-    "@recursyve/nestjs-access-control": "^1.0.1",
+    "@recursyve/nestjs-access-control": "^1.0.3",
     "@recursyve/nestjs-common": "^1.0.4",
     "@recursyve/nestjs-redis": "^1.0.2",
     "sequelize": "^5.18.4",
@@ -32,7 +32,7 @@
     "@nestjs/common": "^6.11.6",
     "@nestjs/core": "^6.11.6",
     "@nestjs/cqrs": "^6.1.0",
-    "@recursyve/nestjs-access-control": "^1.0.1",
+    "@recursyve/nestjs-access-control": "^1.0.3",
     "@recursyve/nestjs-common": "^1.0.4",
     "@recursyve/nestjs-redis": "^1.0.2",
     "@types/moment": "^2.13.0",

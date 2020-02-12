@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { RedisService } from "@recursyve/nestjs-redis";
-import { AccessActionType, UserResources } from "../models";
+import { AccessActionType, UserResources, Users } from "../models";
 import { RedisKeyUtils } from "../utils";
 
 @Injectable()
@@ -23,7 +23,10 @@ export class ResourceEventService {
         await Promise.all(
             resources.map(resource =>
                 this.redisService.del(
-                    RedisKeyUtils.userResourceIdKey(resource.table, resource.resourceId, resource.userId)
+                    RedisKeyUtils.userResourceIdKey(resource.table, resource.resourceId, {
+                        id: resource.userId,
+                        role: resource.userRole
+                    } as Users)
                 )
             )
         );
@@ -40,7 +43,10 @@ export class ResourceEventService {
         await Promise.all(
             users.map(user =>
                 this.redisService.lpush(
-                    RedisKeyUtils.userResourceActionKey(user.userId, user.table, action),
+                    RedisKeyUtils.userResourceActionKey({
+                        id: user.userId,
+                        role: user.userRole
+                    } as Users, user.table, action),
                     user.resourceId.toString()
                 )
             )
@@ -52,7 +58,10 @@ export class ResourceEventService {
         await Promise.all(
             newResources.map(user =>
                 this.redisService.lpush(
-                    RedisKeyUtils.userResourceActionKey(user.userId, user.table, action),
+                    RedisKeyUtils.userResourceActionKey({
+                        id: user.userId,
+                        role: user.userRole
+                    } as Users, user.table, action),
                     user.resourceId.toString()
                 )
             )
@@ -62,7 +71,10 @@ export class ResourceEventService {
         await Promise.all(
             oldResources.map(user =>
                 this.redisService.lrem(
-                    RedisKeyUtils.userResourceActionKey(user.userId, user.table, action),
+                    RedisKeyUtils.userResourceActionKey({
+                        id: user.userId,
+                        role: user.userRole
+                    } as Users, user.table, action),
                     user.resourceId.toString()
                 )
             )

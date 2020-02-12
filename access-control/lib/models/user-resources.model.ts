@@ -6,4 +6,5 @@ export interface UserResources {
 
     table?: string;
     resourceId?: number;
+    userRole?: string;
 }

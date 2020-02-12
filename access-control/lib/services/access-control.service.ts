@@ -3,7 +3,7 @@ import { RedisService } from "@recursyve/nestjs-redis";
 import { CommandBus } from "@nestjs/cqrs";
 import { Model } from "sequelize-typescript";
 import { ResourceAccessControlService } from "./resource-access-control.service";
-import { AccessActionType } from "../models";
+import { AccessActionType, Users } from "../models";
 import { RedisKeyUtils } from "../utils";
 
 @Injectable()
@@ -17,12 +17,12 @@ export class AccessControlService {
         return service;
     }
 
-    public async clearCacheForUser(userId: string) {
+    public async clearCacheForUser(user: Users) {
         await Promise.all([
-            this.redisService.scanDel(RedisKeyUtils.userAccessControl(userId, "*")),
-            this.redisService.scanDel(RedisKeyUtils.userResourceActionKey(userId, "*", "*" as AccessActionType)),
-            this.redisService.scanDel(RedisKeyUtils.userResourceActionPattern(userId, "*")),
-            this.redisService.scanDel(RedisKeyUtils.userResourceIdKey("*", "*" as any, userId))
+            this.redisService.scanDel(RedisKeyUtils.userAccessControl(user, "*")),
+            this.redisService.scanDel(RedisKeyUtils.userResourceActionKey(user, "*", "*" as AccessActionType)),
+            this.redisService.scanDel(RedisKeyUtils.userResourceActionPattern(user, "*")),
+            this.redisService.scanDel(RedisKeyUtils.userResourceIdKey("*", "*" as any, user))
         ]);
     }
 }

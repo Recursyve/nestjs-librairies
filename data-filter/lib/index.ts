@@ -35,6 +35,8 @@ export class DataFilterProvider {
     }
 }
 
+export * from "./data-filter.service";
+export * from "./data-filter.repository";
 export * from "./decorators";
 export * from "./filter";
 export * from "./models/filter.model";

@@ -20,15 +20,15 @@ export class ResourceAccessControlService {
             return await this.fetchResources(user);
         }
 
-        return await this.getResourcesForAction(user.id, AccessActionType.Read);
+        return await this.getResourcesForAction(user, AccessActionType.Read);
     }
 
     public async accessControlsExists(user: Users): Promise<boolean> {
-        return !!(await this.redisService.get(RedisKeyUtils.userAccessControl(user.id, this.table)));
+        return !!(await this.redisService.get(RedisKeyUtils.userAccessControl(user, this.table)));
     }
 
     public async getAccessRules(user: Users, resourceId: number): Promise<AccessRules> {
-        const res = await this.redisService.get(RedisKeyUtils.userResourceIdKey(this.table, resourceId, user.id));
+        const res = await this.redisService.get(RedisKeyUtils.userResourceIdKey(this.table, resourceId, user));
         if (res) {
             return JSON.parse(res);
         }
@@ -41,9 +41,9 @@ export class ResourceAccessControlService {
             const resources: AccessControlResources[] = await this.commandBus.execute(
                 new GetResourcesCommand(this.table, user)
             );
-            await this.setAccessRules(user.id, resources);
+            await this.setAccessRules(user, resources);
 
-            await this.redisService.set(RedisKeyUtils.userAccessControl(user.id, this.table), "1");
+            await this.redisService.set(RedisKeyUtils.userAccessControl(user, this.table), "1");
             return resources.filter(x => x.rules.r).map(x => x.resourceId);
         } catch (e) {
             return [];
@@ -56,45 +56,45 @@ export class ResourceAccessControlService {
             await this.fetchResources(user);
         }
 
-        const r = await this.resourceHasAction(user.id, resourceId, AccessActionType.Read);
-        const u = await this.resourceHasAction(user.id, resourceId, AccessActionType.Update);
-        const d = await this.resourceHasAction(user.id, resourceId, AccessActionType.Delete);
+        const r = await this.resourceHasAction(user, resourceId, AccessActionType.Read);
+        const u = await this.resourceHasAction(user, resourceId, AccessActionType.Update);
+        const d = await this.resourceHasAction(user, resourceId, AccessActionType.Delete);
 
         const rules = AccessRules.rud(r, u, d);
         await this.redisService.set(
-            RedisKeyUtils.userResourceIdKey(this.table, resourceId, user.id),
+            RedisKeyUtils.userResourceIdKey(this.table, resourceId, user),
             JSON.stringify(rules)
         );
         return rules;
     }
 
-    private async getResourcesForAction(userId: string, action: AccessActionType): Promise<number[]> {
+    private async getResourcesForAction(user: Users, action: AccessActionType): Promise<number[]> {
         return await this.redisService
-            .lrange(RedisKeyUtils.userResourceActionKey(userId, this.table, action), 0, -1)
+            .lrange(RedisKeyUtils.userResourceActionKey(user, this.table, action), 0, -1)
             .then(result => result.map(x => +x));
     }
 
-    private async setAccessRules(userId: string, resources: AccessControlResources[]) {
+    private async setAccessRules(user: Users, resources: AccessControlResources[]) {
         [AccessActionType.Read, AccessActionType.Update, AccessActionType.Delete].forEach(async a => {
-            await this.setAccessAction(userId, resources, a);
+            await this.setAccessAction(user, resources, a);
         });
     }
 
     private async setAccessAction(
-        userId: string,
+        user: Users,
         resources: AccessControlResources[],
         action: AccessActionType
     ): Promise<void> {
         const values = resources
             .filter(resource => resource.rules[action])
             .map(resource => resource.resourceId.toString());
-        await this.redisService.del(RedisKeyUtils.userResourceActionKey(userId, this.table, action));
-        await this.redisService.lpush(RedisKeyUtils.userResourceActionKey(userId, this.table, action), ...values);
+        await this.redisService.del(RedisKeyUtils.userResourceActionKey(user, this.table, action));
+        await this.redisService.lpush(RedisKeyUtils.userResourceActionKey(user, this.table, action), ...values);
     }
 
-    private async resourceHasAction(userId: string, resourceId: number, action: AccessActionType): Promise<boolean> {
+    private async resourceHasAction(user: Users, resourceId: number, action: AccessActionType): Promise<boolean> {
         const res = await this.redisService.lrange(
-            RedisKeyUtils.userResourceActionKey(userId, this.table, action),
+            RedisKeyUtils.userResourceActionKey(user, this.table, action),
             0,
             -1
         );

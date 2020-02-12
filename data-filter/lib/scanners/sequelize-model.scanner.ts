@@ -82,7 +82,9 @@ export class SequelizeModelScanner {
             const association = this.findAssociation(model, obj);
             model = association.getAssociatedClass();
         }
-        attributes = attributes ? attributes : SequelizeUtils.getModelSearchableAttributes(model as typeof M);
+        attributes = attributes ?
+            SequelizeUtils.getModelFieldAttributes(model as typeof M, attributes as string[]) :
+            SequelizeUtils.getModelSearchableAttributes(model as typeof M);
         result.push(
             ...(attributes as string[]).map(a => ({
                 name: a,
