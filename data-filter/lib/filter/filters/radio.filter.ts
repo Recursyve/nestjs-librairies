@@ -45,7 +45,7 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
         };
     }
 
-    public getWhereOptions(rule: QueryRuleModel): WhereOptions {
+    public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions> {
         const option = this.options.find(x => x.key === rule.value);
         if (!option) {
             return super.getWhereOptions(rule);
@@ -58,7 +58,7 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
         });
     }
 
-    public getHavingOptions(rule: QueryRuleModel): WhereOptions {
+    public async getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions> {
         const option = this.options.find(x => x.key === rule.value);
         if (!option) {
             return super.getHavingOptions(rule);

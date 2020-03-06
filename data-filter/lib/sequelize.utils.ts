@@ -11,6 +11,11 @@ import {
 import { RuleModel } from "./filter";
 import { ArrayUtils } from "@recursyve/nestjs-common";
 
+export interface GeoPoint {
+    type: "point",
+    coordinates: number[];
+}
+
 export class M extends Model<M> {}
 
 export class SequelizeUtils {
@@ -151,6 +156,10 @@ export class SequelizeUtils {
 
     public static getAttributeFullName(attribute: string, path: string) {
         return `$${path}.${attribute}$`;
+    }
+
+    public static getLiteralFullName(attribute: string, path: string) {
+        return `\`${path.split(".").join("->")}\`.\`${attribute}\``;
     }
 
     public static getModelSearchableAttributes(model: typeof M): string[] {
