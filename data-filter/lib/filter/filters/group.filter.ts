@@ -18,7 +18,6 @@ export interface GroupFilterDefinition extends BaseGroupFilterDefinition {
     getConfig(key: string, user?: Users): Promise<GroupFilterBaseConfigurationModel>;
     getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions>;
     getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions>;
-    getAttributeOptions(rule: QueryRuleModel): Promise<FindAttributeOptions>;
 }
 
 export class GroupFilter implements GroupFilterDefinition {
@@ -78,26 +77,18 @@ export class GroupFilter implements GroupFilterDefinition {
         }
 
         const valueFilter = this.valueFilter ?? await this.getValueFilter(root as QueryRuleModel);
-        return {
-            [Op.and]: [
-                await this.rootFilter.getHavingOptions(rule),
-                await valueFilter.getHavingOptions(rule)
-            ]
-        };
-    }
-
-    public async getAttributeOptions(rule: QueryRuleModel): Promise<FindAttributeOptions> {
-        const [root, value] = this.getRules(rule);
-        if (!root || !value) {
+        const rootHaving =  await this.rootFilter.getHavingOptions(rule);
+        const valueHaving =  await valueFilter.getHavingOptions(rule);
+        if (!rootHaving && !valueHaving) {
             return null;
         }
 
-        const valueFilter = this.valueFilter ?? await this.getValueFilter(root as QueryRuleModel);
-        const attributes = [
-            ...await this.rootFilter.getAttributeOptions(rule) as string[],
-            ...await valueFilter.getAttributeOptions(rule) as string[]
-        ].filter(x => x);
-        return attributes.length ? attributes : null;
+        return {
+            [Op.and]: [
+                rootHaving,
+                valueHaving
+            ].filter(x => x)
+        };
     }
 
     protected getRules(rule: QueryRuleModel): [RuleModel, RuleModel] {

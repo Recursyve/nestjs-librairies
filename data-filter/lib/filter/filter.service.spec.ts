@@ -16,6 +16,8 @@ import { DataFilterScanner } from "../scanners/data-filter.scanner";
 import { Systems } from "../test/models/systems/systems.model";
 import { Places } from "../test/models/places/places.model";
 import { Persons } from "../test/models/persons/persons.model";
+import { MaintenanceVisits } from "../test/models/maintenance-visits/maintenance-visits.model";
+import { Visits } from "../test/models/visits/visits.model";
 
 @Data(ContractSystems)
 @Attributes(["active"])
@@ -110,7 +112,6 @@ describe("FilterService", () => {
         expect(options).toBeDefined();
         expect(options).toStrictEqual({
             group: "ContractSystems.id",
-            attributes: [],
             include: [
                 {
                     as: "system",
@@ -131,12 +132,24 @@ describe("FilterService", () => {
                                             as: "person",
                                             model: Persons,
                                             required: false,
-                                            attributes: undefined,
                                             include: []
                                         }
                                     ]
                                 }
                             ]
+                        }
+                    ]
+                },
+                {
+                    as: "visits",
+                    model: MaintenanceVisits,
+                    required: false,
+                    include: [
+                        {
+                            as: "visit",
+                            model: Visits,
+                            required: false,
+                            include: []
                         }
                     ]
                 }

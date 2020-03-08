@@ -86,8 +86,7 @@ describe("SequelizeModelScanner", () => {
                                                 required: false,
                                                 include: []
                                             }
-                                        ],
-                                        where: {}
+                                        ]
                                     }
                                 ]
                             }

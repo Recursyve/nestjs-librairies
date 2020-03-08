@@ -1,4 +1,4 @@
-import { FindAttributeOptions, fn, literal, WhereOptions } from "sequelize";
+import { fn, literal, LogicType, where, WhereOptions } from "sequelize";
 import { QueryRuleModel } from "../models";
 import { SequelizeUtils } from "../../sequelize.utils";
 import { GroupFilter, GroupFilterDefinition } from "./group.filter";
@@ -23,24 +23,14 @@ export class GeoLocalizationFilter extends GroupFilter implements GroupFilterDef
         super(definition);
     }
 
-    public async getAttributeOptions(rule: QueryRuleModel): Promise<FindAttributeOptions> {
-        const [root] = this.getRules(rule);
+    public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions> {
+        const [root, value] = this.getRules(rule);
         const name = this.rootFilter.path ?
             SequelizeUtils.getLiteralFullName(this.rootFilter.attribute, this.rootFilter.path) :
             this.rootFilter.attribute;
         const [latitude, longitude] = CoordinateFilter.getCoordinates(root);
         const location = literal(`point(${latitude}, ${longitude})`);
-        return [[
-            fn("ST_Distance_Sphere", literal(name), location),
-            `${rule.id}_distance_${GeoLocalizationFilter.attributesCounter++}`
-        ]];
-    }
-
-    public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions> {
-        const [, value] = this.getRules(rule);
-        return {
-            [`${rule.id}_distance_${GeoLocalizationFilter.whereCounter++}`]: SequelizeUtils.generateWhereValue(value)
-        };
+        return where(fn("ST_Distance_Sphere", literal(name), location), SequelizeUtils.generateWhereValue(value) as LogicType)
     }
 
     public static reset(): void {

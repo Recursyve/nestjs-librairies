@@ -29,8 +29,7 @@ import { FilterConfigurationSearchModel } from "./models/filter-configuration-se
 import { FilterResourceValueModel } from "./models/filter-resource-value.model";
 import { IncludeWhereModel } from "../models/include.model";
 import { GeoLocalizationFilter } from "./filters/geo-localization.filter";
-import { ProjectionAlias } from "sequelize/types/lib/model";
-import { GroupFilterDefinition } from "./filters/group.filter";
+import { GroupFilter, GroupFilterDefinition } from "./filters/group.filter";
 
 @Injectable()
 export class FilterService<Data> {
@@ -147,21 +146,22 @@ export class FilterService<Data> {
             group: `${model.name}.id`
         };
         if (query) {
-            const attributes = [];
             const whereConditions = [];
             const havingConditions = [];
 
             option = {
                 ...option,
-                attributes,
                 include: await this.getInclude(model, query),
                 where: query.condition === "and" ? { [Op.and]: whereConditions } : { [Op.or]: whereConditions },
                 having: query.condition === "and" ? { [Op.and]: havingConditions } : { [Op.or]: havingConditions }
             };
 
-            await this.generateFindAttributeOptions(query, attributes);
             await this.generateWhereOptions(query, whereConditions);
             await this.generateHavingOptions(query, havingConditions);
+
+            if (!havingConditions.length) {
+                delete option.having;
+            }
         }
 
         return option;
@@ -176,7 +176,7 @@ export class FilterService<Data> {
                 continue;
             }
 
-            if (!Filter.validate(this.model[key] as FilterDefinition)) {
+            if (!Filter.validate(this.model[key] as FilterDefinition) && !GroupFilter.validate(this.model[key] as GroupFilterDefinition)) {
                 continue;
             }
 
@@ -301,32 +301,6 @@ export class FilterService<Data> {
             const filterOptions = await filter.getHavingOptions(r);
             if (filterOptions) {
                 options.push(filterOptions);
-            }
-        }
-    }
-
-    private async generateFindAttributeOptions(query: QueryModel, attributes: FindAttributeOptions) {
-        if (!query.rules) {
-            return;
-        }
-
-        for (const rule of query.rules) {
-            const c = rule as QueryModel;
-            if (c.condition) {
-                const attr = [];
-                await this.generateFindAttributeOptions(c, attr);
-                continue;
-            }
-
-            const r = rule as QueryRuleModel;
-            if (!this.filters.hasOwnProperty(r.id)) {
-                continue;
-            }
-
-            const filter = this.filters[r.id];
-            const attributeOptions = await filter.getAttributeOptions(r);
-            if (attributeOptions) {
-                (attributes as (string | ProjectionAlias)[]).push(attributeOptions as (string | ProjectionAlias));
             }
         }
     }
@@ -478,7 +452,7 @@ export class FilterService<Data> {
     }
 
     private getFilterInclude(model: typeof M, filter: FilterDefinition): IncludeOptions[][] {
-        if (filter.path) {
+        if (!filter.path) {
             return [this.getConditionInclude(model, filter.condition)];
         }
 
@@ -486,7 +460,7 @@ export class FilterService<Data> {
             this.sequelizeModelScanner.getIncludes(model, {
                 path: filter.path,
                 where: this.generateWhereConditions(filter.where)
-            }, [], { include: [] }),
+            }, []),
             this.getConditionInclude(model, filter.condition)
         ];
     }

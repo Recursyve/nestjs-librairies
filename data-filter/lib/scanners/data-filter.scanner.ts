@@ -18,7 +18,9 @@ export class DataFilterScanner {
     public getPath(target: any, property: string, options?: object): PathModel {
         const path = Reflect.getMetadata(PATH.replace("{{path}}", property), target.prototype);
         if (!path) {
-            return path;
+            return {
+                path: property
+            };
         }
 
         if (!options) {

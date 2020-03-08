@@ -2,7 +2,7 @@ import {
     AutoIncrement,
     BelongsTo,
     Column,
-    CreatedAt,
+    CreatedAt, DataType,
     DeletedAt,
     ForeignKey,
     Model,
@@ -11,6 +11,11 @@ import {
     UpdatedAt
 } from "sequelize-typescript";
 import { Locations } from "../locations/locations.model";
+
+export interface GeoPoint {
+    type: "Point",
+    coordinates: number[];
+}
 
 @Table({
     tableName: "coords"
@@ -54,6 +59,9 @@ export class Coords extends Model<Coords> {
 
     @Column
     business_phone_ext: string;
+
+    @Column({ type: DataType.GEOMETRY("POINT") })
+    geo_point: GeoPoint;
 
     @BelongsTo(() => Locations)
     location: Locations;

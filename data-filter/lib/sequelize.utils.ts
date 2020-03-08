@@ -39,7 +39,10 @@ export class SequelizeUtils {
                 if (aChild.attributes || bChild.attributes) {
                     aChild.attributes = this.mergeAttributes(aChild, bChild);
                 }
-                aChild.where = this.mergeWhere(aChild.where, bChild.where);
+                const where = this.mergeWhere(aChild.where, bChild.where);
+                if (where) {
+                    aChild.where = where;
+                }
             } else {
                 a.push(bChild);
             }
@@ -87,6 +90,9 @@ export class SequelizeUtils {
     }
 
     public static mergeWhere(a: WhereOptions, b: WhereOptions): WhereOptions {
+        if (!a && !b) {
+            return null;
+        }
         return Object.assign(a || {}, b || {});
     }
 

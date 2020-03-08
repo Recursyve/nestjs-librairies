@@ -5,7 +5,7 @@ import {
     CreatedAt,
     DataType,
     DeletedAt,
-    ForeignKey,
+    ForeignKey, HasMany,
     Model,
     PrimaryKey,
     Table,
@@ -13,6 +13,7 @@ import {
 } from "sequelize-typescript";
 import { Contracts } from "./contracts.model";
 import { Systems } from "../systems/systems.model";
+import { MaintenanceVisits } from "../maintenance-visits/maintenance-visits.model";
 
 @Table({
     tableName: "contract_systems",
@@ -43,6 +44,9 @@ export class ContractSystems extends Model<ContractSystems> {
 
     @BelongsTo(() => Systems)
     system: Systems;
+
+    @HasMany(() => MaintenanceVisits)
+    visits: MaintenanceVisits[];
 
     @CreatedAt
     created_at: Date;

@@ -1,7 +1,7 @@
 import { CustomOperator, FilterOperators, FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
-import { Op, where, WhereOperators, WhereOptions, FindAttributeOptions } from "sequelize";
+import { Op, where, WhereOperators, WhereOptions } from "sequelize";
 import { QueryRuleModel } from "../models/query.model";
 import { SequelizeUtils } from "../../sequelize.utils";
 import { RuleModel } from "../models/rule.model";
@@ -36,7 +36,6 @@ export interface FilterDefinition extends BaseFilterDefinition {
     getConfig(key: string, user?: Users): Promise<FilterBaseConfigurationModel>;
     getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions>;
     getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions>;
-    getAttributeOptions(rule: QueryRuleModel): Promise<FindAttributeOptions>;
 }
 
 export abstract class Filter implements FilterDefinition {
@@ -137,10 +136,6 @@ export abstract class Filter implements FilterDefinition {
         }
 
         return this.getOperatorHavingOptions(rule.operation, options);
-    }
-
-    public async getAttributeOptions(rule: QueryRuleModel): Promise<FindAttributeOptions> {
-        return null;
     }
 
     protected getConditionWhereOptions(where: WhereOptions): WhereOptions {
