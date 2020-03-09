@@ -1,7 +1,7 @@
 import { ProjectionAlias } from "sequelize";
 import { PathModel } from "./path.model";
 
-export interface CustomAttributesConfig<T = unknown> {
+export interface CustomAttributesConfig<T = any> {
     key: string;
     type: string;
     config?: T;

@@ -1,6 +1,6 @@
-import { CUSTOM_ATTRIBUTES, MODEL_CUSTOM_ATTRIBUTES } from "../constant";
 import { DistanceAttributesConfig, DistanceConfig } from "../models/distance.model";
-import { CustomAttributesConfig } from "../models/custom-attributes.model";
+import { DataFilterHandler } from "../handlers/data-filter.handler";
+import { AttributesHandler } from "../handlers/attributes.handler";
 
 export function Distance(options: DistanceConfig): PropertyDecorator & ClassDecorator {
     return (target: Object, propertyKey?: string) => {
@@ -10,13 +10,13 @@ export function Distance(options: DistanceConfig): PropertyDecorator & ClassDeco
 
 function defineCustomAttributesMetadata(target: Object, propertyKey?: string, options?: DistanceConfig) {
     if (!propertyKey) {
-        const attributes: CustomAttributesConfig[] = Reflect.getMetadata(MODEL_CUSTOM_ATTRIBUTES, target) || [];
-        attributes.push(new DistanceAttributesConfig(propertyKey, options));
-        return Reflect.defineMetadata(MODEL_CUSTOM_ATTRIBUTES, attributes, target);
+        const dataFilter = DataFilterHandler.getDataFilter(target);
+        dataFilter.addCustomAttribute(new DistanceAttributesConfig(propertyKey, options));
+        DataFilterHandler.saveDataFilter(target, dataFilter);
+        return;
     }
 
-    const name = CUSTOM_ATTRIBUTES.replace("{{attribute}}", propertyKey);
-    const attributes: CustomAttributesConfig[] = Reflect.getMetadata(name, target) || [];
-    attributes.push(new DistanceAttributesConfig(propertyKey, options));
-    Reflect.defineMetadata(name, attributes, target);
+    const attribute = AttributesHandler.getAttribute(target, propertyKey);
+    attribute.addCustomAttribute(new DistanceAttributesConfig(propertyKey, options));
+    AttributesHandler.saveAttribute(target, attribute);
 }

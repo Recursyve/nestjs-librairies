@@ -1,5 +1,5 @@
-import { INCLUDE } from "../constant";
 import { IncludeConfig } from "../models/include.model";
+import { AttributesHandler } from "../handlers/attributes.handler";
 
 export function Include(options: IncludeConfig): PropertyDecorator;
 export function Include(path: string): PropertyDecorator;
@@ -10,9 +10,8 @@ export function Include(optionsOrPath: IncludeConfig | string): PropertyDecorato
             optionsOrPath = { path: optionsOrPath };
         }
 
-        const includes: IncludeConfig[] =
-            Reflect.getMetadata(INCLUDE.replace("{{include}}", propertyKey), target) || [];
-        includes.push(optionsOrPath);
-        Reflect.defineMetadata(INCLUDE.replace("{{include}}", propertyKey), includes, target);
+        const attribute = AttributesHandler.getAttribute(target, propertyKey);
+        attribute.addInclude(optionsOrPath);
+        AttributesHandler.saveAttribute(target, attribute);
     };
 }

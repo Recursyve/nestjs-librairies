@@ -1,7 +1,9 @@
-import { EXPORTS } from "../constant";
+import { DataFilterHandler } from "../handlers/data-filter.handler";
 
 export function Exports(columns: string[]): ClassDecorator {
     return (target: object) => {
-        Reflect.defineMetadata(EXPORTS, columns, target);
+        const dataFilter = DataFilterHandler.getDataFilter(target);
+        dataFilter.setExportColumns(columns);
+        DataFilterHandler.saveDataFilter(target, dataFilter);
     };
 }
