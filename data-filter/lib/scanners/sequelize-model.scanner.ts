@@ -15,7 +15,7 @@ export class SequelizeModelScanner {
         additionalIncludes: IncludeModel[],
         attributes?: FindAttributeOptions
     ): IncludeOptions[] {
-        const objects = path.path?.split(".");
+        const objects = path?.path?.split(".");
         if (!objects?.length) {
             return [];
         }

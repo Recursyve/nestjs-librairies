@@ -19,6 +19,7 @@ export interface FilterQueryModel {
     search?: FilterSearchModel;
     query?: QueryModel;
     order?: OrderModel;
+    data?: object;
 }
 
 export interface FilterResultModel<T> {

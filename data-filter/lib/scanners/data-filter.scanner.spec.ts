@@ -3,12 +3,13 @@ import { Attributes, Data, Include, Path } from "../decorators";
 import { Persons } from "../test/models/persons/persons.model";
 import { Coords } from "../test/models/coords/coords.model";
 import { Places } from "../test/models/places/places.model";
+import { DataFilterConfig, DataFilterConfigModel } from "../models/data-filter.model";
+import { AttributesConfig, AttributesConfigModel } from "../models/attributes.model";
 
 @Data(Persons)
 @Attributes(["first_name", "last_name"])
 class PersonsTest {
     @Attributes(["cellphone"])
-    @Path("coord")
     coord: Coords;
 
     @Attributes([])
@@ -24,46 +25,49 @@ describe("DataFilterScanner", () => {
         scanner = new DataFilterScanner();
     });
 
-    it("getModel should return the valid Sequelize Typescript Model", () => {
-        const model = scanner.getModel(PersonsTest);
+    it("getDataFilter should return the valid DataFilterConfig", () => {
+        const model = scanner.getDataFilter(PersonsTest);
         expect(model).toBeDefined();
-        expect(model).toStrictEqual(Persons);
+        const expected = new DataFilterConfig();
+        Object.assign<DataFilterConfig, DataFilterConfigModel>(expected, {
+            model: Persons,
+            attributes: ["first_name", "last_name"],
+            customAttributes: []
+        });
+        expect(model).toStrictEqual(expected);
     });
 
-    it("getModelAttributes should return the valid findAttributes", () => {
-        const attributes = scanner.getModelAttributes(PersonsTest);
+    it("getAttributes should return the valid AttributesConfig array", () => {
+        const attributes = scanner.getAttributes(PersonsTest);
         expect(attributes).toBeDefined();
-        expect(attributes).toStrictEqual(["first_name", "last_name"]);
-    });
-
-    it("getPath should return the valid include path", () => {
-        const path = scanner.getPath(PersonsTest, "coord");
-        expect(path).toBeDefined();
-        expect(path).toHaveProperty("path", "coord");
-    });
-
-    it("getInclude should return the valid include option", () => {
-        const include = scanner.getInclude(PersonsTest, "places");
-        expect(include).toBeDefined();
-        expect(include).toStrictEqual([
-            {
-                path: "system",
-                attributes: ["file_number"]
-            }
-        ]);
-    });
-
-    it("getInclude with options should return the valid include option", () => {
-        const include = scanner.getInclude(PersonsTest, "places", { file_number: "123456" });
-        expect(include).toBeDefined();
-        expect(include).toStrictEqual([
-            {
-                path: "system",
-                attributes: ["file_number"],
-                where: {
-                    file_number: "123456"
+        const expected = [
+            new AttributesConfig("coord"),
+            new AttributesConfig("places")
+        ];
+        Object.assign<AttributesConfig, AttributesConfigModel>(expected[0], {
+            key: "coord",
+            attributes: ["cellphone"],
+            path: {
+                path: "coord"
+            },
+            customAttributes: [],
+            includes: []
+        });
+        Object.assign<AttributesConfig, AttributesConfigModel>(expected[1], {
+            key: "places",
+            attributes: [],
+            path: {
+                path: "owner.places"
+            },
+            customAttributes: [],
+            includes: [
+                {
+                    path: "system",
+                    attributes: ["file_number"],
+                    where: { file_number: option => option.file_number }
                 }
-            }
-        ]);
+            ]
+        });
+        expect(JSON.stringify(attributes)).toStrictEqual(JSON.stringify(expected));
     });
 });

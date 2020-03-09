@@ -2,7 +2,7 @@ import { CustomOperator, FilterOperators, FilterOperatorTypes } from "../operato
 import { FilterType } from "../type";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { Op, where, WhereOperators, WhereOptions } from "sequelize";
-import { QueryRuleModel } from "../models/query.model";
+import { QueryModel, QueryRuleModel } from "../models/query.model";
 import { SequelizeUtils } from "../../sequelize.utils";
 import { RuleModel } from "../models/rule.model";
 import { IncludeWhereModel } from "../../models/include.model";
@@ -20,6 +20,10 @@ export interface FilterCondition {
     rules: (FilterConditionRule | FilterCondition)[];
 }
 
+export type PathCondition = boolean | {
+    [filter: string]: any;
+}
+
 export interface BaseFilterDefinition {
     attribute: string;
     path?: string;
@@ -27,6 +31,7 @@ export interface BaseFilterDefinition {
     condition?: FilterCondition;
     group?: string;
     where?: IncludeWhereModel;
+    pathCondition?: PathCondition;
 }
 
 export interface FilterDefinition extends BaseFilterDefinition {
@@ -36,6 +41,7 @@ export interface FilterDefinition extends BaseFilterDefinition {
     getConfig(key: string, user?: Users): Promise<FilterBaseConfigurationModel>;
     getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions>;
     getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions>;
+    usePathCondition(query: QueryModel): boolean;
 }
 
 export abstract class Filter implements FilterDefinition {
@@ -46,6 +52,7 @@ export abstract class Filter implements FilterDefinition {
     public having?: any;
     public path?: string;
     public condition?: FilterCondition;
+    public pathCondition?: PathCondition;
 
     public static validate(definition: FilterDefinition) {
         return typeof definition === "object" && definition.type && definition.operators && definition.attribute;
@@ -138,6 +145,20 @@ export abstract class Filter implements FilterDefinition {
         return this.getOperatorHavingOptions(rule.operation, options);
     }
 
+    public usePathCondition(query: QueryModel): boolean {
+        if (!this.pathCondition || typeof this.pathCondition === "boolean") {
+            return false;
+        }
+
+        const keys = Object.keys(this.pathCondition);
+        const rules = this.getRuleFromKeys(query, keys);
+        if (keys.length !== rules.length) {
+            return false;
+        }
+
+        return rules.every(x => this.pathCondition[x.id] === x.value);
+    }
+
     protected getConditionWhereOptions(where: WhereOptions): WhereOptions {
         if (!this.condition) {
             return where;
@@ -188,5 +209,18 @@ export abstract class Filter implements FilterDefinition {
                   [Op.and]: [where, op.having]
               }
             : op.having;
+    }
+
+    private getRuleFromKeys(query: QueryModel, keys: string[]): QueryRuleModel[] {
+        const rules: QueryRuleModel[] = [];
+        for (const rule of query.rules) {
+            if ((rule as QueryModel).condition) {
+                rules.push(...this.getRuleFromKeys(rule as QueryModel, keys));
+            } else if (keys.some(x => (rule as QueryRuleModel).id === x)) {
+                rules.push(rule as QueryRuleModel);
+            }
+        }
+
+        return rules;
     }
 }

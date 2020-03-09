@@ -146,6 +146,7 @@ describe("DataFilterRepository", () => {
                 include: [
                     {
                         as: "coord",
+                        attributes: ["id"],
                         model: Coords,
                         required: false,
                         include: []
