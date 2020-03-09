@@ -58,23 +58,23 @@ export class SequelizeUtils {
             return ArrayUtils.uniqueValues([...a.attributes, "id"], x => x);
         } else if (b.attributes instanceof Array) {
             return ArrayUtils.uniqueValues([...b.attributes, "id"], x => x);
-        } else if (a.attributes && b.attributes) {
+        } else if (a.attributes || b.attributes) {
             const aAttributes = (a.attributes || {}) as { include: string[]; exclude: string[] };
             const bAttributes = (b.attributes || {}) as { include: string[]; exclude: string[] };
             const result: { include?: string[]; exclude?: string[] } = {};
 
-            if (aAttributes.include) {
+            if (aAttributes.include?.length) {
                 result.include = [...aAttributes.include];
             }
-            if (bAttributes.include) {
-                result.include ? result.include.push(...bAttributes.include) : bAttributes.include;
+            if (bAttributes.include?.length) {
+                result.include = [...(result.include ?? []), ...bAttributes.include];
             }
 
-            if (aAttributes.exclude) {
+            if (aAttributes.exclude?.length) {
                 result.exclude = [...aAttributes.exclude];
             }
-            if (bAttributes.exclude) {
-                result.exclude ? result.exclude.push(...bAttributes.exclude) : bAttributes.exclude;
+            if (bAttributes.exclude?.length) {
+                result.exclude = [...(result.exclude ?? []), ...bAttributes.exclude];
             }
 
             if (result.include) {
@@ -82,6 +82,10 @@ export class SequelizeUtils {
             }
             if (result.exclude) {
                 result.exclude = ArrayUtils.uniqueValues(result.exclude, x => x);
+            }
+
+            if (!result.include && !result.exclude) {
+                return undefined;
             }
 
             return result as FindAttributeOptions;

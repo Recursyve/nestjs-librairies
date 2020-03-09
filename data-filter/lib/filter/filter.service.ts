@@ -13,7 +13,6 @@ import {
 } from "./filters";
 import {
     CountOptions,
-    FindAttributeOptions,
     FindOptions,
     Includeable,
     IncludeOptions,
