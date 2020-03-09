@@ -5,7 +5,6 @@ import { Op, where, WhereOperators, WhereOptions } from "sequelize";
 import { QueryRuleModel } from "../models/query.model";
 import { SequelizeUtils } from "../../sequelize.utils";
 import { RuleModel } from "../models/rule.model";
-import { FilterUtils } from "../filter.utils";
 import { IncludeWhereModel } from "../../models/include.model";
 import { Users } from "@recursyve/nestjs-access-control";
 
@@ -35,8 +34,8 @@ export interface FilterDefinition extends BaseFilterDefinition {
     operators: (FilterOperatorTypes | CustomOperator)[];
 
     getConfig(key: string, user?: Users): Promise<FilterBaseConfigurationModel>;
-    getWhereOptions(rule: QueryRuleModel): WhereOptions;
-    getHavingOptions(rule: QueryRuleModel): WhereOptions;
+    getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions>;
+    getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions>;
 }
 
 export abstract class Filter implements FilterDefinition {
@@ -52,10 +51,10 @@ export abstract class Filter implements FilterDefinition {
         return typeof definition === "object" && definition.type && definition.operators && definition.attribute;
     }
 
-    // public abstract valueFormatter(rule: QueryRuleModel): unknown;
-
-    protected constructor(definition: BaseFilterDefinition) {
-        Object.assign(this, definition);
+    protected constructor(definition?: BaseFilterDefinition) {
+        if (definition) {
+            Object.assign(this, definition);
+        }
     }
 
     public addOperators(...operator: (FilterOperatorTypes | CustomOperator)[]): Filter {
@@ -69,12 +68,8 @@ export abstract class Filter implements FilterDefinition {
     }
 
     public async getConfig(key: string, user?: Users): Promise<FilterBaseConfigurationModel> {
-        return {
+        const config = {
             type: this.type,
-            group: {
-                key: this.group,
-                name: this.group
-            },
             operators: this.operators.map(x => {
                 if (typeof x === "string") {
                     return {
@@ -88,11 +83,21 @@ export abstract class Filter implements FilterDefinition {
                     name: x.name
                 };
             })
-        };
+        } as FilterBaseConfigurationModel;
+
+        if (this.group) {
+            config.group = {
+                key: this.group,
+                name: this.group
+            }
+        }
+        return config;
     }
 
-    public getWhereOptions(rule: QueryRuleModel): WhereOptions {
-        const name = this.path ? SequelizeUtils.getAttributeFullName(this.attribute, this.path) : this.attribute;
+    public async getWhereOptions(rule: QueryRuleModel, name?: string): Promise<WhereOptions> {
+        if (!name) {
+            name = this.path ? SequelizeUtils.getAttributeFullName(this.attribute, this.path) : this.attribute;
+        }
 
         const op = this.operators.find(x => {
             if (typeof x === "string") {
@@ -115,7 +120,7 @@ export abstract class Filter implements FilterDefinition {
         });
     }
 
-    public getHavingOptions(rule: QueryRuleModel): WhereOptions {
+    public async getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions> {
         if (!this.having) {
             return this.getOperatorHavingOptions(rule.operation, null);
         }
@@ -133,7 +138,7 @@ export abstract class Filter implements FilterDefinition {
         return this.getOperatorHavingOptions(rule.operation, options);
     }
 
-    private getConditionWhereOptions(where: WhereOptions): WhereOptions {
+    protected getConditionWhereOptions(where: WhereOptions): WhereOptions {
         if (!this.condition) {
             return where;
         }
@@ -144,7 +149,7 @@ export abstract class Filter implements FilterDefinition {
         return option;
     }
 
-    private generateRuleWhereOptions(filter: FilterCondition, options: WhereOptions[]) {
+    protected generateRuleWhereOptions(filter: FilterCondition, options: WhereOptions[]) {
         for (const rule of filter.rules) {
             const c = rule as FilterCondition;
             if (c.condition) {
@@ -162,7 +167,7 @@ export abstract class Filter implements FilterDefinition {
         }
     }
 
-    private getOperatorHavingOptions(operator: FilterOperators, where: WhereOptions): WhereOptions {
+    protected getOperatorHavingOptions(operator: FilterOperators, where: WhereOptions): WhereOptions {
         const op = this.operators.find(x => {
             if (typeof x === "string") {
                 return false;

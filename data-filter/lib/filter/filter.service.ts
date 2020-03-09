@@ -11,7 +11,14 @@ import {
     SelectFilter,
     SelectFilterValue
 } from "./filters";
-import { CountOptions, FindOptions, Includeable, IncludeOptions, Op, WhereOptions } from "sequelize";
+import {
+    CountOptions,
+    FindOptions,
+    Includeable,
+    IncludeOptions,
+    Op,
+    WhereOptions
+} from "sequelize";
 import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";
 import { M, SequelizeUtils } from "../sequelize.utils";
 import { DataFilterService } from "../data-filter.service";
@@ -20,10 +27,12 @@ import { DataFilterRepository } from "../data-filter.repository";
 import { FilterConfigurationSearchModel } from "./models/filter-configuration-search.model";
 import { FilterResourceValueModel } from "./models/filter-resource-value.model";
 import { IncludeWhereModel } from "../models/include.model";
+import { GeoLocalizationFilter } from "./filters/geo-localization.filter";
+import { GroupFilter, GroupFilterDefinition } from "./filters/group.filter";
 
 @Injectable()
 export class FilterService<Data> {
-    private filters: { [name: string]: FilterDefinition };
+    private filters: { [name: string]: FilterDefinition | GroupFilterDefinition };
     private repository: DataFilterRepository<Data>;
 
     constructor(
@@ -101,7 +110,7 @@ export class FilterService<Data> {
         const options = opt ? opt : userOrOpt as FilterQueryModel;
         const user = opt ? userOrOpt as Users : null;
 
-        const countOptions = this.getFindOptions(this.repository.model, options.query);
+        const countOptions = await this.getFindOptions(this.repository.model, options.query);
         this.addSearchCondition(options.search, countOptions);
         return user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions);
     }
@@ -113,7 +122,7 @@ export class FilterService<Data> {
         const options = opt ? opt : userOrOpt as FilterQueryModel;
         const user = opt ? userOrOpt as Users : null;
 
-        const countOptions = this.getFindOptions(this.repository.model, options.query);
+        const countOptions = await this.getFindOptions(this.repository.model, options.query);
         this.addSearchCondition(options.search, countOptions);
         this.addOrderCondition(options.order, countOptions);
 
@@ -126,7 +135,12 @@ export class FilterService<Data> {
         };
     }
 
-    public getFindOptions(model: typeof M, query: QueryModel): FindOptions {
+    public async getFindOptions(model: typeof M, query: QueryModel): Promise<FindOptions> {
+        /**
+         * Reset Geo localization filter state
+         */
+        GeoLocalizationFilter.reset();
+
         let option: FindOptions = {
             group: `${model.name}.id`
         };
@@ -136,13 +150,17 @@ export class FilterService<Data> {
 
             option = {
                 ...option,
-                include: this.getInclude(model, query),
+                include: await this.getInclude(model, query),
                 where: query.condition === "and" ? { [Op.and]: whereConditions } : { [Op.or]: whereConditions },
                 having: query.condition === "and" ? { [Op.and]: havingConditions } : { [Op.or]: havingConditions }
             };
 
-            this.generateWhereOptions(query, whereConditions);
-            this.generateHavingOptions(query, havingConditions);
+            await this.generateWhereOptions(query, whereConditions);
+            await this.generateHavingOptions(query, havingConditions);
+
+            if (!havingConditions.length) {
+                delete option.having;
+            }
         }
 
         return option;
@@ -157,7 +175,7 @@ export class FilterService<Data> {
                 continue;
             }
 
-            if (!Filter.validate(this.model[key] as FilterDefinition)) {
+            if (!Filter.validate(this.model[key] as FilterDefinition) && !GroupFilter.validate(this.model[key] as GroupFilterDefinition)) {
                 continue;
             }
 
@@ -165,7 +183,7 @@ export class FilterService<Data> {
         }
     }
 
-    private getInclude(model: typeof M, query: QueryModel): Includeable[] {
+    private async getInclude(model: typeof M, query: QueryModel): Promise<Includeable[]> {
         if (!query.rules) {
             return [];
         }
@@ -174,7 +192,7 @@ export class FilterService<Data> {
         for (const rule of query.rules) {
             const m = rule as QueryModel;
             if (m.condition) {
-                includes.push(this.getInclude(model, m) as IncludeOptions[]);
+                includes.push(await this.getInclude(model, m) as IncludeOptions[]);
                 continue;
             }
 
@@ -184,18 +202,19 @@ export class FilterService<Data> {
             }
 
             const filter = this.filters[r.id];
-            if (!filter.path) {
-                includes.push(this.getConditionInclude(model, filter.condition));
-                continue;
-            }
+            if ((filter as GroupFilterDefinition).rootFilter) {
+                const f = filter as GroupFilterDefinition;
+                includes.push(...this.getFilterInclude(model, f.rootFilter));
 
-            includes.push(
-                this.sequelizeModelScanner.getIncludes(model, {
-                    path: filter.path,
-                    where: this.generateWhereConditions(filter.where)
-                }, [], { include: [] }),
-                this.getConditionInclude(model, filter.condition)
-            );
+                if (!f.lazyLoading) {
+                    includes.push(...this.getFilterInclude(model, f.valueFilter));
+                } else {
+                    const valueFiler = await f.getValueFilter(r.value[0]);
+                    includes.push(...this.getFilterInclude(model, valueFiler as FilterDefinition))
+                }
+            } else {
+                includes.push(...this.getFilterInclude(model, filter as FilterDefinition));
+            }
         }
         return SequelizeUtils.reduceIncludes(includes);
     }
@@ -219,7 +238,7 @@ export class FilterService<Data> {
         return includes;
     }
 
-    private generateWhereOptions(query: QueryModel, options: WhereOptions[]) {
+    private async generateWhereOptions(query: QueryModel, options: WhereOptions[]) {
         if (!query.rules) {
             return;
         }
@@ -230,7 +249,7 @@ export class FilterService<Data> {
                 const conditions = [];
                 const op = c.condition === "and" ? Op.and : Op.or;
                 const where = { [op]: conditions };
-                this.generateWhereOptions(c, conditions);
+                await this.generateWhereOptions(c, conditions);
 
                 if (where[op as any].length) {
                     options.push(where);
@@ -245,14 +264,14 @@ export class FilterService<Data> {
             }
 
             const filter = this.filters[r.id];
-            const filterOptions = filter.getWhereOptions(r);
+            const filterOptions = await filter.getWhereOptions(r);
             if (filterOptions) {
                 options.push(filterOptions);
             }
         }
     }
 
-    private generateHavingOptions(query: QueryModel, options: WhereOptions[]) {
+    private async generateHavingOptions(query: QueryModel, options: WhereOptions[]) {
         if (!query.rules) {
             return;
         }
@@ -263,7 +282,7 @@ export class FilterService<Data> {
                 const conditions = [];
                 const op = c.condition === "and" ? Op.and : Op.or;
                 const having = { [op]: conditions };
-                this.generateHavingOptions(c, conditions);
+                await this.generateHavingOptions(c, conditions);
 
                 if (having[op as any].length) {
                     options.push(having);
@@ -278,7 +297,7 @@ export class FilterService<Data> {
             }
 
             const filter = this.filters[r.id];
-            const filterOptions = filter.getHavingOptions(r);
+            const filterOptions = await filter.getHavingOptions(r);
             if (filterOptions) {
                 options.push(filterOptions);
             }
@@ -429,5 +448,19 @@ export class FilterService<Data> {
         }
 
         return where;
+    }
+
+    private getFilterInclude(model: typeof M, filter: FilterDefinition): IncludeOptions[][] {
+        if (!filter.path) {
+            return [this.getConditionInclude(model, filter.condition)];
+        }
+
+        return [
+            this.sequelizeModelScanner.getIncludes(model, {
+                path: filter.path,
+                where: this.generateWhereConditions(filter.where)
+            }, []),
+            this.getConditionInclude(model, filter.condition)
+        ];
     }
 }

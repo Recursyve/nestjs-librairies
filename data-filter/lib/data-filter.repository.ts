@@ -37,21 +37,22 @@ export class DataFilterRepository<Data> {
         this.init();
     }
 
-    public async findByPk(identifier: Identifier, conditions?: object): Promise<Data> {
-        const options = this.generateFindOptions(conditions);
-        const result = await this._model.findByPk(identifier, options);
+    public async findByPk(identifier: Identifier, options?: FindOptions, conditions?: object): Promise<Data> {
+        const result = await this._model.findByPk(identifier, {
+            ...this.generateFindOptions(conditions),
+            ...(options ?? {})
+        });
         if (!result) {
             return result;
         }
         return this.reduceObject(result);
     }
 
-    public async findOne(where?: WhereOptions, conditions?: object): Promise<Data> {
-        const options = {
+    public async findOne(options?: FindOptions, conditions?: object): Promise<Data> {
+        const result = await this._model.findOne({
             ...this.generateFindOptions(conditions),
-            where
-        } as FindOptions;
-        const result = await this._model.findOne(options);
+            ...(options ?? {})
+        });
         if (!result) {
             return result;
         }
@@ -61,7 +62,7 @@ export class DataFilterRepository<Data> {
     public async findAll(options?: FindOptions, conditions?: object): Promise<Data[]> {
         const result = await this._model.findAll({
             ...this.generateFindOptions(conditions),
-            ...options
+            ...(options ?? {})
         });
         if (!result || !result.length) {
             return result;
@@ -74,7 +75,7 @@ export class DataFilterRepository<Data> {
             ...this.generateFindOptions(conditions),
             where
         };
-        return await this._model.count(options);
+        return this._model.count(options);
     }
 
     public generateFindOptions(conditions?: object): FindOptions {
@@ -83,15 +84,52 @@ export class DataFilterRepository<Data> {
                 return [];
             }
             x.path = this.dataFilterScanner.getPath(this.dataDef, x.key, conditions);
+
+            const customAttributes = this.dataFilterScanner.getCustomAttributes(this.dataDef, x.key, x.path, conditions);
+            let attributes = (x.attributes ? x.attributes : undefined) as (string | ProjectionAlias)[];
+            if (customAttributes.length) {
+                attributes = [
+                    ...(attributes ?? []),
+                    ...customAttributes.filter(a => !a.path || a.path.path === x.path.path).map(a => a.attribute)
+                ];
+            }
+
             const additionalIncludes = this.dataFilterScanner.getInclude(this.dataDef, x.key, conditions);
-            return this.sequelizeModelScanner.getIncludes(this._model, x.path, additionalIncludes, x.attributes);
+            additionalIncludes.forEach(i => {
+                const customAttribute = customAttributes.find(a => a.path?.path === i.path);
+                if (customAttribute) {
+                    if (i.attributes) {
+                        i.attributes = [...i.attributes as string[] ?? [], customAttribute.attribute] as (string | ProjectionAlias)[];
+                    } else {
+                        i.attributes = {
+                            include: [customAttribute.attribute]
+                        }
+                    }
+                }
+            });
+            return this.sequelizeModelScanner.getIncludes(this._model, x.path, additionalIncludes, attributes);
         });
+
+        const customAttributes = this.dataFilterScanner.getModelCustomAttributes(this.dataDef, conditions);
+        if (customAttributes.length) {
+            includes.push(...customAttributes.filter(x => x.path).map(x =>
+                this.sequelizeModelScanner.getIncludes(this._model, x.path, [])
+            ));
+        }
 
         if (this.findAttributes) {
             return {
-                attributes: this.findAttributes,
+                attributes: [...this.findAttributes as string[], ...customAttributes.map(x => x.attribute)],
                 include: SequelizeUtils.reduceIncludes(includes)
             };
+        }
+        if (customAttributes.length) {
+            return {
+                attributes: {
+                    include: customAttributes.map(x => x.attribute)
+                },
+                include: SequelizeUtils.reduceIncludes(includes)
+            }
         }
 
         return {

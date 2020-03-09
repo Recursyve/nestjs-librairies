@@ -1,5 +1,7 @@
 export const ATTRIBUTES = "__ATTRIBUTES__";
+export const CUSTOM_ATTRIBUTES = "__CUSTOM_ATTRIBUTES{{attribute}}__";
 export const MODEL_ATTRIBUTES = "__MODEL_ATTRIBUTES__";
+export const MODEL_CUSTOM_ATTRIBUTES = "__MODEL_CUSTOM_ATTRIBUTES__";
 export const HAVING = "__HAVING__";
 export const GROUP = "__GROUP__";
 export const MODEL = "__MODEL__";

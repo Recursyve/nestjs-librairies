@@ -13,7 +13,7 @@ export class DateFilter extends Filter {
         super(definition);
     }
 
-    public getWhereOptions(rule: QueryRuleModel): WhereOptions {
+    public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions> {
         if (rule.operation === FilterOperatorTypes.Between || rule.operation === FilterOperatorTypes.NotBetween) {
             const values = [
                 moment(rule.value[0])
@@ -56,7 +56,7 @@ export class DateFilter extends Filter {
         }
     }
 
-    private getEqualWhereOptions(rule: QueryRuleModel, start: string, end: string): WhereOptions {
+    private async getEqualWhereOptions(rule: QueryRuleModel, start: string, end: string): Promise<WhereOptions> {
         return super.getWhereOptions({
             operation: FilterOperatorTypes.Between,
             value: [start, end],
@@ -64,15 +64,15 @@ export class DateFilter extends Filter {
         });
     }
 
-    private getNotEqualWhereOptions(rule: QueryRuleModel, start: string, end: string): WhereOptions {
+    private async getNotEqualWhereOptions(rule: QueryRuleModel, start: string, end: string): Promise<WhereOptions> {
         return {
             [Op.or]: [
-                super.getWhereOptions({
+                await super.getWhereOptions({
                     operation: FilterOperatorTypes.Less,
                     value: start,
                     id: rule.id
                 }),
-                super.getWhereOptions({
+                await super.getWhereOptions({
                     operation: FilterOperatorTypes.Greater,
                     value: end,
                     id: rule.id
@@ -81,7 +81,7 @@ export class DateFilter extends Filter {
         };
     }
 
-    private getLessWhereOptions(rule: QueryRuleModel, start: string): WhereOptions {
+    private async getLessWhereOptions(rule: QueryRuleModel, start: string): Promise<WhereOptions> {
         return super.getWhereOptions({
             operation: FilterOperatorTypes.Less,
             value: start,
@@ -89,7 +89,7 @@ export class DateFilter extends Filter {
         });
     }
 
-    private getLessOrEqualWhereOptions(rule: QueryRuleModel, end: string): WhereOptions {
+    private async getLessOrEqualWhereOptions(rule: QueryRuleModel, end: string): Promise<WhereOptions> {
         return super.getWhereOptions({
             operation: FilterOperatorTypes.LessOrEqual,
             value: end,
@@ -97,7 +97,7 @@ export class DateFilter extends Filter {
         });
     }
 
-    private getGreaterWhereOptions(rule: QueryRuleModel, end: string): WhereOptions {
+    private async getGreaterWhereOptions(rule: QueryRuleModel, end: string): Promise<WhereOptions> {
         return super.getWhereOptions({
             operation: FilterOperatorTypes.Greater,
             value: end,
@@ -105,7 +105,7 @@ export class DateFilter extends Filter {
         });
     }
 
-    private getGreaterOrEqualWhereOptions(rule: QueryRuleModel, start: string): WhereOptions {
+    private async getGreaterOrEqualWhereOptions(rule: QueryRuleModel, start: string): Promise<WhereOptions> {
         return super.getWhereOptions({
             operation: FilterOperatorTypes.GreaterOrEqual,
             value: start,
