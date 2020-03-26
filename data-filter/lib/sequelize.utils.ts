@@ -174,7 +174,7 @@ export class SequelizeUtils {
 
     public static getModelSearchableAttributes(model: typeof M): string[] {
         return Object.keys(model.rawAttributes).filter(
-            a => !["DATE", "DATEONLY"].some(t => t === (model.rawAttributes[a].type as AbstractDataTypeConstructor).key)
+            a => !["DATE", "DATEONLY", "VIRTUAL"].some(t => t === (model.rawAttributes[a].type as AbstractDataTypeConstructor).key)
         ).map(x => {
             const attr = model.rawAttributes[x];
             if (!attr) {
