@@ -330,7 +330,7 @@ export class FilterService<Data> {
         } else {
             const value = await this.repository.model.count({
                 ...options
-            });
+            }) as any;
             if (typeof value === "number") {
                 return value;
             } else {
