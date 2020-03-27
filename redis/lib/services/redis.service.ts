@@ -48,7 +48,7 @@ export class RedisService {
 
     public async scanDel(pattern: string): Promise<void> {
         const keys = await this.scan(pattern);
-        if (keys && keys.length) {
+        if (keys?.length) {
             await this.client.del(...keys);
         }
     }
