@@ -27,6 +27,5 @@ export class RedisConfigService {
         }
 
         return option;
-
     }
 }
