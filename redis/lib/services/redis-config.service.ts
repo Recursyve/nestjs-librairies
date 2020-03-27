@@ -9,10 +9,10 @@ export class RedisConfigService {
     public database: number;
 
     constructor() {
-        this.host = process.env.REDIS_HOST || "127.0.0.1";
+        this.host = process.env.REDIS_HOST ?? "127.0.0.1";
         this.password = process.env.REDIS_PASSWORD;
-        this.port = +process.env.REDIS_PORT || 6379;
-        this.database = +process.env.REDIS_DATABASE || 0;
+        this.port = +process.env.REDIS_PORT ?? 6379;
+        this.database = +process.env.REDIS_DATABASE ?? 0;
     }
 
     public getConfig(): RedisOptions {
