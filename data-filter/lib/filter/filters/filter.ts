@@ -99,7 +99,7 @@ export abstract class Filter implements FilterDefinition {
 
             return x.name === rule.operation;
         }) as CustomOperator;
-        if (op && op.operator) {
+        if (op?.operator) {
             rule.operation = op.operator;
         }
 

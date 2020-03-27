@@ -63,7 +63,7 @@ export class DataFilterRepository<Data> {
             ...this.generateFindOptions(conditions),
             ...options
         });
-        if (!result || !result.length) {
+        if (!result?.length) {
             return result as unknown as Data[];
         }
         return result.map(x => this.reduceObject(x));
