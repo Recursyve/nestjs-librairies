@@ -13,7 +13,7 @@ function defineAttributesMetadata(target: Object, propertyKey?: string, options?
         return Reflect.defineMetadata(MODEL_ATTRIBUTES, options, target);
     }
 
-    const attributes: AttributesModel[] = Reflect.getMetadata(ATTRIBUTES, target) || [];
+    const attributes: AttributesModel[] = Reflect.getMetadata(ATTRIBUTES, target) ?? [];
     attributes.push({
         key: propertyKey,
         attributes: options

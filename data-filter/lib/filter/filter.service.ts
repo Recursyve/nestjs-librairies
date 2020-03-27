@@ -267,7 +267,7 @@ export class FilterService<Data> {
     }
 
     private addSearchCondition(search: FilterSearchModel, options: CountOptions): void {
-        if (!search || !search.value || !search.value.length) {
+        if (!search?.value?.length) {
             return;
         }
 

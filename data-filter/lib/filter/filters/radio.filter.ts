@@ -52,7 +52,7 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
         return super.getWhereOptions({
             ...rule,
             value: option.value,
-            operation: option.operator || rule.operation
+            operation: option.operator ?? rule.operation
         });
     }
 
@@ -65,7 +65,7 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
         return super.getHavingOptions({
             ...rule,
             value: option.value,
-            operation: option.operator || rule.operation
+            operation: option.operator ?? rule.operation
         });
     }
 }
