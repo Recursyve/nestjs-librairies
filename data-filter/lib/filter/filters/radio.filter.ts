@@ -4,7 +4,6 @@ import { FilterOperatorTypes } from "../operators";
 import { QueryRuleModel } from "../models";
 import { WhereOptions } from "sequelize";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
-import { FilterUtils } from "../filter.utils";
 
 export interface RadioFilterOption {
     key: string;
