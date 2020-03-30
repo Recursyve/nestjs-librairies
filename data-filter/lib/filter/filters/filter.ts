@@ -5,7 +5,6 @@ import { Op, where, WhereOperators, WhereOptions } from "sequelize";
 import { QueryRuleModel } from "../models/query.model";
 import { SequelizeUtils } from "../../sequelize.utils";
 import { RuleModel } from "../models/rule.model";
-import { FilterUtils } from "../filter.utils";
 import { IncludeWhereModel } from "../../models/include.model";
 
 export type Condition = "and" | "or";
@@ -100,7 +99,7 @@ export abstract class Filter implements FilterDefinition {
 
             return x.name === rule.operation;
         }) as CustomOperator;
-        if (op && op.operator) {
+        if (op?.operator) {
             rule.operation = op.operator;
         }
 

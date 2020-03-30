@@ -1,3 +1,4 @@
+// TODO: Make FilterGroups independant of project.
 export enum FilterGroup {
     Company = "company",
     Technician = "technician",

@@ -36,12 +36,12 @@ export class DataFilterScanner {
     }
 
     public getAttributes(target: any): AttributesModel[] {
-        return Reflect.getMetadata(ATTRIBUTES, target.prototype) || [];
+        return Reflect.getMetadata(ATTRIBUTES, target.prototype) ?? [];
     }
 
     public getInclude(target: any, property: string, options?: object): IncludeModel[] {
         const includes: IncludeConfig[] =
-            Reflect.getMetadata(INCLUDE.replace("{{include}}", property), target.prototype) || [];
+            Reflect.getMetadata(INCLUDE.replace("{{include}}", property), target.prototype) ?? [];
 
         if (!options) {
             return includes.map(x => ({ path: x.path, attributes: x.attributes }));
