@@ -16,8 +16,8 @@ export interface AccessControlConfig {
 export class AccessControlModule {
     public static forRoot(models: (typeof M)[], option?: AccessControlConfig): DynamicModule {
         option = {
-            imports: option?.imports ? option.imports : [],
-            deserializer: option?.deserializer ? option.deserializer : {
+            imports: option?.imports ?? [],
+            deserializer: option?.deserializer ?? {
                 provide: UserDeserializer,
                 useClass: DefaultDeserializer
             }
