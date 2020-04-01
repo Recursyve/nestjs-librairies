@@ -4,7 +4,6 @@ import { FilterOperatorTypes } from "../operators";
 import { QueryRuleModel } from "../models";
 import { WhereOptions } from "sequelize";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
-import { FilterUtils } from "../filter.utils";
 import { Users } from "@recursyve/nestjs-access-control";
 
 export interface RadioFilterOption {
@@ -54,7 +53,7 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
         return super.getWhereOptions({
             ...rule,
             value: option.value,
-            operation: option.operator || rule.operation
+            operation: option.operator ?? rule.operation
         });
     }
 
@@ -67,7 +66,7 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
         return super.getHavingOptions({
             ...rule,
             value: option.value,
-            operation: option.operator || rule.operation
+            operation: option.operator ?? rule.operation
         });
     }
 }

@@ -39,7 +39,7 @@ export class DataFilterRepository<Data> {
             ...(options ?? {})
         });
         if (!result) {
-            return result;
+            return result as unknown as Data;
         }
         return this.reduceObject(result);
     }
@@ -50,7 +50,7 @@ export class DataFilterRepository<Data> {
             ...(options ?? {})
         });
         if (!result) {
-            return result;
+            return result as unknown as Data;
         }
         return this.reduceObject(result);
     }
@@ -60,13 +60,13 @@ export class DataFilterRepository<Data> {
             ...this.generateFindOptions(conditions),
             ...(options ?? {})
         });
-        if (!result || !result.length) {
-            return result;
+        if (!result?.length) {
+            return result as unknown as Data[];
         }
         return result.map(x => this.reduceObject(x));
     }
 
-    public async count(where?: WhereOptions, conditions?: object): Promise<number> {
+    public count(where?: WhereOptions, conditions?: object): Promise<number> {
         const options = {
             ...this.generateFindOptions(conditions),
             where

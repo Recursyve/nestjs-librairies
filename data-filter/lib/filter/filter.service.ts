@@ -305,7 +305,7 @@ export class FilterService<Data> {
     }
 
     private addSearchCondition(search: FilterSearchModel, options: CountOptions): void {
-        if (!search || !search.value || !search.value.length) {
+        if (!search?.value?.length) {
             return;
         }
 
@@ -380,7 +380,7 @@ export class FilterService<Data> {
         } else {
             const value = await this.repository.model.count({
                 ...options
-            });
+            }) as any;
             if (typeof value === "number") {
                 return value;
             } else {

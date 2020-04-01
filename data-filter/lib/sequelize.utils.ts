@@ -33,8 +33,8 @@ export class SequelizeUtils {
             const aChild = a.find(value => value.model === bChild.model && value.as === bChild.as);
             if (aChild) {
                 aChild.include = this.mergeIncludes(
-                    (aChild.include as IncludeOptions[]) || [],
-                    (bChild.include as IncludeOptions[]) || []
+                    (aChild.include as IncludeOptions[]) ?? [],
+                    (bChild.include as IncludeOptions[]) ?? []
                 );
                 if (aChild.attributes || bChild.attributes) {
                     aChild.attributes = this.mergeAttributes(aChild, bChild);
@@ -59,8 +59,8 @@ export class SequelizeUtils {
         } else if (b.attributes instanceof Array) {
             return ArrayUtils.uniqueValues([...b.attributes, "id"], x => x);
         } else if (a.attributes || b.attributes) {
-            const aAttributes = (a.attributes || {}) as { include: string[]; exclude: string[] };
-            const bAttributes = (b.attributes || {}) as { include: string[]; exclude: string[] };
+            const aAttributes = (a.attributes ?? {}) as { include: string[]; exclude: string[] };
+            const bAttributes = (b.attributes ?? {}) as { include: string[]; exclude: string[] };
             const result: { include?: string[]; exclude?: string[] } = {};
 
             if (aAttributes.include?.length) {
@@ -97,7 +97,7 @@ export class SequelizeUtils {
         if (!a && !b) {
             return null;
         }
-        return Object.assign(a || {}, b || {});
+        return Object.assign(a ?? {}, b ?? {});
     }
 
     public static generateWhereValue(rule: RuleModel): WhereValue {
