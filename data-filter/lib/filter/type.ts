@@ -3,5 +3,8 @@ export enum FilterType {
     Number = "number",
     Date = "date",
     Select = "select",
-    Radio = "radio"
+    Radio = "radio",
+    Coordinate = "coordinate",
+    Group = "group",
+    GeoLocalization = "geo_localization"
 }

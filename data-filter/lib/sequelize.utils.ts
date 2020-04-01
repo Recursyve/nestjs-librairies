@@ -11,6 +11,11 @@ import {
 import { RuleModel } from "./filter";
 import { ArrayUtils } from "@recursyve/nestjs-common";
 
+export interface GeoPoint {
+    type: "point",
+    coordinates: number[];
+}
+
 export class M extends Model<M> {}
 
 export class SequelizeUtils {
@@ -34,7 +39,10 @@ export class SequelizeUtils {
                 if (aChild.attributes || bChild.attributes) {
                     aChild.attributes = this.mergeAttributes(aChild, bChild);
                 }
-                aChild.where = this.mergeWhere(aChild.where, bChild.where);
+                const where = this.mergeWhere(aChild.where, bChild.where);
+                if (where) {
+                    aChild.where = where;
+                }
             } else {
                 a.push(bChild);
             }
@@ -50,23 +58,23 @@ export class SequelizeUtils {
             return ArrayUtils.uniqueValues([...a.attributes, "id"], x => x);
         } else if (b.attributes instanceof Array) {
             return ArrayUtils.uniqueValues([...b.attributes, "id"], x => x);
-        } else if (a.attributes && b.attributes) {
+        } else if (a.attributes || b.attributes) {
             const aAttributes = (a.attributes ?? {}) as { include: string[]; exclude: string[] };
             const bAttributes = (b.attributes ?? {}) as { include: string[]; exclude: string[] };
             const result: { include?: string[]; exclude?: string[] } = {};
 
-            if (aAttributes.include) {
+            if (aAttributes.include?.length) {
                 result.include = [...aAttributes.include];
             }
-            if (bAttributes.include) {
-                result.include ? result.include.push(...bAttributes.include) : bAttributes.include;
+            if (bAttributes.include?.length) {
+                result.include = [...(result.include ?? []), ...bAttributes.include];
             }
 
-            if (aAttributes.exclude) {
+            if (aAttributes.exclude?.length) {
                 result.exclude = [...aAttributes.exclude];
             }
-            if (bAttributes.exclude) {
-                result.exclude ? result.exclude.push(...bAttributes.exclude) : bAttributes.exclude;
+            if (bAttributes.exclude?.length) {
+                result.exclude = [...(result.exclude ?? []), ...bAttributes.exclude];
             }
 
             if (result.include) {
@@ -76,12 +84,19 @@ export class SequelizeUtils {
                 result.exclude = ArrayUtils.uniqueValues(result.exclude, x => x);
             }
 
+            if (!result.include && !result.exclude) {
+                return undefined;
+            }
+
             return result as FindAttributeOptions;
         }
         return undefined;
     }
 
     public static mergeWhere(a: WhereOptions, b: WhereOptions): WhereOptions {
+        if (!a && !b) {
+            return null;
+        }
         return Object.assign(a ?? {}, b ?? {});
     }
 
@@ -153,9 +168,13 @@ export class SequelizeUtils {
         return `$${path}.${attribute}$`;
     }
 
+    public static getLiteralFullName(attribute: string, path: string) {
+        return `\`${path.split(".").join("->")}\`.\`${attribute}\``;
+    }
+
     public static getModelSearchableAttributes(model: typeof M): string[] {
         return Object.keys(model.rawAttributes).filter(
-            a => !["DATE", "DATEONLY"].some(t => t === (model.rawAttributes[a].type as AbstractDataTypeConstructor).key)
+            a => !["DATE", "DATEONLY", "VIRTUAL"].some(t => t === (model.rawAttributes[a].type as AbstractDataTypeConstructor).key)
         ).map(x => {
             const attr = model.rawAttributes[x];
             if (!attr) {
@@ -163,6 +182,18 @@ export class SequelizeUtils {
             }
             return attr.field ? attr.field : x;
         });
+    }
+
+    public static getModelFieldAttributes(model: typeof M, fields: string[]): string[] {
+        const attributes = model.rawAttributes;
+        return fields.map(x => {
+            const attr = attributes[x];
+            if (!attr) {
+                return x;
+            }
+
+            return attr.field ? attr.field : x;
+        })
     }
 
     public static reduceModelFromPath(model: M, path: string) {

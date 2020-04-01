@@ -1,11 +1,17 @@
-import { INCLUDE } from "../constant";
 import { IncludeConfig } from "../models/include.model";
+import { AttributesHandler } from "../handlers/attributes.handler";
 
-export function Include(options: IncludeConfig): PropertyDecorator {
+export function Include(options: IncludeConfig): PropertyDecorator;
+export function Include(path: string): PropertyDecorator;
+export function Include(optionsOrPath: IncludeConfig | string): PropertyDecorator {
     return (target: Object, propertyKey: string) => {
-        const includes: IncludeConfig[] =
-            Reflect.getMetadata(INCLUDE.replace("{{include}}", propertyKey), target) ?? [];
-        includes.push(options);
-        Reflect.defineMetadata(INCLUDE.replace("{{include}}", propertyKey), includes, target);
+        // Simplify just passing the path.
+        if (typeof optionsOrPath === "string") {
+            optionsOrPath = { path: optionsOrPath };
+        }
+
+        const attribute = AttributesHandler.getAttribute(target, propertyKey);
+        attribute.addInclude(optionsOrPath);
+        AttributesHandler.saveAttribute(target, attribute);
     };
 }

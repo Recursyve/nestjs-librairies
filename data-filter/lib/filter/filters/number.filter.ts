@@ -6,7 +6,7 @@ export class NumberFilter extends Filter {
     public type = FilterType.Number;
     public operators = [...NumberOperators];
 
-    constructor(definition: BaseFilterDefinition) {
+    constructor(definition?: BaseFilterDefinition) {
         super(definition);
     }
 }

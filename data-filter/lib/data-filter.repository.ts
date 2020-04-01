@@ -1,9 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { DefinitionModel } from "./models/definition.model";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import {
-    FindAttributeOptions,
     FindOptions,
     Identifier,
     IncludeOptions,
@@ -14,19 +12,17 @@ import {
 import { M, SequelizeUtils } from "./sequelize.utils";
 import { SearchAttributesModel } from "./models/search-attributes.model";
 import { OrderModel } from "./models/filter.model";
+import { DataFilterConfig } from "./models/data-filter.model";
+import { AttributesConfig } from "./models/attributes.model";
+import { PathModel } from "./models/path.model";
 
 @Injectable()
 export class DataFilterRepository<Data> {
-    private _model: typeof M;
-    private _definitions: DefinitionModel[];
-    private findAttributes: FindAttributeOptions;
-
-    public get definitions(): DefinitionModel[] {
-        return this._definitions;
-    }
+    private _config: DataFilterConfig;
+    private _definitions: AttributesConfig[];
 
     public get model(): typeof M {
-        return this._model;
+        return this._config.model as typeof M;
     }
 
     constructor(
@@ -37,21 +33,22 @@ export class DataFilterRepository<Data> {
         this.init();
     }
 
-    public async findByPk(identifier: Identifier, conditions?: object): Promise<Data> {
-        const options = this.generateFindOptions(conditions);
-        const result = await this._model.findByPk(identifier, options);
+    public async findByPk(identifier: Identifier, options?: FindOptions, conditions?: object): Promise<Data> {
+        const result = await this.model.findByPk(identifier, {
+            ...this.generateFindOptions(conditions),
+            ...(options ?? {})
+        });
         if (!result) {
             return result as unknown as Data;
         }
         return this.reduceObject(result);
     }
 
-    public async findOne(where?: WhereOptions, conditions?: object): Promise<Data> {
-        const options = {
+    public async findOne(options?: FindOptions, conditions?: object): Promise<Data> {
+        const result = await this.model.findOne({
             ...this.generateFindOptions(conditions),
-            where
-        } as FindOptions;
-        const result = await this._model.findOne(options);
+            ...(options ?? {})
+        });
         if (!result) {
             return result as unknown as Data;
         }
@@ -59,9 +56,9 @@ export class DataFilterRepository<Data> {
     }
 
     public async findAll(options?: FindOptions, conditions?: object): Promise<Data[]> {
-        const result = await this._model.findAll({
+        const result = await this.model.findAll({
             ...this.generateFindOptions(conditions),
-            ...options
+            ...(options ?? {})
         });
         if (!result?.length) {
             return result as unknown as Data[];
@@ -74,22 +71,30 @@ export class DataFilterRepository<Data> {
             ...this.generateFindOptions(conditions),
             where
         };
-        return this._model.count(options);
+        return this.model.count(options);
     }
 
     public generateFindOptions(conditions?: object): FindOptions {
-        const includes: IncludeOptions[][] = this._definitions.map(x => {
-            if (!x.path) {
-                return [];
-            }
-            x.path = this.dataFilterScanner.getPath(this.dataDef, x.key, conditions);
-            const additionalIncludes = this.dataFilterScanner.getInclude(this.dataDef, x.key, conditions);
-            return this.sequelizeModelScanner.getIncludes(this._model, x.path, additionalIncludes, x.attributes);
-        });
+        const includes: IncludeOptions[][] = [
+            ...this._definitions.map(x => {
+                if (!x.path) {
+                    return [];
+                }
+                const path = x.transformPathConfig(conditions);
+                const attributes = x.transformAttributesConfig(conditions);
+                const additionalIncludes = x.transformIncludesConfig(conditions);
+                return this.sequelizeModelScanner.getIncludes(this.model, path, additionalIncludes, attributes);
+            }),
+            ...this._config.getCustomAttributesIncludes().map(x => this.sequelizeModelScanner.getIncludes(this.model, {
+                path: x.path
+            }, [], x.attributes))
+        ];
 
-        if (this.findAttributes) {
+        const attributes = this._config.transformAttributesConfig(conditions);
+
+        if (attributes) {
             return {
-                attributes: this.findAttributes,
+                attributes: attributes,
                 include: SequelizeUtils.reduceIncludes(includes)
             };
         }
@@ -123,10 +128,10 @@ export class DataFilterRepository<Data> {
         if (!definition.path) {
             return [];
         }
-        definition.path = this.dataFilterScanner.getPath(this.dataDef, definition.key, {});
-        const additionalIncludes = this.dataFilterScanner.getInclude(this.dataDef, definition.key, {});
-
-        return this.sequelizeModelScanner.getIncludes(this._model, definition.path, additionalIncludes, definition.attributes);
+        const path = definition.transformPathConfig({});
+        const additionalIncludes = definition.transformIncludesConfig({});
+        const attributes = definition.transformAttributesConfig({});
+        return this.sequelizeModelScanner.getIncludes(this.model, path, additionalIncludes, attributes);
     }
 
     public reduceObject(result: any): Data {
@@ -156,9 +161,9 @@ export class DataFilterRepository<Data> {
 
     public getSearchAttributes(): SearchAttributesModel[] {
         const attributes: SearchAttributesModel[] = [];
-        const modelAttr = this.findAttributes
-            ? (this.findAttributes as string[])
-            : SequelizeUtils.getModelSearchableAttributes(this._model);
+        const modelAttr = this._config.attributes
+            ? (this._config.attributes as string[])
+            : SequelizeUtils.getModelSearchableAttributes(this.model);
         attributes.push(
             ...modelAttr.map(a => ({
                 name: a,
@@ -171,11 +176,11 @@ export class DataFilterRepository<Data> {
                 continue;
             }
 
-            const additionalIncludes = this.dataFilterScanner.getInclude(this.dataDef, definition.key, {});
+            const additionalIncludes = definition.transformIncludesConfig({});
             attributes.push(
                 ...this.sequelizeModelScanner.getAttributes(
-                    this._model,
-                    definition.path,
+                    this.model,
+                    definition.path as PathModel,
                     additionalIncludes,
                     definition.attributes
                 )
@@ -186,16 +191,7 @@ export class DataFilterRepository<Data> {
     }
 
     private init() {
-        this._model = this.dataFilterScanner.getModel(this.dataDef);
-        this.findAttributes = this.dataFilterScanner.getModelAttributes(this.dataDef);
-
-        const attributes = this.dataFilterScanner.getAttributes(this.dataDef);
-        this._definitions = attributes.map(a => {
-            return {
-                key: a.key,
-                path: this.dataFilterScanner.getPath(this.dataDef, a.key),
-                attributes: a.attributes
-            };
-        });
+        this._config = this.dataFilterScanner.getDataFilter(this.dataDef);
+        this._definitions = this.dataFilterScanner.getAttributes(this.dataDef);
     }
 }

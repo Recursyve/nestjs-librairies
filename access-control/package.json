@@ -1,0 +1,44 @@
+{
+  "name": "@recursyve/nestjs-access-control",
+  "version": "1.0.3",
+  "description": "NestJs AccessControl library",
+  "main": "index.js",
+  "scripts": {
+    "watch": "gulp",
+    "build": "gulp build",
+    "build:lib": "gulp build-lib",
+    "lint": "gulp lint",
+    "publish-package": "npm run build:lib && npm publish dist --access public",
+    "publish-package:beta": "npm run publish-package -- --tag beta --access public",
+    "publish-package:dry-run": "npm run publish-package -- --dry-run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Recursyve/nestjs-librairies/access-control"
+  },
+  "author": "Recursyve",
+  "license": "MIT",
+  "peerDependencies": {
+    "@nestjs/common": "^6.0.0",
+    "@nestjs/core": "^6.0.0",
+    "@nestjs/cqrs": "^6.1.0",
+    "@recursyve/nestjs-redis": "^1.0.2",
+    "sequelize": "^5.18.4",
+    "sequelize-typescript": "^1.0.0"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^6.11.6",
+    "@nestjs/core": "^6.11.6",
+    "@nestjs/cqrs": "^6.1.0",
+    "@recursyve/nestjs-redis": "^1.0.2",
+    "gulp": "^4.0.2",
+    "gulp-copy": "^4.0.1",
+    "gulp-sourcemaps": "^2.6.5",
+    "gulp-typescript": "^5.0.1",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^6.5.2",
+    "sequelize": "^5.18.4",
+    "sequelize-typescript": "^1.0.0",
+    "typescript": "^3.7.5"
+  }
+}
