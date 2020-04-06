@@ -66,6 +66,8 @@ export class DataFilterProvider {
 
 export * from "./data-filter.service";
 export * from "./data-filter.repository";
+export * from "./adapters";
 export * from "./decorators";
+export * from "./deserializers";
 export * from "./filter";
 export * from "./models/filter.model";
