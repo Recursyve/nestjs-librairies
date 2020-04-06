@@ -1,15 +1,15 @@
 import { Provider, Type } from "@nestjs/common";
-import { ModuleRef } from "@nestjs/core";
+import { AccessControlAdapter } from "../adapters";
+import { DataFilterService } from "../data-filter.service";
+import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";
 import { BaseFilter } from "./base-filter";
 import { FilterServiceFactory } from "./filter.factory";
-import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";
-import { DataFilterService } from "../data-filter.service";
 import { FilterUtils } from "./filter.utils";
 
 export function createFilterProvider(filter: Type<BaseFilter<any>>): Provider {
     return {
         provide: FilterUtils.getProviderToken(filter),
         useFactory: FilterServiceFactory,
-        inject: [ModuleRef, filter, SequelizeModelScanner, DataFilterService]
+        inject: [AccessControlAdapter, filter, SequelizeModelScanner, DataFilterService]
     };
 }

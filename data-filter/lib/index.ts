@@ -39,6 +39,10 @@ export class DataFilterModule {
             providers: [
                 option.deserializer,
                 option.accessControlAdapter
+            ],
+            exports: [
+                UserDeserializer,
+                AccessControlAdapter
             ]
         };
     }
