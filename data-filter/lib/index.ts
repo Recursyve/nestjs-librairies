@@ -1,19 +1,48 @@
 import { DynamicModule, Global, Module, Provider, Type } from "@nestjs/common";
-import { AccessControlModule } from "@recursyve/nestjs-access-control";
+import { AccessControlAdapter } from "./adapters/access-control.adapter";
+import { DefaultAccessControlAdapter } from "./adapters/default-access-control.adapter";
 import { DataFilterService } from "./data-filter.service";
+import { DefaultDeserializer, UserDeserializer } from "./deserializers";
 import { BaseFilter } from "./filter/base-filter";
 import { FilterFactory } from "./filter/filter.factory";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { createFilterProvider } from "./filter/filter.provider";
 
+export interface DataFilterConfig {
+    imports?: Type<any>[];
+    deserializer?: Provider;
+    accessControlAdapter?: Provider;
+}
+
 @Global()
 @Module({
-    imports: [AccessControlModule],
     providers: [DataFilterScanner, SequelizeModelScanner, DataFilterService],
     exports: [DataFilterScanner, SequelizeModelScanner, DataFilterService]
 })
 export class DataFilterModule {
+    public static forRoot(option?: DataFilterConfig): DynamicModule {
+        option = {
+            imports: option?.imports ?? [],
+            deserializer: option?.deserializer ?? {
+                provide: UserDeserializer,
+                useClass: DefaultDeserializer
+            },
+            accessControlAdapter: option?.accessControlAdapter ?? {
+                provide: AccessControlAdapter,
+                useClass: DefaultAccessControlAdapter
+            }
+        };
+        return {
+            module: DataFilterModule,
+            imports: [...option.imports],
+            providers: [
+                option.deserializer,
+                option.accessControlAdapter
+            ]
+        };
+    }
+
     public static forFeature(filters: Type<BaseFilter<any>>[]): DynamicModule {
         return {
             module: DataFilterModule,

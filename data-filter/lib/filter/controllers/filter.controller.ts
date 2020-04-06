@@ -1,15 +1,15 @@
 import { Body, Get, HttpCode, HttpStatus, Inject, Optional, Post, Query, Req } from "@nestjs/common";
 import { FilterQueryModel, FilterResultModel, SelectFilterValue } from "../..";
+import { UserDeserializer } from "../../deserializers";
 import { FilterService } from "../filter.service";
 import { FilterConfigurationSearchModel } from "../models/filter-configuration-search.model";
 import { FilterConfigurationModel } from "../models/filter-configuration.model";
 import { FilterResourceValueModel } from "../models/filter-resource-value.model";
-import { UserDeserializer, Users } from "@recursyve/nestjs-access-control";
 
-export class FilterController<Data> {
+export class FilterController<Data, Users = any> {
     @Inject()
     @Optional()
-    private readonly userUserDeserializer: UserDeserializer;
+    private readonly userUserDeserializer: UserDeserializer<Users>;
 
     constructor(private readonly filterService: FilterService<Data>) {}
 

@@ -2,7 +2,6 @@ import { FilterType } from "../type";
 import { SelectOperators } from "../operators";
 import { BaseFilterDefinition, Filter } from "./filter";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
-import { Users } from "@recursyve/nestjs-access-control";
 
 export interface SelectFilterValue {
     id: number | string;
@@ -18,8 +17,8 @@ export interface SelectFilterDefinition<T> {
 export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T> {
     public type = FilterType.Select;
     public operators = [...SelectOperators];
-    public values: (value: unknown, user?: Users) => Promise<SelectFilterValue[]>;
-    public getResourceById: (id: number, user?: Users) => Promise<SelectFilterValue>;
+    public values: (value: unknown, user?: any) => Promise<SelectFilterValue[]>;
+    public getResourceById: (id: number, user?: any) => Promise<SelectFilterValue>;
     public lazyLoading;
 
     constructor(definition: BaseFilterDefinition & SelectFilterDefinition<T>) {
@@ -30,7 +29,7 @@ export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T>
         }
     }
 
-    public async getConfig(key: string, user?: Users): Promise<FilterBaseConfigurationModel> {
+    public async getConfig<Users>(key: string, user?: Users): Promise<FilterBaseConfigurationModel> {
         const config = await super.getConfig(key, user);
         return {
             ...config,

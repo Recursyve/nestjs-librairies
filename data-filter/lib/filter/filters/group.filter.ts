@@ -1,9 +1,8 @@
-import { Users } from "@recursyve/nestjs-access-control";
-import { FindAttributeOptions, Op, WhereOptions } from "sequelize";
-import { FilterType } from "../type";
+import { Op, WhereOptions } from "sequelize";
 import { GroupFilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { QueryRuleModel } from "../models/query.model";
 import { RuleModel } from "../models/rule.model";
+import { FilterType } from "../type";
 import { BaseFilterDefinition, Filter, FilterDefinition } from "./filter";
 
 export interface BaseGroupFilterDefinition {
@@ -15,7 +14,7 @@ export interface BaseGroupFilterDefinition {
 }
 
 export interface GroupFilterDefinition extends BaseGroupFilterDefinition {
-    getConfig(key: string, user?: Users): Promise<GroupFilterBaseConfigurationModel>;
+    getConfig<Users>(key: string, user?: Users): Promise<GroupFilterBaseConfigurationModel>;
     getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions>;
     getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions>;
 }
@@ -28,15 +27,15 @@ export class GroupFilter implements GroupFilterDefinition {
     public lazyLoading?: boolean;
     public getValueFilter?: (rule: QueryRuleModel) => Promise<FilterDefinition>;
 
-    public static validate(definition: BaseGroupFilterDefinition) {
-        return typeof definition === "object" && definition.rootFilter;
-    }
-
     constructor(definition: BaseGroupFilterDefinition) {
         Object.assign(this, definition);
     }
 
-    public async getConfig(key: string, user?: Users): Promise<GroupFilterBaseConfigurationModel> {
+    public static validate(definition: BaseGroupFilterDefinition) {
+        return typeof definition === "object" && definition.rootFilter;
+    }
+
+    public async getConfig<Users>(key: string, user?: Users): Promise<GroupFilterBaseConfigurationModel> {
         const config = {
             type: this.type,
             rootFilter: await this.rootFilter.getConfig(key, user),
@@ -77,8 +76,8 @@ export class GroupFilter implements GroupFilterDefinition {
         }
 
         const valueFilter = this.valueFilter ?? await this.getValueFilter(root as QueryRuleModel);
-        const rootHaving =  await this.rootFilter.getHavingOptions(rule);
-        const valueHaving =  await valueFilter.getHavingOptions(rule);
+        const rootHaving = await this.rootFilter.getHavingOptions(rule);
+        const valueHaving = await valueFilter.getHavingOptions(rule);
         if (!rootHaving && !valueHaving) {
             return null;
         }

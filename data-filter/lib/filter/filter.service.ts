@@ -1,5 +1,5 @@
-import { Injectable, Optional, Type } from "@nestjs/common";
-import { AccessControlService, Users } from "@recursyve/nestjs-access-control";
+import { Injectable, Type } from "@nestjs/common";
+import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { BaseFilter } from "./base-filter";
 import { QueryModel, QueryRuleModel } from "./models";
 import { FilterConfigurationModel } from "./models/filter-configuration.model";
@@ -36,7 +36,7 @@ export class FilterService<Data> {
     private repository: DataFilterRepository<Data>;
 
     constructor(
-        @Optional() private accessControlService: AccessControlService,
+        private accessControlAdapter: AccessControlAdapter,
         private model: BaseFilter<Data>,
         private sequelizeModelScanner: SequelizeModelScanner,
         private dataFilter: DataFilterService
@@ -46,7 +46,7 @@ export class FilterService<Data> {
 
     public forData<T>(dataDef: Type<T>): FilterService<T> {
         return new FilterService(
-            this.accessControlService,
+            this.accessControlAdapter,
             {
                 ...this.model,
                 dataDefinition: dataDef
@@ -56,7 +56,7 @@ export class FilterService<Data> {
         );
     }
 
-    public async getConfig(user?: Users): Promise<FilterConfigurationModel[]> {
+    public async getConfig<Users>(user?: Users): Promise<FilterConfigurationModel[]> {
         const result: FilterConfigurationModel[] = [];
         for (const key in this.filters) {
             if (!this.filters.hasOwnProperty(key)) {
@@ -74,7 +74,7 @@ export class FilterService<Data> {
         return result;
     }
 
-    public async searchConfigValues(
+    public async searchConfigValues<Users>(
         search: FilterConfigurationSearchModel,
         user?: Users
     ): Promise<SelectFilterValue[]> {
@@ -90,7 +90,7 @@ export class FilterService<Data> {
         return [];
     }
 
-    public async findResourceValueById(search: FilterResourceValueModel, user?: Users): Promise<SelectFilterValue> {
+    public async findResourceValueById<Users>(search: FilterResourceValueModel, user?: Users): Promise<SelectFilterValue> {
         if (!this.filters.hasOwnProperty(search.id)) {
             return;
         }
@@ -103,9 +103,9 @@ export class FilterService<Data> {
         return;
     }
 
-    public async count(user: Users, options: FilterQueryModel): Promise<number>;
-    public async count(options: FilterQueryModel): Promise<number>;
-    public async count(...args: [Users | FilterQueryModel, FilterQueryModel?]): Promise<number> {
+    public async count<Users>(user: Users, options: FilterQueryModel): Promise<number>;
+    public async count<Users>(options: FilterQueryModel): Promise<number>;
+    public async count<Users>(...args: [Users | FilterQueryModel, FilterQueryModel?]): Promise<number> {
         const [userOrOpt, opt] = args;
         const options = opt ? opt : userOrOpt as FilterQueryModel;
         const user = opt ? userOrOpt as Users : null;
@@ -115,9 +115,9 @@ export class FilterService<Data> {
         return user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions);
     }
 
-    public async filter(user: Users, options: FilterQueryModel): Promise<FilterResultModel<Data>>;
-    public async filter(options: FilterQueryModel): Promise<FilterResultModel<Data>>;
-    public async filter(...args: [Users | FilterQueryModel, FilterQueryModel?]): Promise<FilterResultModel<Data>> {
+    public async filter<Users>(user: Users, options: FilterQueryModel): Promise<FilterResultModel<Data>>;
+    public async filter<Users>(options: FilterQueryModel): Promise<FilterResultModel<Data>>;
+    public async filter<Users>(...args: [Users | FilterQueryModel, FilterQueryModel?]): Promise<FilterResultModel<Data>> {
         const [userOrOpt, opt] = args;
         const options = opt ? opt : userOrOpt as FilterQueryModel;
         const user = opt ? userOrOpt as Users : null;
@@ -358,9 +358,9 @@ export class FilterService<Data> {
         );
     }
 
-    private async countTotalValues(user: Users, options: FindOptions): Promise<number>;
-    private async countTotalValues(options: FindOptions): Promise<number>;
-    private async countTotalValues(...args: [Users | FindOptions, FindOptions?]): Promise<number> {
+    private async countTotalValues<Users>(user: Users, options: FindOptions): Promise<number>;
+    private async countTotalValues<Users>(options: FindOptions): Promise<number>;
+    private async countTotalValues<Users>(...args: [Users | FindOptions, FindOptions?]): Promise<number> {
         const [userOrOpt, opt] = args;
         const options = opt ? opt : userOrOpt as FindOptions;
 
@@ -389,9 +389,9 @@ export class FilterService<Data> {
         }
     }
 
-    private async findValues(user: Users, filter: FilterQueryModel, options: FindOptions): Promise<Data[]>;
-    private async findValues(filter: FilterQueryModel, options: FindOptions): Promise<Data[]>;
-    private async findValues(...args: [Users | FilterQueryModel, FilterQueryModel | FindOptions, FindOptions?]): Promise<Data[]> {
+    private async findValues<Users>(user: Users, filter: FilterQueryModel, options: FindOptions): Promise<Data[]>;
+    private async findValues<Users>(filter: FilterQueryModel, options: FindOptions): Promise<Data[]>;
+    private async findValues<Users>(...args: [Users | FilterQueryModel, FilterQueryModel | FindOptions, FindOptions?]): Promise<Data[]> {
         const [userOrOFilter, filterOrOpt, opt] = args;
         const options = opt ? opt : filterOrOpt as FindOptions;
         const filter = opt ? filterOrOpt as FilterQueryModel : userOrOFilter as FilterQueryModel;
@@ -419,14 +419,14 @@ export class FilterService<Data> {
         }, {});
     }
 
-    private async getAccessControlWhereCondition(where: WhereOptions, user: Users): Promise<WhereOptions> {
+    private async getAccessControlWhereCondition<Users>(where: WhereOptions, user: Users): Promise<WhereOptions> {
         if (!user) {
             throw new Error("No user found");
-        } else if (!this.accessControlService) {
+        } else if (!this.accessControlAdapter) {
             throw new Error("AccessControl isn't enable in your project");
         }
 
-        const ids = await this.accessControlService.forModel(this.repository.model).getResourceIds(user);
+        const ids = await this.accessControlAdapter.getResourceIds(this.repository.model, user);
         return SequelizeUtils.mergeWhere({ id: ids }, where ?? {});
     }
 

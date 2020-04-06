@@ -4,7 +4,6 @@ import { FilterOperatorTypes } from "../operators";
 import { QueryRuleModel } from "../models";
 import { WhereOptions } from "sequelize";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
-import { Users } from "@recursyve/nestjs-access-control";
 
 export interface RadioFilterOption {
     key: string;
@@ -34,7 +33,7 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
         super(definition);
     }
 
-    public async getConfig(key: string, user?: Users): Promise<RadioFilterConfigurationModel> {
+    public async getConfig<Users>(key: string, user?: Users): Promise<RadioFilterConfigurationModel> {
         return {
             ...(await super.getConfig(key, user)),
             options: this.options.map(x => ({
