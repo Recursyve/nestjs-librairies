@@ -1,4 +1,7 @@
 import { Op, WhereOptions } from "sequelize";
+import { DataFilterUserModel } from "../..";
+import { TranslateAdapter } from "../../adapters/translate.adapter";
+import { FilterUtils } from "../filter.utils";
 import { GroupFilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { QueryRuleModel } from "../models/query.model";
 import { RuleModel } from "../models/rule.model";
@@ -14,12 +17,23 @@ export interface BaseGroupFilterDefinition {
 }
 
 export interface GroupFilterDefinition extends BaseGroupFilterDefinition {
-    getConfig<Users>(key: string, user?: Users): Promise<GroupFilterBaseConfigurationModel>;
+    getConfig(key: string, user?: DataFilterUserModel): Promise<GroupFilterBaseConfigurationModel>;
     getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions>;
     getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions>;
 }
 
 export class GroupFilter implements GroupFilterDefinition {
+    protected _translateService: TranslateAdapter;
+
+    public set translateService(translateService: TranslateAdapter) {
+        this._translateService = translateService;
+
+        this.rootFilter.translateService = translateService;
+        if (this.valueFilter) {
+            this.valueFilter.translateService = translateService;
+        }
+    }
+
     public type = FilterType.Group;
     public group: string;
     public rootFilter: Filter;
@@ -35,7 +49,7 @@ export class GroupFilter implements GroupFilterDefinition {
         return typeof definition === "object" && definition.rootFilter;
     }
 
-    public async getConfig<Users>(key: string, user?: Users): Promise<GroupFilterBaseConfigurationModel> {
+    public async getConfig(key: string, user?: DataFilterUserModel): Promise<GroupFilterBaseConfigurationModel> {
         const config = {
             type: this.type,
             rootFilter: await this.rootFilter.getConfig(key, user),
@@ -48,7 +62,10 @@ export class GroupFilter implements GroupFilterDefinition {
         if (this.group) {
             config.group = {
                 key: this.group,
-                name: this.group
+                name: this._translateService.getTranslation(
+                    user?.language,
+                    FilterUtils.getGroupTranslationKey(this.group)
+                )
             };
         }
         return config;

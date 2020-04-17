@@ -1,6 +1,8 @@
 import { DynamicModule, Global, Module, Provider, Type } from "@nestjs/common";
 import { AccessControlAdapter } from "./adapters/access-control.adapter";
 import { DefaultAccessControlAdapter } from "./adapters/default-access-control.adapter";
+import { DefaultTranslateAdapter } from "./adapters/default-translate.adapter";
+import { TranslateAdapter } from "./adapters/translate.adapter";
 import { DataFilterService } from "./data-filter.service";
 import { DefaultDeserializer, UserDeserializer } from "./deserializers";
 import { BaseFilter } from "./filter/base-filter";
@@ -13,6 +15,7 @@ export interface DataFilterConfig {
     imports?: Type<any>[];
     deserializer?: Provider;
     accessControlAdapter?: Provider;
+    translateAdapter?: Provider;
 }
 
 @Global()
@@ -31,6 +34,10 @@ export class DataFilterModule {
             accessControlAdapter: option?.accessControlAdapter ?? {
                 provide: AccessControlAdapter,
                 useClass: DefaultAccessControlAdapter
+            },
+            translateAdapter: option?.translateAdapter ?? {
+                provide: TranslateAdapter,
+                useClass: DefaultTranslateAdapter
             }
         };
         return {
@@ -75,3 +82,4 @@ export * from "./decorators";
 export * from "./deserializers";
 export * from "./filter";
 export * from "./models/filter.model";
+export * from "./models/user.model";

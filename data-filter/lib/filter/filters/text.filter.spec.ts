@@ -1,3 +1,5 @@
+import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
+import { FilterUtils } from "../filter.utils";
 import { TextFilter } from "./text.filter";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { FilterType } from "../type";
@@ -9,6 +11,7 @@ describe("TextFilter", () => {
             const filter = new TextFilter({
                 attribute: "test"
             });
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
@@ -16,31 +19,31 @@ describe("TextFilter", () => {
                 operators: [
                     {
                         id: "equal",
-                        name: "equal"
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
                         id: "not_equal",
-                        name: "not_equal"
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     },
                     {
                         id: "contains",
-                        name: "contains"
+                        name: FilterUtils.getOperatorTranslationKey("contains")
                     },
                     {
                         id: "begins_with",
-                        name: "begins_with"
+                        name: FilterUtils.getOperatorTranslationKey("begins_with")
                     },
                     {
                         id: "not_begins_with",
-                        name: "not_begins_with"
+                        name: FilterUtils.getOperatorTranslationKey("not_begins_with")
                     },
                     {
                         id: "ends_with",
-                        name: "ends_with"
+                        name: FilterUtils.getOperatorTranslationKey("ends_with")
                     },
                     {
                         id: "not_ends_with",
-                        name: "not_ends_with"
+                        name: FilterUtils.getOperatorTranslationKey("not_ends_with")
                     }
                 ]
             });
@@ -51,6 +54,7 @@ describe("TextFilter", () => {
                 attribute: "test",
                 group: "test"
             });
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
@@ -58,35 +62,35 @@ describe("TextFilter", () => {
                 operators: [
                     {
                         id: "equal",
-                        name: "equal"
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
                         id: "not_equal",
-                        name: "not_equal"
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     },
                     {
                         id: "contains",
-                        name: "contains"
+                        name: FilterUtils.getOperatorTranslationKey("contains")
                     },
                     {
                         id: "begins_with",
-                        name: "begins_with"
+                        name: FilterUtils.getOperatorTranslationKey("begins_with")
                     },
                     {
                         id: "not_begins_with",
-                        name: "not_begins_with"
+                        name: FilterUtils.getOperatorTranslationKey("not_begins_with")
                     },
                     {
                         id: "ends_with",
-                        name: "ends_with"
+                        name: FilterUtils.getOperatorTranslationKey("ends_with")
                     },
                     {
                         id: "not_ends_with",
-                        name: "not_ends_with"
+                        name: FilterUtils.getOperatorTranslationKey("not_ends_with")
                     }
                 ],
                 group: {
-                    name: "test",
+                    name: FilterUtils.getGroupTranslationKey("test"),
                     key: "test"
                 }
             });
@@ -98,42 +102,43 @@ describe("TextFilter", () => {
             }).addOperators({
                 name: "none"
             });
-            const config = await filter.getConfig(null, null);
+            filter.translateService = new DefaultTranslateAdapter();
+            const config = await filter.getConfig("test", null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
                 type: FilterType.Text,
                 operators: [
                     {
                         id: "equal",
-                        name: "equal"
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
                         id: "not_equal",
-                        name: "not_equal"
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     },
                     {
                         id: "contains",
-                        name: "contains"
+                        name: FilterUtils.getOperatorTranslationKey("contains")
                     },
                     {
                         id: "begins_with",
-                        name: "begins_with"
+                        name: FilterUtils.getOperatorTranslationKey("begins_with")
                     },
                     {
                         id: "not_begins_with",
-                        name: "not_begins_with"
+                        name: FilterUtils.getOperatorTranslationKey("not_begins_with")
                     },
                     {
                         id: "ends_with",
-                        name: "ends_with"
+                        name: FilterUtils.getOperatorTranslationKey("ends_with")
                     },
                     {
                         id: "not_ends_with",
-                        name: "not_ends_with"
+                        name: FilterUtils.getOperatorTranslationKey("not_ends_with")
                     },
                     {
                         id: "none",
-                        name: "none"
+                        name: FilterUtils.getCustomOperatorTranslationKey("test", "none")
                     }
                 ]
             });
@@ -143,6 +148,7 @@ describe("TextFilter", () => {
             const filter = new TextFilter({
                 attribute: "test"
             }).setOperators(FilterOperatorTypes.Equal, FilterOperatorTypes.NotEqual);
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
@@ -150,11 +156,11 @@ describe("TextFilter", () => {
                 operators: [
                     {
                         id: "equal",
-                        name: "equal"
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
                         id: "not_equal",
-                        name: "not_equal"
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     }
                 ]
             });

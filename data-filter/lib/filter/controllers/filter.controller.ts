@@ -1,15 +1,16 @@
 import { Body, Get, HttpCode, HttpStatus, Inject, Optional, Post, Query, Req } from "@nestjs/common";
 import { FilterQueryModel, FilterResultModel, SelectFilterValue } from "../..";
 import { UserDeserializer } from "../../deserializers";
+import { DataFilterUserModel } from "../../models/user.model";
 import { FilterService } from "../filter.service";
 import { FilterConfigurationSearchModel } from "../models/filter-configuration-search.model";
 import { FilterConfigurationModel } from "../models/filter-configuration.model";
 import { FilterResourceValueModel } from "../models/filter-resource-value.model";
 
-export class FilterController<Data, Users = any> {
+export class FilterController<Data> {
     @Inject()
     @Optional()
-    private readonly userUserDeserializer: UserDeserializer<Users>;
+    private readonly userUserDeserializer: UserDeserializer<DataFilterUserModel>;
 
     constructor(private readonly filterService: FilterService<Data>) {}
 
@@ -48,7 +49,7 @@ export class FilterController<Data, Users = any> {
         return await this.filterService.searchConfigValues(search, await this.getUser(req));
     }
 
-    private async getUser(req: any): Promise<Users> {
+    private async getUser(req: any): Promise<DataFilterUserModel> {
         if (!this.userUserDeserializer) {
             return null;
         }

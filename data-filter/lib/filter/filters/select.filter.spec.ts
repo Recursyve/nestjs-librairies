@@ -1,8 +1,9 @@
+import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
+import { FilterUtils } from "../filter.utils";
 import { SelectFilter } from "./select.filter";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { FilterType } from "../type";
 import { FilterOperatorTypes } from "../operators";
-
 
 describe("SelectFilter", () => {
     describe("getConfig", () => {
@@ -11,6 +12,7 @@ describe("SelectFilter", () => {
                 attribute: "test",
                 values: () => Promise.resolve([{ id: "test", name: "test" }])
             });
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
@@ -18,11 +20,11 @@ describe("SelectFilter", () => {
                 operators: [
                     {
                         id: "equal",
-                        name: "equal"
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
                         id: "not_equal",
-                        name: "not_equal"
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     }
                 ],
                 values: [],
@@ -36,6 +38,7 @@ describe("SelectFilter", () => {
                 group: "test",
                 values: () => Promise.resolve([{ id: "test", name: "test" }])
             });
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
@@ -43,15 +46,15 @@ describe("SelectFilter", () => {
                 operators: [
                     {
                         id: "equal",
-                        name: "equal"
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
                         id: "not_equal",
-                        name: "not_equal"
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     }
                 ],
                 group: {
-                    name: "test",
+                    name: FilterUtils.getGroupTranslationKey("test"),
                     key: "test"
                 },
                 values: [],
@@ -66,22 +69,23 @@ describe("SelectFilter", () => {
             }).addOperators({
                 name: "none"
             });
-            const config = await filter.getConfig(null, null);
+            filter.translateService = new DefaultTranslateAdapter();
+            const config = await filter.getConfig("test", null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
                 type: FilterType.Select,
                 operators: [
                     {
                         id: "equal",
-                        name: "equal"
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
                         id: "not_equal",
-                        name: "not_equal"
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     },
                     {
                         id: "none",
-                        name: "none"
+                        name: FilterUtils.getCustomOperatorTranslationKey("test", "none")
                     }
                 ],
                 values: [],
@@ -94,6 +98,7 @@ describe("SelectFilter", () => {
                 attribute: "test",
                 values: () => Promise.resolve([{ id: "test", name: "test" }])
             }).setOperators(FilterOperatorTypes.Equal);
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
@@ -101,7 +106,7 @@ describe("SelectFilter", () => {
                 operators: [
                     {
                         id: "equal",
-                        name: "equal"
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     }
                 ],
                 values: [],
@@ -115,6 +120,7 @@ describe("SelectFilter", () => {
                 values: () => Promise.resolve([{ id: "test", name: "test" }]),
                 lazyLoading: false
             });
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
@@ -122,11 +128,11 @@ describe("SelectFilter", () => {
                 operators: [
                     {
                         id: "equal",
-                        name: "equal"
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
                         id: "not_equal",
-                        name: "not_equal"
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     }
                 ],
                 values: [{ id: "test", name: "test" }],

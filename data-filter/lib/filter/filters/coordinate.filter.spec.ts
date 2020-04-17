@@ -1,3 +1,5 @@
+import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
+import { FilterUtils } from "../filter.utils";
 import { CoordinateFilter } from "./coordinate.filter";
 import { FilterOperatorTypes } from "../operators";
 import { Op, WhereOptions } from "sequelize";
@@ -10,18 +12,19 @@ describe("CoordinateFilter", () => {
             const filter = new CoordinateFilter({
                 attribute: "test"
             });
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
                 type: FilterType.Coordinate,
                 operators: [
                     {
-                        "id": "equal",
-                        "name": "equal"
+                        id: "equal",
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
-                        "id": "not_equal",
-                        "name": "not_equal"
+                        id: "not_equal",
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     }
                 ]
             });
@@ -32,22 +35,23 @@ describe("CoordinateFilter", () => {
                 attribute: "test",
                 group: "test"
             });
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
                 type: FilterType.Coordinate,
                 operators: [
                     {
-                        "id": "equal",
-                        "name": "equal"
+                        id: "equal",
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
-                        "id": "not_equal",
-                        "name": "not_equal"
+                        id: "not_equal",
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     }
                 ],
                 group: {
-                    name: "test",
+                    name: FilterUtils.getGroupTranslationKey("test"),
                     key: "test"
                 }
             });
@@ -59,22 +63,23 @@ describe("CoordinateFilter", () => {
             }).addOperators({
                 name: "none"
             });
-            const config = await filter.getConfig(null, null);
+            filter.translateService = new DefaultTranslateAdapter();
+            const config = await filter.getConfig("test", null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
                 type: FilterType.Coordinate,
                 operators: [
                     {
-                        "id": "equal",
-                        "name": "equal"
+                        id: "equal",
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
-                        "id": "not_equal",
-                        "name": "not_equal"
+                        id: "not_equal",
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     },
                     {
                         id: "none",
-                        name: "none"
+                        name: FilterUtils.getCustomOperatorTranslationKey("test", "none")
                     }
                 ]
             });
@@ -84,6 +89,7 @@ describe("CoordinateFilter", () => {
             const filter = new CoordinateFilter({
                 attribute: "test"
             }).setOperators(FilterOperatorTypes.Equal);
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
@@ -91,7 +97,7 @@ describe("CoordinateFilter", () => {
                 operators: [
                     {
                         id: "equal",
-                        name: "equal"
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     }
                 ]
             });

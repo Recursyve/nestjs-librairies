@@ -1,3 +1,6 @@
+import { DefaultAccessControlAdapter } from "../../adapters";
+import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
+import { FilterUtils } from "../filter.utils";
 import { GeoLocalizationFilter } from "./geo-localization.filter";
 import { CoordinateFilter } from "./coordinate.filter";
 import { FilterOperatorTypes } from "../operators";
@@ -21,6 +24,7 @@ describe("GeoLocalizationFilter", () => {
                     attribute: "test"
                 })
             });
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<GroupFilterBaseConfigurationModel>({
@@ -29,12 +33,12 @@ describe("GeoLocalizationFilter", () => {
                     type: FilterType.Coordinate,
                     operators: [
                         {
-                            "id": "equal",
-                            "name": "equal"
+                            id: "equal",
+                            name: FilterUtils.getOperatorTranslationKey("equal")
                         },
                         {
-                            "id": "not_equal",
-                            "name": "not_equal"
+                            id: "not_equal",
+                            name: FilterUtils.getOperatorTranslationKey("not_equal")
                         }
                     ]
                 },
@@ -42,28 +46,28 @@ describe("GeoLocalizationFilter", () => {
                     type: FilterType.Number,
                     operators: [
                         {
-                            "id": "equal",
-                            "name": "equal"
+                            id: "equal",
+                            name: FilterUtils.getOperatorTranslationKey("equal")
                         },
                         {
-                            "id": "not_equal",
-                            "name": "not_equal"
+                            id: "not_equal",
+                            name: FilterUtils.getOperatorTranslationKey("not_equal")
                         },
                         {
-                            "id": "greater",
-                            "name": "greater"
+                            id: "greater",
+                            name: FilterUtils.getOperatorTranslationKey("greater")
                         },
                         {
-                            "id": "greater_or_equal",
-                            "name": "greater_or_equal"
+                            id: "greater_or_equal",
+                            name: FilterUtils.getOperatorTranslationKey("greater_or_equal")
                         },
                         {
-                            "id": "less",
-                            "name": "less"
+                            id: "less",
+                            name: FilterUtils.getOperatorTranslationKey("less")
                         },
                         {
-                            "id": "less_or_equal",
-                            "name": "less_or_equal"
+                            id: "less_or_equal",
+                            name: FilterUtils.getOperatorTranslationKey("less_or_equal")
                         }
                     ]
                 },
@@ -78,6 +82,7 @@ describe("GeoLocalizationFilter", () => {
                 }),
                 group: "test"
             });
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<GroupFilterBaseConfigurationModel>({
@@ -86,12 +91,12 @@ describe("GeoLocalizationFilter", () => {
                     type: FilterType.Coordinate,
                     operators: [
                         {
-                            "id": "equal",
-                            "name": "equal"
+                            id: "equal",
+                            name: FilterUtils.getOperatorTranslationKey("equal")
                         },
                         {
-                            "id": "not_equal",
-                            "name": "not_equal"
+                            id: "not_equal",
+                            name: FilterUtils.getOperatorTranslationKey("not_equal")
                         }
                     ]
                 },
@@ -99,34 +104,34 @@ describe("GeoLocalizationFilter", () => {
                     type: FilterType.Number,
                     operators: [
                         {
-                            "id": "equal",
-                            "name": "equal"
+                            id: "equal",
+                            name: FilterUtils.getOperatorTranslationKey("equal")
                         },
                         {
-                            "id": "not_equal",
-                            "name": "not_equal"
+                            id: "not_equal",
+                            name: FilterUtils.getOperatorTranslationKey("not_equal")
                         },
                         {
-                            "id": "greater",
-                            "name": "greater"
+                            id: "greater",
+                            name: FilterUtils.getOperatorTranslationKey("greater")
                         },
                         {
-                            "id": "greater_or_equal",
-                            "name": "greater_or_equal"
+                            id: "greater_or_equal",
+                            name: FilterUtils.getOperatorTranslationKey("greater_or_equal")
                         },
                         {
-                            "id": "less",
-                            "name": "less"
+                            id: "less",
+                            name: FilterUtils.getOperatorTranslationKey("less")
                         },
                         {
-                            "id": "less_or_equal",
-                            "name": "less_or_equal"
+                            id: "less_or_equal",
+                            name: FilterUtils.getOperatorTranslationKey("less_or_equal")
                         }
                     ]
                 },
                 lazyLoading: false,
                 group: {
-                    name: "test",
+                    name: FilterUtils.getGroupTranslationKey("test"),
                     key: "test"
                 }
             });
@@ -186,7 +191,8 @@ describe("GeoLocalizationTestFilter", () => {
 
     beforeAll(() => {
         filter = new FilterService(
-            null,
+            new DefaultAccessControlAdapter(),
+            new DefaultTranslateAdapter(),
             new GeoLocalizationTestFilter(),
             new SequelizeModelScanner(),
             new DataFilterService(

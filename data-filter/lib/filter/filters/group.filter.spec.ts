@@ -1,3 +1,5 @@
+import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
+import { FilterUtils } from "../filter.utils";
 import { FilterOperatorTypes } from "../operators";
 import { Op, WhereOptions } from "sequelize";
 import { GroupFilter } from "./group.filter";
@@ -20,6 +22,7 @@ describe("GroupFilter", () => {
                     attribute: "value"
                 })
             });
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<GroupFilterBaseConfigurationModel>({
@@ -29,11 +32,11 @@ describe("GroupFilter", () => {
                     operators: [
                         {
                             id: "equal",
-                            name: "equal"
+                            name: FilterUtils.getOperatorTranslationKey("equal")
                         },
                         {
                             id: "not_equal",
-                            name: "not_equal"
+                            name: FilterUtils.getOperatorTranslationKey("not_equal")
                         }
                     ],
                     values: [{ id: "test", name: "test" }],
@@ -43,28 +46,28 @@ describe("GroupFilter", () => {
                     type: FilterType.Number,
                     operators: [
                         {
-                            "id": "equal",
-                            "name": "equal"
+                            id: "equal",
+                            name: FilterUtils.getOperatorTranslationKey("equal")
                         },
                         {
-                            "id": "not_equal",
-                            "name": "not_equal"
+                            id: "not_equal",
+                            name: FilterUtils.getOperatorTranslationKey("not_equal")
                         },
                         {
-                            "id": "greater",
-                            "name": "greater"
+                            id: "greater",
+                            name: FilterUtils.getOperatorTranslationKey("greater")
                         },
                         {
-                            "id": "greater_or_equal",
-                            "name": "greater_or_equal"
+                            id: "greater_or_equal",
+                            name: FilterUtils.getOperatorTranslationKey("greater_or_equal")
                         },
                         {
-                            "id": "less",
-                            "name": "less"
+                            id: "less",
+                            name: FilterUtils.getOperatorTranslationKey("less")
                         },
                         {
-                            "id": "less_or_equal",
-                            "name": "less_or_equal"
+                            id: "less_or_equal",
+                            name: FilterUtils.getOperatorTranslationKey( "less_or_equal")
                         }
                     ]
                 },
@@ -84,6 +87,7 @@ describe("GroupFilter", () => {
                 }),
                 group: "test"
             });
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<GroupFilterBaseConfigurationModel>({
@@ -93,11 +97,11 @@ describe("GroupFilter", () => {
                     operators: [
                         {
                             id: "equal",
-                            name: "equal"
+                            name: FilterUtils.getOperatorTranslationKey("equal")
                         },
                         {
                             id: "not_equal",
-                            name: "not_equal"
+                            name: FilterUtils.getOperatorTranslationKey("not_equal")
                         }
                     ],
                     values: [{ id: "test", name: "test" }],
@@ -107,35 +111,35 @@ describe("GroupFilter", () => {
                     type: FilterType.Number,
                     operators: [
                         {
-                            "id": "equal",
-                            "name": "equal"
+                            id: "equal",
+                            name: FilterUtils.getOperatorTranslationKey("equal")
                         },
                         {
-                            "id": "not_equal",
-                            "name": "not_equal"
+                            id: "not_equal",
+                            name: FilterUtils.getOperatorTranslationKey("not_equal")
                         },
                         {
-                            "id": "greater",
-                            "name": "greater"
+                            id: "greater",
+                            name: FilterUtils.getOperatorTranslationKey("greater")
                         },
                         {
-                            "id": "greater_or_equal",
-                            "name": "greater_or_equal"
+                            id: "greater_or_equal",
+                            name: FilterUtils.getOperatorTranslationKey("greater_or_equal")
                         },
                         {
-                            "id": "less",
-                            "name": "less"
+                            id: "less",
+                            name: FilterUtils.getOperatorTranslationKey("less")
                         },
                         {
-                            "id": "less_or_equal",
-                            "name": "less_or_equal"
+                            id: "less_or_equal",
+                            name: FilterUtils.getOperatorTranslationKey( "less_or_equal")
                         }
                     ]
                 },
                 lazyLoading: false,
                 group: {
                     key: "test",
-                    name: "test"
+                    name: FilterUtils.getGroupTranslationKey("test")
                 }
             });
         });
@@ -150,6 +154,7 @@ describe("GroupFilter", () => {
                 getValueFilter: async () => Promise.resolve(new NumberFilter({ attribute: "value" })),
                 lazyLoading: false
             });
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<GroupFilterBaseConfigurationModel>({
@@ -159,11 +164,11 @@ describe("GroupFilter", () => {
                     operators: [
                         {
                             id: "equal",
-                            name: "equal"
+                            name: FilterUtils.getOperatorTranslationKey("equal")
                         },
                         {
                             id: "not_equal",
-                            name: "not_equal"
+                            name: FilterUtils.getOperatorTranslationKey("not_equal")
                         }
                     ],
                     values: [{ id: "test", name: "test" }],

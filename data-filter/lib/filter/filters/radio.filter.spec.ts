@@ -1,8 +1,9 @@
+import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
+import { FilterUtils } from "../filter.utils";
 import { RadioFilter } from "./radio.filter";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { FilterType } from "../type";
 import { FilterOperatorTypes } from "../operators";
-
 
 describe("RadioFilter", () => {
     describe("getConfig", () => {
@@ -20,24 +21,25 @@ describe("RadioFilter", () => {
                     }
                 ]
             });
-            const config = await filter.getConfig(null, null);
+            filter.translateService = new DefaultTranslateAdapter();
+            const config = await filter.getConfig("test", null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
                 type: FilterType.Radio,
                 operators: [
                     {
                         id: "equal",
-                        name: "equal"
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     }
                 ],
                 options: [
                     {
                         key: "yes",
-                        name: "yes"
+                        name: FilterUtils.getRadioOptionTranslationKey("test", "yes")
                     },
                     {
                         key: "no",
-                        name: "no"
+                        name: FilterUtils.getRadioOptionTranslationKey("test", "no")
                     }
                 ]
             });
@@ -58,28 +60,29 @@ describe("RadioFilter", () => {
                     }
                 ]
             });
-            const config = await filter.getConfig(null, null);
+            filter.translateService = new DefaultTranslateAdapter();
+            const config = await filter.getConfig("test", null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
                 type: FilterType.Radio,
                 operators: [
                     {
                         id: "equal",
-                        name: "equal"
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     }
                 ],
                 group: {
-                    name: "test",
+                    name: FilterUtils.getGroupTranslationKey("test"),
                     key: "test"
                 },
                 options: [
                     {
                         key: "yes",
-                        name: "yes"
+                        name: FilterUtils.getRadioOptionTranslationKey("test", "yes")
                     },
                     {
                         key: "no",
-                        name: "no"
+                        name: FilterUtils.getRadioOptionTranslationKey("test", "no")
                     }
                 ]
             });
@@ -101,28 +104,29 @@ describe("RadioFilter", () => {
             }).addOperators({
                 name: "none"
             });
-            const config = await filter.getConfig(null, null);
+            filter.translateService = new DefaultTranslateAdapter();
+            const config = await filter.getConfig("test", null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
                 type: FilterType.Radio,
                 operators: [
                     {
                         id: "equal",
-                        name: "equal"
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
                         id: "none",
-                        name: "none"
+                        name: FilterUtils.getCustomOperatorTranslationKey("test", "none")
                     }
                 ],
                 options: [
                     {
                         key: "yes",
-                        name: "yes"
+                        name: FilterUtils.getRadioOptionTranslationKey("test", "yes")
                     },
                     {
                         key: "no",
-                        name: "no"
+                        name: FilterUtils.getRadioOptionTranslationKey("test", "no")
                     }
                 ]
             });
@@ -142,24 +146,25 @@ describe("RadioFilter", () => {
                     }
                 ]
             }).setOperators(FilterOperatorTypes.NotEqual);
-            const config = await filter.getConfig(null, null);
+            filter.translateService = new DefaultTranslateAdapter();
+            const config = await filter.getConfig("test", null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
                 type: FilterType.Radio,
                 operators: [
                     {
                         id: "not_equal",
-                        name: "not_equal"
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     }
                 ],
                 options: [
                     {
                         key: "yes",
-                        name: "yes"
+                        name: FilterUtils.getRadioOptionTranslationKey("test", "yes")
                     },
                     {
                         key: "no",
-                        name: "no"
+                        name: FilterUtils.getRadioOptionTranslationKey("test", "no")
                     }
                 ]
             });

@@ -1,3 +1,4 @@
+import { DataFilterUserModel } from "../..";
 import { FilterType } from "../type";
 import { SelectOperators } from "../operators";
 import { BaseFilterDefinition, Filter } from "./filter";
@@ -9,7 +10,7 @@ export interface SelectFilterValue {
 }
 
 export interface SelectFilterDefinition<T> {
-    values: (value: unknown) => Promise<SelectFilterValue[]>;
+    values: <User extends DataFilterUserModel>(value: unknown, user?: User) => Promise<SelectFilterValue[]>;
     lazyLoading?: boolean;
     getResourceById?: (id: number) => Promise<SelectFilterValue>;
 }
@@ -17,7 +18,7 @@ export interface SelectFilterDefinition<T> {
 export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T> {
     public type = FilterType.Select;
     public operators = [...SelectOperators];
-    public values: (value: unknown, user?: any) => Promise<SelectFilterValue[]>;
+    public values: <User extends DataFilterUserModel>(value: unknown, user?: User) => Promise<SelectFilterValue[]>;
     public getResourceById: (id: number, user?: any) => Promise<SelectFilterValue>;
     public lazyLoading;
 
@@ -29,7 +30,7 @@ export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T>
         }
     }
 
-    public async getConfig<Users>(key: string, user?: Users): Promise<FilterBaseConfigurationModel> {
+    public async getConfig(key: string, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
         const config = await super.getConfig(key, user);
         return {
             ...config,

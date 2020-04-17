@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { col, FindOptions, fn, Op, where } from "sequelize";
+import { DefaultAccessControlAdapter } from "../adapters";
+import { DefaultTranslateAdapter } from "../adapters/default-translate.adapter";
 import { Attributes, Data, Include, Path } from "../decorators";
 import { ContractSystems } from "../test/models/contracts/contract-systems.model";
 import { Invoices } from "../test/models/invoices/invoices.model";
@@ -81,7 +83,8 @@ describe("FilterService", () => {
 
     beforeAll(() => {
         filterService = new FilterService<ContractSystemsTest>(
-            null,
+            new DefaultAccessControlAdapter(),
+            new DefaultTranslateAdapter(),
             new TestFilter(),
             new SequelizeModelScanner(),
             new DataFilterService(new DataFilterScanner(), new SequelizeModelScanner())
