@@ -16,6 +16,7 @@ export class AttributesConfig implements AttributesConfigModel {
     public path?: PathConfig;
     public includes: IncludeConfig[] = [];
     public customAttributes: CustomAttributesConfig[] = [];
+    public ignoreInSearch = false;
 
     constructor(public key: string) {
         this.path = {
@@ -29,6 +30,10 @@ export class AttributesConfig implements AttributesConfigModel {
 
     public setPath(path?: PathConfig) {
         this.path = path;
+    }
+
+    public setIgnoreInPath(ignore: boolean) {
+        this.ignoreInSearch = ignore;
     }
 
     public addInclude(include: IncludeConfig) {

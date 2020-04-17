@@ -172,7 +172,7 @@ export class DataFilterRepository<Data> {
         );
 
         for (const definition of this._definitions) {
-            if (!definition.path) {
+            if (!definition.path || definition.ignoreInSearch) {
                 continue;
             }
 
