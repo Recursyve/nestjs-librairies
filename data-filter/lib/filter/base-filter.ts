@@ -9,7 +9,7 @@ export abstract class BaseFilter<T> implements FilterModel<T> {
 
     public set translateService(translateService: TranslateAdapter) {
         for (const key in this) {
-            if (!this.hasOwnProperty(key)) {
+            if (!this.hasOwnProperty(key) || key === "dataDefinition") {
                 continue;
             }
 
