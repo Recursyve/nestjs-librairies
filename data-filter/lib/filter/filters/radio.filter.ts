@@ -1,3 +1,5 @@
+import { DataFilterUserModel } from "../..";
+import { FilterUtils } from "../filter.utils";
 import { BaseFilterDefinition, Filter } from "./filter";
 import { FilterType } from "../type";
 import { FilterOperatorTypes } from "../operators";
@@ -33,12 +35,15 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
         super(definition);
     }
 
-    public async getConfig<Users>(key: string, user?: Users): Promise<RadioFilterConfigurationModel> {
+    public async getConfig(key: string, user?: DataFilterUserModel): Promise<RadioFilterConfigurationModel> {
         return {
             ...(await super.getConfig(key, user)),
             options: this.options.map(x => ({
                 key: x.key,
-                name: x.key
+                name: this._translateService.getTranslation(
+                    user?.language,
+                    FilterUtils.getRadioOptionTranslationKey(key, x.key)
+                )
             }))
         };
     }

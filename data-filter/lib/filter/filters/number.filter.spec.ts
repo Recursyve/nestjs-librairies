@@ -1,3 +1,5 @@
+import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
+import { FilterUtils } from "../filter.utils";
 import { NumberFilter } from "./number.filter";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { FilterType } from "../type";
@@ -9,34 +11,35 @@ describe("NumberFilter", () => {
             const filter = new NumberFilter({
                 attribute: "test"
             });
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
                 type: FilterType.Number,
                 operators: [
                     {
-                        "id": "equal",
-                        "name": "equal"
+                        id: "equal",
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
-                        "id": "not_equal",
-                        "name": "not_equal"
+                        id: "not_equal",
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     },
                     {
-                        "id": "greater",
-                        "name": "greater"
+                        id: "greater",
+                        name: FilterUtils.getOperatorTranslationKey("greater")
                     },
                     {
-                        "id": "greater_or_equal",
-                        "name": "greater_or_equal"
+                        id: "greater_or_equal",
+                        name: FilterUtils.getOperatorTranslationKey("greater_or_equal")
                     },
                     {
-                        "id": "less",
-                        "name": "less"
+                        id: "less",
+                        name: FilterUtils.getOperatorTranslationKey("less")
                     },
                     {
-                        "id": "less_or_equal",
-                        "name": "less_or_equal"
+                        id: "less_or_equal",
+                        name: FilterUtils.getOperatorTranslationKey("less_or_equal")
                     }
                 ]
             });
@@ -47,38 +50,39 @@ describe("NumberFilter", () => {
                 attribute: "test",
                 group: "test"
             });
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
                 type: FilterType.Number,
                 operators: [
                     {
-                        "id": "equal",
-                        "name": "equal"
+                        id: "equal",
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
-                        "id": "not_equal",
-                        "name": "not_equal"
+                        id: "not_equal",
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     },
                     {
-                        "id": "greater",
-                        "name": "greater"
+                        id: "greater",
+                        name: FilterUtils.getOperatorTranslationKey("greater")
                     },
                     {
-                        "id": "greater_or_equal",
-                        "name": "greater_or_equal"
+                        id: "greater_or_equal",
+                        name: FilterUtils.getOperatorTranslationKey("greater_or_equal")
                     },
                     {
-                        "id": "less",
-                        "name": "less"
+                        id: "less",
+                        name: FilterUtils.getOperatorTranslationKey("less")
                     },
                     {
-                        "id": "less_or_equal",
-                        "name": "less_or_equal"
+                        id: "less_or_equal",
+                        name: FilterUtils.getOperatorTranslationKey("less_or_equal")
                     }
                 ],
                 group: {
-                    name: "test",
+                    name: FilterUtils.getGroupTranslationKey("test"),
                     key: "test"
                 }
             });
@@ -90,38 +94,39 @@ describe("NumberFilter", () => {
             }).addOperators({
                 name: "none"
             });
-            const config = await filter.getConfig(null, null);
+            filter.translateService = new DefaultTranslateAdapter();
+            const config = await filter.getConfig("test", null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
                 type: FilterType.Number,
                 operators: [
                     {
-                        "id": "equal",
-                        "name": "equal"
+                        id: "equal",
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
-                        "id": "not_equal",
-                        "name": "not_equal"
+                        id: "not_equal",
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     },
                     {
-                        "id": "greater",
-                        "name": "greater"
+                        id: "greater",
+                        name: FilterUtils.getOperatorTranslationKey("greater")
                     },
                     {
-                        "id": "greater_or_equal",
-                        "name": "greater_or_equal"
+                        id: "greater_or_equal",
+                        name: FilterUtils.getOperatorTranslationKey("greater_or_equal")
                     },
                     {
-                        "id": "less",
-                        "name": "less"
+                        id: "less",
+                        name: FilterUtils.getOperatorTranslationKey("less")
                     },
                     {
-                        "id": "less_or_equal",
-                        "name": "less_or_equal"
+                        id: "less_or_equal",
+                        name: FilterUtils.getOperatorTranslationKey("less_or_equal")
                     },
                     {
                         id: "none",
-                        name: "none"
+                        name: FilterUtils.getCustomOperatorTranslationKey("test", "none")
                     }
                 ]
             });
@@ -131,6 +136,7 @@ describe("NumberFilter", () => {
             const filter = new NumberFilter({
                 attribute: "test"
             }).setOperators(FilterOperatorTypes.Equal, FilterOperatorTypes.NotEqual);
+            filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
             expect(config).toBeDefined();
             expect(config).toStrictEqual<FilterBaseConfigurationModel>({
@@ -138,11 +144,11 @@ describe("NumberFilter", () => {
                 operators: [
                     {
                         id: "equal",
-                        name: "equal"
+                        name: FilterUtils.getOperatorTranslationKey("equal")
                     },
                     {
                         id: "not_equal",
-                        name: "not_equal"
+                        name: FilterUtils.getOperatorTranslationKey("not_equal")
                     }
                 ]
             });

@@ -1,34 +1,25 @@
 import { Injectable, Type } from "@nestjs/common";
+import { CountOptions, FindOptions, Includeable, IncludeOptions, Op, WhereOptions } from "sequelize";
+import { FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
-import { BaseFilter } from "./base-filter";
-import { QueryModel, QueryRuleModel } from "./models";
-import { FilterConfigurationModel } from "./models/filter-configuration.model";
-import {
-    Filter,
-    FilterCondition,
-    FilterConditionRule,
-    FilterDefinition,
-    SelectFilter,
-    SelectFilterValue
-} from "./filters";
-import {
-    CountOptions,
-    FindOptions,
-    Includeable,
-    IncludeOptions,
-    Op,
-    WhereOptions
-} from "sequelize";
+import { TranslateAdapter } from "../adapters/translate.adapter";
+import { DataFilterRepository } from "../data-filter.repository";
+import { DataFilterService } from "../data-filter.service";
+import { IncludeWhereModel } from "../models/include.model";
+import { DataFilterUserModel } from "../models/user.model";
 import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";
 import { M, SequelizeUtils } from "../sequelize.utils";
-import { DataFilterService } from "../data-filter.service";
-import { FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../";
-import { DataFilterRepository } from "../data-filter.repository";
-import { FilterConfigurationSearchModel } from "./models/filter-configuration-search.model";
-import { FilterResourceValueModel } from "./models/filter-resource-value.model";
-import { IncludeWhereModel } from "../models/include.model";
+import { BaseFilter } from "./base-filter";
+import { FilterUtils } from "./filter.utils";
+import {
+    Filter, FilterCondition, FilterConditionRule, FilterDefinition, SelectFilter, SelectFilterValue
+} from "./filters";
 import { GeoLocalizationFilter } from "./filters/geo-localization.filter";
 import { GroupFilter, GroupFilterDefinition } from "./filters/group.filter";
+import { QueryModel, QueryRuleModel } from "./models";
+import { FilterConfigurationSearchModel } from "./models/filter-configuration-search.model";
+import { FilterConfigurationModel } from "./models/filter-configuration.model";
+import { FilterResourceValueModel } from "./models/filter-resource-value.model";
 
 @Injectable()
 export class FilterService<Data> {
@@ -37,6 +28,7 @@ export class FilterService<Data> {
 
     constructor(
         private accessControlAdapter: AccessControlAdapter,
+        private translateAdapter: TranslateAdapter,
         private model: BaseFilter<Data>,
         private sequelizeModelScanner: SequelizeModelScanner,
         private dataFilter: DataFilterService
@@ -47,6 +39,7 @@ export class FilterService<Data> {
     public forData<T>(dataDef: Type<T>): FilterService<T> {
         return new FilterService(
             this.accessControlAdapter,
+            this.translateAdapter,
             {
                 ...this.model,
                 dataDefinition: dataDef
@@ -56,27 +49,27 @@ export class FilterService<Data> {
         );
     }
 
-    public async getConfig<Users>(user?: Users): Promise<FilterConfigurationModel[]> {
+    public async getConfig(user?: DataFilterUserModel): Promise<FilterConfigurationModel[]> {
         const result: FilterConfigurationModel[] = [];
         for (const key in this.filters) {
             if (!this.filters.hasOwnProperty(key)) {
                 continue;
             }
 
-            const config = await (this.filters[key] as FilterDefinition).getConfig(key);
+            const config = await (this.filters[key] as FilterDefinition).getConfig(key, user);
             result.push({
                 ...config,
                 id: key,
-                name: key
+                name: this.translateAdapter.getTranslation(user.language, FilterUtils.getFilterTranslationKey(key))
             });
         }
 
         return result;
     }
 
-    public async searchConfigValues<Users>(
+    public async searchConfigValues(
         search: FilterConfigurationSearchModel,
-        user?: Users
+        user?: DataFilterUserModel
     ): Promise<SelectFilterValue[]> {
         if (!this.filters.hasOwnProperty(search.id)) {
             return [];
@@ -90,7 +83,7 @@ export class FilterService<Data> {
         return [];
     }
 
-    public async findResourceValueById<Users>(search: FilterResourceValueModel, user?: Users): Promise<SelectFilterValue> {
+    public async findResourceValueById(search: FilterResourceValueModel, user?: DataFilterUserModel): Promise<SelectFilterValue> {
         if (!this.filters.hasOwnProperty(search.id)) {
             return;
         }
@@ -103,24 +96,24 @@ export class FilterService<Data> {
         return;
     }
 
-    public async count<Users>(user: Users, options: FilterQueryModel): Promise<number>;
-    public async count<Users>(options: FilterQueryModel): Promise<number>;
-    public async count<Users>(...args: [Users | FilterQueryModel, FilterQueryModel?]): Promise<number> {
+    public async count(user: DataFilterUserModel, options: FilterQueryModel): Promise<number>;
+    public async count(options: FilterQueryModel): Promise<number>;
+    public async count(...args: [DataFilterUserModel | FilterQueryModel, FilterQueryModel?]): Promise<number> {
         const [userOrOpt, opt] = args;
         const options = opt ? opt : userOrOpt as FilterQueryModel;
-        const user = opt ? userOrOpt as Users : null;
+        const user = opt ? userOrOpt as DataFilterUserModel : null;
 
         const countOptions = await this.getFindOptions(this.repository.model, options.query);
         this.addSearchCondition(options.search, countOptions);
         return user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions);
     }
 
-    public async filter<Users>(user: Users, options: FilterQueryModel): Promise<FilterResultModel<Data>>;
-    public async filter<Users>(options: FilterQueryModel): Promise<FilterResultModel<Data>>;
-    public async filter<Users>(...args: [Users | FilterQueryModel, FilterQueryModel?]): Promise<FilterResultModel<Data>> {
+    public async filter(user: DataFilterUserModel, options: FilterQueryModel): Promise<FilterResultModel<Data>>;
+    public async filter(options: FilterQueryModel): Promise<FilterResultModel<Data>>;
+    public async filter(...args: [DataFilterUserModel | FilterQueryModel, FilterQueryModel?]): Promise<FilterResultModel<Data>> {
         const [userOrOpt, opt] = args;
         const options = opt ? opt : userOrOpt as FilterQueryModel;
-        const user = opt ? userOrOpt as Users : null;
+        const user = opt ? userOrOpt as DataFilterUserModel : null;
 
         const countOptions = await this.getFindOptions(this.repository.model, options.query, options.data);
         this.addSearchCondition(options.search, countOptions);
@@ -358,9 +351,9 @@ export class FilterService<Data> {
         );
     }
 
-    private async countTotalValues<Users>(user: Users, options: FindOptions): Promise<number>;
-    private async countTotalValues<Users>(options: FindOptions): Promise<number>;
-    private async countTotalValues<Users>(...args: [Users | FindOptions, FindOptions?]): Promise<number> {
+    private async countTotalValues(user: DataFilterUserModel, options: FindOptions): Promise<number>;
+    private async countTotalValues(options: FindOptions): Promise<number>;
+    private async countTotalValues(...args: [DataFilterUserModel | FindOptions, FindOptions?]): Promise<number> {
         const [userOrOpt, opt] = args;
         const options = opt ? opt : userOrOpt as FindOptions;
 
@@ -368,7 +361,7 @@ export class FilterService<Data> {
          * This means that countTotalValues was called with a user
          */
         if (opt) {
-            options.where = await this.getAccessControlWhereCondition(options.where, userOrOpt as Users);
+            options.where = await this.getAccessControlWhereCondition(options.where, userOrOpt as DataFilterUserModel);
         }
 
         if (options.having) {
@@ -389,9 +382,9 @@ export class FilterService<Data> {
         }
     }
 
-    private async findValues<Users>(user: Users, filter: FilterQueryModel, options: FindOptions): Promise<Data[]>;
-    private async findValues<Users>(filter: FilterQueryModel, options: FindOptions): Promise<Data[]>;
-    private async findValues<Users>(...args: [Users | FilterQueryModel, FilterQueryModel | FindOptions, FindOptions?]): Promise<Data[]> {
+    private async findValues<Users extends DataFilterUserModel>(user: Users, filter: FilterQueryModel, options: FindOptions): Promise<Data[]>;
+    private async findValues<Users extends DataFilterUserModel>(filter: FilterQueryModel, options: FindOptions): Promise<Data[]>;
+    private async findValues<Users extends DataFilterUserModel>(...args: [Users | FilterQueryModel, FilterQueryModel | FindOptions, FindOptions?]): Promise<Data[]> {
         const [userOrOFilter, filterOrOpt, opt] = args;
         const options = opt ? opt : filterOrOpt as FindOptions;
         const filter = opt ? filterOrOpt as FilterQueryModel : userOrOFilter as FilterQueryModel;
@@ -419,7 +412,7 @@ export class FilterService<Data> {
         }, {});
     }
 
-    private async getAccessControlWhereCondition<Users>(where: WhereOptions, user: Users): Promise<WhereOptions> {
+    private async getAccessControlWhereCondition(where: WhereOptions, user: DataFilterUserModel): Promise<WhereOptions> {
         if (!user) {
             throw new Error("No user found");
         } else if (!this.accessControlAdapter) {

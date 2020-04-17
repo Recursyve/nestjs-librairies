@@ -1,3 +1,6 @@
+import { DataFilterUserModel } from "../..";
+import { TranslateAdapter } from "../../adapters/translate.adapter";
+import { FilterUtils } from "../filter.utils";
 import { CustomOperator, FilterOperators, FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
@@ -37,13 +40,19 @@ export interface FilterDefinition extends BaseFilterDefinition {
     type: FilterType;
     operators: (FilterOperatorTypes | CustomOperator)[];
 
-    getConfig<Users>(key: string, user?: Users): Promise<FilterBaseConfigurationModel>;
+    getConfig(key: string, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel>;
     getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions>;
     getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions>;
     usePathCondition(query: QueryModel): boolean;
 }
 
 export abstract class Filter implements FilterDefinition {
+    protected _translateService: TranslateAdapter;
+
+    public set translateService(translateService: TranslateAdapter) {
+        this._translateService = translateService;
+    }
+
     public type: FilterType;
     public operators: (FilterOperatorTypes | CustomOperator)[];
     public group: string;
@@ -73,20 +82,26 @@ export abstract class Filter implements FilterDefinition {
         return this;
     }
 
-    public async getConfig<Users>(key: string, user?: Users): Promise<FilterBaseConfigurationModel> {
+    public async getConfig(key: string, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
         const config = {
             type: this.type,
             operators: this.operators.map(x => {
                 if (typeof x === "string") {
                     return {
                         id: x,
-                        name: x
+                        name: this._translateService.getTranslation(
+                            user?.language,
+                            FilterUtils.getOperatorTranslationKey(x)
+                        )
                     };
                 }
 
                 return {
                     id: x.name,
-                    name: x.name
+                    name: this._translateService.getTranslation(
+                        user?.language,
+                        FilterUtils.getCustomOperatorTranslationKey(key, x.name)
+                    )
                 };
             })
         } as FilterBaseConfigurationModel;
@@ -94,7 +109,7 @@ export abstract class Filter implements FilterDefinition {
         if (this.group) {
             config.group = {
                 key: this.group,
-                name: this.group
+                name: this._translateService.getTranslation(user?.language, FilterUtils.getGroupTranslationKey(this.group))
             }
         }
         return config;
