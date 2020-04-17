@@ -12,7 +12,13 @@ export class RedisModule implements OnModuleDestroy {
 
     public async onModuleDestroy(): Promise<void> {
         const service = await this.moduleRef.get(RedisService);
-        await service.disconnect();
+
+        /**
+         * Disconnection causes some issues when running tests, for now we deactivate it
+         */
+        if (!process.env.CI) {
+            await service.disconnect();
+        }
     }
 }
 
