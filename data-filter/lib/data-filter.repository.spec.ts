@@ -1,3 +1,4 @@
+import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdapter } from "./adapters";
 import { databaseFactory } from "./test/database.factory";
 import { DataFilterRepository } from "./data-filter.repository";
 import { Attributes, Data, Include, Path } from "./decorators";
@@ -43,7 +44,14 @@ describe("DataFilterRepository", () => {
         let repository: DataFilterRepository<PersonsTest>;
 
         beforeAll(() => {
-            repository = new DataFilterRepository(PersonsTest, new DataFilterScanner(), new SequelizeModelScanner());
+            repository = new DataFilterRepository(
+                PersonsTest,
+                new DataFilterScanner(),
+                new SequelizeModelScanner(),
+                new DefaultAccessControlAdapter(),
+                new DefaultTranslateAdapter(),
+                new DefaultExportAdapter()
+            );
         });
 
         it("generateFindOptions should return a valid Sequelize FindOptions object", () => {
@@ -131,7 +139,14 @@ describe("DataFilterRepository", () => {
         let repository: DataFilterRepository<CustomAttributesTest>;
 
         beforeAll(() => {
-            repository = new DataFilterRepository(CustomAttributesTest, new DataFilterScanner(), new SequelizeModelScanner());
+            repository = new DataFilterRepository(
+                CustomAttributesTest,
+                new DataFilterScanner(),
+                new SequelizeModelScanner(),
+                new DefaultAccessControlAdapter(),
+                new DefaultTranslateAdapter(),
+                new DefaultExportAdapter()
+            );
         });
 
         it("generateFindOptions with conditions should return a valid Sequelize FindOptions object", () => {
@@ -160,7 +175,14 @@ describe("DataFilterRepository", () => {
         let repository: DataFilterRepository<CustomCoordAttributesTest>;
 
         beforeAll(() => {
-            repository = new DataFilterRepository(CustomCoordAttributesTest, new DataFilterScanner(), new SequelizeModelScanner());
+            repository = new DataFilterRepository(
+                CustomCoordAttributesTest,
+                new DataFilterScanner(),
+                new SequelizeModelScanner(),
+                new DefaultAccessControlAdapter(),
+                new DefaultTranslateAdapter(),
+                new DefaultExportAdapter()
+            );
         });
 
         it("generateFindOptions with conditions should return a valid Sequelize FindOptions object", () => {

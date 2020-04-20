@@ -229,26 +229,26 @@ export class DataFilterRepository<Data> {
         return XlsxUtils.arrayToXlsxBuffer(
             this.getExportData(data),
             this._config.model.getTableName() as string,
-            this.getExportsHeader(lang)
+            await this.getExportsHeader(lang)
         );
     }
 
     public async downloadHtml(data: Data[], lang: string, options?: any): Promise<string> {
         return this.exportAdapter.exportAsHtml(lang, {
             title: this._config.model.getTableName() as string,
-            columns: this.getExportsHeader(lang),
+            columns: await this.getExportsHeader(lang),
             data: this.getExportData(data)
         }, options);
     }
 
     public async downloadCsv(data: Data[], lang: string): Promise<Buffer> {
-        return await CsvUtils.arrayToCsvBuffer(this.getExportData(data), this.getExportsHeader(lang));
+        return await CsvUtils.arrayToCsvBuffer(this.getExportData(data), await this.getExportsHeader(lang));
     }
 
     public async downloadPdf(data: Data[], lang: string, options?: any): Promise<Buffer> {
         return this.exportAdapter.exportAsPdf(lang, {
             title: this._config.model.getTableName() as string,
-            columns: this.getExportsHeader(lang),
+            columns: await this.getExportsHeader(lang),
             data: this.getExportData(data)
         }, options);
     }
@@ -258,8 +258,8 @@ export class DataFilterRepository<Data> {
         this._definitions = this.dataFilterScanner.getAttributes(this.dataDef);
     }
 
-    private getExportsHeader(lang: string, translateService = this.translateService): string[] {
-        return this._config.exportColumns.map(x => translateService.getTranslation(lang, `exports.${x}`));
+    private getExportsHeader(lang: string, translateService = this.translateService): Promise<string[]> {
+        return Promise.all(this._config.exportColumns.map(x => translateService.getTranslation(lang, `exports.${x}`)));
     }
 
     private getExportData(data: Data[]): object[] {

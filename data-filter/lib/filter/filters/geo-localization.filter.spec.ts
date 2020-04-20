@@ -1,4 +1,4 @@
-import { DefaultAccessControlAdapter } from "../../adapters";
+import { DefaultAccessControlAdapter, DefaultExportAdapter } from "../../adapters";
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
 import { FilterUtils } from "../filter.utils";
 import { GeoLocalizationFilter } from "./geo-localization.filter";
@@ -197,7 +197,10 @@ describe("GeoLocalizationTestFilter", () => {
             new SequelizeModelScanner(),
             new DataFilterService(
                 new DataFilterScanner(),
-                new SequelizeModelScanner()
+                new SequelizeModelScanner(),
+                new DefaultAccessControlAdapter(),
+                new DefaultTranslateAdapter(),
+                new DefaultExportAdapter()
             )
         );
     });

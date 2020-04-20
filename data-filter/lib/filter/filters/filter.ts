@@ -85,11 +85,11 @@ export abstract class Filter implements FilterDefinition {
     public async getConfig(key: string, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
         const config = {
             type: this.type,
-            operators: this.operators.map(x => {
+            operators: await Promise.all(this.operators.map(async x => {
                 if (typeof x === "string") {
                     return {
                         id: x,
-                        name: this._translateService.getTranslation(
+                        name: await this._translateService.getTranslation(
                             user?.language,
                             FilterUtils.getOperatorTranslationKey(x)
                         )
@@ -98,18 +98,18 @@ export abstract class Filter implements FilterDefinition {
 
                 return {
                     id: x.name,
-                    name: this._translateService.getTranslation(
+                    name: await this._translateService.getTranslation(
                         user?.language,
                         FilterUtils.getCustomOperatorTranslationKey(key, x.name)
                     )
                 };
-            })
+            }))
         } as FilterBaseConfigurationModel;
 
         if (this.group) {
             config.group = {
                 key: this.group,
-                name: this._translateService.getTranslation(user?.language, FilterUtils.getGroupTranslationKey(this.group))
+                name: await this._translateService.getTranslation(user?.language, FilterUtils.getGroupTranslationKey(this.group))
             }
         }
         return config;

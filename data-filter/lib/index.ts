@@ -1,4 +1,4 @@
-import { DynamicModule, Global, Module, Provider, Type } from "@nestjs/common";
+import { DynamicModule, ForwardReference, Global, Module, Provider, Type } from "@nestjs/common";
 import { ExportAdapter } from "./adapters";
 import { AccessControlAdapter } from "./adapters/access-control.adapter";
 import { DefaultAccessControlAdapter } from "./adapters/default-access-control.adapter";
@@ -7,6 +7,7 @@ import { DefaultTranslateAdapter } from "./adapters/default-translate.adapter";
 import { TranslateAdapter } from "./adapters/translate.adapter";
 import { DataFilterService } from "./data-filter.service";
 import { DefaultDeserializer, UserDeserializer } from "./deserializers";
+import { FilterUtils } from "./filter";
 import { BaseFilter } from "./filter/base-filter";
 import { FilterFactory } from "./filter/filter.factory";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
@@ -14,11 +15,15 @@ import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { createFilterProvider } from "./filter/filter.provider";
 
 export interface DataFilterConfig {
-    imports?: Type<any>[];
+    imports?: Array<Type<any> | DynamicModule | Promise<DynamicModule> | ForwardReference>;
     deserializer?: Provider;
     accessControlAdapter?: Provider;
     translateAdapter?: Provider;
     exportAdapter?: Provider;
+}
+
+export interface DataFilterFeatureConfig extends DataFilterConfig {
+    filters: { filter: Type<BaseFilter<any>>; inject?: any[] }[];
 }
 
 @Global()
@@ -65,24 +70,31 @@ export class DataFilterModule {
         };
     }
 
-    public static forFeature(filters: Type<BaseFilter<any>>[]): DynamicModule {
+    public static forFeature(option: DataFilterFeatureConfig): DynamicModule {
+        const providerOverride = Object.keys(option).map(x => {
+            if (x === "imports" || x === "filters") {
+                return;
+            }
+            return option[x];
+        }).filter(x => x);
         return {
             module: DataFilterModule,
-            providers: filters.map(filter => createFilterProvider(filter))
+            imports: [...(option.imports ?? [])],
+            providers: [
+                ...providerOverride,
+                ...option.filters.flatMap(x => ([
+                    {
+                        provide: x.filter,
+                        useFactory: FilterFactory(x.filter),
+                        inject: x.inject ?? []
+                    },
+                    createFilterProvider(x.filter)
+                ]))
+            ],
+            exports: [
+                ...option.filters.map(x => FilterUtils.getProviderToken(x.filter))
+            ]
         };
-    }
-}
-
-export class DataFilterProvider {
-    public static forFeature(filter: Type<BaseFilter<any>>, inject?: any[]): Provider[] {
-        return [
-            {
-                provide: filter,
-                useFactory: FilterFactory(filter),
-                inject
-            },
-            createFilterProvider(filter)
-        ];
     }
 }
 

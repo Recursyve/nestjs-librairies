@@ -16,7 +16,7 @@ export abstract class BaseFilter<T> implements FilterModel<T> {
             if (Filter.validate(this[key] as FilterDefinition)) {
                 (this[key] as Filter).translateService = translateService;
             }
-            if (GroupFilter.validate(this.model[key] as GroupFilterDefinition)) {
+            if (GroupFilter.validate(this[key] as GroupFilterDefinition)) {
                 (this[key] as GroupFilter).translateService = translateService;
             }
         }

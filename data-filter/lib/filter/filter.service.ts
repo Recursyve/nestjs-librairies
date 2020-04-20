@@ -60,7 +60,7 @@ export class FilterService<Data> {
             result.push({
                 ...config,
                 id: key,
-                name: this.translateAdapter.getTranslation(user.language, FilterUtils.getFilterTranslationKey(key))
+                name: await this.translateAdapter.getTranslation(user.language, FilterUtils.getFilterTranslationKey(key))
             });
         }
 
@@ -175,6 +175,7 @@ export class FilterService<Data> {
 
     private init() {
         this.repository = this.dataFilter.for(this.model.dataDefinition);
+        this.model.translateService = this.translateAdapter;
 
         this.filters = {};
         for (const key in this.model) {

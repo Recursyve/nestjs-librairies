@@ -3,7 +3,7 @@ import { TranslateAdapter } from "./translate.adapter";
 
 @Injectable()
 export class DefaultTranslateAdapter extends TranslateAdapter {
-    public getTranslation(language: string, key: string): string {
+    public async getTranslation(language: string, key: string): Promise<string> {
         return key;
     }
 }
