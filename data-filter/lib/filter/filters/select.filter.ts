@@ -10,15 +10,15 @@ export interface SelectFilterValue {
 }
 
 export interface SelectFilterDefinition<T> {
-    values: <User extends DataFilterUserModel>(value: unknown, user?: User) => Promise<SelectFilterValue[]>;
+    values: (value: unknown, user?: any) => Promise<SelectFilterValue[]>;
     lazyLoading?: boolean;
-    getResourceById?: (id: number) => Promise<SelectFilterValue>;
+    getResourceById?: (id: number, user?: any) => Promise<SelectFilterValue>;
 }
 
 export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T> {
     public type = FilterType.Select;
     public operators = [...SelectOperators];
-    public values: <User extends DataFilterUserModel>(value: unknown, user?: User) => Promise<SelectFilterValue[]>;
+    public values: (value: unknown, user?: any) => Promise<SelectFilterValue[]>;
     public getResourceById: (id: number, user?: any) => Promise<SelectFilterValue>;
     public lazyLoading;
 

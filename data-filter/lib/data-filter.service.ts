@@ -1,6 +1,7 @@
 import { Injectable, Type } from "@nestjs/common";
-import { ExportAdapter } from "./adapters/export.adapter";
-import { TranslateAdapter } from "./adapters/translate.adapter";
+import { AccessControlAdapter } from "./adapters";
+import { ExportAdapter } from "./adapters";
+import { TranslateAdapter } from "./adapters";
 import { DataFilterRepository } from "./data-filter.repository";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
@@ -10,6 +11,7 @@ export class DataFilterService {
     constructor(
         private dataFilterScanner: DataFilterScanner,
         private sequelizeModelScanner: SequelizeModelScanner,
+        private accessControlAdapter: AccessControlAdapter,
         private translateAdapter: TranslateAdapter,
         private exportAdapter: ExportAdapter
     ) {}
@@ -19,6 +21,7 @@ export class DataFilterService {
             data,
             this.dataFilterScanner,
             this.sequelizeModelScanner,
+            this.accessControlAdapter,
             this.translateAdapter,
             this.exportAdapter
         );

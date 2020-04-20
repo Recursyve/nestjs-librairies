@@ -1,16 +1,17 @@
-import { DataFilterUserModel } from "../..";
+import { Op, WhereOptions } from "sequelize";
+import { DataFilterUserModel, FilterCondition } from "../..";
 import { FilterUtils } from "../filter.utils";
-import { BaseFilterDefinition, Filter } from "./filter";
-import { FilterType } from "../type";
-import { FilterOperatorTypes } from "../operators";
 import { QueryRuleModel } from "../models";
-import { WhereOptions } from "sequelize";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
+import { FilterOperatorTypes } from "../operators";
+import { FilterType } from "../type";
+import { BaseFilterDefinition, Filter } from "./filter";
 
 export interface RadioFilterOption {
     key: string;
     value: unknown;
     operator?: FilterOperatorTypes;
+    condition?: FilterCondition;
 }
 
 export interface RadioFilterDefinition {
@@ -54,11 +55,25 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
             return super.getWhereOptions(rule);
         }
 
-        return super.getWhereOptions({
-            ...rule,
-            value: option.value,
-            operation: option.operator ?? rule.operation
-        });
+        if (!option.condition) {
+            return super.getWhereOptions({
+                ...rule,
+                value: option.value,
+                operation: option.operator || rule.operation
+            });
+        }
+
+        const conditions = [];
+        const where = option.condition.condition === "and" ? { [Op.and]: conditions } : { [Op.or]: conditions };
+        this.generateRuleWhereOptions(option.condition, conditions);
+        conditions.push(
+            super.getWhereOptions({
+                ...rule,
+                value: option.value,
+                operation: option.operator || rule.operation
+            })
+        );
+        return where;
     }
 
     public async getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions> {

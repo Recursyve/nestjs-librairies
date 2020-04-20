@@ -1,13 +1,15 @@
 import { Injectable } from "@nestjs/common";
 import { FindOptions, Identifier, IncludeOptions, Model, ProjectionAlias, WhereOptions } from "sequelize";
-import { ExportAdapter } from "./adapters/export.adapter";
-import { TranslateAdapter } from "./adapters/translate.adapter";
+import { AccessControlAdapter } from "./adapters";
+import { ExportAdapter } from "./adapters";
+import { TranslateAdapter } from "./adapters";
 import { AttributesConfig } from "./models/attributes.model";
 import { DataFilterConfig } from "./models/data-filter.model";
 import { ExportTypes } from "./models/export-types.model";
 import { OrderModel } from "./models/filter.model";
 import { PathModel } from "./models/path.model";
 import { SearchAttributesModel } from "./models/search-attributes.model";
+import { DataFilterUserModel } from "./models/user.model";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { M, SequelizeUtils } from "./sequelize.utils";
@@ -27,6 +29,7 @@ export class DataFilterRepository<Data> {
         private dataDef: any,
         private dataFilterScanner: DataFilterScanner,
         private sequelizeModelScanner: SequelizeModelScanner,
+        private accessControlAdapter: AccessControlAdapter,
         private translateService: TranslateAdapter,
         private exportAdapter: ExportAdapter
     ) {
@@ -42,6 +45,14 @@ export class DataFilterRepository<Data> {
             return result as unknown as Data;
         }
         return this.reduceObject(result);
+    }
+
+    public async findByPkFromUser(user: DataFilterUserModel, identifier: Identifier, conditions?: object): Promise<Data> {
+        const ids = await this.accessControlAdapter.getResourceIds(this._config.model as any, user);
+        if (!ids.includes(identifier as number)) {
+            return null;
+        }
+        return await this.findByPk(identifier, conditions);
     }
 
     public async findOne(options?: FindOptions, conditions?: object): Promise<Data> {
@@ -64,6 +75,17 @@ export class DataFilterRepository<Data> {
             return result as unknown as Data[];
         }
         return result.map(x => this.reduceObject(x));
+    }
+
+    public async findAllFromUser(user: DataFilterUserModel, options?: FindOptions, conditions?: object): Promise<Data[]> {
+        const ids = await this.accessControlAdapter.getResourceIds(this._config.model as any, user);
+        return await this.findAll(
+            {
+                ...options,
+                where: SequelizeUtils.mergeWhere({ id: ids }, options.where)
+            },
+            conditions
+        );
     }
 
     public count(where?: WhereOptions, conditions?: object): Promise<number> {

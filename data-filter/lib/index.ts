@@ -52,11 +52,15 @@ export class DataFilterModule {
             imports: [...option.imports],
             providers: [
                 option.deserializer,
-                option.accessControlAdapter
+                option.accessControlAdapter,
+                option.translateAdapter,
+                option.exportAdapter
             ],
             exports: [
                 UserDeserializer,
-                AccessControlAdapter
+                AccessControlAdapter,
+                TranslateAdapter,
+                ExportAdapter
             ]
         };
     }
@@ -90,4 +94,5 @@ export * from "./deserializers";
 export * from "./filter";
 export * from "./models/export-types.model";
 export * from "./models/filter.model";
+export * from "./models/include.model";
 export * from "./models/user.model";

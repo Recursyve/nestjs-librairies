@@ -15,7 +15,7 @@ export class FilterController<Data> {
     @Optional()
     private readonly userUserDeserializer: UserDeserializer<DataFilterUserModel>;
 
-    constructor(private readonly filterService: FilterService<Data>) {}
+    constructor(protected readonly filterService: FilterService<Data>) {}
 
     @Post("filter")
     @HttpCode(HttpStatus.OK)
