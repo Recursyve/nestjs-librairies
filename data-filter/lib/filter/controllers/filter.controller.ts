@@ -5,7 +5,7 @@ import { ExportTypes, FilterQueryModel, FilterResultModel, SelectFilterValue } f
 import { UserDeserializer } from "../../deserializers";
 import { DataFilterUserModel } from "../../models/user.model";
 import { FilterService } from "../filter.service";
-import { DataGridDownloadInterceptor } from "../interceptors/data-grid-download.interceptor";
+import { DataFileDownloadInterceptor } from "../interceptors/data-file-download.interceptor";
 import { FilterConfigurationSearchModel } from "../models/filter-configuration-search.model";
 import { FilterConfigurationModel } from "../models/filter-configuration.model";
 import { FilterResourceValueModel } from "../models/filter-resource-value.model";
@@ -33,7 +33,7 @@ export class FilterController<Data> {
 
     @Post("download/:type")
     @HttpCode(HttpStatus.OK)
-    @UseInterceptors(DataGridDownloadInterceptor)
+    @UseInterceptors(DataFileDownloadInterceptor)
     public async downloadData(
         @Body() query: FilterQueryModel,
         @Param("type") type: ExportTypes,

@@ -5,7 +5,7 @@ import { map } from "rxjs/operators";
 import { ExportTypes } from "../../models/export-types.model";
 
 @Injectable()
-export class DataGridDownloadInterceptor implements NestInterceptor {
+export class DataFileDownloadInterceptor implements NestInterceptor {
     intercept(context: ExecutionContext, next: CallHandler<Buffer | string>): Observable<void> {
         const type = context.switchToHttp().getRequest<express.Request>().params.type as ExportTypes;
         const res = context.switchToHttp().getResponse<express.Response>();
