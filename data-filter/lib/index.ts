@@ -1,4 +1,4 @@
-import { DynamicModule, ForwardReference, Global, Module, Provider, Type } from "@nestjs/common";
+import { DynamicModule, forwardRef, ForwardReference, Global, Module, Provider, Type } from "@nestjs/common";
 import { ExportAdapter } from "./adapters";
 import { AccessControlAdapter } from "./adapters/access-control.adapter";
 import { DefaultAccessControlAdapter } from "./adapters/default-access-control.adapter";
@@ -79,7 +79,7 @@ export class DataFilterModule {
         }).filter(x => x);
         return {
             module: DataFilterModule,
-            imports: [...(option.imports ?? [])],
+            imports: option.imports ?? [],
             providers: [
                 ...providerOverride,
                 ...option.filters.flatMap(x => ([

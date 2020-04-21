@@ -30,6 +30,7 @@
     "@nestjs/common": "^7.0.0",
     "@nestjs/core": "^7.0.0",
     "@nestjs/cqrs": "^6.1.0",
+    "@nestjs/testing": "^7.0.8",
     "@recursyve/nestjs-common": "^7.0.0",
     "@types/bluebird": "*",
     "@types/jest": "^25.1.4",
