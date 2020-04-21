@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { col, FindOptions, fn, Op, where } from "sequelize";
-import { DefaultAccessControlAdapter } from "../adapters";
-import { DefaultTranslateAdapter } from "../adapters/default-translate.adapter";
+import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdapter } from "../adapters";
 import { Attributes, Data, Include, Path } from "../decorators";
 import { ContractSystems } from "../test/models/contracts/contract-systems.model";
 import { Invoices } from "../test/models/invoices/invoices.model";
@@ -9,7 +8,6 @@ import { Contracts } from "../test/models/contracts/contracts.model";
 import { Owners } from "../test/models/places/owners.model";
 import { BaseFilter } from "./base-filter";
 import { NumberFilter, TextFilter } from "./filters";
-import { FilterGroup } from "./models/filter-group.enum";
 import { FilterOperatorTypes } from "./operators";
 import { FilterService } from "./filter.service";
 import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";
@@ -45,7 +43,7 @@ export class TestFilter extends BaseFilter<ContractSystemsTest> {
     public email = new TextFilter({
         attribute: "email",
         path: "system.place.owners.person",
-        group: FilterGroup.Owner
+        group: "owner"
     }).addOperators({
         name: "none",
         having: where(fn("count", col("system.place.owners.person.email")), {
@@ -56,7 +54,7 @@ export class TestFilter extends BaseFilter<ContractSystemsTest> {
     public name = new TextFilter({
         attribute: "first_name",
         path: "system.place.owners.person",
-        group: FilterGroup.Owner,
+        group: "owner",
         condition: {
             condition: "and",
             rules: [
@@ -73,7 +71,7 @@ export class TestFilter extends BaseFilter<ContractSystemsTest> {
     public visitCount = new NumberFilter({
         attribute: "id",
         path: "visits.visit",
-        group: FilterGroup.Visit,
+        group: "visit",
         having: fn("count", col("visits.visit.id"))
     });
 }
@@ -87,7 +85,13 @@ describe("FilterService", () => {
             new DefaultTranslateAdapter(),
             new TestFilter(),
             new SequelizeModelScanner(),
-            new DataFilterService(new DataFilterScanner(), new SequelizeModelScanner())
+            new DataFilterService(
+                new DataFilterScanner(),
+                new SequelizeModelScanner(),
+                new DefaultAccessControlAdapter(),
+                new DefaultTranslateAdapter(),
+                new DefaultExportAdapter()
+            )
         );
     });
 

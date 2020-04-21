@@ -1,6 +1,6 @@
 import { Injectable, Type } from "@nestjs/common";
 import { CountOptions, FindOptions, Includeable, IncludeOptions, Op, WhereOptions } from "sequelize";
-import { FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../";
+import { ExportTypes, FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
 import { DataFilterRepository } from "../data-filter.repository";
@@ -60,7 +60,7 @@ export class FilterService<Data> {
             result.push({
                 ...config,
                 id: key,
-                name: this.translateAdapter.getTranslation(user.language, FilterUtils.getFilterTranslationKey(key))
+                name: await this.translateAdapter.getTranslation(user.language, FilterUtils.getFilterTranslationKey(key))
             });
         }
 
@@ -128,6 +128,20 @@ export class FilterService<Data> {
         };
     }
 
+    public async downloadData(
+        user: DataFilterUserModel,
+        type: ExportTypes,
+        options: FilterQueryModel,
+        exportOptions?: object
+    ): Promise<Buffer | string> {
+        const findOptions = await this.getFindOptions(this.repository.model, options.query);
+        this.addSearchCondition(options.search, findOptions);
+        this.addOrderCondition(options.order, findOptions);
+        delete options.page;
+        const values = await this.findValues(user, options, findOptions);
+        return await this.repository.downloadData(values, type, user.language, exportOptions);
+    }
+
     public async getFindOptions(model: typeof M, query: QueryModel, data?: object): Promise<FindOptions> {
         /**
          * Reset Geo localization filter state
@@ -161,6 +175,7 @@ export class FilterService<Data> {
 
     private init() {
         this.repository = this.dataFilter.for(this.model.dataDefinition);
+        this.model.translateService = this.translateAdapter;
 
         this.filters = {};
         for (const key in this.model) {

@@ -62,7 +62,7 @@ export class GroupFilter implements GroupFilterDefinition {
         if (this.group) {
             config.group = {
                 key: this.group,
-                name: this._translateService.getTranslation(
+                name: await this._translateService.getTranslation(
                     user?.language,
                     FilterUtils.getGroupTranslationKey(this.group)
                 )

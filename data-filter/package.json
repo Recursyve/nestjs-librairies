@@ -1,6 +1,6 @@
 {
   "name": "@recursyve/nestjs-data-filter",
-  "version": "7.0.2",
+  "version": "7.1.0",
   "description": "NestJs Datafilter librairy",
   "main": "index.js",
   "scripts": {
@@ -30,12 +30,16 @@
     "@nestjs/common": "^7.0.0",
     "@nestjs/core": "^7.0.0",
     "@nestjs/cqrs": "^6.1.0",
+    "@nestjs/testing": "^7.0.8",
     "@recursyve/nestjs-common": "^7.0.0",
     "@types/bluebird": "*",
     "@types/jest": "^25.1.4",
     "@types/moment": "^2.13.0",
+    "@types/node": "^12.12.36",
+    "@types/xlsx": "0.0.36",
     "class-transformer": "^0.2.3",
     "class-validator": "^0.11.1",
+    "express": "^4.17.1",
     "gulp": "^4.0.2",
     "gulp-copy": "^4.0.1",
     "gulp-sourcemaps": "^2.6.5",
@@ -63,5 +67,9 @@
     },
     "coverageDirectory": "./coverage",
     "testEnvironment": "node"
+  },
+  "dependencies": {
+    "csv-stringify": "^5.3.6",
+    "xlsx": "^0.15.6"
   }
 }

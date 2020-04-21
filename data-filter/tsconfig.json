@@ -2,12 +2,12 @@
   "compileOnSave": false,
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es2018",
+    "target": "es2019",
     "moduleResolution": "node",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "lib": [
-      "es2018"
+      "es2019"
     ],
     "sourceMap": true,
     "outDir": "build"

@@ -1,20 +1,20 @@
 import { Injectable } from "@nestjs/common";
+import { FindOptions, Identifier, IncludeOptions, Model, ProjectionAlias, WhereOptions } from "sequelize";
+import { AccessControlAdapter } from "./adapters";
+import { ExportAdapter } from "./adapters";
+import { TranslateAdapter } from "./adapters";
+import { AttributesConfig } from "./models/attributes.model";
+import { DataFilterConfig } from "./models/data-filter.model";
+import { ExportTypes } from "./models/export-types.model";
+import { OrderModel } from "./models/filter.model";
+import { PathModel } from "./models/path.model";
+import { SearchAttributesModel } from "./models/search-attributes.model";
+import { DataFilterUserModel } from "./models/user.model";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
-import {
-    FindOptions,
-    Identifier,
-    IncludeOptions,
-    Model,
-    ProjectionAlias,
-    WhereOptions
-} from "sequelize";
 import { M, SequelizeUtils } from "./sequelize.utils";
-import { SearchAttributesModel } from "./models/search-attributes.model";
-import { OrderModel } from "./models/filter.model";
-import { DataFilterConfig } from "./models/data-filter.model";
-import { AttributesConfig } from "./models/attributes.model";
-import { PathModel } from "./models/path.model";
+import { CsvUtils } from "./utils/csv.utils";
+import { XlsxUtils } from "./utils/xlsx.utils";
 
 @Injectable()
 export class DataFilterRepository<Data> {
@@ -28,7 +28,10 @@ export class DataFilterRepository<Data> {
     constructor(
         private dataDef: any,
         private dataFilterScanner: DataFilterScanner,
-        private sequelizeModelScanner: SequelizeModelScanner
+        private sequelizeModelScanner: SequelizeModelScanner,
+        private accessControlAdapter: AccessControlAdapter,
+        private translateService: TranslateAdapter,
+        private exportAdapter: ExportAdapter
     ) {
         this.init();
     }
@@ -42,6 +45,14 @@ export class DataFilterRepository<Data> {
             return result as unknown as Data;
         }
         return this.reduceObject(result);
+    }
+
+    public async findByPkFromUser(user: DataFilterUserModel, identifier: Identifier, conditions?: object): Promise<Data> {
+        const ids = await this.accessControlAdapter.getResourceIds(this._config.model as any, user);
+        if (!ids.includes(identifier as number)) {
+            return null;
+        }
+        return await this.findByPk(identifier, conditions);
     }
 
     public async findOne(options?: FindOptions, conditions?: object): Promise<Data> {
@@ -64,6 +75,17 @@ export class DataFilterRepository<Data> {
             return result as unknown as Data[];
         }
         return result.map(x => this.reduceObject(x));
+    }
+
+    public async findAllFromUser(user: DataFilterUserModel, options?: FindOptions, conditions?: object): Promise<Data[]> {
+        const ids = await this.accessControlAdapter.getResourceIds(this._config.model as any, user);
+        return await this.findAll(
+            {
+                ...options,
+                where: SequelizeUtils.mergeWhere({ id: ids }, options.where)
+            },
+            conditions
+        );
     }
 
     public count(where?: WhereOptions, conditions?: object): Promise<number> {
@@ -190,8 +212,83 @@ export class DataFilterRepository<Data> {
         return attributes;
     }
 
+    public async downloadData(data: Data[], type: ExportTypes, lang: string, options?: any): Promise<Buffer | string> {
+        switch (type) {
+            case ExportTypes.XLSX:
+                return await this.downloadXlsx(data, lang);
+            case ExportTypes.HTML:
+                return await this.downloadHtml(data, lang, options);
+            case ExportTypes.CSV:
+                return await this.downloadCsv(data, lang);
+            case ExportTypes.PDF:
+                return await this.downloadPdf(data, lang, options);
+        }
+    }
+
+    public async downloadXlsx(data: Data[], lang: string): Promise<Buffer> {
+        return XlsxUtils.arrayToXlsxBuffer(
+            this.getExportData(data),
+            this._config.model.getTableName() as string,
+            await this.getExportsHeader(lang)
+        );
+    }
+
+    public async downloadHtml(data: Data[], lang: string, options?: any): Promise<string> {
+        return this.exportAdapter.exportAsHtml(lang, {
+            title: this._config.model.getTableName() as string,
+            columns: await this.getExportsHeader(lang),
+            data: this.getExportData(data)
+        }, options);
+    }
+
+    public async downloadCsv(data: Data[], lang: string): Promise<Buffer> {
+        return await CsvUtils.arrayToCsvBuffer(this.getExportData(data), await this.getExportsHeader(lang));
+    }
+
+    public async downloadPdf(data: Data[], lang: string, options?: any): Promise<Buffer> {
+        return this.exportAdapter.exportAsPdf(lang, {
+            title: this._config.model.getTableName() as string,
+            columns: await this.getExportsHeader(lang),
+            data: this.getExportData(data)
+        }, options);
+    }
+
     private init() {
         this._config = this.dataFilterScanner.getDataFilter(this.dataDef);
         this._definitions = this.dataFilterScanner.getAttributes(this.dataDef);
+    }
+
+    private getExportsHeader(lang: string, translateService = this.translateService): Promise<string[]> {
+        return Promise.all(this._config.exportColumns.map(x => translateService.getTranslation(lang, `exports.${x}`)));
+    }
+
+    private getExportData(data: Data[]): object[] {
+        return data.map(x => {
+            const result = {};
+            let i = 0;
+            for (const key of this._config.exportColumns) {
+                const [value, prop] = this.getExportValue(x, key);
+                result[`${i++}:${prop}`] = value;
+            }
+            return result;
+        });
+    }
+
+    private getExportValue(data: Data, path: string): [unknown, string] {
+        const keys = path.split(".");
+        if (keys.length === 1) {
+            const key = keys.pop();
+            return [data[key], key];
+        }
+
+        let key: string;
+        while (keys.length) {
+            key = keys.shift();
+            if (data) {
+                data = data[key];
+            }
+        }
+
+        return [data, key];
     }
 }
