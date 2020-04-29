@@ -47,6 +47,8 @@ export interface FilterDefinition extends BaseFilterDefinition {
 }
 
 export abstract class Filter implements FilterDefinition {
+    private _type = "filter";
+
     protected _translateService: TranslateAdapter;
 
     public set translateService(translateService: TranslateAdapter) {
@@ -63,7 +65,7 @@ export abstract class Filter implements FilterDefinition {
     public pathCondition?: PathCondition;
 
     public static validate(definition: FilterDefinition) {
-        return typeof definition === "object" && definition.type && definition.operators && definition.attribute;
+        return definition["_type"] === "filter";
     }
 
     protected constructor(definition?: BaseFilterDefinition) {

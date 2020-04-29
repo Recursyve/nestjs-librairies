@@ -1,5 +1,5 @@
 import { Injectable, Type } from "@nestjs/common";
-import { CountOptions, FindOptions, Includeable, IncludeOptions, Op, WhereOptions } from "sequelize";
+import { CountOptions, FindOptions, Includeable, IncludeOptions, Op, Order, WhereOptions } from "sequelize";
 import { ExportTypes, FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
@@ -20,10 +20,11 @@ import { QueryModel, QueryRuleModel } from "./models";
 import { FilterConfigurationSearchModel } from "./models/filter-configuration-search.model";
 import { FilterConfigurationModel } from "./models/filter-configuration.model";
 import { FilterResourceValueModel } from "./models/filter-resource-value.model";
+import { OrderRule, OrderRuleDefinition } from "./order-rules/order-rule";
 
 @Injectable()
 export class FilterService<Data> {
-    private filters: { [name: string]: FilterDefinition | GroupFilterDefinition };
+    private definitions: { [name: string]: FilterDefinition | GroupFilterDefinition | OrderRuleDefinition };
     private repository: DataFilterRepository<Data>;
 
     constructor(
@@ -51,12 +52,12 @@ export class FilterService<Data> {
 
     public async getConfig(user?: DataFilterUserModel): Promise<FilterConfigurationModel[]> {
         const result: FilterConfigurationModel[] = [];
-        for (const key in this.filters) {
-            if (!this.filters.hasOwnProperty(key)) {
+        for (const key in this.definitions) {
+            if (!this.definitions.hasOwnProperty(key) || OrderRule.validate(this.definitions[key] as OrderRuleDefinition)) {
                 continue;
             }
 
-            const config = await (this.filters[key] as FilterDefinition).getConfig(key, user);
+            const config = await (this.definitions[key] as FilterDefinition).getConfig(key, user);
             result.push({
                 ...config,
                 id: key,
@@ -71,11 +72,11 @@ export class FilterService<Data> {
         search: FilterConfigurationSearchModel,
         user?: DataFilterUserModel
     ): Promise<SelectFilterValue[]> {
-        if (!this.filters.hasOwnProperty(search.id)) {
+        if (!this.definitions.hasOwnProperty(search.id)) {
             return [];
         }
 
-        const filter = this.filters[search.id];
+        const filter = this.definitions[search.id];
         if (filter instanceof SelectFilter) {
             return await filter.values(search.value, user);
         }
@@ -84,11 +85,11 @@ export class FilterService<Data> {
     }
 
     public async findResourceValueById(search: FilterResourceValueModel, user?: DataFilterUserModel): Promise<SelectFilterValue> {
-        if (!this.filters.hasOwnProperty(search.id)) {
+        if (!this.definitions.hasOwnProperty(search.id)) {
             return;
         }
 
-        const filter = this.filters[search.id];
+        const filter = this.definitions[search.id];
         if (filter instanceof SelectFilter && filter.getResourceById) {
             return await filter.getResourceById(search.resourceId, user);
         }
@@ -177,17 +178,21 @@ export class FilterService<Data> {
         this.repository = this.dataFilter.for(this.model.dataDefinition);
         this.model.translateService = this.translateAdapter;
 
-        this.filters = {};
+        this.definitions = {};
         for (const key in this.model) {
             if (!this.model.hasOwnProperty(key)) {
                 continue;
             }
 
-            if (!Filter.validate(this.model[key] as FilterDefinition) && !GroupFilter.validate(this.model[key] as GroupFilterDefinition)) {
+            if (
+                !Filter.validate(this.model[key] as FilterDefinition) &&
+                !GroupFilter.validate(this.model[key] as GroupFilterDefinition) &&
+                !OrderRule.validate(this.model[key] as OrderRuleDefinition)
+            ) {
                 continue;
             }
 
-            this.filters[key] = this.model[key] as FilterDefinition;
+            this.definitions[key] = this.model[key] as FilterDefinition;
         }
     }
 
@@ -205,11 +210,11 @@ export class FilterService<Data> {
             }
 
             const r = rule as QueryRuleModel;
-            if (!this.filters.hasOwnProperty(r.id)) {
+            if (!this.definitions.hasOwnProperty(r.id)) {
                 continue;
             }
 
-            const filter = this.filters[r.id];
+            const filter = this.definitions[r.id];
             if ((filter as GroupFilterDefinition).rootFilter) {
                 const f = filter as GroupFilterDefinition;
                 includes.push(...this.getFilterInclude(model, f.rootFilter, data));
@@ -267,11 +272,11 @@ export class FilterService<Data> {
             }
 
             const r = rule as QueryRuleModel;
-            if (!this.filters.hasOwnProperty(r.id)) {
+            if (!this.definitions.hasOwnProperty(r.id)) {
                 continue;
             }
 
-            const filter = this.filters[r.id];
+            const filter = this.definitions[r.id] as FilterDefinition;
             const filterOptions = await filter.getWhereOptions(r);
             if (filterOptions) {
                 options.push(filterOptions);
@@ -300,11 +305,11 @@ export class FilterService<Data> {
             }
 
             const r = rule as QueryRuleModel;
-            if (!this.filters.hasOwnProperty(r.id)) {
+            if (!this.definitions.hasOwnProperty(r.id)) {
                 continue;
             }
 
-            const filter = this.filters[r.id];
+            const filter = this.definitions[r.id] as FilterDefinition;
             const filterOptions = await filter.getHavingOptions(r);
             if (filterOptions) {
                 options.push(filterOptions);
@@ -355,7 +360,10 @@ export class FilterService<Data> {
             return;
         }
 
-        const includes = this.repository.generateOrderInclude(order);
+        const rule = this.definitions[order.column] as OrderRuleDefinition;
+        const includes = rule && OrderRule.validate(rule) ?
+            this.sequelizeModelScanner.getIncludes(this.repository.model, { path: rule.path }, []) :
+            this.repository.generateOrderInclude(order);
         if (!includes.length) {
             return;
         }
@@ -411,7 +419,7 @@ export class FilterService<Data> {
             options.where = await this.getAccessControlWhereCondition(options.where, userOrOFilter as Users);
         }
 
-        const order = this.sequelizeModelScanner.getOrder(this.repository.model, filter.order);
+        const order = this.getOrderOptions(filter.order);
         const values = await this.repository.model.findAll({
             ...options,
             limit: filter.page ? filter.page.size : null,
@@ -424,7 +432,7 @@ export class FilterService<Data> {
                 id: values.map(x => x.id)
             },
             order
-        }, {});
+        }, filter.data ?? {});
     }
 
     private async getAccessControlWhereCondition(where: WhereOptions, user: DataFilterUserModel): Promise<WhereOptions> {
@@ -470,5 +478,18 @@ export class FilterService<Data> {
             }, []),
             this.getConditionInclude(model, filter.condition)
         ];
+    }
+
+    private getOrderOptions(orderObj: OrderModel): Order {
+        if (!orderObj || !orderObj.column || orderObj.direction === "") {
+            return;
+        }
+
+        const rule = this.definitions[orderObj.column] as OrderRuleDefinition;
+        if (!rule || !OrderRule.validate(rule)) {
+            return this.sequelizeModelScanner.getOrder(this.repository.model, orderObj);
+        }
+
+        return [[rule.getOrderOption(), orderObj.direction.toUpperCase()]];
     }
 }
