@@ -277,9 +277,12 @@ export class FilterService<Data> {
             }
 
             const filter = this.definitions[r.id] as FilterDefinition;
-            const filterOptions = await filter.getWhereOptions(r);
-            if (filterOptions) {
-                options.push(filterOptions);
+            if (!OrderRule.validate(filter)) {
+                const filterOptions = await filter.getWhereOptions(r);
+
+                if (filterOptions) {
+                    options.push(filterOptions);
+                }
             }
         }
     }
@@ -310,9 +313,11 @@ export class FilterService<Data> {
             }
 
             const filter = this.definitions[r.id] as FilterDefinition;
-            const filterOptions = await filter.getHavingOptions(r);
-            if (filterOptions) {
-                options.push(filterOptions);
+            if (!OrderRule.validate(filter)) {
+                const filterOptions = await filter.getHavingOptions(r);
+                if (filterOptions) {
+                    options.push(filterOptions);
+                }
             }
         }
     }
