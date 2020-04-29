@@ -3,11 +3,11 @@ import { SequelizeUtils } from "../../sequelize.utils";
 import { BaseOrderRuleDefinition, OrderItemColumn, OrderRule } from "./order-rule";
 
 export interface EnumOrderRuleDefinition {
-    priority: string[];
+    priorities: string[];
 }
 
 export class EnumOrderRule extends OrderRule implements EnumOrderRuleDefinition {
-    public priority: string[];
+    public priorities: string[];
 
     constructor(definition: BaseOrderRuleDefinition & EnumOrderRuleDefinition) {
         super(definition);
@@ -15,8 +15,8 @@ export class EnumOrderRule extends OrderRule implements EnumOrderRuleDefinition 
 
     public getOrderOption(): OrderItemColumn {
         let order = `CASE ${this.path ? SequelizeUtils.getLiteralFullName(this.attribute, this.path) : this.attribute} `;
-        for (let i = 0; i < this.priority.length; ++i) {
-            order += `WHEN '${this.priority[i]}' THEN ${this.priority.length - i} `;
+        for (let i = 0; i < this.priorities.length; ++i) {
+            order += `WHEN '${this.priorities[i]}' THEN ${this.priorities.length - i} `;
         }
         order += `ELSE 0 END`;
         return literal(order);

@@ -6,7 +6,7 @@ describe("EnumOrderRule", () => {
         it("should return a valid order option", async () => {
             const filter = new EnumOrderRule({
                 attribute: "test",
-                priority: ["one", "two", "three"]
+                priorities: ["one", "two", "three"]
             });
             const order = await filter.getOrderOption();
             expect(order).toBeDefined();
