@@ -23,6 +23,7 @@ export interface GroupFilterDefinition extends BaseGroupFilterDefinition {
 }
 
 export class GroupFilter implements GroupFilterDefinition {
+    private _type = "group_filter";
     protected _translateService: TranslateAdapter;
 
     public set translateService(translateService: TranslateAdapter) {
@@ -46,7 +47,7 @@ export class GroupFilter implements GroupFilterDefinition {
     }
 
     public static validate(definition: BaseGroupFilterDefinition) {
-        return typeof definition === "object" && definition.rootFilter;
+        return definition["_type"] === "group_filter";
     }
 
     public async getConfig(key: string, user?: DataFilterUserModel): Promise<GroupFilterBaseConfigurationModel> {
