@@ -1,5 +1,5 @@
 import {
-    Body, Get, HttpCode, HttpStatus, Inject, Optional, Param, Post, Query, Req, UseInterceptors
+    Body, Get, HttpCode, HttpStatus, Inject, Optional, Param, Post, Query, Req, UseGuards, UseInterceptors
 } from "@nestjs/common";
 import { ExportTypes, FilterQueryModel, FilterResultModel, SelectFilterValue } from "../..";
 import { UserDeserializer } from "../../deserializers";
@@ -9,6 +9,7 @@ import { DataFileDownloadInterceptor } from "../interceptors/data-file-download.
 import { FilterConfigurationSearchModel } from "../models/filter-configuration-search.model";
 import { FilterConfigurationModel } from "../models/filter-configuration.model";
 import { FilterResourceValueModel } from "../models/filter-resource-value.model";
+import { FilterQueryGuard } from "../guards/filter-query.guard";
 
 export class FilterController<Data> {
     @Inject()
@@ -19,6 +20,7 @@ export class FilterController<Data> {
 
     @Post("filter")
     @HttpCode(HttpStatus.OK)
+    @UseGuards(FilterQueryGuard)
     public async filter(@Body() query: FilterQueryModel, @Req() req: any): Promise<FilterResultModel<Data>> {
         const user = await this.getUser(req);
         return user ? this.filterService.filter(user, query) : this.filterService.filter(query);
