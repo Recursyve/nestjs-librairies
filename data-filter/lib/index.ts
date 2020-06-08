@@ -13,6 +13,8 @@ import { FilterFactory } from "./filter/filter.factory";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { createFilterProvider } from "./filter/filter.provider";
+import { defaultFilterOptionConfig, FilterOptionConfig } from "./filter/filter.config";
+import { FILTER_OPTION } from "./constant";
 
 export interface DataFilterConfig {
     imports?: Array<Type<any> | DynamicModule | Promise<DynamicModule> | ForwardReference>;
@@ -20,6 +22,7 @@ export interface DataFilterConfig {
     accessControlAdapter?: Provider;
     translateAdapter?: Provider;
     exportAdapter?: Provider;
+    filter?: FilterOptionConfig;
 }
 
 export interface DataFilterFeatureConfig extends DataFilterConfig {
@@ -50,18 +53,27 @@ export class DataFilterModule {
             exportAdapter: option?.exportAdapter ?? {
                 provide: ExportAdapter,
                 useClass: DefaultExportAdapter
+            },
+            filter: {
+                ...defaultFilterOptionConfig,
+                ...(option?.filter ?? {})
             }
         };
         return {
             module: DataFilterModule,
             imports: [...option.imports],
             providers: [
+                {
+                    provide: FILTER_OPTION,
+                    useValue: option.filter
+                },
                 option.deserializer,
                 option.accessControlAdapter,
                 option.translateAdapter,
                 option.exportAdapter
             ],
             exports: [
+                FILTER_OPTION,
                 UserDeserializer,
                 AccessControlAdapter,
                 TranslateAdapter,
