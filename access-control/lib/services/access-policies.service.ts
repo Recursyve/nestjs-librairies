@@ -1,4 +1,4 @@
-import { Injectable, Type } from "@nestjs/common";
+import { Injectable, Logger, Type } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
 import { Model } from "sequelize-typescript";
 import { POLICY_METADATA } from "../decorators/constant";
@@ -8,6 +8,7 @@ import { M } from "../utils";
 
 @Injectable()
 export class AccessPoliciesService {
+    private readonly logger = new Logger();
     private _policies: AccessPolicy[] = [];
 
     public get policies(): AccessPolicy[] {
@@ -21,7 +22,10 @@ export class AccessPoliciesService {
         if (!policy) {
             return [];
         }
-        return await policy.getResources(user);
+        this.logger.verbose(`Getting resources for user ${user.id}`, policy.name);
+        const resources = await policy.getResources(user);
+        this.logger.verbose(`${resources.length} resources found for user ${user.id}`, policy.name);
+        return resources;
     }
 
     public registerPolicies(...policies: Type<AccessPolicy>[]): void {

@@ -8,6 +8,10 @@ export abstract class ResourceUpdatedPolicy<T extends Model<T>> {
     public repository: typeof M;
     public parentRepository: typeof M;
 
+    public get name(): string {
+        return (this as any).constructor.name;
+    }
+
     public async handle(before: T, after: T): Promise<UserResources[]> {
         const result = await this.getPolicies(before, after);
         return result

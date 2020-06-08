@@ -1,4 +1,4 @@
-import { Injectable, Type } from "@nestjs/common";
+import { Injectable, Logger, Type } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
 import { Model } from "sequelize-typescript";
 import { CREATED_POLICY_METADATA, FROM_POLICY_METADATA } from "../decorators/constant";
@@ -8,6 +8,7 @@ import { M } from "../utils";
 
 @Injectable()
 export class ResourceCreatedPoliciesService {
+    private readonly logger = new Logger();
     private _policies: ResourceCreatedPolicy<any>[] = [];
 
     public get policies(): ResourceCreatedPolicy<any>[] {
@@ -18,12 +19,22 @@ export class ResourceCreatedPoliciesService {
 
     public async execute(table: string, resource: any): Promise<UserResources[]> {
         const policies = this._policies.filter(x => x.repository.tableName === table && !x.parentRepository);
-        const policiesRes = await Promise.all(policies.map(policy => policy.handle(resource)))
+        const policiesRes = await Promise.all(policies.map(async policy => {
+            this.logger.verbose(`Getting users for resource ${resource.id}`, policy.name);
+            const users = await policy.handle(resource);
+            this.logger.verbose(`${users.length} users found for resource ${resource.id}`, policy.name);
+            return users;
+        }))
             .then(res => res.reduce((all, current) => [...all, ...current], []))
             .then(res => res.map(x => ({ ...x, resourceId: resource.id })));
 
         const parentPolicies = this._policies.filter(x => x.parentRepository && x.parentRepository.tableName === table);
-        const parentPoliciesRes = await Promise.all(parentPolicies.map(policy => policy.handle(resource)));
+        const parentPoliciesRes = await Promise.all(parentPolicies.map(async policy => {
+            this.logger.verbose(`Getting users for resource ${resource.id}`, policy.name);
+            const users = await policy.handle(resource);
+            this.logger.verbose(`${users.length} users found for resource ${resource.id}`, policy.name);
+            return users;
+        }));
 
         return parentPoliciesRes.reduce((all, current) => [...all, ...current], policiesRes);
     }
