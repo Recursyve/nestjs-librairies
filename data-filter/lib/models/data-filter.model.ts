@@ -2,6 +2,7 @@ import { FindAttributeOptions } from "sequelize";
 import { Model } from "sequelize-typescript";
 import { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
 import { IncludeConfig } from "./include.model";
+import { M, SequelizeUtils } from "../sequelize.utils";
 
 export interface DataFilterConfigModel {
     model: typeof Model;
@@ -66,5 +67,12 @@ export class DataFilterConfig implements DataFilterConfigModel {
                 attributes: [],
                 path: x.config.path
             }));
+    }
+
+    public getSearchableAttributes(): string[] {
+        const searchableAttributes = SequelizeUtils.getModelSearchableAttributes(this.model as typeof M);
+        return this.attributes ?
+            (this.attributes as string[])?.filter(x => searchableAttributes.some(attr => attr === x)) :
+            searchableAttributes;
     }
 }

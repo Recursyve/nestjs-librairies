@@ -183,9 +183,7 @@ export class DataFilterRepository<Data> {
 
     public getSearchAttributes(): SearchAttributesModel[] {
         const attributes: SearchAttributesModel[] = [];
-        const modelAttr = this._config.attributes
-            ? (this._config.attributes as string[])
-            : SequelizeUtils.getModelSearchableAttributes(this.model);
+        const modelAttr = this._config.getSearchableAttributes();
         attributes.push(
             ...modelAttr.map(a => ({
                 name: a,
