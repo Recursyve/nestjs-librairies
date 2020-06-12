@@ -184,16 +184,25 @@ export class SequelizeUtils {
         });
     }
 
-    public static getModelFieldAttributes(model: typeof M, fields: string[]): string[] {
+    public static getModelSearchableFieldAttributes(model: typeof M, fields: string[]): string[] {
         const attributes = model.rawAttributes;
-        return fields.map(x => {
-            const attr = attributes[x];
-            if (!attr) {
-                return x;
-            }
+        return fields
+            .filter(x => {
+                const attr = attributes[x];
+                if (!attr) {
+                    return false;
+                }
 
-            return attr.field ? attr.field : x;
-        })
+                return !["DATE", "DATEONLY", "VIRTUAL"].some(t => t === (attr.type as AbstractDataTypeConstructor).key);
+            }).
+            map(x => {
+                const attr = attributes[x];
+                if (!attr) {
+                    return x;
+                }
+
+                return attr.field ? attr.field : x;
+            })
     }
 
     public static reduceModelFromPath(model: M, path: string) {
