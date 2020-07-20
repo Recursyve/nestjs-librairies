@@ -1,23 +1,24 @@
 import { Injectable } from "@nestjs/common";
 import { col, FindOptions, fn, Op, where } from "sequelize";
 import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdapter } from "../adapters";
-import { Attributes, Data, Include, Path } from "../decorators";
-import { ContractSystems } from "../test/models/contracts/contract-systems.model";
-import { Invoices } from "../test/models/invoices/invoices.model";
-import { Contracts } from "../test/models/contracts/contracts.model";
-import { Owners } from "../test/models/places/owners.model";
-import { BaseFilter } from "./base-filter";
-import { NumberFilter, TextFilter } from "./filters";
-import { FilterOperatorTypes } from "./operators";
-import { FilterService } from "./filter.service";
-import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";
 import { DataFilterService } from "../data-filter.service";
+import { Attributes, Data, Include, Path } from "../decorators";
 import { DataFilterScanner } from "../scanners/data-filter.scanner";
-import { Systems } from "../test/models/systems/systems.model";
-import { Places } from "../test/models/places/places.model";
-import { Persons } from "../test/models/persons/persons.model";
+import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";
+import { ContractSystems } from "../test/models/contracts/contract-systems.model";
+import { Contracts } from "../test/models/contracts/contracts.model";
+import { Invoices } from "../test/models/invoices/invoices.model";
 import { MaintenanceVisits } from "../test/models/maintenance-visits/maintenance-visits.model";
+import { Persons } from "../test/models/persons/persons.model";
+import { Owners } from "../test/models/places/owners.model";
+import { Places } from "../test/models/places/places.model";
+import { Systems } from "../test/models/systems/systems.model";
 import { Visits } from "../test/models/visits/visits.model";
+import { BaseFilter } from "./base-filter";
+import { FilterService } from "./filter.service";
+import { NumberFilter, TextFilter } from "./filters";
+import { DefaultFilter } from "./filters/default.filter";
+import { FilterOperatorTypes } from "./operators";
 
 @Data(ContractSystems)
 @Attributes(["active"])
@@ -39,6 +40,12 @@ class ContractSystemsTest {
 @Injectable()
 export class TestFilter extends BaseFilter<ContractSystemsTest> {
     public dataDefinition = ContractSystemsTest;
+
+    public defaultFilter = new DefaultFilter({
+        id: "email",
+        operation: FilterOperatorTypes.Contains,
+        value: "@"
+    });
 
     public email = new TextFilter({
         attribute: "email",
@@ -172,6 +179,11 @@ describe("FilterService", () => {
                                 "$system.place.owners.person.last_name$": "Doe"
                             }
                         ]
+                    },
+                    {
+                        "$system.place.owners.person.email$": {
+                            [Op.like]: "%@%"
+                        }
                     }
                 ]
             },

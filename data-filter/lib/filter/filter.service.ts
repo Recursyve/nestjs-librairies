@@ -14,6 +14,7 @@ import { FilterUtils } from "./filter.utils";
 import {
     Filter, FilterCondition, FilterConditionRule, FilterDefinition, SelectFilter, SelectFilterValue
 } from "./filters";
+import { DefaultFilter, DefaultFilterDefinition } from "./filters/default.filter";
 import { GeoLocalizationFilter } from "./filters/geo-localization.filter";
 import { GroupFilter, GroupFilterDefinition } from "./filters/group.filter";
 import { QueryModel, QueryRuleModel } from "./models";
@@ -149,6 +150,7 @@ export class FilterService<Data> {
          */
         GeoLocalizationFilter.reset();
 
+        query = this.addDefaultFilter(query);
         let option: FindOptions = {
             group: `${model.name}.id`
         };
@@ -496,5 +498,29 @@ export class FilterService<Data> {
         }
 
         return [[rule.getOrderOption(), orderObj.direction.toUpperCase()]];
+    }
+
+    private addDefaultFilter(query: QueryModel): QueryModel {
+        if (!this.model.defaultFilter) {
+            return query;
+        }
+
+        if (this.model.defaultFilter.required) {
+            if (query?.condition !== "and") {
+                query = {
+                    condition: "and",
+                    rules: [query]
+                };
+            }
+        } else {
+            if (query?.condition !== "or") {
+                query = {
+                    condition: "or",
+                    rules: [query]
+                };
+            }
+        }
+        query.rules.push(this.model.defaultFilter.filter);
+        return query;
     }
 }
