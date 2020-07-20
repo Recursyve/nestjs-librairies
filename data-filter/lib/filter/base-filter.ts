@@ -1,11 +1,13 @@
 import { Type } from "@nestjs/common";
 import { TranslateAdapter } from "../adapters/translate.adapter";
 import { Filter, FilterDefinition, GroupFilter, GroupFilterDefinition } from "./filters";
+import { DefaultFilterDefinition } from "./filters/default.filter";
 import { FilterConfig, FilterModel } from "./models";
 
 export abstract class BaseFilter<T> implements FilterModel<T> {
     [name: string]: FilterConfig | unknown;
-    abstract dataDefinition: Type<T>;
+    public abstract dataDefinition: Type<T>;
+    public defaultFilter?: DefaultFilterDefinition;
 
     public set translateService(translateService: TranslateAdapter) {
         for (const key in this) {
