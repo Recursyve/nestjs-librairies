@@ -23,7 +23,7 @@ export class ObjectUtils {
     public static objectToArrayOfProperties(object: Object, deep = false): any[] {
         // Convert object properties to array.
         const properties: any[] = [];
-        this.forEachProperty(
+        ObjectUtils.forEachProperty(
             object,
             value => {
                 properties.push(value);
@@ -32,7 +32,7 @@ export class ObjectUtils {
             !deep
                 ? null
                 : deepObject => {
-                      properties.push(this.objectToArrayOfProperties(deepObject));
+                      properties.push(ObjectUtils.objectToArrayOfProperties(deepObject));
                   }
         );
         return properties;
@@ -50,7 +50,7 @@ export class ObjectUtils {
                 }
                 return value;
             },
-            this.stringBoolsToBools
+            ObjectUtils.stringBoolsToBools
         );
     }
 }
