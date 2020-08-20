@@ -168,7 +168,7 @@ export class FilterService<Data> {
             const paranoid = await this.generateWhereOptions(query, whereConditions);
             await this.generateHavingOptions(query, havingConditions);
 
-            if (paranoid) {
+            if (!paranoid) {
                 option.paranoid = paranoid;
             }
 
