@@ -53,6 +53,8 @@ export class DateFilter extends Filter {
                 return this.getGreaterWhereOptions(rule, end);
             case FilterOperatorTypes.GreaterOrEqual:
                 return this.getGreaterOrEqualWhereOptions(rule, start);
+            default:
+                return super.getWhereOptions(rule);
         }
     }
 

@@ -262,14 +262,14 @@ export class FilterService<Data> {
             return;
         }
 
-        let paranoid = false;
+        let paranoid = true;
         for (const rule of query.rules) {
             const c = rule as QueryModel;
             if (c.condition) {
                 const conditions = [];
                 const op = c.condition === "and" ? Op.and : Op.or;
                 const where = { [op]: conditions };
-                paranoid = paranoid || await this.generateWhereOptions(c, conditions);
+                paranoid = paranoid && await this.generateWhereOptions(c, conditions);
 
                 if (where[op as any].length) {
                     options.push(where);
@@ -291,8 +291,10 @@ export class FilterService<Data> {
                     options.push(filterOptions);
                 }
             }
-            return filter.paranoid ?? false;
+            paranoid = filter.paranoid ?? true;
         }
+
+        return paranoid;
     }
 
     private async generateHavingOptions(query: QueryModel, options: WhereOptions[]) {
