@@ -6,3 +6,4 @@ export * from "./resource-created-policies.service";
 export * from "./resource-event.service";
 export * from "./resource-event-access-control.service";
 export * from "./resource-updated-policies.service";
+export * from "./sequelize-models.service";
