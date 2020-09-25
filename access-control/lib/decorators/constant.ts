@@ -1,3 +1,4 @@
+export const ACCESS_CONTROL_ROUTES = "__accessControlRoutes__";
 export const POLICY_METADATA = "__policy__";
 export const CREATED_POLICY_METADATA = "__createdPolicy__";
 export const UPDATED_POLICY_METADATA = "__updatedPolicy__";

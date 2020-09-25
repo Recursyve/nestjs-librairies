@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Inject, Injectable } from "@nestjs/commo
 import { Reflector } from "@nestjs/core";
 import { Model } from "sequelize-typescript";
 import { ACCESS_CONTROL_MODELS } from "../constant";
-import { NEEDS_ACCESS_ACTIONS } from "../decorators/constant";
+import { ACCESS_CONTROL_ROUTES, NEEDS_ACCESS_ACTIONS } from "../decorators/constant";
 import { UserDeserializer } from "../deserializers";
 import { AccessAction } from "../models";
 import { AccessControlService } from "../services";
@@ -11,6 +11,7 @@ import { M } from "../utils";
 @Injectable()
 export class AccessControlGuard implements CanActivate {
     private resources: { [resource: string]: typeof Model };
+    private routes: string[];
 
     constructor(
         @Inject(ACCESS_CONTROL_MODELS) private readonly models: (typeof M)[],
@@ -63,7 +64,7 @@ export class AccessControlGuard implements CanActivate {
     // 0/1     /2   /3     /4
     //  /model1/:id1/model2/:id2...
     // Its splits by "/" and takes uneven indexes (1, 3, ...) up until extractCount resources.
-    private getModels(path: string, extractCount): typeof Model[] {
+    public getModels(path: string, extractCount): typeof Model[] {
         const resources = path
             .split("/")
             .filter((component, index) => component.length && index % 2 !== 0 && index < extractCount * 2 + 1);
@@ -74,9 +75,22 @@ export class AccessControlGuard implements CanActivate {
     private init(): void {
         this.resources = {};
         for (const model of this.models) {
-            if (model.options.comment) {
-                this.resources[model.options.comment] = model;
+            const routes = this.reflectModelRoutes(model);
+            if (!routes) {
+                return;
+            }
+
+            for (const route of routes) {
+                if (this.resources[route]) {
+                    throw new Error(`${route} is already associated to a model (${this.resources[route].tableName})`);
+                }
+                this.resources[route] = model;
             }
         }
+        this.routes = Object.keys(this.resources);
+    }
+
+    private reflectModelRoutes(policy: any): string[] {
+        return Reflect.getMetadata(ACCESS_CONTROL_ROUTES, policy);
     }
 }
