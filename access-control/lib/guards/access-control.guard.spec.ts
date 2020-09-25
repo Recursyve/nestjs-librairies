@@ -1,10 +1,10 @@
-import { AccessControlRoutes } from "../decorators/access-control-routes.decorator";
+import { AccessControlModelRoutes } from "../decorators";
 import { AccessControlGuard } from "./access-control.guard";
 
-@AccessControlRoutes("account")
+@AccessControlModelRoutes("account")
 class ModelTest1 {}
 
-@AccessControlRoutes("coord")
+@AccessControlModelRoutes("coord")
 class ModelTest2 {}
 
 describe("AccessControlGuard", () => {
