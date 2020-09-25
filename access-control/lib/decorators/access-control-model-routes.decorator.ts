@@ -1,11 +1,12 @@
 import { ACCESS_CONTROL_ROUTES } from "./constant";
 
 /**
- * Define the routes associated with a model. It helps the AccessControlGuard to resolve the right model from the HTTP Request
+ * Defines the routes associated with a model. It helps the AccessControlGuard resolve the right model from the HTTP Request's URL
+ * Most times it should be singular a kebab-case singular version of the table name. To make sure, refer to the model's main controller path.
  * ```
  * @Table({ tableName: "accounts" })
  * @AccessControlModelRoutes("account")
- * class Accounts extends DatabaseEntities<Accounts> {}
+ * export class Accounts extends DatabaseEntities<Accounts> {}
  * ```
  */
 export function AccessControlModelRoutes(...routes: string[]): ClassDecorator {
