@@ -5,6 +5,8 @@ import { FilterType } from "../type";
 import { BaseFilterDefinition, Filter } from "./filter";
 import * as moment from "moment";
 
+// Filters a row by exact date and time given in the rules.
+// TODO: Do not hard code timezone offset
 export class DateTimeFilter extends Filter {
     public type = FilterType.DateTime;
     public operators = [...DateOperators];
@@ -13,7 +15,6 @@ export class DateTimeFilter extends Filter {
         super(definition);
     }
 
-    // TODO: Do not hard code timezone offset
     public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions> {
         if (rule.operation === FilterOperatorTypes.Between || rule.operation === FilterOperatorTypes.NotBetween) {
             return super.getWhereOptions({
