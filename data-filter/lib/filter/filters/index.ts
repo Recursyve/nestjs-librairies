@@ -1,5 +1,6 @@
 export * from "./coordinate.filter";
 export * from "./date.filter";
+export * from "./date-time.filter";
 export * from "./filter";
 export * from "./geo-localization.filter";
 export * from "./group.filter";
