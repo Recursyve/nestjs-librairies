@@ -165,8 +165,12 @@ export class FilterService<Data> {
                 having: query.condition === "and" ? { [Op.and]: havingConditions } : { [Op.or]: havingConditions }
             };
 
-            await this.generateWhereOptions(query, whereConditions);
+            const paranoid = await this.generateWhereOptions(query, whereConditions);
             await this.generateHavingOptions(query, havingConditions);
+
+            if (!paranoid) {
+                option.paranoid = paranoid;
+            }
 
             if (!havingConditions.length) {
                 delete option.having;
@@ -253,18 +257,19 @@ export class FilterService<Data> {
         return includes;
     }
 
-    private async generateWhereOptions(query: QueryModel, options: WhereOptions[]) {
+    private async generateWhereOptions(query: QueryModel, options: WhereOptions[]): Promise<boolean> {
         if (!query.rules) {
             return;
         }
 
+        let paranoid = true;
         for (const rule of query.rules) {
             const c = rule as QueryModel;
             if (c.condition) {
                 const conditions = [];
                 const op = c.condition === "and" ? Op.and : Op.or;
                 const where = { [op]: conditions };
-                await this.generateWhereOptions(c, conditions);
+                paranoid = paranoid && await this.generateWhereOptions(c, conditions);
 
                 if (where[op as any].length) {
                     options.push(where);
@@ -286,7 +291,10 @@ export class FilterService<Data> {
                     options.push(filterOptions);
                 }
             }
+            paranoid = filter.paranoid ?? true;
         }
+
+        return paranoid;
     }
 
     private async generateHavingOptions(query: QueryModel, options: WhereOptions[]) {
@@ -438,7 +446,8 @@ export class FilterService<Data> {
             where: {
                 id: values.map(x => x.id)
             },
-            order
+            order,
+            paranoid: options.paranoid
         }, filter.data ?? {});
     }
 

@@ -30,6 +30,7 @@ export interface BaseFilterDefinition {
     attribute: string;
     path?: string;
     having?: any;
+    paranoid?: boolean;
     condition?: FilterCondition;
     group?: string;
     where?: IncludeWhereModel;
