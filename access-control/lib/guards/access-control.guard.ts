@@ -77,7 +77,7 @@ export class AccessControlGuard implements CanActivate {
         for (const model of this.models) {
             const routes = this.reflectModelRoutes(model);
             if (!routes) {
-                return;
+                continue;
             }
 
             for (const route of routes) {
