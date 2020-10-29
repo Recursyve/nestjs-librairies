@@ -37,7 +37,8 @@ export class DataFilterConfig implements DataFilterConfigModel {
         const customAttributes = this.getCustomAttributes(options);
         if (this.attributes) {
             return [
-                ...this.attributes as string[],
+                "id",
+                ...SequelizeUtils.getModelSearchableFieldAttributes(this.model as typeof M, this.attributes as string[]),
                 ...customAttributes.map(x => x.attribute)
             ];
         }
@@ -71,8 +72,9 @@ export class DataFilterConfig implements DataFilterConfigModel {
 
     public getSearchableAttributes(): string[] {
         const searchableAttributes = SequelizeUtils.getModelSearchableAttributes(this.model as typeof M);
-        return this.attributes ?
-            (this.attributes as string[])?.filter(x => searchableAttributes.some(attr => attr === x)) :
+        const attributes = SequelizeUtils.getModelSearchableFieldAttributes(this.model as typeof M, this.attributes as string[] ?? []);
+        return attributes.length ?
+            (attributes as string[])?.filter(x => searchableAttributes.some(attr => attr === x)) :
             searchableAttributes;
     }
 }

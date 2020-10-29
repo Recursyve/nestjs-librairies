@@ -66,7 +66,7 @@ export class FilterController<Data> {
         return await this.filterService.searchConfigValues(search, await this.getUser(req) ?? {} as DataFilterUserModel);
     }
 
-    private async getUser(req: any): Promise<DataFilterUserModel> {
+    protected async getUser(req: any): Promise<DataFilterUserModel> {
         if (!this.userUserDeserializer) {
             return null;
         }
