@@ -38,7 +38,7 @@ export class DataFilterConfig implements DataFilterConfigModel {
         if (this.attributes) {
             return [
                 "id",
-                ...SequelizeUtils.getModelSearchableFieldAttributes(this.model as typeof M, this.attributes as string[]),
+                ...(this.attributes as string[]),
                 ...customAttributes.map(x => x.attribute)
             ];
         }
