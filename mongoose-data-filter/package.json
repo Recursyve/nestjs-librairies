@@ -1,0 +1,79 @@
+{
+    "name": "@recursyve/nestjs-mongoose-data-filter",
+    "version": "7.0.0",
+    "description": "NestJs Mongoose DataFilter library",
+    "main": "index.js",
+    "scripts": {
+        "watch": "gulp",
+        "build": "gulp build",
+        "build:lib": "gulp build-lib",
+        "lint": "gulp lint",
+        "publish-package": "npm run build:lib && npm publish dist --access public",
+        "publish-package:beta": "npm run publish-package -- --tag beta --access public",
+        "publish-package:dry-run": "npm run publish-package -- --dry-run"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Recursyve/nestjs-librairies/mongoose-data-filter"
+    },
+    "author": "Recursyve",
+    "license": "MIT",
+    "peerDependencies": {
+        "@nestjs/common": "^7.0.0",
+        "@nestjs/core": "^7.0.0",
+        "@recursyve/nestjs-common": "^7.0.0"
+    },
+    "dependencies": {
+        "csv-stringify": "^5.3.6",
+        "xlsx": "^0.15.6"
+    },
+    "devDependencies": {
+        "@nestjs/common": "^7.0.0",
+        "@nestjs/core": "^7.0.0",
+        "@nestjs/cqrs": "^6.1.0",
+        "@nestjs/mongoose": "^7.0.2",
+        "@nestjs/testing": "^7.0.8",
+        "@recursyve/nestjs-common": "^7.0.0",
+        "@types/bluebird": "*",
+        "@types/jest": "^25.1.4",
+        "@types/moment": "^2.13.0",
+        "@types/mongodb-memory-server": "^2.3.0",
+        "@types/mongoose": "^5.7.37",
+        "@types/node": "^12.12.36",
+        "@types/xlsx": "0.0.36",
+        "@typescript-eslint/eslint-plugin": "4.6.0",
+        "@typescript-eslint/parser": "4.6.0",
+        "class-transformer": "^0.2.3",
+        "class-validator": "^0.11.1",
+        "eslint": "7.12.1",
+        "eslint-config-prettier": "6.15.0",
+        "eslint-plugin-prettier": "^3.1.4",
+        "express": "^4.17.1",
+        "gulp": "^4.0.2",
+        "gulp-copy": "^4.0.1",
+        "gulp-sourcemaps": "^2.6.5",
+        "gulp-typescript": "^5.0.1",
+        "jest": "^25.2.4",
+        "mongodb-memory-server": "^6.9.2",
+        "mongoose": "^5.10.11",
+        "reflect-metadata": "^0.1.13",
+        "rxjs": "^6.5.4",
+        "ts-jest": "^25.3.0",
+        "ts-node": "^8.8.1",
+        "typescript": "^3.8.3"
+    },
+    "jest": {
+        "moduleFileExtensions": [
+            "js",
+            "json",
+            "ts"
+        ],
+        "rootDir": "lib",
+        "testRegex": ".spec.ts$",
+        "transform": {
+            "^.+\\.(t|j)s$": "ts-jest"
+        },
+        "coverageDirectory": "./coverage",
+        "testEnvironment": "node"
+    }
+}
