@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Model } from "mongoose";
-import { SequelizeUtils } from "../../data-filter/lib/sequelize.utils";
+import { PathModel } from "../../data-filter/lib/models/path.model";
 import { AttributesConfig } from "./models/attributes.model";
 import { DataFilterConfig } from "./models/data-filter.model";
 import { MongoUtils } from "./mongo.utils";
@@ -35,6 +35,35 @@ export class DataFilterRepository<Data> {
         ];
 
         return MongoUtils.reduceLookups(lookups);
+    }
+
+    public getSearchAttributes(): string[] {
+        const attributes: string[] = [];
+        const modelAttr = this._config.getSearchableAttributes();
+        attributes.push(
+            ...modelAttr.map(a => ({
+                name: a,
+                key: a
+            }))
+        );
+
+        for (const definition of this._definitions) {
+            if (!definition.path) {
+                continue;
+            }
+
+            const additionalIncludes = definition.transformIncludesConfig({});
+            attributes.push(
+                ...this.sequelizeModelScanner.getAttributes(
+                    this.model,
+                    definition.path as PathModel,
+                    additionalIncludes,
+                    definition.attributes
+                )
+            );
+        }
+
+        return attributes;
     }
 
     private init() {

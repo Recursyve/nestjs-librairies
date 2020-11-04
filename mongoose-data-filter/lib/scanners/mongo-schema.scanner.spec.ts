@@ -1,5 +1,5 @@
 import { SchemaFactory } from "@nestjs/mongoose";
-import { Aggregate, Connection, Schema } from "mongoose";
+import { Connection, Schema } from "mongoose";
 import { databaseFactory } from "../test/database.factory";
 import { Owners } from "../test/models/places/owners.model";
 import { MongoSchemaScanner } from "./mongo-schema.scanner";
@@ -15,30 +15,84 @@ describe("MongoSchemaScanner", () => {
         schema = SchemaFactory.createForClass(Owners);
     });
 
-    it("getLookups should return a valid lookup aggregation", () => {
-        const placesLookups = new Aggregate(scanner.getLookups(schema, "places"));
-        expect(placesLookups).toBeDefined();
-        expect(placesLookups).toStrictEqual(
-            new Aggregate().lookup({
-                from: "places",
-                localField: "places",
-                foreignField: "_id",
-                as: "places"
-            })
-        );
+    afterAll(async () => {
+        await connection.close(true);
+    });
 
-        const accountsLookups = new Aggregate(scanner.getLookups(schema, "account"));
-        expect(accountsLookups).toBeDefined();
-        expect(accountsLookups).toStrictEqual(
-            new Aggregate().lookup({
-                from: "accounts",
-                localField: "account",
-                foreignField: "_id",
-                as: "account"
-            }).unwind({
-                path: "$account",
-                preserveNullAndEmptyArrays: true
-            })
-        );
+    it("getLookups should return a valid lookup aggregation", async () => {
+        const placesLookups = scanner.getLookups(schema, "places.geoCoord.location");
+        expect(placesLookups).toBeDefined();
+        expect(placesLookups).toStrictEqual([
+            {
+                $lookup: {
+                    from: "places",
+                    let: { placesId: "$places" },
+                    as: "places",
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $in: ["$_id", "$$placesId"]
+                                }
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: "coords",
+                                let: { geoCoordId: "$geoCoord" },
+                                as: "geoCoord",
+                                pipeline: [
+                                    {
+                                        $match: {
+                                            $expr: {
+                                                $eq: ["$_id", "$$geoCoordId"]
+                                            }
+                                        }
+                                    },
+                                    {
+                                        $lookup: {
+                                            from: "locations",
+                                            let: { locationId: "$location" },
+                                            as: "location",
+                                            pipeline: [
+                                                {
+                                                    $match: {
+                                                        $expr: {
+                                                            $eq: ["$_id", "$$locationId"]
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                    },
+                                    {
+                                        $unwind: {
+                                            path: `$location`,
+                                            preserveNullAndEmptyArrays: true
+                                        }
+                                    }
+                                ]
+                            },
+                        },
+                        {
+                            $unwind: {
+                                path: `$geoCoord`,
+                                preserveNullAndEmptyArrays: true
+                            }
+                        }
+                    ]
+                }
+            }
+        ]);
+    });
+
+    it("getSchemaFields should return all field in schema", () => {
+        const fields = scanner.getSchemaFields(schema);
+        expect(fields).toBeDefined();
+    });
+
+    it("getFields should return all field in schema", () => {
+        const fields = scanner.getFields(schema, "places");
+        expect(fields).toBeDefined();
     });
 });

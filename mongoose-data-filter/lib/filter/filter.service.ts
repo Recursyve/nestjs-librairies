@@ -12,7 +12,7 @@ import { MongoUtils } from "../mongo.utils";
 import { MongoSchemaScanner } from "../scanners/mongo-schema.scanner";
 import { BaseFilter } from "./base-filter";
 import { FilterUtils } from "./filter.utils";
-import { Filter, FilterDefinition } from "./filters";
+import { Filter, FilterDefinition, SelectFilter, SelectFilterValue } from "./filters";
 import { GroupFilter, GroupFilterDefinition } from "./filters/group.filter";
 import { QueryModel, QueryRuleModel } from "./models";
 import { FilterConfigurationSearchModel } from "./models/filter-configuration-search.model";
@@ -50,7 +50,7 @@ export class FilterService<Data> {
     public async getConfig(user?: DataFilterUserModel): Promise<FilterConfigurationModel[]> {
         const result: FilterConfigurationModel[] = [];
         for (const key in this.definitions) {
-            if (!this.definitions.hasOwnProperty(key) || OrderRule.validate(this.definitions[key] as OrderRuleDefinition)) {
+            if (!this.definitions.hasOwnProperty(key)) {
                 continue;
             }
 
@@ -137,10 +137,12 @@ export class FilterService<Data> {
         }
 
         const matchConditions: mongoose.FilterQuery<any>[] = [];
+        await this.generateMatchOptions(query, matchConditions);
+
         const match = {
             $match: query.condition === "and" ? { "$and": matchConditions } : { "$or": matchConditions }
         }
-        await this.generateMatchOptions(query, matchConditions);
+
         return [
             ...await this.getLookups(model, query, data),
             match

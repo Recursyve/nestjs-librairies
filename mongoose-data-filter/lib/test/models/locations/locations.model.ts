@@ -7,8 +7,6 @@ export class Locations {
     })
     value: string;
 
-    @Prop({
-        required: true
-    })
+    @Prop()
     uniqueCode: string;
 }

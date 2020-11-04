@@ -75,7 +75,7 @@ export class MongoUtils {
     public static reduceLookups(lookups: any[][]): any[] {
         const results = [];
         for (const lookup of lookups) {
-            const exist = results.findIndex(x => x.as === lookup.as) >= 0;
+            this.mergeLookups(results, lookup);
         }
         return results;
     }
@@ -88,5 +88,17 @@ export class MongoUtils {
         }
 
         return a;
+    }
+
+    public static generateSearchCondition(fields: string[], search: string): object {
+        if (!search) {
+            return {};
+        }
+
+        return {
+            $or: fields.map(x => ({
+                [x]: new RegExp(`.*${search}.*`, "i")
+            }))
+        };
     }
 }
