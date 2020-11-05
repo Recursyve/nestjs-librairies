@@ -10,6 +10,7 @@ import {
 } from "mongoose";
 import { AttributesConfig } from "./models/attributes.model";
 import { DataFilterConfig } from "./models/data-filter.model";
+import { OrderModel } from "./models/filter.model";
 import { MongoUtils } from "./mongo.utils";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { MongoSchemaScanner } from "./scanners/mongo-schema.scanner";
@@ -32,24 +33,26 @@ export class DataFilterRepository<Data> {
         this.init();
     }
 
-    public findOne(conditions?: FilterQuery<Data>, projection?: any | null, options?: QueryFindBaseOptions): Promise<Data> {
+    public async findOne(conditions?: FilterQuery<Data>, projection?: any | null, options?: QueryFindBaseOptions): Promise<Data> {
         const aggregation = this.getFilterAggregation(conditions, {
+            ...(options ?? {}),
             projection: options?.projection ?? projection,
             limit: 1
         });
-        return aggregation.exec().then(x => x.shift());
+        return await aggregation.exec().then(x => x.shift());
     }
 
-    public find(conditions?: FilterQuery<Data>, projection?: any | null, options?: QueryFindOptions): Promise<Data[]> {
+    public async find(conditions?: FilterQuery<Data>, projection?: any | null, options?: QueryFindOptions): Promise<Data[]> {
         const aggregation = this.getFilterAggregation(conditions, {
+            ...(options ?? {}),
             projection: options?.projection ?? projection
         });
-        return aggregation.exec();
+        return await aggregation.exec();
     }
 
-    public count(conditions?: FilterQuery<Data>): Promise<Data[]> {
+    public async count(conditions?: FilterQuery<Data>): Promise<Data[]> {
         const aggregation = this.getFilterAggregation(conditions);
-        return aggregation.count("total").exec().then(x => x?.shift()?.total)
+        return await aggregation.count("total").exec().then(x => x?.shift()?.total)
     }
 
     public getLookups(): any[] {
@@ -85,6 +88,25 @@ export class DataFilterRepository<Data> {
         }
 
         return attributes;
+    }
+
+    public generateOrderLookup(order: OrderModel): any[] {
+        if (!order || !order.column || order.direction === "") {
+            return [];
+        }
+
+        const objects = order.column.split(".");
+        objects.pop();
+        const definition = this._definitions.find(x => x.path === objects.join("."));
+
+        if (!definition) {
+            return [];
+        }
+
+        if (!definition.path) {
+            return [];
+        }
+        return this.mongoSchemaScanner.getLookups(this.model.schema, definition.path, definition.includes);
     }
 
     public getFilterAggregation(conditions?: MongooseFilterQuery<any>, options?: QueryFindOptions): Aggregate<any> {

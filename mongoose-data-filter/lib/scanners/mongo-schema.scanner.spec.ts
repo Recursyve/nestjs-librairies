@@ -3,6 +3,7 @@ import { Connection, Schema } from "mongoose";
 import { databaseFactory } from "../test/database.factory";
 import { Accounts } from "../test/models/accounts/accounts.model";
 import { Owners } from "../test/models/places/owners.model";
+import { Places } from "../test/models/places/places.model";
 import { MongoSchemaScanner } from "./mongo-schema.scanner";
 
 describe("MongoSchemaScanner", () => {
@@ -10,12 +11,14 @@ describe("MongoSchemaScanner", () => {
     let scanner: MongoSchemaScanner;
     let ownersSchema: Schema<Owners>;
     let accountsSchema: Schema<Accounts>;
+    let placesSchema: Schema<Places>;
 
     beforeAll(async () => {
         connection = await databaseFactory();
         scanner = new MongoSchemaScanner(connection);
         ownersSchema = SchemaFactory.createForClass(Owners);
         accountsSchema = SchemaFactory.createForClass(Accounts);
+        placesSchema = SchemaFactory.createForClass(Places);
     });
 
     afterAll(async () => {
@@ -91,6 +94,12 @@ describe("MongoSchemaScanner", () => {
                 }
             }
         ]);
+    });
+
+    it("getLookups with reverse ref should return a valid lookup aggregation", async () => {
+        const placesLookups = scanner.getLookups(placesSchema, "owners.account", []);
+        expect(placesLookups).toBeDefined();
+        expect(placesLookups).toStrictEqual([]);
     });
 
     it("getSchemaFields should return all field in schema", () => {

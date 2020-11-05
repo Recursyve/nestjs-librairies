@@ -109,15 +109,15 @@ export class MongoSchemaScanner {
         const lookup =  {
             $lookup: {
                 from: fromCollection,
-                let: {[`${path}Id`]: `$${path}`},
+                let: {[`${path}Id`]: `$${obj.localKey ?? path}`},
                 as: path,
                 pipeline: [
                     {
                         $match: {
-                            $expr: isArray ? {
-                                $in: ["$_id", `$$${path}Id`]
+                            $expr: isArray && !obj.foreignKey ? {
+                                $in: [`$${obj.foreignKey ?? "_id"}`, `$$${path}Id`]
                             } : {
-                                $eq: ["$_id", `$$${path}Id`]
+                                $eq: [`$${obj.foreignKey ?? "_id"}`, `$$${path}Id`]
                             }
                         }
                     }

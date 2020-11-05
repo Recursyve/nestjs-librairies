@@ -128,7 +128,8 @@ export class FilterService<Data> {
         const pipeline = [];
         const queryLookups = await this.getLookups(model, options.query, data);
         const searchLookups = options.search?.value?.length ? this.repository.getLookups() : [];
-        pipeline.push(...MongoUtils.mergeLookups(queryLookups, searchLookups));
+        const orderLookups = MongoUtils.mergeLookups(this.repository.generateOrderLookup(options.order), searchLookups);
+        pipeline.push(...MongoUtils.mergeLookups(queryLookups, orderLookups));
 
         const match: any = {};
         const searchConditions: mongoose.FilterQuery<any>[] = [];
@@ -312,10 +313,12 @@ export class FilterService<Data> {
             aggregation = aggregation.skip(filter.page.number * filter.page.size).limit(filter.page.size);
         }
 
-        const values = aggregation.exec().then(x => x?.[0]?.data)
-        return this.repository.find({
-            _id: values.map(x => x._id)
-        }, null, {
+        const values = await aggregation.exec();
+        return await this.repository.find({
+            _id: {
+                $in: values.map(x => x._id)
+            }
+        } as any, null, {
             sort
         });
     }
