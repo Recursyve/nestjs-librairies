@@ -1,18 +1,21 @@
 import { SchemaFactory } from "@nestjs/mongoose";
 import { Connection, Schema } from "mongoose";
 import { databaseFactory } from "../test/database.factory";
+import { Accounts } from "../test/models/accounts/accounts.model";
 import { Owners } from "../test/models/places/owners.model";
 import { MongoSchemaScanner } from "./mongo-schema.scanner";
 
 describe("MongoSchemaScanner", () => {
     let connection: Connection;
     let scanner: MongoSchemaScanner;
-    let schema: Schema<Owners>;
+    let ownersSchema: Schema<Owners>;
+    let accountsSchema: Schema<Accounts>;
 
     beforeAll(async () => {
         connection = await databaseFactory();
         scanner = new MongoSchemaScanner(connection);
-        schema = SchemaFactory.createForClass(Owners);
+        ownersSchema = SchemaFactory.createForClass(Owners);
+        accountsSchema = SchemaFactory.createForClass(Accounts);
     });
 
     afterAll(async () => {
@@ -20,7 +23,11 @@ describe("MongoSchemaScanner", () => {
     });
 
     it("getLookups should return a valid lookup aggregation", async () => {
-        const placesLookups = scanner.getLookups(schema, "places.geoCoord.location");
+        const placesLookups = scanner.getLookups(ownersSchema, "places.geoCoord", [
+            {
+                path: "location"
+            }
+        ]);
         expect(placesLookups).toBeDefined();
         expect(placesLookups).toStrictEqual([
             {
@@ -87,12 +94,33 @@ describe("MongoSchemaScanner", () => {
     });
 
     it("getSchemaFields should return all field in schema", () => {
-        const fields = scanner.getSchemaFields(schema);
+        const fields = scanner.getSchemaFields(accountsSchema);
         expect(fields).toBeDefined();
+        expect(fields).toStrictEqual([
+            "lastName",
+            "firstName",
+            "email",
+            "userId"
+        ]);
     });
 
     it("getFields should return all field in schema", () => {
-        const fields = scanner.getFields(schema, "places");
+        const fields = scanner.getFields(ownersSchema, "places", [
+            {
+                path: "geoCoord"
+            },
+            {
+                path: "geoCoord.location"
+            }
+        ]);
         expect(fields).toBeDefined();
+        expect(fields).toStrictEqual([
+            "places.$.geoCoord.postalCode",
+            "places.$.geoCoord.address2",
+            "places.$.geoCoord.address",
+            "places.$.geoCoord.streetNumber",
+            "places.$.geoCoord.location.uniqueCode",
+            "places.$.geoCoord.location.value"
+        ])
     });
 });

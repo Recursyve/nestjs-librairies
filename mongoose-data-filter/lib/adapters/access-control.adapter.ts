@@ -1,5 +1,5 @@
-import { M } from "../sequelize.utils";
+import { Model } from "mongoose";
 
 export abstract class AccessControlAdapter {
-    public abstract getResourceIds<Users>(model: typeof M, user: Users): Promise<number[]>;
+    public abstract getResourceIds<Users>(model: Model<any>, user: Users): Promise<number[]>;
 }

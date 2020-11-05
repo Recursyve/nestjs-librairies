@@ -15,6 +15,16 @@ export class Accounts {
     email: string;
 
     @Prop({
+        required: true
+    })
+    firstName: string;
+
+    @Prop({
+        required: true
+    })
+    lastName: string;
+
+    @Prop({
         type: mongoose.Schema.Types.ObjectId,
         ref: Coords.name
     })

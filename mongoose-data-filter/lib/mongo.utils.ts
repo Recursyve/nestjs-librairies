@@ -1,5 +1,5 @@
 import { QuerySelector } from "mongodb";
-import { RuleModel } from "../../data-filter/lib/filter/models";
+import { RuleModel } from "./filter/models";
 
 export class MongoUtils {
     public static generateWhereValue(rule: RuleModel): QuerySelector<any> {
@@ -81,10 +81,20 @@ export class MongoUtils {
     }
 
     public static mergeLookups(a: any[], b: any[]): any[] {
-        const [bLookup] = b;
-        const exist = a.findIndex(x => x.as === bLookup.as) >=0;
-        if (!exist) {
-            a.push(...b);
+        for (const bChild of b) {
+            if (bChild.$lookup) {
+                const aChild = a.find(x => x.$lookup?.from === bChild.$lookup.from && x.$lookup?.as === bChild.$lookup.as);
+                if (aChild) {
+                    aChild.$lookup.pipeline = this.mergeLookups(aChild.$lookup.pipeline ?? [], bChild.$lookup.pipeline ?? []);
+                } else {
+                    a.push(bChild);
+                }
+            } else if (bChild.$unwind) {
+                const aChild = a.find(x => x.$unwind?.path === bChild.$unwind.path);
+                if (!aChild) {
+                    a.push(bChild);
+                }
+            }
         }
 
         return a;

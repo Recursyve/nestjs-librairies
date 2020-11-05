@@ -1,11 +1,11 @@
 import { Prop, Schema } from "@nestjs/mongoose";
-import { Types } from "mongoose";
+import * as mongoose from "mongoose";
 import { Locations } from "../locations/locations.model";
 
 @Schema()
 export class Coords {
     @Prop({
-        type: Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: Locations.name
     })
     location: string | Locations;

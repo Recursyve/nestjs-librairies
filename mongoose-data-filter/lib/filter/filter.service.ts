@@ -1,7 +1,8 @@
 import { Injectable, Type } from "@nestjs/common";
 import * as mongoose from "mongoose";
-import { Aggregate, Model } from "mongoose";
-import { FilterSearchModel } from "../../../data-filter/lib";
+import { Model } from "mongoose";
+import { FilterSearchModel, OrderModel } from "../../../data-filter/lib";
+import { SequelizeUtils } from "../../../data-filter/lib/sequelize.utils";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
 import { DataFilterRepository } from "../data-filter.repository";
@@ -101,9 +102,8 @@ export class FilterService<Data> {
         const options = opt ? opt : userOrOpt as FilterQueryModel;
         const user = opt ? userOrOpt as DataFilterUserModel : null;
 
-        const countOptions = await this.getFindOptions(this.repository.model, options.query);
-        this.addSearchCondition(options.search, countOptions);
-        return user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions);
+        const pipeline = await this.getFilterPipeline(this.repository.model, options);
+        return user ? this.countTotalValues(user, pipeline) : this.countTotalValues(pipeline);
     }
 
     public async filter(user: DataFilterUserModel, options: FilterQueryModel): Promise<FilterResultModel<Data>>;
@@ -113,12 +113,10 @@ export class FilterService<Data> {
         const options = opt ? opt : userOrOpt as FilterQueryModel;
         const user = opt ? userOrOpt as DataFilterUserModel : null;
 
-        const countOptions = await this.getFindOptions(this.repository.model, options.query, options.data);
-        this.addSearchCondition(options.search, countOptions);
-        this.addOrderCondition(options.order, countOptions);
+        const pipeline = await this.getFilterPipeline(this.repository.model, options);
 
-        const total = await (user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions));
-        const values = await (user ? this.findValues(user, options, countOptions) : this.findValues(options, countOptions));
+        const total = await (user ? this.countTotalValues(user, pipeline) : this.countTotalValues(pipeline));
+        const values = await (user ? this.findValues(user, options, pipeline) : this.findValues(options, pipeline));
         return {
             total,
             page: options.page,
@@ -127,26 +125,36 @@ export class FilterService<Data> {
     }
 
     public async getFilterPipeline(model: Model<any>, options: FilterQueryModel, data?: object): Promise<any[]> {
+        options.query = this.addDefaultFilter(options.query);
+
         const pipeline = [];
         const queryLookups = await this.getLookups(model, options.query, data);
         const searchLookups = options.search?.value?.length ? this.repository.getLookups() : [];
         pipeline.push(...MongoUtils.mergeLookups(queryLookups, searchLookups));
 
+        const match: any = {};
+        const searchConditions: mongoose.FilterQuery<any>[] = [];
         if (options.search?.value?.length) {
+            match.$match = { "$and": searchConditions };
 
+            searchConditions.push(this.generateSearchOptions(options.search));
         }
 
         const matchConditions: mongoose.FilterQuery<any>[] = [];
-        await this.generateMatchOptions(query, matchConditions);
-
-        const match = {
-            $match: query.condition === "and" ? { "$and": matchConditions } : { "$or": matchConditions }
+        if (!match.$match && options.query) {
+            match.$match = options.query.condition === "and" ? { "$and": matchConditions } : { "$or": matchConditions }
+        } else if (options.query) {
+            searchConditions.push({
+                [`$${options.query.condition}`]: matchConditions
+            });
         }
 
-        return [
-            ...await this.getLookups(model, query, data),
-            match
-        ];
+        await this.generateMatchOptions(options.query, matchConditions);
+        if (matchConditions.length || searchLookups.length) {
+            pipeline.push(match);
+        }
+
+        return pipeline;
     }
 
     private init() {
@@ -207,7 +215,7 @@ export class FilterService<Data> {
     }
 
     private async generateMatchOptions(query: QueryModel, filters: mongoose.FilterQuery<any>[]): Promise<void> {
-        if (!query.rules) {
+        if (!query?.rules) {
             return;
         }
 
@@ -239,107 +247,82 @@ export class FilterService<Data> {
         }
     }
 
-    private addSearchCondition(search: FilterSearchModel, options: CountOptions): void {
+    private generateSearchOptions(search: FilterSearchModel): object {
         if (!search?.value?.length) {
             return;
         }
 
-        const repoOption = this.repository.generateFindOptions({});
-        options.include = SequelizeUtils.mergeIncludes(
-            options.include as IncludeOptions[],
-            repoOption.include as IncludeOptions[]
-        );
-
-        if (!options.where) {
-            options.where = { [Op.and]: [] };
-        }
-
-        const where = options.where;
         const generateFieldsObject = searchValue =>
             this.repository
                 .getSearchAttributes()
                 .map(a => {
                     return {
-                        [a.key]: {
-                            [Op.like]: `%${searchValue}%`
+                        [a]: {
+                            $eq: new RegExp(`.*${searchValue}.*`, "i")
                         }
                     };
                 })
                 .reduce((a, o) => Object.assign(a, o), {});
 
         const tokens = search.value.split(" ");
-        where[Op.and].push(
-            tokens.map(t => {
+        return {
+            $or: tokens.map(t => {
                 return {
-                    [Op.or]: generateFieldsObject(t)
+                    $or: generateFieldsObject(t)
                 };
             })
-        );
+        };
     }
 
-    private async countTotalValues(user: DataFilterUserModel, options: FindOptions): Promise<number>;
-    private async countTotalValues(options: FindOptions): Promise<number>;
-    private async countTotalValues(...args: [DataFilterUserModel | FindOptions, FindOptions?]): Promise<number> {
+    private async countTotalValues(user: DataFilterUserModel, pipeline: any[]): Promise<number>;
+    private async countTotalValues(pipeline: any[]): Promise<number>;
+    private async countTotalValues(...args: [DataFilterUserModel | any[], any[]?]): Promise<number> {
         const [userOrOpt, opt] = args;
-        const options = opt ? opt : userOrOpt as FindOptions;
+        const pipeline = opt ? opt : userOrOpt as any[];
 
         /**
          * This means that countTotalValues was called with a user
          */
         if (opt) {
-            options.where = await this.getAccessControlWhereCondition(options.where, userOrOpt as DataFilterUserModel);
+            await this.setAccessControlMatchCondition(pipeline, userOrOpt as DataFilterUserModel);
         }
 
-        if (options.having) {
-            const data = await this.repository.model.findAll({
-                ...options,
-                subQuery: false
-            });
-            return data.length;
-        } else {
-            const value = await this.repository.model.count({
-                ...options
-            }) as any;
-            if (typeof value === "number") {
-                return value;
-            } else {
-                return value.length;
-            }
-        }
+        const result = await this.repository.model.aggregate(pipeline).count("total").exec();
+        return result?.[0]?.total;
     }
 
-    private async findValues<Users extends DataFilterUserModel>(user: Users, filter: FilterQueryModel, options: FindOptions): Promise<Data[]>;
-    private async findValues<Users extends DataFilterUserModel>(filter: FilterQueryModel, options: FindOptions): Promise<Data[]>;
-    private async findValues<Users extends DataFilterUserModel>(...args: [Users | FilterQueryModel, FilterQueryModel | FindOptions, FindOptions?]): Promise<Data[]> {
+    private async findValues<Users extends DataFilterUserModel>(user: Users, filter: FilterQueryModel, pipeline: any[]): Promise<Data[]>;
+    private async findValues<Users extends DataFilterUserModel>(filter: FilterQueryModel, pipeline: any[]): Promise<Data[]>;
+    private async findValues<Users extends DataFilterUserModel>(...args: [Users | FilterQueryModel, FilterQueryModel | any[], any[]?]): Promise<Data[]> {
         const [userOrOFilter, filterOrOpt, opt] = args;
-        const options = opt ? opt : filterOrOpt as FindOptions;
+        const pipeline = opt ? opt : filterOrOpt as any[];
         const filter = opt ? filterOrOpt as FilterQueryModel : userOrOFilter as FilterQueryModel;
 
         /**
          * This means that findValues was called with a user
          */
         if (opt) {
-            options.where = await this.getAccessControlWhereCondition(options.where, userOrOFilter as Users);
+            await this.setAccessControlMatchCondition(pipeline, userOrOFilter as Users);
         }
 
-        const order = this.getOrderOptions(filter.order);
-        const values = await this.repository.model.findAll({
-            ...options,
-            limit: filter.page ? filter.page.size : null,
-            offset: filter.page ? filter.page.number * filter.page.size : null,
-            subQuery: false,
-            order
+        const sort = this.getSortOption(filter.order);
+        let aggregation =  this.repository.model.aggregate(pipeline);
+        if (sort) {
+            aggregation = aggregation.sort(sort);
+        }
+        if (filter.page) {
+            aggregation = aggregation.skip(filter.page.number * filter.page.size).limit(filter.page.size);
+        }
+
+        const values = aggregation.exec().then(x => x?.[0]?.data)
+        return this.repository.find({
+            _id: values.map(x => x._id)
+        }, null, {
+            sort
         });
-        return await this.repository.findAll({
-            where: {
-                id: values.map(x => x.id)
-            },
-            order,
-            paranoid: options.paranoid
-        }, filter.data ?? {});
     }
 
-    private async getAccessControlWhereCondition(where: WhereOptions, user: DataFilterUserModel): Promise<WhereOptions> {
+    private async setAccessControlMatchCondition(pipeline: any[], user: DataFilterUserModel): Promise<void> {
         if (!user) {
             throw new Error("No user found");
         } else if (!this.accessControlAdapter) {
@@ -347,7 +330,16 @@ export class FilterService<Data> {
         }
 
         const ids = await this.accessControlAdapter.getResourceIds(this.repository.model, user);
-        return SequelizeUtils.mergeWhere({ id: ids }, where ?? {});
+        let match = pipeline.find(x => x.$match);
+        if (!match) {
+            match = {
+                $match: {}
+            }
+        }
+        match.$match = {
+            ...match.$match,
+            _id: ids
+        }
     }
 
     private getFilterLookups(model: Model<any>, filter: FilterDefinition): any[][] {
@@ -356,8 +348,18 @@ export class FilterService<Data> {
         }
 
         return [
-            this.mongoSchemaScanner.getLookups(model.schema, filter.path)
+            this.mongoSchemaScanner.getLookups(model.schema, filter.path, [])
         ];
+    }
+
+    private getSortOption(orderObj: OrderModel): { [field: string]: number } {
+        if (!orderObj || !orderObj.column || orderObj.direction === "") {
+            return;
+        }
+
+        return {
+            [orderObj.column]: orderObj.direction === "asc" ? 1 : -1
+        }
     }
 
     private addDefaultFilter(query: QueryModel): QueryModel {

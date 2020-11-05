@@ -26,7 +26,7 @@ export async function databaseFactory() {
     }
 
     mongoServer = new MongoMemoryServer();
-    const mongoUri = "mongodb://127.0.0.1:27017/data_filter"; // await mongoServer.getUri();
+    const mongoUri = await mongoServer.getUri();
     connection = await mongoose.createConnection(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
 
     for (const model of models) {
