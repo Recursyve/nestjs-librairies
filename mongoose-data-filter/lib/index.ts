@@ -1,18 +1,19 @@
 import { DynamicModule, ForwardReference, Global, Module, Provider, Type } from "@nestjs/common";
 import {
     AccessControlAdapter,
-    DataFilterService,
-    DefaultAccessControlAdapter,
-    DefaultDeserializer, DefaultExportAdapter, DefaultTranslateAdapter, ExportAdapter, FilterUtils, TranslateAdapter,
-    UserDeserializer
-} from "../../data-filter/lib";
-import { FILTER_OPTION } from "../../data-filter/lib/constant";
-import { BaseFilter } from "../../data-filter/lib/filter";
-import { defaultFilterOptionConfig, FilterOptionConfig } from "../../data-filter/lib/filter/filter.config";
-import { FilterFactory } from "../../data-filter/lib/filter/filter.factory";
-import { createFilterProvider } from "../../data-filter/lib/filter/filter.provider";
-import { DataFilterScanner } from "../../data-filter/lib/scanners/data-filter.scanner";
-import { SequelizeModelScanner } from "../../data-filter/lib/scanners/sequelize-model.scanner";
+    DefaultAccessControlAdapter, DefaultExportAdapter,
+    DefaultTranslateAdapter, ExportAdapter,
+    TranslateAdapter
+} from "./adapters";
+import { FILTER_OPTION } from "./constant";
+import { DataFilterService } from "./data-filter.service";
+import { DefaultDeserializer, UserDeserializer } from "./deserializers";
+import { BaseFilter, FilterUtils } from "./filter";
+import { defaultFilterOptionConfig, FilterOptionConfig } from "./filter/filter.config";
+import { FilterFactory } from "./filter/filter.factory";
+import { createFilterProvider } from "./filter/filter.provider";
+import { DataFilterScanner } from "./scanners/data-filter.scanner";
+import { MongoSchemaScanner } from "./scanners/mongo-schema.scanner";
 
 export interface DataFilterConfig {
     imports?: Array<Type<any> | DynamicModule | Promise<DynamicModule> | ForwardReference>;
@@ -29,8 +30,8 @@ export interface DataFilterFeatureConfig extends DataFilterConfig {
 
 @Global()
 @Module({
-    providers: [DataFilterScanner, SequelizeModelScanner, DataFilterService],
-    exports: [DataFilterScanner, SequelizeModelScanner, DataFilterService]
+    providers: [DataFilterScanner, MongoSchemaScanner, DataFilterService],
+    exports: [DataFilterScanner, MongoSchemaScanner, DataFilterService]
 })
 export class DataFilterModule {
     public static forRoot(option?: DataFilterConfig): DynamicModule {

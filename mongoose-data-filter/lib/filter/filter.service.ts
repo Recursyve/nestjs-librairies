@@ -1,13 +1,11 @@
 import { Injectable, Type } from "@nestjs/common";
 import * as mongoose from "mongoose";
 import { Model } from "mongoose";
-import { FilterSearchModel, OrderModel } from "../../../data-filter/lib";
-import { SequelizeUtils } from "../../../data-filter/lib/sequelize.utils";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
 import { DataFilterRepository } from "../data-filter.repository";
 import { DataFilterService } from "../data-filter.service";
-import { FilterQueryModel, FilterResultModel } from "../models/filter.model";
+import { FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../models/filter.model";
 import { DataFilterUserModel } from "../models/user.model";
 import { MongoUtils } from "../mongo.utils";
 import { MongoSchemaScanner } from "../scanners/mongo-schema.scanner";

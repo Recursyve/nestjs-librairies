@@ -1,4 +1,4 @@
-import { IncludeConfig } from "../../../data-filter/lib";
+import { IncludeConfig } from "./include.model";
 
 export interface AttributesConfigModel {
     key: string;

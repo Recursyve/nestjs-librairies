@@ -1,17 +1,17 @@
 import { Type } from "@nestjs/common";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
+import { DataFilterService } from "../data-filter.service";
 import { MongoSchemaScanner } from "../scanners/mongo-schema.scanner";
 import { BaseFilter } from "./base-filter";
 import { FilterService } from "./filter.service";
-import { DataFilterScanner } from "../scanners/data-filter.scanner";
 
 export function FilterServiceFactory<T>(
     accessControlAdapter: AccessControlAdapter,
     translateAdapter: TranslateAdapter,
     filter: BaseFilter<T>,
     mongoSchemaScanner: MongoSchemaScanner,
-    dataFilterService: DataFilterScanner
+    dataFilterService: DataFilterService
 ) {
     return new FilterService(accessControlAdapter, translateAdapter, filter, mongoSchemaScanner, dataFilterService);
 }
