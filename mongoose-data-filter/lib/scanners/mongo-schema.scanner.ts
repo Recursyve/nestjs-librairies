@@ -1,7 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
-import { Connection, Schema } from "mongoose";
+import { Connection, MongooseFilterQuery, Schema } from "mongoose";
 import { IncludeModel } from "../models/include.model";
+import { PathModel } from "../models/path.model";
 import { MongoUtils } from "../mongo.utils";
 
 @Injectable()
@@ -12,8 +13,8 @@ export class MongoSchemaScanner {
      * Generate lookup aggregation
      * https://docs.mongodb.com/manual/reference/operator/aggregation/lookup
      */
-    public getLookups(schema: Schema, path: string, additionalIncludes: IncludeModel[]): any[] {
-        const objects = path?.split(".");
+    public getLookups(schema: Schema, path: PathModel, additionalIncludes: IncludeModel[], attributes?: string[], fieldsToAdd?: [any, string[]]): any[] {
+        const objects = path?.path?.split(".");
         if (!objects?.length) {
             return [];
         }
@@ -21,8 +22,10 @@ export class MongoSchemaScanner {
         let result = [];
         let pipeline = result;
         for (const object of objects) {
+            const isLast = object === objects[objects.length - 1];
+
             const [obj, schemaRef] = this.findSchemaRef(schema, object);
-            const [lookup, isArray] = this.getSingleLookups(obj, object);
+            const [lookup, isArray] = this.getSingleLookups(obj, object, isLast ? path.where : null);
 
             pipeline.push(lookup);
             if (!isArray) {
@@ -34,15 +37,35 @@ export class MongoSchemaScanner {
                 });
             }
 
-            if (obj !== objects[objects.length - 1]) {
-                pipeline = lookup.$lookup.pipeline;
-                schema = schemaRef;
-            }
+            pipeline = lookup.$lookup.pipeline;
+            schema = schemaRef;
+        }
+
+        if (attributes) {
+            const projection = attributes.reduce((previous, current) => ({
+                ...previous,
+                [current]: 1
+            }), {});
+            pipeline.push({
+                $project: projection
+            } as any);
+        }
+
+        if (!fieldsToAdd) {
+            fieldsToAdd = [null, []];
+        }
+        const [fields, unwindFields] = fieldsToAdd;
+        if (fields) {
+            pipeline.push({
+                $addFields: fields
+            });
+
+            pipeline.push(...unwindFields.map(x => ({ $unwind: { path: `$${x}`, preserveNullAndEmptyArrays: true } })));
         }
 
         const addLookups: any[][] = [];
         for (const additionalInclude of additionalIncludes) {
-            addLookups.push(this.getLookups(schema, additionalInclude.path, []));
+            addLookups.push(this.getLookups(schema, { path: additionalInclude.path }, []));
         }
 
         pipeline.push(...MongoUtils.reduceLookups(addLookups));
@@ -50,62 +73,25 @@ export class MongoSchemaScanner {
         return result;
     }
 
-    public getSchemaFields(schema: Schema, prefix = ""): string[] {
-        const fields: string[] = [];
-        for (const key in schema.obj) {
-            if (!schema.obj.hasOwnProperty(key)) {
-                continue;
-            }
-
-            const path = schema.path(key) as any;
-            if (path.instance === "ObjectID" || path.caster?.instance === "ObjectID" || path.instance === "Date") {
-                continue;
-            }
-
-            if (prefix && !prefix.endsWith(".")) {
-                prefix += ".";
-            }
-            fields.push(`${prefix}${key}`);
-        }
-
-        return fields;
-    }
-
-    public getFields(schema: Schema, path: string, additionalIncludes: IncludeModel[], prefix = ""): string[] {
-        const objects = path.split(".");
-        if (!objects.length) {
-            return [];
-        }
-
-        const result: string[] = [];
-        let pathRef: any;
-        for (const obj of objects) {
-            const [, schemaRef] = this.findSchemaRef(schema,  obj);
-            pathRef = schema.paths[obj] as any;
-            schema = schemaRef;
-        }
-
-        if (prefix && !prefix.endsWith(".")) {
-            prefix += ".";
-        }
-
-        prefix += pathRef.instance === "Array" ? pathRef.caster._arrayPath : path;
-        result.push(...this.getSchemaFields(schema, prefix));
-
-        for (const include of additionalIncludes) {
-            result.push(...this.getFields(schema, include.path, [], prefix));
-        }
-
-        return result;
-    }
-
-    private getSingleLookups(obj: any, path: string): [any, boolean] {
+    private getSingleLookups(obj: any, path: string, where?: MongooseFilterQuery<any>): [any, boolean] {
         const fromCollection = this.connection.model(obj?.ref)?.collection?.name;
         if (!fromCollection) {
             throw new Error(`No collection found for reference ${path}`);
         }
 
         const isArray = obj.type instanceof Array;
+        const condition = isArray && !obj.foreignKey ? {
+            $in: [`$${obj.foreignKey ?? "_id"}`, `$$${path}Id`]
+        } : {
+            $eq: [`$${obj.foreignKey ?? "_id"}`, `$$${path}Id`]
+        };
+        const expr = where ? {
+            $and: [
+                where,
+                condition
+            ]
+        } : condition;
+
         const lookup =  {
             $lookup: {
                 from: fromCollection,
@@ -114,11 +100,7 @@ export class MongoSchemaScanner {
                 pipeline: [
                     {
                         $match: {
-                            $expr: isArray && !obj.foreignKey ? {
-                                $in: [`$${obj.foreignKey ?? "_id"}`, `$$${path}Id`]
-                            } : {
-                                $eq: [`$${obj.foreignKey ?? "_id"}`, `$$${path}Id`]
-                            }
+                            $expr: expr
                         }
                     }
                 ]

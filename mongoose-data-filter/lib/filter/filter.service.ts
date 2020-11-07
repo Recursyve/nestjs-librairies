@@ -5,6 +5,7 @@ import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
 import { DataFilterRepository } from "../data-filter.repository";
 import { DataFilterService } from "../data-filter.service";
+import { AddFieldModel } from "../models/add-field.model";
 import { FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../models/filter.model";
 import { DataFilterUserModel } from "../models/user.model";
 import { MongoUtils } from "../mongo.utils";
@@ -17,10 +18,11 @@ import { QueryModel, QueryRuleModel } from "./models";
 import { FilterConfigurationSearchModel } from "./models/filter-configuration-search.model";
 import { FilterConfigurationModel } from "./models/filter-configuration.model";
 import { FilterResourceValueModel } from "./models/filter-resource-value.model";
+import { SortRule, SortRuleDefinition } from "./sort-rules/sort-rule";
 
 @Injectable()
 export class FilterService<Data> {
-    private definitions: { [name: string]: FilterDefinition | GroupFilterDefinition };
+    private definitions: { [name: string]: FilterDefinition | GroupFilterDefinition | SortRuleDefinition };
     private repository: DataFilterRepository<Data>;
 
     constructor(
@@ -53,7 +55,12 @@ export class FilterService<Data> {
                 continue;
             }
 
-            const config = await (this.definitions[key] as FilterDefinition).getConfig(key, user);
+            const filter = this.definitions[key];
+            if (SortRule.validate(filter as SortRuleDefinition)) {
+                continue;
+            }
+            const config = await (filter as FilterDefinition).getConfig(key, user);
+
             result.push({
                 ...config,
                 id: key,
@@ -127,8 +134,8 @@ export class FilterService<Data> {
 
         const pipeline = [];
         const queryLookups = await this.getLookups(model, options.query, data);
-        const searchLookups = options.search?.value?.length ? this.repository.getLookups() : [];
-        const orderLookups = MongoUtils.mergeLookups(this.repository.generateOrderLookup(options.order), searchLookups);
+        const searchLookups = options.search?.value?.length ? await this.getSearchableLookups(model) : [];
+        const orderLookups = MongoUtils.mergeLookups(this.getSortLookups(model, options.order ?? this.model.defaultOrder, data), searchLookups);
         pipeline.push(...MongoUtils.mergeLookups(queryLookups, orderLookups));
 
         const match: any = {};
@@ -140,16 +147,17 @@ export class FilterService<Data> {
         }
 
         const matchConditions: mongoose.FilterQuery<any>[] = [];
-        if (!match.$match && options.query) {
+        await this.generateMatchOptions(options.query, matchConditions);
+
+        if (!match.$match && matchConditions.length) {
             match.$match = options.query.condition === "and" ? { "$and": matchConditions } : { "$or": matchConditions }
-        } else if (options.query) {
+        } else if (matchConditions.length) {
             searchConditions.push({
                 [`$${options.query.condition}`]: matchConditions
             });
         }
 
-        await this.generateMatchOptions(options.query, matchConditions);
-        if (matchConditions.length || searchLookups.length) {
+        if (match.$match) {
             pipeline.push(match);
         }
 
@@ -168,7 +176,8 @@ export class FilterService<Data> {
 
             if (
                 !Filter.validate(this.model[key] as FilterDefinition) &&
-                !GroupFilter.validate(this.model[key] as GroupFilterDefinition)
+                !GroupFilter.validate(this.model[key] as GroupFilterDefinition) &&
+                !SortRule.validate(this.model[key] as SortRuleDefinition)
             ) {
                 continue;
             }
@@ -213,6 +222,19 @@ export class FilterService<Data> {
         return MongoUtils.reduceLookups(lookups);
     }
 
+    public async getSearchableLookups(model: Model<any>): Promise<any[]> {
+        const paths = this.model.searchableFields?.filter(x => x.path).map(x => x.path);
+        if (!paths?.length) {
+            return [];
+        }
+
+        const lookups: any[][] = [];
+        for (const path of paths) {
+            lookups.push(this.mongoSchemaScanner.getLookups(model.schema, { path }, []));
+        }
+        return MongoUtils.reduceLookups(lookups);
+    }
+
     private async generateMatchOptions(query: QueryModel, filters: mongoose.FilterQuery<any>[]): Promise<void> {
         if (!query?.rules) {
             return;
@@ -239,29 +261,28 @@ export class FilterService<Data> {
             }
 
             const filter = this.definitions[r.id] as FilterDefinition;
-            const filterOptions = await filter.getMatchOptions(r);
-            if (filterOptions) {
-                filters.push(filterOptions);
+            if (!SortRule.validate(filter)) {
+                const filterOptions = await filter.getMatchOptions(r);
+                if (filterOptions) {
+                    filters.push(filterOptions);
+                }
             }
         }
     }
 
     private generateSearchOptions(search: FilterSearchModel): object {
-        if (!search?.value?.length) {
+        if (!search?.value?.length || !this.model.searchableFields?.length) {
             return;
         }
 
         const generateFieldsObject = searchValue =>
-            this.repository
-                .getSearchAttributes()
+            this.model.searchableFields
                 .map(a => {
+                    const attribute = a.path ? `${a.path}.${a.attribute}` : a.attribute;
                     return {
-                        [a]: {
-                            $eq: new RegExp(`.*${searchValue}.*`, "i")
-                        }
+                        [attribute]: new RegExp(`.*${searchValue}.*`, "i")
                     };
-                })
-                .reduce((a, o) => Object.assign(a, o), {});
+                });
 
         const tokens = search.value.split(" ");
         return {
@@ -304,9 +325,13 @@ export class FilterService<Data> {
             await this.setAccessControlMatchCondition(pipeline, userOrOFilter as Users);
         }
 
-        const sort = this.getSortOption(filter.order);
+        const [sort, fieldsToAdd] = this.getSortOption(filter.order);
         let aggregation =  this.repository.model.aggregate(pipeline);
         if (sort) {
+            if (fieldsToAdd?.length) {
+                aggregation = aggregation.addFields(MongoUtils.reduceFieldsToAdd(fieldsToAdd));
+            }
+
             aggregation = aggregation.sort(sort);
         }
         if (filter.page) {
@@ -320,7 +345,7 @@ export class FilterService<Data> {
             }
         } as any, null, {
             sort
-        });
+        }, null, fieldsToAdd);
     }
 
     private async setAccessControlMatchCondition(pipeline: any[], user: DataFilterUserModel): Promise<void> {
@@ -339,7 +364,9 @@ export class FilterService<Data> {
         }
         match.$match = {
             ...match.$match,
-            _id: ids
+            _id: {
+                $in: ids
+            }
         }
     }
 
@@ -349,18 +376,48 @@ export class FilterService<Data> {
         }
 
         return [
-            this.mongoSchemaScanner.getLookups(model.schema, filter.path, [])
+            this.mongoSchemaScanner.getLookups(model.schema, { path: filter.path }, [])
         ];
     }
 
-    private getSortOption(orderObj: OrderModel): { [field: string]: number } {
-        if (!orderObj || !orderObj.column || orderObj.direction === "") {
-            return;
+    private getSortLookups(model: Model<any>, orderObj: OrderModel, data?: object): any[] {
+        if (!orderObj?.column || orderObj?.direction === "") {
+            return [];
         }
 
-        return {
-            [orderObj.column]: orderObj.direction === "asc" ? 1 : -1
+        const rule = this.definitions[orderObj.column] as SortRuleDefinition;
+        if (rule && rule.path && SortRule.validate(rule)) {
+            return this.mongoSchemaScanner.getLookups(model.schema, { path: rule.path, where: rule.where }, []);
         }
+
+        return this.repository.generateOrderLookup(orderObj, data);
+    }
+
+    private getSortOption(orderObj: OrderModel): [{ [field: string]: number }, AddFieldModel[]] {
+        if (!orderObj) {
+            orderObj = this.model.defaultOrder;
+        }
+
+        if (!orderObj || !orderObj.column || orderObj.direction === "") {
+            return [null, null];
+        }
+
+        const rule = this.definitions[orderObj.column] as SortRuleDefinition;
+        if (!rule || !SortRule.validate(rule)) {
+            return [
+                {
+                    [orderObj.column]: orderObj.direction === "asc" ? 1 : -1
+                },
+                []
+            ]
+        }
+
+        return [
+            {
+                [rule.getSortOption()]: orderObj.direction === "asc" ? 1 : -1
+            },
+            rule.getFieldsToAdd(orderObj)
+        ]
     }
 
     private addDefaultFilter(query: QueryModel): QueryModel {

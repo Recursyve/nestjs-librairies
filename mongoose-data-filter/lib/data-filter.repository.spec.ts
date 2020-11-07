@@ -1,5 +1,6 @@
 import { Connection, Document, Model } from "mongoose";
 import { DataFilterRepository } from "./data-filter.repository";
+import { Where } from "./decorators";
 import { Attributes } from "./decorators/attributes.decorator";
 import { Data } from "./decorators/data.decorator";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
@@ -11,6 +12,9 @@ import { Coords } from "./test/models/coords/coords.model";
 @Data(Accounts)
 class AccountsTest extends Accounts {
     @Attributes()
+    @Where({
+        location: () => ({ $ne: null })
+    })
     coord: Coords;
 }
 
@@ -54,7 +58,16 @@ describe("DataFilterRepository", () => {
                             {
                                 $match: {
                                     $expr: {
-                                        $eq: ["$_id", "$$coordId"]
+                                        $and: [
+                                            {
+                                                location: {
+                                                    $ne: null
+                                                }
+                                            },
+                                            {
+                                                $eq: ["$_id", "$$coordId"]
+                                            }
+                                        ]
                                     }
                                 }
                             }
@@ -80,7 +93,16 @@ describe("DataFilterRepository", () => {
                             {
                                 $match: {
                                     $expr: {
-                                        $eq: ["$_id", "$$coordId"]
+                                        $and: [
+                                            {
+                                                location: {
+                                                    $ne: null
+                                                }
+                                            },
+                                            {
+                                                $eq: ["$_id", "$$coordId"]
+                                            }
+                                        ]
                                     }
                                 }
                             }

@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Connection } from "mongoose";
 import { DefaultAccessControlAdapter, DefaultTranslateAdapter } from "../adapters";
 import { DataFilterService } from "../data-filter.service";
+import { Where } from "../decorators";
 import { Attributes } from "../decorators/attributes.decorator";
 import { Data } from "../decorators/data.decorator";
 import { DataFilterScanner } from "../scanners/data-filter.scanner";
@@ -19,6 +20,9 @@ import { FilterOperatorTypes } from "./operators";
 @Data(Owners)
 class OwnersTest extends Owners {
     @Attributes()
+    @Where({
+        email: () => ({ $ne: null })
+    })
     account: Accounts
 
     @Attributes()

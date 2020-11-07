@@ -7,7 +7,7 @@ import { DataFilterConfig, DataFilterConfigModel } from "../models/data-filter.m
 import { AttributesConfig, AttributesConfigModel } from "../models/attributes.model";
 
 @Data(Accounts)
-class AccountsTest {
+class AccountsTest extends Accounts {
     @Attributes()
     coord: Coords;
 }
@@ -24,7 +24,8 @@ describe("DataFilterScanner", () => {
         expect(model).toBeDefined();
         const expected = new DataFilterConfig();
         Object.assign<DataFilterConfig, DataFilterConfigModel>(expected, {
-            model: Accounts
+            model: Accounts,
+            fieldsToAdd: []
         });
         expect(model).toStrictEqual(expected);
     });
@@ -37,7 +38,12 @@ describe("DataFilterScanner", () => {
         ];
         Object.assign<AttributesConfig, AttributesConfigModel>(expected[0], {
             key: "coord",
-            path: "coord"
+            path: {
+                path: "coord"
+            },
+            fieldsToAdd: [],
+            includes: [],
+            ignoreInSearch: false
         });
         expect(JSON.stringify(attributes)).toStrictEqual(JSON.stringify(expected));
     });

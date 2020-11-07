@@ -1,5 +1,6 @@
 import { QuerySelector } from "mongodb";
 import { RuleModel } from "./filter/models";
+import { AddFieldModel } from "./models/add-field.model";
 
 export class MongoUtils {
     public static generateWhereValue(rule: RuleModel): QuerySelector<any> {
@@ -110,5 +111,12 @@ export class MongoUtils {
                 [x]: new RegExp(`.*${search}.*`, "i")
             }))
         };
+    }
+
+    public static reduceFieldsToAdd(fieldsToAdd: AddFieldModel[]): any {
+        return fieldsToAdd.map(x => x.transform()).reduce((previous, current) => ({
+            ...previous,
+            ...current
+        }), {});
     }
 }

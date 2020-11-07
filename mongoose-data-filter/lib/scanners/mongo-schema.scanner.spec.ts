@@ -26,11 +26,13 @@ describe("MongoSchemaScanner", () => {
     });
 
     it("getLookups should return a valid lookup aggregation", async () => {
-        const placesLookups = scanner.getLookups(ownersSchema, "places.geoCoord", [
+        const placesLookups = scanner.getLookups(ownersSchema, {
+            path: "places.geoCoord"
+        }, [
             {
                 path: "location"
             }
-        ]);
+        ], ["postalCode"]);
         expect(placesLookups).toBeDefined();
         expect(placesLookups).toStrictEqual([
             {
@@ -57,6 +59,11 @@ describe("MongoSchemaScanner", () => {
                                             $expr: {
                                                 $eq: ["$_id", "$$geoCoordId"]
                                             }
+                                        }
+                                    },
+                                    {
+                                        $project: {
+                                            postalCode: 1
                                         }
                                     },
                                     {
@@ -97,39 +104,63 @@ describe("MongoSchemaScanner", () => {
     });
 
     it("getLookups with reverse ref should return a valid lookup aggregation", async () => {
-        const placesLookups = scanner.getLookups(placesSchema, "owners.account", []);
+        const placesLookups = scanner.getLookups(placesSchema, {
+            path: "owners.account",
+            where: {
+                email: {
+                    $ne: null
+                }
+            }
+        }, []);
         expect(placesLookups).toBeDefined();
-        expect(placesLookups).toStrictEqual([]);
-    });
-
-    it("getSchemaFields should return all field in schema", () => {
-        const fields = scanner.getSchemaFields(accountsSchema);
-        expect(fields).toBeDefined();
-        expect(fields).toStrictEqual([
-            "lastName",
-            "firstName",
-            "email",
-            "userId"
-        ]);
-    });
-
-    it("getFields should return all field in schema", () => {
-        const fields = scanner.getFields(ownersSchema, "places", [
+        expect(placesLookups).toStrictEqual([
             {
-                path: "geoCoord"
-            },
-            {
-                path: "geoCoord.location"
+                $lookup: {
+                    from: "owners",
+                    let: { ownersId: "$owners" },
+                    as: "owners",
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $in: ["$_id", "$$ownersId"]
+                                }
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: "accounts",
+                                let: { accountId: "$account" },
+                                as: "account",
+                                pipeline: [
+                                    {
+                                        $match: {
+                                            $expr: {
+                                                $and: [
+                                                    {
+                                                        email: {
+                                                            $ne: null
+                                                        }
+                                                    },
+                                                    {
+                                                        $eq: ["$_id", "$$accountId"]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            $unwind: {
+                                path: "$account",
+                                preserveNullAndEmptyArrays: true
+                            }
+                        }
+                    ]
+                }
             }
         ]);
-        expect(fields).toBeDefined();
-        expect(fields).toStrictEqual([
-            "places.$.geoCoord.postalCode",
-            "places.$.geoCoord.address2",
-            "places.$.geoCoord.address",
-            "places.$.geoCoord.streetNumber",
-            "places.$.geoCoord.location.uniqueCode",
-            "places.$.geoCoord.location.value"
-        ])
     });
 });

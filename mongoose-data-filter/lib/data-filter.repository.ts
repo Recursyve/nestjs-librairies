@@ -8,9 +8,11 @@ import {
     QueryFindBaseOptions,
     QueryFindOptions
 } from "mongoose";
+import { AddFieldModel } from "./models/add-field.model";
 import { AttributesConfig } from "./models/attributes.model";
 import { DataFilterConfig } from "./models/data-filter.model";
 import { OrderModel } from "./models/filter.model";
+import { TransformationsConfig } from "./models/transformations/transformations.model";
 import { MongoUtils } from "./mongo.utils";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { MongoSchemaScanner } from "./scanners/mongo-schema.scanner";
@@ -19,6 +21,7 @@ import { MongoSchemaScanner } from "./scanners/mongo-schema.scanner";
 export class DataFilterRepository<Data> {
     private _config: DataFilterConfig;
     private _definitions: AttributesConfig[];
+    private _transformations: TransformationsConfig[];
 
     public get model(): Model<any> {
         return this._config.model;
@@ -33,21 +36,35 @@ export class DataFilterRepository<Data> {
         this.init();
     }
 
-    public async findOne(conditions?: FilterQuery<Data>, projection?: any | null, options?: QueryFindBaseOptions): Promise<Data> {
+    public async findOne(
+        conditions?: FilterQuery<Data>,
+        projection?: any | null,
+        options?: QueryFindBaseOptions,
+        config?: object,
+        addFields?: AddFieldModel[]
+    ): Promise<Data> {
         const aggregation = this.getFilterAggregation(conditions, {
             ...(options ?? {}),
             projection: options?.projection ?? projection,
             limit: 1
-        });
-        return await aggregation.exec().then(x => x.shift());
+        }, config, addFields);
+        const result = await aggregation.exec().then(x => x.shift());
+        return this.transformObject(result);
     }
 
-    public async find(conditions?: FilterQuery<Data>, projection?: any | null, options?: QueryFindOptions): Promise<Data[]> {
+    public async find(
+        conditions?: FilterQuery<Data>,
+        projection?: any | null,
+        options?: QueryFindOptions,
+        config?: object,
+        addFields?: AddFieldModel[]
+    ): Promise<Data[]> {
         const aggregation = this.getFilterAggregation(conditions, {
             ...(options ?? {}),
             projection: options?.projection ?? projection
-        });
-        return await aggregation.exec();
+        }, config, addFields);
+        const results = await aggregation.exec();
+        return results.map(x => this.transformObject(x));
     }
 
     public async count(conditions?: FilterQuery<Data>): Promise<Data[]> {
@@ -55,49 +72,29 @@ export class DataFilterRepository<Data> {
         return await aggregation.count("total").exec().then(x => x?.shift()?.total)
     }
 
-    public getLookups(): any[] {
+    public getLookups(config?: object): any[] {
         const lookups: any[][] = [
             ...this._definitions.map(x => {
                 if (!x.path) {
                     return [];
                 }
-                return this.mongoSchemaScanner.getLookups(this.model.schema, x.path, x.includes);
+                const path = x.transformPathConfig(config);
+                const fieldsToAdd = x.getFieldsToAdd();
+                return this.mongoSchemaScanner.getLookups(this.model.schema, path, x.includes, x.attributes, fieldsToAdd);
             })
         ];
 
         return MongoUtils.reduceLookups(lookups);
     }
 
-    public getSearchAttributes(): string[] {
-        const attributes: string[] = [];
-        const modelAttr = this.mongoSchemaScanner.getSchemaFields(this.model.schema);
-        attributes.push(...modelAttr);
-
-        for (const definition of this._definitions) {
-            if (!definition.path) {
-                continue;
-            }
-
-            attributes.push(
-                ...this.mongoSchemaScanner.getFields(
-                    this.model.schema,
-                    definition.path,
-                    definition.includes
-                )
-            );
-        }
-
-        return attributes;
-    }
-
-    public generateOrderLookup(order: OrderModel): any[] {
+    public generateOrderLookup(order: OrderModel, config?: object): any[] {
         if (!order || !order.column || order.direction === "") {
             return [];
         }
 
         const objects = order.column.split(".");
         objects.pop();
-        const definition = this._definitions.find(x => x.path === objects.join("."));
+        const definition = this._definitions.find(x => x.path?.path === objects.join("."));
 
         if (!definition) {
             return [];
@@ -106,15 +103,29 @@ export class DataFilterRepository<Data> {
         if (!definition.path) {
             return [];
         }
-        return this.mongoSchemaScanner.getLookups(this.model.schema, definition.path, definition.includes);
+        return this.mongoSchemaScanner.getLookups(
+            this.model.schema,
+            definition.transformPathConfig(config),
+            definition.includes,
+            definition.attributes
+        );
     }
 
-    public getFilterAggregation(conditions?: MongooseFilterQuery<any>, options?: QueryFindOptions): Aggregate<any> {
-        let aggregation = this.model.aggregate(this.getLookups());
+    public getFilterAggregation(
+        conditions?: MongooseFilterQuery<any>,
+        options?: QueryFindOptions,
+        config?: object,
+        addFields?: AddFieldModel[]
+    ): Aggregate<any> {
+        let aggregation = this.model.aggregate(this.getLookups(config));
 
         if (conditions) {
             aggregation = aggregation.match(conditions);
         }
+        if (addFields?.length) {
+            aggregation = aggregation.addFields(MongoUtils.reduceFieldsToAdd(addFields));
+        }
+
         if (!options) {
             return aggregation;
         }
@@ -132,7 +143,28 @@ export class DataFilterRepository<Data> {
             aggregation = aggregation.skip(options.limit);
         }
 
+        const [fieldsToAdd, unwindFields] = this._config.getFieldsToAdd();
+        if (fieldsToAdd) {
+            aggregation = aggregation.addFields(fieldsToAdd);
+
+            if (unwindFields.length) {
+                aggregation = aggregation.unwind(...unwindFields.map(x => ({ path: `$${x}`, preserveNullAndEmptyArrays: true })));
+            }
+        }
+
         return aggregation;
+    }
+
+    public transformObject(data: Data): Data {
+        if (!this._transformations.length) {
+            return data;
+        }
+
+        for (const transformation of this._transformations) {
+            data[transformation.key] = transformation.transform(data[transformation.key], data);
+        }
+
+        return data;
     }
 
     private init() {
@@ -140,5 +172,6 @@ export class DataFilterRepository<Data> {
         this._config.model = this.connection.model(this._config.model.name);
 
         this._definitions = this.dataFilterScanner.getAttributes(this.dataDef);
+        this._transformations = this.dataFilterScanner.getTransformations(this.dataDef);
     }
 }
