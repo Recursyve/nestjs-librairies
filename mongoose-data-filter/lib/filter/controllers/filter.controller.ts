@@ -11,10 +11,9 @@ import {
     UseGuards,
     UseInterceptors
 } from "@nestjs/common";
-import { FilterQueryModel, FilterResultModel, SelectFilterValue } from "../..";
-import { ExportTypes } from "../../../../data-filter/lib";
-import { DataFileDownloadInterceptor } from "../../../../data-filter/lib/filter/interceptors/data-file-download.interceptor";
+import { ExportTypes, FilterQueryModel, FilterResultModel, SelectFilterValue } from "../..";
 import { UserDeserializer } from "../../deserializers";
+import { DataFileDownloadInterceptor } from "../../interceptors/data-file-download.interceptor";
 import { DataFilterUserModel } from "../../models/user.model";
 import { FilterService } from "../filter.service";
 import { FilterQueryGuard } from "../guards/filter-query.guard";

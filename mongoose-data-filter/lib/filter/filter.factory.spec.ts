@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import { DataFilterModule } from "../../../data-filter/lib";
 import { Attributes, Where } from "../decorators";
 import { Data } from "../decorators/data.decorator";
+import { DataFilterModule } from "../index";
 import { DataFilterScanner } from "../scanners/data-filter.scanner";
 import { MongoSchemaScanner } from "../scanners/mongo-schema.scanner";
 import { Accounts } from "../test/models/accounts/accounts.model";

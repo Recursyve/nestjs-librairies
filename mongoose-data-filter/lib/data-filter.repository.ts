@@ -8,18 +8,18 @@ import {
     QueryFindBaseOptions,
     QueryFindOptions
 } from "mongoose";
-import { ExportTypes } from "../../data-filter/lib";
 import { AccessControlAdapter, ExportAdapter, TranslateAdapter } from "./adapters";
-import { CsvUtils } from "../../data-filter/lib/utils/csv.utils";
-import { XlsxUtils } from "../../data-filter/lib/utils/xlsx.utils";
 import { AddFieldModel } from "./models/add-field.model";
 import { AttributesConfig } from "./models/attributes.model";
 import { DataFilterConfig } from "./models/data-filter.model";
+import { ExportTypes } from "./models/export-types.model";
 import { OrderModel } from "./models/filter.model";
 import { TransformationsConfig } from "./models/transformations/transformations.model";
 import { MongoUtils } from "./mongo.utils";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { MongoSchemaScanner } from "./scanners/mongo-schema.scanner";
+import { CsvUtils } from "./utils/csv.utils";
+import { XlsxUtils } from "./utils/xlsx.utils";
 
 @Injectable()
 export class DataFilterRepository<Data> {
