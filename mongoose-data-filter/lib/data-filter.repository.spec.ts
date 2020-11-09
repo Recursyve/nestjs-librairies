@@ -1,4 +1,5 @@
 import { Connection, Document, Model } from "mongoose";
+import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdapter } from "./adapters";
 import { DataFilterRepository } from "./data-filter.repository";
 import { Where } from "./decorators";
 import { Attributes } from "./decorators/attributes.decorator";
@@ -41,6 +42,9 @@ describe("DataFilterRepository", () => {
                 AccountsTest,
                 new DataFilterScanner(),
                 new MongoSchemaScanner(connection),
+                new DefaultAccessControlAdapter(),
+                new DefaultTranslateAdapter(),
+                new DefaultExportAdapter(),
                 connection
             );
         });

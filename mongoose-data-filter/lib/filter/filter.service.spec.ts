@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Connection } from "mongoose";
-import { DefaultAccessControlAdapter, DefaultTranslateAdapter } from "../adapters";
+import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdapter } from "../adapters";
 import { DataFilterService } from "../data-filter.service";
 import { Where } from "../decorators";
 import { Attributes } from "../decorators/attributes.decorator";
@@ -15,6 +15,7 @@ import { BaseFilter } from "./base-filter";
 import { FilterService } from "./filter.service";
 import { TextFilter } from "./filters";
 import { DefaultFilter } from "./filters/default.filter";
+import { SearchableFieldModel } from "./models";
 import { FilterOperatorTypes } from "./operators";
 
 @Data(Owners)
@@ -32,6 +33,16 @@ class OwnersTest extends Owners {
 @Injectable()
 export class TestFilter extends BaseFilter<OwnersTest> {
     public dataDefinition = OwnersTest;
+    public searchableFields: SearchableFieldModel[] = [
+        {
+            attribute: "email",
+            path: "account"
+        },
+        {
+            attribute: "address",
+            path: "places.geoCoord"
+        }
+    ];
 
     public defaultFilter = new DefaultFilter({
         id: "email",
@@ -67,6 +78,9 @@ describe("FilterService", () => {
                 connection,
                 new DataFilterScanner(),
                 new MongoSchemaScanner(connection),
+                new DefaultAccessControlAdapter(),
+                new DefaultTranslateAdapter(),
+                new DefaultExportAdapter()
             )
         );
     });
@@ -127,6 +141,28 @@ describe("FilterService", () => {
                                     $in: ["$_id", "$$placesId"]
                                 }
                             }
+                        },
+                        {
+                            $lookup: {
+                                from: "coords",
+                                let: { geoCoordId: "$geoCoord" },
+                                as: "geoCoord",
+                                pipeline: [
+                                    {
+                                        $match: {
+                                            $expr: {
+                                                $eq: ["$_id", "$$geoCoordId"]
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            $unwind: {
+                                path: "$geoCoord",
+                                preserveNullAndEmptyArrays: true
+                            }
                         }
                     ]
                 }
@@ -137,20 +173,14 @@ describe("FilterService", () => {
                         {
                             $or: [
                                 {
-                                    $or: {
-                                        "account.firstName": {
-                                            $eq: new RegExp(`.*Doe.*`, "i")
+                                    $or: [
+                                        {
+                                            "account.email": new RegExp(`.*Doe.*`, "i")
                                         },
-                                        "account.lastName": {
-                                            $eq: new RegExp(`.*Doe.*`, "i")
-                                        },
-                                        "account.email": {
-                                            $eq: new RegExp(`.*Doe.*`, "i")
-                                        },
-                                        "account.userId": {
-                                            $eq: new RegExp(`.*Doe.*`, "i")
+                                        {
+                                            "places.geoCoord.address": new RegExp(`.*Doe.*`, "i")
                                         }
-                                    }
+                                    ]
                                 }
                             ]
                         },

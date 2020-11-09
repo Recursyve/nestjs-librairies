@@ -88,50 +88,6 @@ describe("NumberFilter", () => {
             });
         });
 
-        it("with custom operator should return a valid config", async () => {
-            const filter = new NumberFilter({
-                attribute: "test"
-            }).addOperators({
-                name: "none"
-            });
-            filter.translateService = new DefaultTranslateAdapter();
-            const config = await filter.getConfig("test", null);
-            expect(config).toBeDefined();
-            expect(config).toStrictEqual<FilterBaseConfigurationModel>({
-                type: FilterType.Number,
-                operators: [
-                    {
-                        id: "equal",
-                        name: FilterUtils.getOperatorTranslationKey("equal")
-                    },
-                    {
-                        id: "not_equal",
-                        name: FilterUtils.getOperatorTranslationKey("not_equal")
-                    },
-                    {
-                        id: "greater",
-                        name: FilterUtils.getOperatorTranslationKey("greater")
-                    },
-                    {
-                        id: "greater_or_equal",
-                        name: FilterUtils.getOperatorTranslationKey("greater_or_equal")
-                    },
-                    {
-                        id: "less",
-                        name: FilterUtils.getOperatorTranslationKey("less")
-                    },
-                    {
-                        id: "less_or_equal",
-                        name: FilterUtils.getOperatorTranslationKey("less_or_equal")
-                    },
-                    {
-                        id: "none",
-                        name: FilterUtils.getCustomOperatorTranslationKey("test", "none")
-                    }
-                ]
-            });
-        });
-
         it("with specified operators should return a valid config", async () => {
             const filter = new NumberFilter({
                 attribute: "test"

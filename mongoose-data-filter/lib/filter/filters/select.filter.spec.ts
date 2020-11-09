@@ -62,37 +62,6 @@ describe("SelectFilter", () => {
             });
         });
 
-        it("with custom operator should return a valid config", async () => {
-            const filter = new SelectFilter({
-                attribute: "test",
-                values: () => Promise.resolve([{ id: "test", name: "test" }])
-            }).addOperators({
-                name: "none"
-            });
-            filter.translateService = new DefaultTranslateAdapter();
-            const config = await filter.getConfig("test", null);
-            expect(config).toBeDefined();
-            expect(config).toStrictEqual<FilterBaseConfigurationModel>({
-                type: FilterType.Select,
-                operators: [
-                    {
-                        id: "equal",
-                        name: FilterUtils.getOperatorTranslationKey("equal")
-                    },
-                    {
-                        id: "not_equal",
-                        name: FilterUtils.getOperatorTranslationKey("not_equal")
-                    },
-                    {
-                        id: "none",
-                        name: FilterUtils.getCustomOperatorTranslationKey("test", "none")
-                    }
-                ],
-                values: [],
-                lazyLoading: true
-            });
-        });
-
         it("with specified operators should return a valid config", async () => {
             const filter = new SelectFilter({
                 attribute: "test",

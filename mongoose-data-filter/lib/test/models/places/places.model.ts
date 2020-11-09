@@ -12,6 +12,6 @@ export class Places {
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Coords.name })
     geoCoord?: Types.ObjectId | Coords;
 
-    @Prop({ type: [Owners], ref: "Owners", from: "places" })
+    @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: "Owners", from: "places" })
     owners: Owners[];
 }

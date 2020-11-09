@@ -1,7 +1,7 @@
+import { MongooseFilterQuery } from "mongoose";
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
 import { FilterUtils } from "../filter.utils";
 import { FilterOperatorTypes } from "../operators";
-import { Op, WhereOptions } from "sequelize";
 import { GroupFilter } from "./group.filter";
 import { SelectFilter } from "./select.filter";
 import { NumberFilter } from "./number.filter";
@@ -179,7 +179,7 @@ describe("GroupFilter", () => {
         });
     });
 
-    describe("getWhereOptions", () => {
+    describe("getMatchOptions", () => {
         it("should return a valid filter config", async () => {
             const filter = new GroupFilter({
                 rootFilter: new SelectFilter({
@@ -190,7 +190,7 @@ describe("GroupFilter", () => {
                     attribute: "value"
                 })
             });
-            const options = await filter.getWhereOptions({
+            const options = await filter.getMatchOptions({
                 id: "test",
                 value: [
                     {
@@ -205,14 +205,14 @@ describe("GroupFilter", () => {
                 operation: FilterOperatorTypes.Equal
             });
             expect(options).toBeDefined();
-            expect(options).toStrictEqual<WhereOptions>({
-                [Op.and]: [
+            expect(options).toStrictEqual<MongooseFilterQuery<any>>({
+                $and: [
                     {
                         test: "test"
                     },
                     {
                         value: {
-                            [Op.gt]: 10
+                            $gt: 10
                         }
                     }
                 ]
@@ -227,7 +227,7 @@ describe("GroupFilter", () => {
                 }),
                 getValueFilter: async () => Promise.resolve(new NumberFilter({ attribute: "value" }))
             });
-            const options = await filter.getWhereOptions({
+            const options = await filter.getMatchOptions({
                 id: "test",
                 value: [
                     {
@@ -242,14 +242,14 @@ describe("GroupFilter", () => {
                 operation: FilterOperatorTypes.Equal
             });
             expect(options).toBeDefined();
-            expect(options).toStrictEqual<WhereOptions>({
-                [Op.and]: [
+            expect(options).toStrictEqual<MongooseFilterQuery<any>>({
+                $and: [
                     {
                         test: "test"
                     },
                     {
                         value: {
-                            [Op.gt]: 10
+                            $gt: 10
                         }
                     }
                 ]

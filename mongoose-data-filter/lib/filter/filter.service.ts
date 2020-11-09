@@ -1,6 +1,7 @@
 import { Injectable, Type } from "@nestjs/common";
 import * as mongoose from "mongoose";
 import { Model } from "mongoose";
+import { ExportTypes } from "..";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
 import { DataFilterRepository } from "../data-filter.repository";
@@ -127,6 +128,18 @@ export class FilterService<Data> {
             page: options.page,
             values
         };
+    }
+
+    public async downloadData(
+        user: DataFilterUserModel,
+        type: ExportTypes,
+        options: FilterQueryModel,
+        exportOptions?: object
+    ): Promise<Buffer | string> {
+        const findOptions = await this.getFilterPipeline(this.repository.model, options, options?.data);
+        delete options.page;
+        const values = await this.findValues(user, options, findOptions);
+        return await this.repository.downloadData(values, type, user.language, exportOptions);
     }
 
     public async getFilterPipeline(model: Model<any>, options: FilterQueryModel, data?: object): Promise<any[]> {

@@ -8,6 +8,10 @@ import {
     QueryFindBaseOptions,
     QueryFindOptions
 } from "mongoose";
+import { ExportTypes } from "../../data-filter/lib";
+import { AccessControlAdapter, ExportAdapter, TranslateAdapter } from "./adapters";
+import { CsvUtils } from "../../data-filter/lib/utils/csv.utils";
+import { XlsxUtils } from "../../data-filter/lib/utils/xlsx.utils";
 import { AddFieldModel } from "./models/add-field.model";
 import { AttributesConfig } from "./models/attributes.model";
 import { DataFilterConfig } from "./models/data-filter.model";
@@ -31,6 +35,9 @@ export class DataFilterRepository<Data> {
         private dataDef: any,
         private dataFilterScanner: DataFilterScanner,
         private mongoSchemaScanner: MongoSchemaScanner,
+        private accessControlAdapter: AccessControlAdapter,
+        private translateAdapter: TranslateAdapter,
+        private exportAdapter: ExportAdapter,
         private connection: Connection
     ) {
         this.init();
@@ -167,11 +174,90 @@ export class DataFilterRepository<Data> {
         return data;
     }
 
+    public async downloadData(data: Data[], type: ExportTypes, lang: string, options?: any): Promise<Buffer | string> {
+        if (!this._config.exportColumns) {
+            throw new Error("No export columns provided!");
+        }
+
+        switch (type) {
+            case ExportTypes.XLSX:
+                return await this.downloadXlsx(data, lang);
+            case ExportTypes.HTML:
+                return await this.downloadHtml(data, lang, options);
+            case ExportTypes.CSV:
+                return await this.downloadCsv(data, lang);
+            case ExportTypes.PDF:
+                return await this.downloadPdf(data, lang, options);
+        }
+    }
+
+    public async downloadXlsx(data: Data[], lang: string): Promise<Buffer> {
+        return XlsxUtils.arrayToXlsxBuffer(
+            this.getExportData(data),
+            this._config.model.collection.collectionName,
+            await this.getExportsHeader(lang)
+        );
+    }
+
+    public async downloadHtml(data: Data[], lang: string, options?: any): Promise<string> {
+        return this.exportAdapter.exportAsHtml(lang, {
+            title: this._config.model.collection.collectionName,
+            columns: await this.getExportsHeader(lang),
+            data: this.getExportData(data)
+        }, options);
+    }
+
+    public async downloadCsv(data: Data[], lang: string): Promise<Buffer> {
+        return await CsvUtils.arrayToCsvBuffer(this.getExportData(data), await this.getExportsHeader(lang));
+    }
+
+    public async downloadPdf(data: Data[], lang: string, options?: any): Promise<Buffer> {
+        return this.exportAdapter.exportAsPdf(lang, {
+            title: this._config.model.collection.collectionName,
+            columns: await this.getExportsHeader(lang),
+            data: this.getExportData(data)
+        }, options);
+    }
+
     private init() {
         this._config = this.dataFilterScanner.getDataFilter(this.dataDef);
         this._config.model = this.connection.model(this._config.model.name);
 
         this._definitions = this.dataFilterScanner.getAttributes(this.dataDef);
         this._transformations = this.dataFilterScanner.getTransformations(this.dataDef);
+    }
+
+    private getExportsHeader(lang: string, translateAdapter = this.translateAdapter): Promise<string[]> {
+        return Promise.all(this._config.exportColumns.map(x => translateAdapter.getTranslation(lang, `exports.${x}`)));
+    }
+
+    private getExportData(data: Data[]): object[] {
+        return data.map(x => {
+            const result = {};
+            let i = 0;
+            for (const key of this._config.exportColumns) {
+                const [value, prop] = this.getExportValue(x, key);
+                result[`${i++}:${prop}`] = value;
+            }
+            return result;
+        });
+    }
+
+    private getExportValue(data: Data, path: string): [unknown, string] {
+        const keys = path.split(".");
+        if (keys.length === 1) {
+            const key = keys.pop();
+            return [data[key], key];
+        }
+
+        let key: string;
+        while (keys.length) {
+            key = keys.shift();
+            if (data) {
+                data = data[key];
+            }
+        }
+
+        return [data, key];
     }
 }

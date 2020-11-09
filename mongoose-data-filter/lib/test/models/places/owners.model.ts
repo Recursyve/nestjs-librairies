@@ -9,6 +9,6 @@ export class Owners {
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Accounts.name })
     account: Types.ObjectId | Accounts;
 
-    @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: Places.name })
+    @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: "Places" })
     places: (Types.ObjectId | Places)[];
 }

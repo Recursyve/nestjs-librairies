@@ -1,8 +1,8 @@
+import { MongooseFilterQuery } from "mongoose";
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
 import { FilterUtils } from "../filter.utils";
 import { DateFilter } from "./date.filter";
 import { FilterOperatorTypes } from "../operators";
-import { Op, WhereOptions } from "sequelize";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { FilterType } from "../type";
 
@@ -105,58 +105,6 @@ describe("DateFilter", () => {
             });
         });
 
-        it("with custom operator should return a valid config", async () => {
-            const filter = new DateFilter({
-                attribute: "test"
-            }).addOperators({
-                name: "none"
-            });
-            filter.translateService = new DefaultTranslateAdapter();
-            const config = await filter.getConfig("test", null);
-            expect(config).toBeDefined();
-            expect(config).toStrictEqual<FilterBaseConfigurationModel>({
-                type: FilterType.Date,
-                operators: [
-                    {
-                        id: "equal",
-                        name: FilterUtils.getOperatorTranslationKey("equal")
-                    },
-                    {
-                        id: "not_equal",
-                        name: FilterUtils.getOperatorTranslationKey("not_equal")
-                    },
-                    {
-                        id: "greater",
-                        name: FilterUtils.getOperatorTranslationKey("greater")
-                    },
-                    {
-                        id: "greater_or_equal",
-                        name: FilterUtils.getOperatorTranslationKey("greater_or_equal")
-                    },
-                    {
-                        id: "less",
-                        name: FilterUtils.getOperatorTranslationKey("less")
-                    },
-                    {
-                        id: "less_or_equal",
-                        name: FilterUtils.getOperatorTranslationKey("less_or_equal")
-                    },
-                    {
-                        id: "between",
-                        name: FilterUtils.getOperatorTranslationKey("between")
-                    },
-                    {
-                        id: "not_between",
-                        name: FilterUtils.getOperatorTranslationKey("not_between")
-                    },
-                    {
-                        id: "none",
-                        name: FilterUtils.getCustomOperatorTranslationKey("test", "none")
-                    }
-                ]
-            });
-        });
-
         it("with specified operators should return a valid config", async () => {
             const filter = new DateFilter({
                 attribute: "test"
@@ -180,7 +128,7 @@ describe("DateFilter", () => {
         });
     });
 
-    describe("getWhereOptions", () => {
+    describe("getMatchOptions", () => {
         it("with equal operator should return a valid filter config", async () => {
             const filter = new DateFilter({
                 attribute: "test"
@@ -191,12 +139,10 @@ describe("DateFilter", () => {
                 operation: FilterOperatorTypes.Equal
             });
             expect(options).toBeDefined();
-            expect(options).toStrictEqual<WhereOptions>({
+            expect(options).toStrictEqual<MongooseFilterQuery<any>>({
                 test: {
-                    [Op.between]: [
-                        "2020-03-06T00:00:00-05:00",
-                        "2020-03-06T23:59:59-05:00"
-                    ]
+                    $gte: "2020-03-06T00:00:00-05:00",
+                    $lte: "2020-03-06T23:59:59-05:00"
                 }
             });
         });
@@ -211,16 +157,16 @@ describe("DateFilter", () => {
                 operation: FilterOperatorTypes.NotEqual
             });
             expect(options).toBeDefined();
-            expect(options).toStrictEqual<WhereOptions>({
-                [Op.or]: [
+            expect(options).toStrictEqual<MongooseFilterQuery<any>>({
+                $or: [
                     {
                         test: {
-                            [Op.lt]: "2020-03-06T00:00:00-05:00"
+                            $lt: "2020-03-06T00:00:00-05:00"
                         }
                     },
                     {
                         test: {
-                            [Op.gt]: "2020-03-06T23:59:59-05:00"
+                            $gt: "2020-03-06T23:59:59-05:00"
                         }
                     }
                 ]
@@ -237,9 +183,9 @@ describe("DateFilter", () => {
                 operation: FilterOperatorTypes.Less
             });
             expect(options).toBeDefined();
-            expect(options).toStrictEqual<WhereOptions>({
+            expect(options).toStrictEqual<MongooseFilterQuery<any>>({
                 test: {
-                    [Op.lt]: "2020-03-06T00:00:00-05:00"
+                    $lt: "2020-03-06T00:00:00-05:00"
                 }
             });
         });
@@ -254,9 +200,9 @@ describe("DateFilter", () => {
                 operation: FilterOperatorTypes.LessOrEqual
             });
             expect(options).toBeDefined();
-            expect(options).toStrictEqual<WhereOptions>({
+            expect(options).toStrictEqual<MongooseFilterQuery<any>>({
                 test: {
-                    [Op.lte]: "2020-03-06T23:59:59-05:00"
+                    $lte: "2020-03-06T23:59:59-05:00"
                 }
             });
         });
@@ -271,9 +217,9 @@ describe("DateFilter", () => {
                 operation: FilterOperatorTypes.Greater
             });
             expect(options).toBeDefined();
-            expect(options).toStrictEqual<WhereOptions>({
+            expect(options).toStrictEqual<MongooseFilterQuery<any>>({
                 test: {
-                    [Op.gt]: "2020-03-06T23:59:59-05:00"
+                    $gt: "2020-03-06T23:59:59-05:00"
                 }
             });
         });
@@ -288,9 +234,9 @@ describe("DateFilter", () => {
                 operation: FilterOperatorTypes.GreaterOrEqual
             });
             expect(options).toBeDefined();
-            expect(options).toStrictEqual<WhereOptions>({
+            expect(options).toStrictEqual<MongooseFilterQuery<any>>({
                 test: {
-                    [Op.gte]: "2020-03-06T00:00:00-05:00"
+                    $gte: "2020-03-06T00:00:00-05:00"
                 }
             });
         });
@@ -305,12 +251,10 @@ describe("DateFilter", () => {
                 operation: FilterOperatorTypes.Between
             });
             expect(options).toBeDefined();
-            expect(options).toStrictEqual<WhereOptions>({
+            expect(options).toStrictEqual<MongooseFilterQuery<any>>({
                 test: {
-                    [Op.between]: [
-                        "2020-03-06T00:00:00-05:00",
-                        "2020-06-06T23:59:59-05:00"
-                    ]
+                    $gte: "2020-03-06T00:00:00-05:00",
+                    $lte: "2020-06-06T23:59:59-05:00"
                 }
             });
         });
@@ -325,12 +269,10 @@ describe("DateFilter", () => {
                 operation: FilterOperatorTypes.NotBetween
             });
             expect(options).toBeDefined();
-            expect(options).toStrictEqual<WhereOptions>({
+            expect(options).toStrictEqual<MongooseFilterQuery<any>>({
                 test: {
-                    [Op.notBetween]: [
-                        "2020-03-06T00:00:00-05:00",
-                        "2020-06-06T23:59:59-05:00"
-                    ]
+                    $lt: "2020-03-06T00:00:00-05:00",
+                    $gt: "2020-06-06T23:59:59-05:00"
                 }
             });
         });

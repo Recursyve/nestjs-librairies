@@ -1,5 +1,19 @@
-import { Body, Get, HttpCode, HttpStatus, Inject, Optional, Post, Query, Req, UseGuards } from "@nestjs/common";
+import {
+    Body,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Inject,
+    Optional, Param,
+    Post,
+    Query,
+    Req,
+    UseGuards,
+    UseInterceptors
+} from "@nestjs/common";
 import { FilterQueryModel, FilterResultModel, SelectFilterValue } from "../..";
+import { ExportTypes } from "../../../../data-filter/lib";
+import { DataFileDownloadInterceptor } from "../../../../data-filter/lib/filter/interceptors/data-file-download.interceptor";
 import { UserDeserializer } from "../../deserializers";
 import { DataFilterUserModel } from "../../models/user.model";
 import { FilterService } from "../filter.service";
@@ -28,6 +42,18 @@ export class FilterController<Data> {
     public async filterCount(@Body() query: FilterQueryModel, @Req() req: any): Promise<number> {
         const user = await this.getUser(req);
         return user ? this.filterService.count(user, query) : this.filterService.count(query);
+    }
+
+    @Post("download/:type")
+    @HttpCode(HttpStatus.OK)
+    @UseInterceptors(DataFileDownloadInterceptor)
+    public async downloadData(
+        @Body() query: FilterQueryModel,
+        @Param("type") type: ExportTypes,
+        @Req() req: any
+    ): Promise<Buffer | string> {
+        const user = await this.getUser(req);
+        return await this.filterService.downloadData(user, type, query);
     }
 
     @Get("filter/config")

@@ -7,12 +7,14 @@ export interface DataFilterConfigModel {
     model: Type<any>;
     fieldsToAdd: AddFieldModel[];
     attributes?: string[];
+    exportColumns?: string[];
 }
 
 export class DataFilterConfig implements DataFilterConfigModel {
     public model: Model<any>;
     public fieldsToAdd: AddFieldModel[] = [];
     public attributes?: string[];
+    public exportColumns?: string[];
 
     public setModel(model: Model<any>) {
         this.model = model;
@@ -24,6 +26,10 @@ export class DataFilterConfig implements DataFilterConfigModel {
 
     public addFieldToAdd(field: AddFieldModel) {
         this.fieldsToAdd.push(field);
+    }
+
+    public setExportColumns(exportColumns: string[]) {
+        this.exportColumns = exportColumns;
     }
 
     public getFieldsToAdd(): [any, string[]] {
