@@ -7,7 +7,7 @@ export class RedisService {
     private readonly client: Redis.Redis;
 
     constructor(private readonly configService: RedisConfigService) {
-        this.client = new Redis(configService.getConfig());
+        this.client = configService.getRedisInstance();
     }
 
     public async disconnect(): Promise<void> {
