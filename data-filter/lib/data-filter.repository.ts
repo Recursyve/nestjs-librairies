@@ -133,14 +133,16 @@ export class DataFilterRepository<Data> {
 
         const objects = order.column.split(".");
         const column = objects.pop();
+        const attrCondition = (attribute: string | ProjectionAlias) => {
+            if (typeof attribute === "string") {
+                return attribute === column;
+            }
+            const attr = attribute[attribute.length - 1];
+            return attr === column
+        };
         const definition = this._definitions.filter(x => x.attributes).find(x => {
-            return (x.attributes as (string | ProjectionAlias)[]).some(attribute => {
-                if (typeof attribute === "string") {
-                    return attribute === column;
-                }
-                const attr = attribute[attribute.length - 1];
-                return attr === column
-            });
+            return (x.attributes as (string | ProjectionAlias)[]).some(attrCondition) ||
+                x.includes.some(include => (include.attributes as (string | ProjectionAlias)[]).some(attrCondition));
         });
 
         if (!definition) {
