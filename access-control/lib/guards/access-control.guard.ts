@@ -25,7 +25,7 @@ export class AccessControlGuard implements CanActivate {
 
     public async canActivate(context: ExecutionContext): Promise<boolean> {
         return (await this.validateAccessControl(context))
-            ?? await this.fallbackAccessControlGuards(context);
+            || await this.fallbackAccessControlGuards(context);
     }
 
     private async validateAccessControl(context: ExecutionContext): Promise<boolean> {
@@ -67,14 +67,13 @@ export class AccessControlGuard implements CanActivate {
     }
 
     private async fallbackAccessControlGuards(context: ExecutionContext): Promise<boolean> {
-        const guards = this.reflector.get<Type<CanActivate>[]>(FALLBACK_ACCESS_CONTROL_GUARDS, context.getHandler) ?? [];
-        for (const guard in guards) {
-            const instance = this.moduleRef.get<CanActivate>(guard);
-            if (await instance?.canActivate(context)) {
-                return true;
-            }
-        }
-        return false;
+        const guards = this.reflector.get<Type<CanActivate>[]>(FALLBACK_ACCESS_CONTROL_GUARDS, context.getHandler()) ?? [];
+        const shouldActivate = await Promise.all(
+            guards.map(async guard =>
+                (await this.moduleRef.get<CanActivate>(guard, { strict: false }))
+                    .canActivate(context))
+        );
+        return shouldActivate.some(activate => activate);
     }
 
     // Extracts the models from the route path. Assumes that the schema of the path is:
