@@ -73,7 +73,7 @@ export class AccessControlGuard implements CanActivate {
                 (await this.moduleRef.get<CanActivate>(guard, { strict: false }))
                     .canActivate(context))
         );
-        return shouldActivate.some(activate => activate);
+        return shouldActivate.every(activate => activate);
     }
 
     // Extracts the models from the route path. Assumes that the schema of the path is:
