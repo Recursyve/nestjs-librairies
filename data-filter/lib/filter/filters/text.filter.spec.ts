@@ -9,7 +9,8 @@ describe("TextFilter", () => {
     describe("getConfig", () => {
         it("should return a valid config", async () => {
             const filter = new TextFilter({
-                attribute: "test"
+                attribute: "test",
+                mask: "(000) 000-0000"
             });
             filter.translateService = new DefaultTranslateAdapter();
             const config = await filter.getConfig(null, null);
@@ -45,7 +46,8 @@ describe("TextFilter", () => {
                         id: "not_ends_with",
                         name: FilterUtils.getOperatorTranslationKey("not_ends_with")
                     }
-                ]
+                ],
+                mask: "(000) 000-0000"
             });
         });
 

@@ -35,6 +35,11 @@ export interface BaseFilterDefinition {
     group?: string;
     where?: IncludeWhereModel;
     pathCondition?: PathCondition;
+
+    /**
+     * Private means that the config will not be returned.
+     */
+    private?: boolean;
 }
 
 export interface FilterDefinition extends BaseFilterDefinition {
@@ -64,6 +69,7 @@ export abstract class Filter implements FilterDefinition {
     public path?: string;
     public condition?: FilterCondition;
     public pathCondition?: PathCondition;
+    public private?: boolean;
 
     public static validate(definition: FilterDefinition) {
         return definition["_type"] === "filter";
@@ -86,6 +92,10 @@ export abstract class Filter implements FilterDefinition {
     }
 
     public async getConfig(key: string, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
+        if (this.private) {
+            return;
+        }
+
         const config = {
             type: this.type,
             operators: await Promise.all(this.operators.map(async x => {
