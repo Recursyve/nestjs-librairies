@@ -18,6 +18,7 @@ export interface FilterBaseConfigurationModel {
     lazyLoading?: boolean;
     options?: RadioFilterOptionConfiguration[];
     group?: FilterGroupConfiguration;
+    mask?: string;
 }
 
 export interface FilterConfigurationModel extends FilterBaseConfigurationModel {
