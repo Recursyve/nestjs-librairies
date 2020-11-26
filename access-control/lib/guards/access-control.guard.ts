@@ -1,8 +1,8 @@
-import { CanActivate, ExecutionContext, Inject, Injectable } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
+import { CanActivate, ExecutionContext, Inject, Injectable, Type } from "@nestjs/common";
+import { ModuleRef, Reflector } from "@nestjs/core";
 import { Model } from "sequelize-typescript";
 import { ACCESS_CONTROL_MODELS } from "../constant";
-import { ACCESS_CONTROL_ROUTES, NEEDS_ACCESS_ACTIONS } from "../decorators/constant";
+import { ACCESS_CONTROL_ROUTES, FALLBACK_ACCESS_CONTROL_GUARDS, NEEDS_ACCESS_ACTIONS } from "../decorators/constant";
 import { UserDeserializer } from "../deserializers";
 import { AccessAction } from "../models";
 import { AccessControlService } from "../services";
@@ -17,12 +17,18 @@ export class AccessControlGuard implements CanActivate {
         @Inject(ACCESS_CONTROL_MODELS) private readonly models: (typeof M)[],
         private readonly reflector: Reflector,
         private readonly accessControlService: AccessControlService,
-        private readonly userDeserializer: UserDeserializer
+        private readonly userDeserializer: UserDeserializer,
+        private readonly moduleRef: ModuleRef
     ) {
         this.init();
     }
 
     public async canActivate(context: ExecutionContext): Promise<boolean> {
+        return (await this.validateAccessControl(context))
+            || await this.fallbackAccessControlGuards(context);
+    }
+
+    private async validateAccessControl(context: ExecutionContext): Promise<boolean> {
         const needsAccessActions = this.reflector.get<AccessAction[]>(NEEDS_ACCESS_ACTIONS, context.getHandler());
         if (!needsAccessActions) {
             return true;
@@ -58,6 +64,16 @@ export class AccessControlGuard implements CanActivate {
         }
 
         return true;
+    }
+
+    private async fallbackAccessControlGuards(context: ExecutionContext): Promise<boolean> {
+        const guards = this.reflector.get<Type<CanActivate>[]>(FALLBACK_ACCESS_CONTROL_GUARDS, context.getHandler()) ?? [];
+        const shouldActivate = await Promise.all(
+            guards.map(async guard =>
+                (await this.moduleRef.get<CanActivate>(guard, { strict: false }))
+                    .canActivate(context))
+        );
+        return shouldActivate.every(activate => activate);
     }
 
     // Extracts the models from the route path. Assumes that the schema of the path is:
