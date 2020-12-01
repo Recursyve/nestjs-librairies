@@ -1,7 +1,7 @@
 # Config
 
 ## Features
-- access .env variable trough decorator
+- access .env variable through decorator
 
 ## Getting started
 
