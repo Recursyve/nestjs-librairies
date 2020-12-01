@@ -14,7 +14,6 @@ import { FilterUtils } from "./filter.utils";
 import {
     Filter, FilterCondition, FilterConditionRule, FilterDefinition, SelectFilter, SelectFilterValue
 } from "./filters";
-import { DefaultFilter, DefaultFilterDefinition } from "./filters/default.filter";
 import { GeoLocalizationFilter } from "./filters/geo-localization.filter";
 import { GroupFilter, GroupFilterDefinition } from "./filters/group.filter";
 import { QueryModel, QueryRuleModel } from "./models";
@@ -59,6 +58,9 @@ export class FilterService<Data> {
             }
 
             const config = await (this.definitions[key] as FilterDefinition).getConfig(key, user);
+            if (!config) {
+                continue;
+            }
             result.push({
                 ...config,
                 id: key,

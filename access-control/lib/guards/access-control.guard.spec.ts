@@ -14,7 +14,7 @@ describe("AccessControlGuard", () => {
         guard = new AccessControlGuard([
             ModelTest1 as any,
             ModelTest2 as any
-        ], null, null, null);
+        ], null, null, null, null);
     });
 
     it("getModels should return appropriated models", () => {

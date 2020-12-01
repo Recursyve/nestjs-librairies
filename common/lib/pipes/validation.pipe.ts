@@ -33,7 +33,7 @@ export class ValidationPipe implements PipeTransform<unknown> {
         // The problem comes from multer (which parses the form-data)
         // https://github.com/expressjs/multer/blob/master/lib/make-middleware.js#L28
         // Works when line 28 is: req.body = {}
-        const object = plainToClass(metatype, ValidationPipe.rebuildObjectIfBroken(value));
+        const object = plainToClass(metatype, ValidationPipe.rebuildObjectIfBroken(value), { excludeExtraneousValues: true });
         ObjectUtils.stringBoolsToBools(object);
 
         const errors = await validate(object);
