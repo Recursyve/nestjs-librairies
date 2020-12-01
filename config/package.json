@@ -1,0 +1,38 @@
+{
+    "name": "@recursyve/nestjs-config",
+    "version": "7.0.0",
+    "scripts": {
+        "build:lib": "nest build nestjs-config"
+    },
+    "peerDependencies": {
+        "@nestjs/common": ">= 7.0.0",
+        "@nestjs/core": ">= 7.0.0",
+        "class-transformer": ">= 0.2.0",
+        "reflect-metadata": ">= 0.1.13",
+        "rxjs": ">= 6.0.0"
+    },
+    "devDependencies": {
+        "@nestjs/common": ">= 7.0.0",
+        "@nestjs/core": ">= 7.0.0",
+        "@nestjs/testing": "^7.5.5",
+        "@types/jest": "^26.0.15",
+        "jest": "^26.6.3",
+        "reflect-metadata": ">= 0.1.13",
+        "rxjs": ">= 6.0.0",
+        "ts-jest": "^26.4.4"
+    },
+    "jest": {
+        "moduleFileExtensions": [
+            "js",
+            "json",
+            "ts"
+        ],
+        "rootDir": "src",
+        "testRegex": ".spec.ts$",
+        "transform": {
+            "^.+\\.(t|j)s$": "ts-jest"
+        },
+        "coverageDirectory": "./coverage",
+        "testEnvironment": "node"
+    }
+}
