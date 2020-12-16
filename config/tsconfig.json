@@ -4,18 +4,18 @@
     "module": "commonjs",
     "target": "es2019",
     "moduleResolution": "node",
-    "declaration": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "outDir": "dist"
+    "lib": [
+      "es2019"
+    ],
+    "sourceMap": true,
+    "outDir": "build"
   },
   "include": [
-    "src/**/*",
-    "index.ts"
+    "lib/**/*"
   ],
   "exclude": [
-    "node_modules",
-    "src/test/**/*",
-    "src/**/*.spec.ts"
+    "node_modules"
   ]
 }

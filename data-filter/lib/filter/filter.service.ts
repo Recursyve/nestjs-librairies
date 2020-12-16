@@ -335,7 +335,8 @@ export class FilterService<Data> {
     }
 
     private addSearchCondition(search: FilterSearchModel, options: CountOptions): void {
-        if (!search?.value?.length) {
+        const value = search?.value?.toString();
+        if (!value?.length) {
             return;
         }
 
@@ -362,7 +363,7 @@ export class FilterService<Data> {
                 })
                 .reduce((a, o) => Object.assign(a, o), {});
 
-        const tokens = search.value.split(" ");
+        const tokens = value.split(" ");
         where[Op.and].push(
             tokens.map(t => {
                 return {
