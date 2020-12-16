@@ -142,7 +142,7 @@ export class DataFilterRepository<Data> {
         };
         const definition = this._definitions.filter(x => x.attributes).find(x => {
             return (x.attributes as (string | ProjectionAlias)[]).some(attrCondition) ||
-                x.includes.some(include => (include.attributes as (string | ProjectionAlias)[]).some(attrCondition));
+                x.includes.some(include => (include.attributes as (string | ProjectionAlias)[])?.some(attrCondition));
         });
 
         if (!definition) {
