@@ -86,6 +86,11 @@ export abstract class Filter implements FilterDefinition {
         return this;
     }
 
+    public removeOperators(...operator: (FilterOperatorTypes | CustomOperator)[]): Filter {
+        this.operators = this.operators.filter(x => !operator.some(op => op === x));
+        return this;
+    }
+
     public setOperators(...operator: (FilterOperatorTypes | CustomOperator)[]): Filter {
         this.operators = [...operator];
         return this;
@@ -145,13 +150,13 @@ export abstract class Filter implements FilterDefinition {
         }
 
         const value = SequelizeUtils.generateWhereValue(rule);
-        if (value === undefined || this.having) {
-            return this.getConditionWhereOptions(null);
-        }
+        const where = (value === undefined || this.having) ?
+            this.getConditionWhereOptions(null) :
+            this.getConditionWhereOptions({
+                [name]: value
+            });
 
-        return this.getConditionWhereOptions({
-            [name]: value
-        });
+        return this.getOperatorWhereOptions(rule.operation, where, rule.value);
     }
 
     public async getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions> {
@@ -236,6 +241,30 @@ export abstract class Filter implements FilterDefinition {
                   [Op.and]: [where, op.having]
               }
             : op.having;
+    }
+
+    protected getOperatorWhereOptions(operator: FilterOperators, where: WhereOptions, value: any): WhereOptions {
+        const op = this.operators.find(x => {
+            if (typeof x === "string") {
+                return false;
+            }
+
+            return x.name === operator;
+        }) as CustomOperator;
+        if (!op) {
+            return where;
+        }
+
+        if (!op.where) {
+            return where;
+        }
+
+        const opWhere = typeof op.where === "function" ? op.where(value) : op.where;
+        return where
+            ? {
+                  [Op.and]: [where, opWhere]
+              }
+            : opWhere;
     }
 
     private getRuleFromKeys(query: QueryModel, keys: string[]): QueryRuleModel[] {

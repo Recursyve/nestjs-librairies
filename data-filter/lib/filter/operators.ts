@@ -26,7 +26,7 @@ export enum FilterOperatorTypes {
 
 export interface CustomOperator {
     name: string;
-    where?: WhereOptions;
+    where?: WhereOptions | ((value: any) => WhereOptions);
     having?: Where;
     operator?: FilterOperatorTypes;
 }

@@ -15,11 +15,25 @@ export class ConfigModule {
     public static forRoot(...configs: Type<any>[]): DynamicModule {
         return {
             module: ConfigModule,
+            global: true,
             providers: configs.map((config) => ({
                 provide: ConfigUtils.getProviderToken(config),
                 useFactory: configFactory(config),
                 inject: [ConfigTransformerService]
-            }))
+            })),
+            exports: configs.map((config) => ConfigUtils.getProviderToken(config))
+        };
+    }
+
+    public static forFeature(...configs: Type<any>[]): DynamicModule {
+        return {
+            module: ConfigModule,
+            providers: configs.map((config) => ({
+                provide: ConfigUtils.getProviderToken(config),
+                useFactory: configFactory(config),
+                inject: [ConfigTransformerService]
+            })),
+            exports: configs.map((config) => ConfigUtils.getProviderToken(config))
         };
     }
 }
