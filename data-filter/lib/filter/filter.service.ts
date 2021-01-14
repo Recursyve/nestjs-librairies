@@ -340,37 +340,7 @@ export class FilterService<Data> {
             return;
         }
 
-        const repoOption = this.repository.generateFindOptions({});
-        options.include = SequelizeUtils.mergeIncludes(
-            options.include as IncludeOptions[],
-            repoOption.include as IncludeOptions[]
-        );
-
-        if (!options.where) {
-            options.where = { [Op.and]: [] };
-        }
-
-        const where = options.where;
-        const generateFieldsObject = searchValue =>
-            this.repository
-                .getSearchAttributes()
-                .map(a => {
-                    return {
-                        [a.key]: {
-                            [Op.like]: `%${searchValue}%`
-                        }
-                    };
-                })
-                .reduce((a, o) => Object.assign(a, o), {});
-
-        const tokens = value.split(" ");
-        where[Op.and].push(
-            tokens.map(t => {
-                return {
-                    [Op.or]: generateFieldsObject(t)
-                };
-            })
-        );
+        this.repository.addSearchCondition(search.value, options);
     }
 
     private addOrderCondition(order: OrderModel, options: CountOptions): void {

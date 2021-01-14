@@ -1,4 +1,5 @@
 import { FindAttributeOptions, WhereOptions } from "sequelize";
+import { M, SequelizeUtils } from "../sequelize.utils";
 import { IncludeConfig, IncludeModel, IncludeWhereModel } from "./include.model";
 import { PathConfig, PathModel } from "./path.model";
 import { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
@@ -13,6 +14,7 @@ export interface AttributesConfigModel {
 
 export class AttributesConfig implements AttributesConfigModel {
     public attributes?: FindAttributeOptions;
+    public searchableAttributes?: string[];
     public path?: PathConfig;
     public includes: IncludeConfig[] = [];
     public customAttributes: CustomAttributesConfig[] = [];
@@ -26,6 +28,10 @@ export class AttributesConfig implements AttributesConfigModel {
 
     public setAttributes(attributes?: FindAttributeOptions) {
         this.attributes = attributes;
+    }
+
+    public setSearchableAttributes(attributes: string[]) {
+        this.searchableAttributes = attributes;
     }
 
     public setPath(path?: PathConfig) {

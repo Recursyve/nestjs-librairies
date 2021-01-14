@@ -14,15 +14,25 @@ export interface DataFilterConfigModel {
 export class DataFilterConfig implements DataFilterConfigModel {
     public model: typeof Model;
     public attributes?: FindAttributeOptions;
+    public searchableAttributes?: string[];
     public exportColumns?: string[];
     public customAttributes: CustomAttributesConfig[] = [];
+    public ignoreInSearch = false;
 
     public setModel(model: typeof Model) {
         this.model = model;
     }
 
+    public setIgnoreInPath(ignore: boolean) {
+        this.ignoreInSearch = ignore;
+    }
+
     public setAttributes(attributes?: FindAttributeOptions) {
         this.attributes = attributes;
+    }
+
+    public setSearchableAttributes(attributes: string[]) {
+        this.searchableAttributes = attributes;
     }
 
     public setExportColumns(exportColumns: string[]) {
@@ -71,6 +81,14 @@ export class DataFilterConfig implements DataFilterConfigModel {
     }
 
     public getSearchableAttributes(): string[] {
+        if (this.ignoreInSearch) {
+            return [];
+        }
+
+        if (this.searchableAttributes) {
+            return SequelizeUtils.getModelSearchableFieldAttributes(this.model as typeof M, this.searchableAttributes);
+        }
+
         const searchableAttributes = SequelizeUtils.getModelSearchableAttributes(this.model as typeof M);
         const attributes = SequelizeUtils.getModelSearchableFieldAttributes(this.model as typeof M, this.attributes as string[] ?? []);
         return attributes.length ?

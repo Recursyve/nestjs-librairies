@@ -1,7 +1,8 @@
 import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdapter } from "./adapters";
+import { SearchableAttributes } from "./decorators/seachable-attributes.decorator";
 import { databaseFactory } from "./test/database.factory";
 import { DataFilterRepository } from "./data-filter.repository";
-import { Attributes, Data, Include, Path } from "./decorators";
+import { Attributes, Data, IgnoreInSearch, Include, Path } from "./decorators";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { Persons } from "./test/models/persons/persons.model";
@@ -12,9 +13,16 @@ import { fn, literal } from "sequelize";
 
 @Data(Persons)
 @Attributes(["first_name", "last_name"])
+@SearchableAttributes(["first_name"])
 class PersonsTest {
     @Attributes(["cellphone"])
-    @Include({ path: "location", attributes: ["value"], where: { value: option => option.value } })
+    @SearchableAttributes(["address", "postal_code"])
+    @Include({
+        path: "location",
+        attributes: ["value"],
+        searchableAttributes: ["value", "unique_code"],
+        where: { value: option => option.value }
+    })
     @Path("coord")
     coord: Coords;
 
@@ -58,7 +66,7 @@ describe("DataFilterRepository", () => {
             const options = repository.generateFindOptions();
             expect(options).toBeDefined();
             expect(options).toStrictEqual({
-                attributes: ["first_name", "last_name"],
+                attributes: ["id", "first_name", "last_name"],
                 include: [
                     {
                         as: "coord",
@@ -83,7 +91,7 @@ describe("DataFilterRepository", () => {
             const options = repository.generateFindOptions({ value: "Montreal" });
             expect(options).toBeDefined();
             expect(options).toStrictEqual({
-                attributes: ["first_name", "last_name"],
+                attributes: ["id", "first_name", "last_name"],
                 include: [
                     {
                         as: "coord",
@@ -133,6 +141,33 @@ describe("DataFilterRepository", () => {
             });
             expect(person).toStrictEqual(res);
         });
+
+        it("getSearchableFields should return only searchable fields", () => {
+            const fields = repository.getSearchAttributes();
+            expect(fields).toBeDefined();
+            expect(fields).toEqual([
+                {
+                    key: "first_name",
+                    name: "first_name"
+                },
+                {
+                    key: "$coord.address$",
+                    name: "address"
+                },
+                {
+                    key: "$coord.postal_code$",
+                    name: "postal_code"
+                },
+                {
+                    key: "$coord.location.value$",
+                    name: "value"
+                },
+                {
+                    key: "$coord.location.unique_code$",
+                    name: "unique_code"
+                }
+            ])
+        });
     });
 
     describe("CustomAttributesTest", () => {
@@ -154,6 +189,7 @@ describe("DataFilterRepository", () => {
             expect(options).toBeDefined();
             expect(options).toStrictEqual({
                 attributes: [
+                    "id",
                     "first_name",
                     "last_name",
                     [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"), literal(`point(${45.8797953}, ${-73.2815516})`)), "distance"]
@@ -190,6 +226,7 @@ describe("DataFilterRepository", () => {
             expect(options).toBeDefined();
             expect(options).toStrictEqual({
                 attributes: [
+                    "id",
                     "first_name",
                     "last_name"
                 ],

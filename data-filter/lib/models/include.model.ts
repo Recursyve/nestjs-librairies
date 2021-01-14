@@ -7,6 +7,8 @@ export interface IncludeWhereModel {
 export interface IncludeConfig {
     path: string;
     attributes?: FindAttributeOptions;
+    searchableAttributes?: string[];
+    ignoreInSearch?: boolean;
     where?: IncludeWhereModel;
     required?: boolean;
 }
@@ -14,6 +16,8 @@ export interface IncludeConfig {
 export interface IncludeModel {
     path: string;
     attributes?: FindAttributeOptions;
+    searchableAttributes?: string[];
+    ignoreInSearch?: boolean;
     where?: WhereOptions;
     required?: boolean;
 }

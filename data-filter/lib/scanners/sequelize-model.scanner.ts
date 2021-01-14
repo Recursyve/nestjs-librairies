@@ -93,6 +93,10 @@ export class SequelizeModelScanner {
         );
 
         for (const include of additionalIncludes) {
+            if (include.ignoreInSearch) {
+                continue;
+            }
+
             result.push(
                 ...this.getAttributes(
                     model as typeof Model,
@@ -100,7 +104,7 @@ export class SequelizeModelScanner {
                         path: include.path
                     },
                     [],
-                    include.attributes
+                    include.searchableAttributes ?? include.attributes
                 ).map(a => ({
                     name: a.name,
                     key: SequelizeUtils.getAttributeFullName(a.name, [path.path, include.path].join("."))

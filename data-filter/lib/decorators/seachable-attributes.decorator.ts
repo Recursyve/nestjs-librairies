@@ -1,21 +1,21 @@
 import { AttributesHandler } from "../handlers/attributes.handler";
 import { DataFilterHandler } from "../handlers/data-filter.handler";
 
-export function IgnoreInSearch(): PropertyDecorator & ClassDecorator {
+export function SearchableAttributes(attributes: string[]): PropertyDecorator & ClassDecorator {
     return (target: Object, propertyKey?: string) => {
-        defineInSearchMetadata(target, propertyKey);
-    }
+        defineSearchableAttributesMetadata(target, propertyKey, attributes);
+    };
 }
 
-function defineInSearchMetadata(target: Object, propertyKey?: string) {
+function defineSearchableAttributesMetadata(target: Object, propertyKey?: string, attributes?: string[]) {
     if (!propertyKey) {
         const dataFilter = DataFilterHandler.getDataFilter(target);
-        dataFilter.setIgnoreInPath(true);
+        dataFilter.setSearchableAttributes(attributes);
         DataFilterHandler.saveDataFilter(target, dataFilter);
         return;
     }
 
     const attribute = AttributesHandler.getAttribute(target, propertyKey);
-    attribute.setIgnoreInPath(true);
+    attribute.setSearchableAttributes(attributes);
     AttributesHandler.saveAttribute(target, attribute);
 }

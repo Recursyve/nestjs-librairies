@@ -1,8 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { FindOptions, Identifier, IncludeOptions, Model, ProjectionAlias, WhereOptions } from "sequelize";
-import { AccessControlAdapter } from "./adapters";
-import { ExportAdapter } from "./adapters";
-import { TranslateAdapter } from "./adapters";
+import { FindOptions, Identifier, IncludeOptions, Model, Op, ProjectionAlias, WhereOptions } from "sequelize";
+import { AccessControlAdapter, ExportAdapter, TranslateAdapter } from "./adapters";
 import { AttributesConfig } from "./models/attributes.model";
 import { DataFilterConfig } from "./models/data-filter.model";
 import { ExportTypes } from "./models/export-types.model";
@@ -88,12 +86,37 @@ export class DataFilterRepository<Data> {
         );
     }
 
-    public count(where?: WhereOptions, conditions?: object): Promise<number> {
+    public async count(where?: WhereOptions, conditions?: object): Promise<number> {
         const options = {
             ...this.generateFindOptions(conditions),
             where
         };
         return this.model.count(options);
+    }
+
+    public async search(search: string): Promise<Data[]> {
+        const options = this.generateFindOptions();
+        this.addSearchCondition(search, options);
+
+        const result = await this.model.findAll(options);
+        if (!result?.length) {
+            return result as unknown as Data[];
+        }
+        return result.map(x => this.reduceObject(x));
+    }
+
+    public async searchFromUser(user: DataFilterUserModel, search: string): Promise<Data[]> {
+        const options = this.generateFindOptions();
+        this.addSearchCondition(search, options);
+
+        const ids = await this.accessControlAdapter.getResourceIds(this._config.model as any, user);
+        options.where = SequelizeUtils.mergeWhere({ id: ids }, options.where);
+
+        const result = await this.model.findAll(options);
+        if (!result?.length) {
+            return result as unknown as Data[];
+        }
+        return result.map(x => this.reduceObject(x));
     }
 
     public generateFindOptions(conditions?: object): FindOptions {
@@ -194,17 +217,18 @@ export class DataFilterRepository<Data> {
         );
 
         for (const definition of this._definitions) {
-            if (!definition.path || definition.ignoreInSearch) {
+            if (!definition.path) {
                 continue;
             }
 
+            const attr = definition.ignoreInSearch ? [] : definition.searchableAttributes ?? definition.attributes;
             const additionalIncludes = definition.transformIncludesConfig({});
             attributes.push(
                 ...this.sequelizeModelScanner.getAttributes(
                     this.model,
                     definition.path as PathModel,
                     additionalIncludes,
-                    definition.attributes
+                    attr
                 )
             );
         }
@@ -256,6 +280,39 @@ export class DataFilterRepository<Data> {
     private init() {
         this._config = this.dataFilterScanner.getDataFilter(this.dataDef);
         this._definitions = this.dataFilterScanner.getAttributes(this.dataDef);
+    }
+
+    public addSearchCondition(search: string, options: FindOptions): void {
+        const repoOption = this.generateFindOptions({});
+        options.include = SequelizeUtils.mergeIncludes(
+            options.include as IncludeOptions[],
+            repoOption.include as IncludeOptions[]
+        );
+
+        if (!options.where) {
+            options.where = { [Op.and]: [] };
+        }
+
+        const where = options.where;
+        const generateFieldsObject = searchValue =>
+            this.getSearchAttributes()
+                .map(a => {
+                    return {
+                        [a.key]: {
+                            [Op.like]: `%${searchValue}%`
+                        }
+                    };
+                })
+                .reduce((a, o) => Object.assign(a, o), {});
+
+        const tokens = search.split(" ");
+        where[Op.and].push(
+            tokens.map(t => {
+                return {
+                    [Op.or]: generateFieldsObject(t)
+                };
+            })
+        );
     }
 
     private getExportsHeader(lang: string, translateService = this.translateService): Promise<string[]> {

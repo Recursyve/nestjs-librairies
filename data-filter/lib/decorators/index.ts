@@ -5,3 +5,4 @@ export * from "./export.decorator";
 export * from "./ignore-in-search.decorator";
 export * from "./include.decorator";
 export * from "./path.decorator";
+export * from "./seachable-attributes.decorator";
