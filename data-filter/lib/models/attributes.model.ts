@@ -38,6 +38,10 @@ export class AttributesConfig implements AttributesConfigModel {
         this.path = path;
     }
 
+    public containsPath(path: string) {
+        return this.path?.path.startsWith(path);
+    }
+
     public setIgnoreInPath(ignore: boolean) {
         this.ignoreInSearch = ignore;
     }

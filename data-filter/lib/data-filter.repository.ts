@@ -163,9 +163,25 @@ export class DataFilterRepository<Data> {
             const attr = attribute[attribute.length - 1];
             return attr === column
         };
-        const definition = this._definitions.filter(x => x.attributes).find(x => {
-            return (x.attributes as (string | ProjectionAlias)[]).some(attrCondition) ||
-                x.includes.some(include => (include.attributes as (string | ProjectionAlias)[])?.some(attrCondition));
+
+        const objectsPath = objects.join(".");
+        const definition = this._definitions.find(x => {
+            if (x.attributes && (x.attributes as (string | ProjectionAlias)[]).some(attrCondition)) {
+                return true;
+            }
+
+            if (definition.containsPath(objectsPath)) {
+                return true;
+            }
+
+            const pathRelativeToDef = objectsPath.replace(x.path?.path ?? "", "");
+            return x.includes.some(include => {
+                if (include.attributes) {
+                    return (include.attributes as (string | ProjectionAlias)[]).some(attrCondition)
+                }
+
+                return include.path.startsWith(pathRelativeToDef);
+            });
         });
 
         if (!definition) {
