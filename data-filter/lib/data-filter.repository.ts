@@ -94,9 +94,12 @@ export class DataFilterRepository<Data> {
         return this.model.count(options);
     }
 
-    public async search(search: string): Promise<Data[]> {
-        const options = this.generateFindOptions();
-        this.addSearchCondition(search, options);
+    public async search(search: string, options?: FindOptions): Promise<Data[]> {
+        const findOptions = this.generateFindOptions();
+        this.addSearchCondition(search, {
+            ...findOptions,
+            ...options
+        });
 
         const result = await this.model.findAll(options);
         if (!result?.length) {
@@ -105,9 +108,12 @@ export class DataFilterRepository<Data> {
         return result.map(x => this.reduceObject(x));
     }
 
-    public async searchFromUser(user: DataFilterUserModel, search: string): Promise<Data[]> {
-        const options = this.generateFindOptions();
-        this.addSearchCondition(search, options);
+    public async searchFromUser(user: DataFilterUserModel, search: string, options?: FindOptions): Promise<Data[]> {
+        const findOptions = this.generateFindOptions();
+        this.addSearchCondition(search,  {
+            ...findOptions,
+            ...options
+        });
 
         const ids = await this.accessControlAdapter.getResourceIds(this._config.model as any, user);
         options.where = SequelizeUtils.mergeWhere({ id: ids }, options.where);
@@ -170,7 +176,7 @@ export class DataFilterRepository<Data> {
                 return true;
             }
 
-            if (definition.containsPath(objectsPath)) {
+            if (x.containsPath(objectsPath)) {
                 return true;
             }
 
@@ -299,6 +305,10 @@ export class DataFilterRepository<Data> {
     }
 
     public addSearchCondition(search: string, options: FindOptions): void {
+        if (!search) {
+            return;
+        }
+
         const repoOption = this.generateFindOptions({});
         options.include = SequelizeUtils.mergeIncludes(
             options.include as IncludeOptions[],
