@@ -5,7 +5,7 @@ import { ModuleRef } from "@nestjs/core";
 
 @Module({
     providers: [RedisConfigService, RedisService],
-    exports: [RedisService]
+    exports: [RedisConfigService, RedisService]
 })
 export class RedisModule implements OnModuleDestroy {
     constructor(private readonly moduleRef: ModuleRef) {}
@@ -23,3 +23,4 @@ export class RedisModule implements OnModuleDestroy {
 }
 
 export * from "./services/redis.service";
+export * from "./services/redis-config.service";

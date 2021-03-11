@@ -94,31 +94,27 @@ export class DataFilterRepository<Data> {
         return this.model.count(options);
     }
 
-    public async search(search: string, options?: FindOptions): Promise<Data[]> {
-        const findOptions = this.generateFindOptions();
-        this.addSearchCondition(search, {
-            ...findOptions,
-            ...options
-        });
+    public async search(search: string, options?: FindOptions, conditions?: object): Promise<Data[]> {
+        const findOptions = this.generateFindOptions(conditions);
+        Object.assign(findOptions, options);
+        this.addSearchCondition(search, findOptions);
 
-        const result = await this.model.findAll(options);
+        const result = await this.model.findAll(findOptions);
         if (!result?.length) {
             return result as unknown as Data[];
         }
         return result.map(x => this.reduceObject(x));
     }
 
-    public async searchFromUser(user: DataFilterUserModel, search: string, options?: FindOptions): Promise<Data[]> {
-        const findOptions = this.generateFindOptions();
-        this.addSearchCondition(search,  {
-            ...findOptions,
-            ...options
-        });
+    public async searchFromUser(user: DataFilterUserModel, search: string, options?: FindOptions, conditions?: object): Promise<Data[]> {
+        const findOptions = this.generateFindOptions(conditions);
+        Object.assign(findOptions, options);
+        this.addSearchCondition(search, findOptions);
 
         const ids = await this.accessControlAdapter.getResourceIds(this._config.model as any, user);
-        options.where = SequelizeUtils.mergeWhere({ id: ids }, options.where);
+        findOptions.where = SequelizeUtils.mergeWhere({ id: ids }, findOptions.where);
 
-        const result = await this.model.findAll(options);
+        const result = await this.model.findAll(findOptions);
         if (!result?.length) {
             return result as unknown as Data[];
         }
