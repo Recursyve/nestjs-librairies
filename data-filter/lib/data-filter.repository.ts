@@ -156,47 +156,7 @@ export class DataFilterRepository<Data> {
             return [];
         }
 
-        const objects = order.column.split(".");
-        const column = objects.pop();
-        const attrCondition = (attribute: string | ProjectionAlias) => {
-            if (typeof attribute === "string") {
-                return attribute === column;
-            }
-            const attr = attribute[attribute.length - 1];
-            return attr === column
-        };
-
-        const objectsPath = objects.join(".");
-        const definition = this._definitions.find(x => {
-            if (x.attributes && (x.attributes as (string | ProjectionAlias)[]).some(attrCondition)) {
-                return true;
-            }
-
-            if (x.containsPath(objectsPath)) {
-                return true;
-            }
-
-            const pathRelativeToDef = objectsPath.replace(x.path?.path ?? "", "");
-            return x.includes.some(include => {
-                if (include.attributes) {
-                    return (include.attributes as (string | ProjectionAlias)[]).some(attrCondition)
-                }
-
-                return include.path.startsWith(pathRelativeToDef);
-            });
-        });
-
-        if (!definition) {
-            return [];
-        }
-
-        if (!definition.path) {
-            return [];
-        }
-        const path = definition.transformPathConfig({});
-        const additionalIncludes = definition.transformIncludesConfig({});
-        const attributes = definition.transformAttributesConfig({});
-        return this.sequelizeModelScanner.getIncludes(this.model, path, additionalIncludes, attributes);
+        return this.sequelizeModelScanner.getOrderIncludes(this.model, order);
     }
 
     public reduceObject(result: any): Data {

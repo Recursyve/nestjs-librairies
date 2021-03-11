@@ -115,6 +115,31 @@ describe("DataFilterRepository", () => {
             });
         });
 
+        it("generateOrderInclude should return a valid Sequelize Includes array", () => {
+            const includes = repository.generateOrderInclude({
+                column: "coord.location.value",
+                direction: "desc"
+            });
+            expect(includes).toBeDefined();
+            expect(includes).toStrictEqual([
+                {
+                    model: Coords,
+                    as: "coord",
+                    attributes: [],
+                    include: [
+                        {
+                            model: Locations,
+                            as: "location",
+                            attributes: ["value"],
+                            include: [],
+                            required: false
+                        }
+                    ],
+                    required: false
+                }
+            ]);
+        });
+
         it("reduceObject should return a valid PersonsTest object", () => {
             const person = repository.reduceObject({
                 first_name: "Test",

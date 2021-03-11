@@ -19,24 +19,25 @@ export interface GeoPoint {
 export class M extends Model<M> {}
 
 export class SequelizeUtils {
-    public static reduceIncludes(includes: IncludeOptions[][]): Includeable[] {
+    public static reduceIncludes(includes: IncludeOptions[][], ignoreAttributes = false): Includeable[] {
         let include: IncludeOptions[] = [];
         for (const i of includes) {
-            include = this.mergeIncludes(include, i);
+            include = this.mergeIncludes(include, i, ignoreAttributes);
         }
 
         return include;
     }
 
-    public static mergeIncludes(a: IncludeOptions[] = [], b: IncludeOptions[] = []) {
+    public static mergeIncludes(a: IncludeOptions[] = [], b: IncludeOptions[] = [], ignoreAttributes = false) {
         for (const bChild of b) {
             const aChild = a.find(value => value.model === bChild.model && value.as === bChild.as);
             if (aChild) {
                 aChild.include = this.mergeIncludes(
                     (aChild.include as IncludeOptions[]) ?? [],
-                    (bChild.include as IncludeOptions[]) ?? []
+                    (bChild.include as IncludeOptions[]) ?? [],
+                    ignoreAttributes
                 );
-                if (aChild.attributes || bChild.attributes) {
+                if ((aChild.attributes || bChild.attributes) && !ignoreAttributes) {
                     aChild.attributes = this.mergeAttributes(aChild, bChild);
                 }
                 const where = this.mergeWhere(aChild.where, bChild.where);
@@ -172,6 +173,10 @@ export class SequelizeUtils {
         return `\`${path.split(".").join("->")}\`.\`${attribute}\``;
     }
 
+    public static getOrderFullName(attribute: string, path: string[]) {
+        return `${path.join("->")}.${attribute}`;
+    }
+
     public static getModelSearchableAttributes(model: typeof M): string[] {
         return Object.keys(model.rawAttributes).filter(
             a => !["DATE", "DATEONLY", "VIRTUAL"].some(t => t === (model.rawAttributes[a].type as AbstractDataTypeConstructor).key)
@@ -234,5 +239,16 @@ export class SequelizeUtils {
         }
 
         return model;
+    }
+
+    public static findColumnFieldName(model: typeof M, name: string): string {
+        const field = Object.keys(model.rawAttributes).find((key) => {
+            if (key === name) {
+                return true;
+            }
+
+            return model.rawAttributes[key].field === name;
+        });
+        return model.rawAttributes[field].field ?? name;
     }
 }

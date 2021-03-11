@@ -1,11 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import { BaseAssociation, getAssociations, Model } from "sequelize-typescript";
 import { FindAttributeOptions, IncludeOptions, Order } from "sequelize";
+import { Association, BaseAssociation, getAssociations, Model } from "sequelize-typescript";
+import { OrderModel } from "..";
 import { IncludeModel } from "../models/include.model";
-import { M, SequelizeUtils } from "../sequelize.utils";
 import { PathModel } from "../models/path.model";
 import { SearchAttributesModel } from "../models/search-attributes.model";
-import { OrderModel } from "..";
+import { M, SequelizeUtils } from "../sequelize.utils";
 
 @Injectable()
 export class SequelizeModelScanner {
@@ -13,7 +13,8 @@ export class SequelizeModelScanner {
         model: typeof Model,
         path: PathModel,
         additionalIncludes: IncludeModel[],
-        attributes?: FindAttributeOptions
+        attributes?: FindAttributeOptions,
+        ignoreAttributes = false
     ): IncludeOptions[] {
         const objects = path?.path?.split(".");
         if (!objects?.length) {
@@ -27,6 +28,7 @@ export class SequelizeModelScanner {
             includes.push({
                 as: association.getAs() as string,
                 model: association.getAssociatedClass(),
+                attributes: ignoreAttributes ? [] : undefined,
                 include: [],
                 required: false
             });
@@ -38,7 +40,7 @@ export class SequelizeModelScanner {
         }
 
         if (attributes) {
-            includes[0].attributes = SequelizeUtils.mergeAttributes(includes[0], { attributes: attributes });
+            includes[0].attributes = ignoreAttributes ? [] : SequelizeUtils.mergeAttributes(includes[0], { attributes: attributes });
         }
         if (path.where) {
             includes[0].where = SequelizeUtils.mergeWhere(includes[0].where, path.where);
@@ -56,12 +58,13 @@ export class SequelizeModelScanner {
                         required: include.required
                     },
                     [],
-                    include.attributes
+                    include.attributes,
+                    ignoreAttributes
                 )
             );
         }
 
-        includes[0].include.push(...SequelizeUtils.reduceIncludes(addIncludes));
+        includes[0].include.push(...SequelizeUtils.reduceIncludes(addIncludes, ignoreAttributes));
 
         return result;
     }
@@ -134,6 +137,61 @@ export class SequelizeModelScanner {
         order.push(column);
         order.push(orderObj.direction.toUpperCase());
         return [order] as Order;
+    }
+
+    public getGroup(model: typeof Model, orderObj: OrderModel): string[] {
+        if (!orderObj || !orderObj.column || orderObj.direction === "") {
+            return;
+        }
+
+        const group: string[] = [];
+        const values = orderObj.column.split(".");
+        const column = values.pop();
+        for (const value of values) {
+            const association = this.findAssociation(model, value);
+            model = association.getAssociatedClass();
+            group.push(value);
+        }
+        return [
+            SequelizeUtils.getOrderFullName("id", group),
+            SequelizeUtils.getOrderFullName(SequelizeUtils.findColumnFieldName(model as typeof M, column), group)
+        ];
+    }
+
+    public getOrderIncludes(model: typeof Model, orderObj: OrderModel): IncludeOptions[] {
+        if (!orderObj || !orderObj.column || orderObj.direction === "") {
+            return [];
+        }
+
+        const values = orderObj.column.split(".");
+        if (values.length <= 1) {
+            return [];
+        }
+
+        const column = values.pop();
+        const result: IncludeOptions[] = [];
+        let includes: IncludeOptions[] = result;
+        for (const value of values) {
+            const association = this.findAssociation(model, value);
+            includes.push({
+                as: association.getAs() as string,
+                model: association.getAssociatedClass(),
+                attributes: [],
+                include: [],
+                required: false,
+                through: association.getAssociation() === Association.BelongsToMany ? {
+                    attributes: []
+                } : undefined
+            });
+
+            if (value !== values[values.length - 1]) {
+                model = includes[0].model as typeof Model;
+                includes = includes[0].include as IncludeOptions[];
+            }
+        }
+
+        includes[0].attributes = [column];
+        return result;
     }
 
     private findAssociation(model: typeof Model, obj: string): BaseAssociation {
