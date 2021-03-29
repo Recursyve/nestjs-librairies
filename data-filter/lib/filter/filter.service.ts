@@ -118,6 +118,12 @@ export class FilterService<Data> {
         const [userOrOpt, opt] = args;
         const options = opt ? opt : userOrOpt as FilterQueryModel;
         const user = opt ? userOrOpt as DataFilterUserModel : null;
+        if (!opt.order || !opt.order.column) {
+            opt.order = {
+                column: "id",
+                direction: "asc"
+            };
+        }
 
         const countOptions = await this.getFindOptions(this.repository.model, options.query, options.data);
         this.addSearchCondition(options.search, countOptions);
