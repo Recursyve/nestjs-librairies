@@ -34,7 +34,7 @@ export class SequelizeModelScanner {
             });
 
             if (obj !== objects[objects.length - 1]) {
-                model = includes[0].model as typeof Model;
+                model = includes[0].model as unknown as typeof Model;
                 includes = includes[0].include as IncludeOptions[];
             }
         }
@@ -51,7 +51,7 @@ export class SequelizeModelScanner {
         for (const include of additionalIncludes) {
             addIncludes.push(
                 this.getIncludes(
-                    includes[0].model as typeof Model,
+                    includes[0].model as unknown as typeof Model,
                     {
                         path: include.path,
                         where: include.where,
@@ -83,7 +83,7 @@ export class SequelizeModelScanner {
         const result: SearchAttributesModel[] = [];
         for (const obj of objects) {
             const association = this.findAssociation(model, obj);
-            model = association.getAssociatedClass();
+            model = association.getAssociatedClass() as unknown as typeof Model;
         }
         attributes = attributes ?
             SequelizeUtils.getModelSearchableFieldAttributes(model as typeof M, attributes as string[]) :
@@ -128,7 +128,7 @@ export class SequelizeModelScanner {
         const column = values.pop();
         for (const value of values) {
             const association = this.findAssociation(model, value);
-            model = association.getAssociatedClass();
+            model = association.getAssociatedClass() as unknown as typeof Model;
             order.push({
                 model,
                 as: association.getAs()
@@ -149,7 +149,7 @@ export class SequelizeModelScanner {
         const column = values.pop();
         for (const value of values) {
             const association = this.findAssociation(model, value);
-            model = association.getAssociatedClass();
+            model = association.getAssociatedClass() as unknown as typeof Model;
             group.push(value);
         }
         return [
@@ -185,7 +185,7 @@ export class SequelizeModelScanner {
             });
 
             if (value !== values[values.length - 1]) {
-                model = includes[0].model as typeof Model;
+                model = includes[0].model as unknown as typeof Model;
                 includes = includes[0].include as IncludeOptions[];
             }
         }
@@ -194,8 +194,8 @@ export class SequelizeModelScanner {
         return result;
     }
 
-    private findAssociation(model: typeof Model, obj: string): BaseAssociation {
-        const associations = getAssociations(model.prototype);
+    private findAssociation(model: typeof Model, obj: string): BaseAssociation<any, typeof Model> {
+        const associations = getAssociations<any, typeof Model>(model.prototype);
 
         const association = associations.find(a => a.getAs() === obj);
         if (!association) {

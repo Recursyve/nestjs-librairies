@@ -16,7 +16,7 @@ export interface GeoPoint {
     coordinates: number[];
 }
 
-export class M extends Model<M> {}
+export class M extends Model {}
 
 export class SequelizeUtils {
     public static reduceIncludes(includes: IncludeOptions[][], ignoreAttributes = false): Includeable[] {
