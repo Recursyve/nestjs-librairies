@@ -131,21 +131,25 @@ describe("FilterService", () => {
                     as: "system",
                     model: Systems,
                     required: false,
+                    attributes: [],
                     include: [
                         {
                             as: "place",
                             model: Places,
                             required: false,
+                            attributes: [],
                             include: [
                                 {
                                     as: "owners",
                                     model: Owners,
                                     required: false,
+                                    attributes: [],
                                     include: [
                                         {
                                             as: "person",
                                             model: Persons,
                                             required: false,
+                                            attributes: [],
                                             include: []
                                         }
                                     ]
@@ -158,11 +162,13 @@ describe("FilterService", () => {
                     as: "visits",
                     model: MaintenanceVisits,
                     required: false,
+                    attributes: [],
                     include: [
                         {
                             as: "visit",
                             model: Visits,
                             required: false,
+                            attributes: [],
                             include: []
                         }
                     ]

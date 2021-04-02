@@ -1,5 +1,5 @@
 import { Injectable, Type } from "@nestjs/common";
-import { CountOptions, FindOptions, Includeable, IncludeOptions, Op, Order, WhereOptions } from "sequelize";
+import { col, CountOptions, FindOptions, Includeable, IncludeOptions, Op, Order, WhereOptions } from "sequelize";
 import { ExportTypes, FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
@@ -128,6 +128,7 @@ export class FilterService<Data> {
         const countOptions = await this.getFindOptions(this.repository.model, options.query, options.data);
         this.addSearchCondition(options.search, countOptions);
         this.addOrderCondition(options.order, countOptions);
+        this.addGroupOption(options, countOptions);
 
         const total = await (user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions));
         const values = await (user ? this.findValues(user, options, countOptions) : this.findValues(options, countOptions));
@@ -159,9 +160,7 @@ export class FilterService<Data> {
         GeoLocalizationFilter.reset();
 
         query = this.addDefaultFilter(query);
-        let option: FindOptions = {
-            group: `${model.name}.id`
-        };
+        let option: FindOptions = {};
         if (query) {
             const whereConditions = [];
             const havingConditions = [];
@@ -243,7 +242,7 @@ export class FilterService<Data> {
                 includes.push(...this.getFilterInclude(model, filter as FilterDefinition, data));
             }
         }
-        return SequelizeUtils.reduceIncludes(includes);
+        return SequelizeUtils.reduceIncludes(includes, true);
     }
 
     private getConditionInclude(model: typeof M, condition: FilterCondition): IncludeOptions[] {
@@ -259,7 +258,7 @@ export class FilterService<Data> {
             }
             const r = rule as FilterConditionRule;
             if (r.path) {
-                includes.push(...this.sequelizeModelScanner.getIncludes(model, { path: r.path }, [], { include: [] }));
+                includes.push(...this.sequelizeModelScanner.getIncludes(model, { path: r.path }, [], { include: [] }, true));
             }
         }
         return includes;
@@ -368,6 +367,21 @@ export class FilterService<Data> {
         );
     }
 
+    private addGroupOption(query: FilterQueryModel, options: CountOptions): void {
+        if (query?.order?.column === "") {
+            return;
+        }
+
+        const model = this.repository.model;
+        const values = query?.order?.column.split(".");
+        const column = values.pop();
+        if (!values.length) {
+            options.group = [`${model.name}.id`, `${model.name}.${SequelizeUtils.findColumnFieldName(model, column)}`];
+        } else {
+            options.group = [`${model.name}.id`, ...this.sequelizeModelScanner.getGroup(model, query.order)];
+        }
+    }
+
     private async countTotalValues(user: DataFilterUserModel, options: FindOptions): Promise<number>;
     private async countTotalValues(options: FindOptions): Promise<number>;
     private async countTotalValues(...args: [DataFilterUserModel | FindOptions, FindOptions?]): Promise<number> {
@@ -414,8 +428,10 @@ export class FilterService<Data> {
         }
 
         const order = this.getOrderOptions(filter.order);
+        const orderAttr = order[0]?.length === 2 ? order[0][order[0].length - 2] : undefined
         const values = await this.repository.model.findAll({
             ...options,
+            attributes: orderAttr ? ["id", orderAttr] : ["id"],
             limit: filter.page ? filter.page.size : null,
             offset: filter.page ? filter.page.number * filter.page.size : null,
             subQuery: false,
@@ -470,7 +486,7 @@ export class FilterService<Data> {
             this.sequelizeModelScanner.getIncludes(model, {
                 path: filter.path,
                 where: this.generateWhereConditions(filter.where, data)
-            }, []),
+            }, [], [], true),
             this.getConditionInclude(model, filter.condition)
         ];
     }
