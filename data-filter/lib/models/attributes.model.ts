@@ -1,5 +1,4 @@
-import { FindAttributeOptions, WhereOptions } from "sequelize";
-import { M, SequelizeUtils } from "../sequelize.utils";
+import { FindAttributeOptions, Order, WhereOptions } from "sequelize";
 import { IncludeConfig, IncludeModel, IncludeWhereModel } from "./include.model";
 import { PathConfig, PathModel } from "./path.model";
 import { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
@@ -15,7 +14,7 @@ export interface AttributesConfigModel {
 export class AttributesConfig implements AttributesConfigModel {
     public attributes?: FindAttributeOptions;
     public searchableAttributes?: string[];
-    public path?: PathConfig;
+    public path: PathConfig;
     public includes: IncludeConfig[] = [];
     public customAttributes: CustomAttributesConfig[] = [];
     public ignoreInSearch = false;
@@ -34,7 +33,7 @@ export class AttributesConfig implements AttributesConfigModel {
         this.searchableAttributes = attributes;
     }
 
-    public setPath(path?: PathConfig) {
+    public setPath(path: PathConfig) {
         this.path = path;
     }
 
@@ -44,6 +43,14 @@ export class AttributesConfig implements AttributesConfigModel {
 
     public setIgnoreInPath(ignore: boolean) {
         this.ignoreInSearch = ignore;
+    }
+
+    public setSeparate(): void {
+        this.path.separate = true;
+    }
+
+    public setOrder(order: Order): void {
+        this.path.order = order;
     }
 
     public addInclude(include: IncludeConfig) {
@@ -108,14 +115,12 @@ export class AttributesConfig implements AttributesConfigModel {
             })
             .map(x => {
                 if (!options) {
-                    return {
-                        path: x.path,
-                        attributes: x.attributes
-                    };
+                    const { where, ...values } = x;
+                    return values;
                 }
 
                 if (!x.where) {
-                    return { path: x.path, attributes: x.attributes };
+                    return x;
                 }
 
                 return {

@@ -11,6 +11,7 @@ export interface IncludeConfig {
     ignoreInSearch?: boolean;
     where?: IncludeWhereModel;
     required?: boolean;
+    separate?: boolean;
 }
 
 export interface IncludeModel {
@@ -20,4 +21,5 @@ export interface IncludeModel {
     ignoreInSearch?: boolean;
     where?: WhereOptions;
     required?: boolean;
+    separate?: boolean;
 }
