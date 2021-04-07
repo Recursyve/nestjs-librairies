@@ -118,8 +118,8 @@ export class FilterService<Data> {
         const [userOrOpt, opt] = args;
         const options = opt ? opt : userOrOpt as FilterQueryModel;
         const user = opt ? userOrOpt as DataFilterUserModel : null;
-        if (!opt.order || !opt.order.column) {
-            opt.order = {
+        if (!options.order || !options.order.column) {
+            options.order = {
                 column: "id",
                 direction: "asc"
             };

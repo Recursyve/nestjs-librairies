@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { FindAttributeOptions, IncludeOptions, Order } from "sequelize";
 import { Association, BaseAssociation, getAssociations, Model } from "sequelize-typescript";
 import { OrderModel } from "..";
-import { IncludeModel } from "../models/include.model";
+import { IncludeModel } from "..";
 import { PathModel } from "../models/path.model";
 import { SearchAttributesModel } from "../models/search-attributes.model";
 import { M, SequelizeUtils } from "../sequelize.utils";
@@ -47,6 +47,9 @@ export class SequelizeModelScanner {
             includes[0].required = !!path.required;
         }
 
+        includes[0].separate = !!path.separate;
+        includes[0].order = path.order;
+
         const addIncludes: IncludeOptions[][] = [];
         for (const include of additionalIncludes) {
             addIncludes.push(
@@ -55,7 +58,8 @@ export class SequelizeModelScanner {
                     {
                         path: include.path,
                         where: include.where,
-                        required: include.required
+                        required: include.required,
+                        separate: include.separate
                     },
                     [],
                     include.attributes,
