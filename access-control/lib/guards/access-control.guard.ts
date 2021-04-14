@@ -6,7 +6,6 @@ import { ACCESS_CONTROL_ROUTES, FALLBACK_ACCESS_CONTROL_GUARDS, NEEDS_ACCESS_ACT
 import { UserDeserializer } from "../deserializers";
 import { AccessAction } from "../models";
 import { AccessControlService } from "../services";
-import { M } from "../utils";
 
 @Injectable()
 export class AccessControlGuard implements CanActivate {
@@ -14,7 +13,7 @@ export class AccessControlGuard implements CanActivate {
     private routes: string[];
 
     constructor(
-        @Inject(ACCESS_CONTROL_MODELS) private readonly models: (typeof M)[],
+        @Inject(ACCESS_CONTROL_MODELS) private readonly models: (typeof Model)[],
         private readonly reflector: Reflector,
         private readonly accessControlService: AccessControlService,
         private readonly userDeserializer: UserDeserializer,
