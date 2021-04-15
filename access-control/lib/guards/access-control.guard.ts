@@ -6,7 +6,6 @@ import { ACCESS_CONTROL_ROUTES, FALLBACK_ACCESS_CONTROL_GUARDS, NEEDS_ACCESS_ACT
 import { UserDeserializer } from "../deserializers";
 import { AccessAction } from "../models";
 import { AccessControlService } from "../services";
-import { M } from "../utils";
 
 @Injectable()
 export class AccessControlGuard implements CanActivate {
@@ -14,7 +13,7 @@ export class AccessControlGuard implements CanActivate {
     private routes: string[];
 
     constructor(
-        @Inject(ACCESS_CONTROL_MODELS) private readonly models: (typeof M)[],
+        @Inject(ACCESS_CONTROL_MODELS) private readonly models: (typeof Model)[],
         private readonly reflector: Reflector,
         private readonly accessControlService: AccessControlService,
         private readonly userDeserializer: UserDeserializer,
@@ -35,7 +34,7 @@ export class AccessControlGuard implements CanActivate {
         }
 
         const request = context.switchToHttp().getRequest();
-        request.resources = this.getModels(request.route.path, needsAccessActions.length);
+        request.resources = this.getModels(request.route.path, needsAccessActions);
         const user = await this.userDeserializer.deserializeUser(request);
 
         const data: [AccessAction, typeof Model][] = needsAccessActions.map<[AccessAction, typeof Model]>((x, i) => [
@@ -76,16 +75,26 @@ export class AccessControlGuard implements CanActivate {
         return shouldActivate.length && shouldActivate.every(activate => activate);
     }
 
-    // Extracts the models from the route path. Assumes that the schema of the path is:
-    // 0/1     /2   /3     /4
-    //  /model1/:id1/model2/:id2...
-    // Its splits by "/" and takes uneven indexes (1, 3, ...) up until extractCount resources.
-    public getModels(path: string, extractCount): typeof Model[] {
-        const resources = path
-            .split("/")
-            .filter((component, index) => component.length && index % 2 !== 0 && index < extractCount * 2 + 1);
+    public getModels(path: string, actions: AccessAction[]): typeof Model[] {
+        const model = [];
+        for (const action of actions) {
+            const param = `/:${action.resourceIdParameterName}`;
+            const paramIndex = path.indexOf(param);
+            for (const key in this.resources) {
+                const index = path.indexOf(key);
 
-        return resources.map(resource => this.resources[resource]);
+                /**
+                 * Path always start with / so we check for index 1
+                 * We also check if the next value after the path is the param
+                 * Ex: /test/coord/:id -> Resource test/coord is accepted, but not resource test or coord
+                 */
+                if (index === 1 && index + key.length === paramIndex) {
+                    model.push(this.resources[key]);
+                    path = path.slice(paramIndex + param.length);
+                }
+            }
+        }
+        return model;
     }
 
     private init(): void {
