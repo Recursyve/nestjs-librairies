@@ -372,6 +372,11 @@ export class FilterService<Data> {
             return;
         }
 
+        const rule = this.definitions[query.order.column] as OrderRuleDefinition;
+        if (rule && OrderRule.validate(rule)) {
+            return;
+        }
+
         const model = this.repository.model;
         const values = query?.order?.column.split(".");
         const column = values.pop();
