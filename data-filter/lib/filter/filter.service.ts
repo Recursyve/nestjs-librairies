@@ -436,7 +436,7 @@ export class FilterService<Data> {
         const orderAttr = order[0]?.length === 2 ? order[0][order[0].length - 2] : undefined
         const values = await this.repository.model.findAll({
             ...options,
-            attributes: orderAttr ? ["id", orderAttr] : ["id"],
+            attributes: orderAttr && orderAttr?.constructor?.name !== "Literal" ? ["id", orderAttr] : ["id"],
             limit: filter.page ? filter.page.size : null,
             offset: filter.page ? filter.page.number * filter.page.size : null,
             subQuery: false,
