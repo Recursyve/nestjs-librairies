@@ -198,8 +198,8 @@ export class SequelizeModelScanner {
         return result;
     }
 
-    private findAssociation(model: typeof Model, obj: string): BaseAssociation<any, typeof Model> {
-        const associations = getAssociations<any, typeof Model>(model.prototype);
+    private findAssociation(model: typeof Model, obj: string): BaseAssociation {
+        const associations = getAssociations(model.prototype);
 
         const association = associations.find(a => a.getAs() === obj);
         if (!association) {
