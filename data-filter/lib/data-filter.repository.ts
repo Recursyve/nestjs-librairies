@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { FindOptions, Identifier, IncludeOptions, Model, Op, Utils, WhereOptions } from "sequelize";
+import { FindOptions, Identifier, IncludeOptions, Model, Op, Utils, WhereOptions, Sequelize } from "sequelize";
+import * as sequelize from "sequelize";
 import { AccessControlAdapter, ExportAdapter, TranslateAdapter } from "./adapters";
 import { AttributesConfig } from "./models/attributes.model";
 import { DataFilterConfig } from "./models/data-filter.model";
@@ -287,7 +288,8 @@ export class DataFilterRepository<Data> {
                          * literal function is not working of some reason...
                          * This is the equivalent
                          */
-                        return new Utils.Literal(`UPPER(JSON_EXTRACT(${field}, '$')) LIKE '%${searchValue.toUpperCase()}%'`);
+                        const value = this.model.sequelize.escape(`%${searchValue.toUpperCase()}%`);
+                        return new Utils.Literal(`UPPER(JSON_EXTRACT(${field}, '$')) LIKE '${value}'`);
                     }
                     return {
                         [a.key]: {
