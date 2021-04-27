@@ -125,7 +125,6 @@ describe("FilterService", () => {
         });
         expect(options).toBeDefined();
         expect(options).toStrictEqual({
-            group: "ContractSystems.id",
             include: [
                 {
                     as: "system",
@@ -148,7 +147,9 @@ describe("FilterService", () => {
                                         {
                                             as: "person",
                                             model: Persons,
+                                            order: undefined,
                                             required: false,
+                                            separate: false,
                                             attributes: [],
                                             include: []
                                         }
@@ -167,7 +168,9 @@ describe("FilterService", () => {
                         {
                             as: "visit",
                             model: Visits,
+                            order: undefined,
                             required: false,
+                            separate: false,
                             attributes: [],
                             include: []
                         }

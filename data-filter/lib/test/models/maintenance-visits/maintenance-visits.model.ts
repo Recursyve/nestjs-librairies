@@ -17,7 +17,7 @@ import { Visits } from "../visits/visits.model";
     tableName: "maintenance_visits",
     comment: "maintenance-visit"
 })
-export class MaintenanceVisits extends Model<MaintenanceVisits> {
+export class MaintenanceVisits extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column

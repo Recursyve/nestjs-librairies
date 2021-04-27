@@ -21,7 +21,7 @@ import { Systems } from "../systems/systems.model";
     tableName: "places",
     comment: "place"
 })
-export class Places extends Model<Places> {
+export class Places extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column

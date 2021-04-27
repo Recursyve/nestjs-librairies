@@ -8,3 +8,4 @@ export * from "./path.decorator";
 export * from "./seachable-attributes.decorator";
 export * from "./separate.decorator";
 export * from "./order.decorator";
+export * from "./where.decorator";

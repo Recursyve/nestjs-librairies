@@ -17,7 +17,7 @@ import { Invoices } from "../invoices/invoices.model";
     tableName: "contracts",
     comment: "contract"
 })
-export class Contracts extends Model<Contracts> {
+export class Contracts extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column

@@ -2,7 +2,7 @@ import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdap
 import { SearchableAttributes } from "./decorators/seachable-attributes.decorator";
 import { databaseFactory } from "./test/database.factory";
 import { DataFilterRepository } from "./data-filter.repository";
-import { Attributes, Data, IgnoreInSearch, Include, Path } from "./decorators";
+import { Attributes, Data, Include, Path } from "./decorators";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { Persons } from "./test/models/persons/persons.model";
@@ -72,14 +72,18 @@ describe("DataFilterRepository", () => {
                         as: "coord",
                         model: Coords,
                         attributes: ["cellphone", "id"],
+                        order: undefined,
                         required: false,
+                        separate: false,
                         include: [
                             {
                                 as: "location",
                                 model: Locations,
                                 attributes: ["value", "id"],
+                                order: undefined,
                                 include: [],
-                                required: false
+                                required: false,
+                                separate: false
                             }
                         ]
                     }
@@ -97,13 +101,17 @@ describe("DataFilterRepository", () => {
                         as: "coord",
                         model: Coords,
                         attributes: ["cellphone", "id"],
+                        order: undefined,
                         required: false,
+                        separate: false,
                         include: [
                             {
                                 as: "location",
                                 model: Locations,
                                 attributes: ["value", "id"],
+                                order: undefined,
                                 required: false,
+                                separate: false,
                                 include: [],
                                 where: {
                                     value: "Montreal"
@@ -132,10 +140,12 @@ describe("DataFilterRepository", () => {
                             as: "location",
                             attributes: ["value"],
                             include: [],
-                            required: false
+                            required: false,
+                            through: undefined
                         }
                     ],
-                    required: false
+                    required: false,
+                    through: undefined
                 }
             ]);
         });
@@ -173,23 +183,32 @@ describe("DataFilterRepository", () => {
             expect(fields).toEqual([
                 {
                     key: "first_name",
-                    name: "first_name"
+                    name: "first_name",
+                    isJson: false
                 },
                 {
+                    literalKey: "`coord`.`address`",
                     key: "$coord.address$",
-                    name: "address"
+                    name: "address",
+                    isJson: false
                 },
                 {
+                    literalKey: "`coord`.`postal_code`",
                     key: "$coord.postal_code$",
-                    name: "postal_code"
+                    name: "postal_code",
+                    isJson: false
                 },
                 {
+                    literalKey: "`coord->location`.`value`",
                     key: "$coord.location.value$",
-                    name: "value"
+                    name: "value",
+                    isJson: false
                 },
                 {
+                    literalKey: "`coord->location`.`unique_code`",
                     key: "$coord.location.unique_code$",
-                    name: "unique_code"
+                    name: "unique_code",
+                    isJson: false
                 }
             ])
         });
@@ -224,7 +243,9 @@ describe("DataFilterRepository", () => {
                         as: "coord",
                         attributes: ["id"],
                         model: Coords,
+                        order: undefined,
                         required: false,
+                        separate: false,
                         include: []
                     }
                 ]
@@ -264,13 +285,17 @@ describe("DataFilterRepository", () => {
                             [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"), literal(`point(${45.8797953}, ${-73.2815516})`)), "distance"],
                             "id"
                         ],
+                        order: undefined,
                         required: false,
+                        separate: false,
                         include: [
                             {
                                 as: "location",
                                 model: Locations,
                                 attributes: ["value", "id"],
+                                order: undefined,
                                 required: false,
+                                separate: false,
                                 include: [],
                                 where: {
                                     value: "Montreal"

@@ -19,7 +19,7 @@ import { MaintenanceVisits } from "../maintenance-visits/maintenance-visits.mode
     tableName: "contract_systems",
     comment: "contract-system"
 })
-export class ContractSystems extends Model<ContractSystems> {
+export class ContractSystems extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column

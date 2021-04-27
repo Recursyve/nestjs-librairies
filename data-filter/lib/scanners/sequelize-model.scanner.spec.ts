@@ -21,23 +21,29 @@ describe("SequelizeModelScanner", () => {
         expect(includes).toStrictEqual([
             {
                 as: "systems",
+                attributes: undefined,
                 model: Systems,
                 required: false,
                 include: [
                     {
                         as: "contracts",
+                        attributes: undefined,
                         model: ContractSystems,
                         required: false,
                         include: [
                             {
                                 as: "contract",
+                                attributes: undefined,
                                 model: Contracts,
                                 required: false,
                                 include: [
                                     {
                                         as: "invoice",
+                                        attributes: undefined,
+                                        order: undefined,
                                         model: Invoices,
                                         required: false,
+                                        separate: false,
                                         include: []
                                     }
                                 ]
@@ -62,28 +68,39 @@ describe("SequelizeModelScanner", () => {
         expect(includes).toStrictEqual([
             {
                 as: "system",
+                attributes: undefined,
                 model: Systems,
                 required: false,
                 include: [
                     {
                         as: "place",
+                        attributes: undefined,
                         model: Places,
                         required: false,
                         include: [
                             {
                                 as: "owners",
+                                attributes: undefined,
+                                order: undefined,
                                 model: Owners,
                                 required: false,
+                                separate: false,
                                 include: [
                                     {
                                         as: "person",
+                                        attributes: undefined,
+                                        order: undefined,
                                         model: Persons,
                                         required: false,
+                                        separate: false,
                                         include: [
                                             {
                                                 as: "coord",
+                                                attributes: undefined,
+                                                order: undefined,
                                                 model: Coords,
                                                 required: false,
+                                                separate: false,
                                                 include: []
                                             }
                                         ]

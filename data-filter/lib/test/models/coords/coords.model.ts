@@ -20,7 +20,7 @@ export interface GeoPoint {
 @Table({
     tableName: "coords"
 })
-export class Coords extends Model<Coords> {
+export class Coords extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
