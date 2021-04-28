@@ -289,7 +289,7 @@ export class DataFilterRepository<Data> {
                          * This is the equivalent
                          */
                         const value = this.model.sequelize.escape(`%${searchValue.toUpperCase()}%`);
-                        return new Utils.Literal(`UPPER(JSON_EXTRACT(${field}, '$')) LIKE '${value}'`);
+                        return new Utils.Literal(`UPPER(JSON_EXTRACT(${field}, '$')) LIKE ${value}`);
                     }
                     return {
                         [a.key]: {
