@@ -442,12 +442,15 @@ export class FilterService<Data> {
             subQuery: false,
             order
         });
+
+        const group = filter.groupBy ? [SequelizeUtils.getGroupLiteral(this.repository.model, filter.groupBy)] : [];
         return await this.repository.findAll({
             where: {
                 id: values.map(x => x.id)
             },
             order,
-            paranoid: options.paranoid
+            paranoid: options.paranoid,
+            group
         }, filter.data ?? {});
     }
 

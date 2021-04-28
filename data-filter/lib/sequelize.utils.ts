@@ -3,8 +3,8 @@ import {
     AbstractDataTypeConstructor,
     FindAttributeOptions,
     Includeable,
-    IncludeOptions,
-    Op,
+    IncludeOptions, literal,
+    Op, Utils,
     WhereOptions,
     WhereValue
 } from "sequelize";
@@ -169,8 +169,11 @@ export class SequelizeUtils {
         return `$${path}.${attribute}$`;
     }
 
-    public static getLiteralFullName(attribute: string, path: string) {
-        return `\`${path.split(".").join("->")}\`.\`${attribute}\``;
+    public static getLiteralFullName(attribute: string, path: string | string[]) {
+        if (typeof path === "string") {
+            path = path.split(".");
+        }
+        return `\`${path.join("->")}\`.\`${attribute}\``;
     }
 
     public static getOrderFullName(attribute: string, path: string[]) {
@@ -250,5 +253,19 @@ export class SequelizeUtils {
             return model.rawAttributes[key].field === name;
         });
         return model.rawAttributes[field].field ?? name;
+    }
+
+    public static isColumnJson(model: typeof M, name: string): boolean {
+        return (model.rawAttributes[name]?.type as AbstractDataTypeConstructor)?.key === "JSON";
+    }
+
+    public static getGroupLiteral(model: typeof M, group: string): string {
+        const items = group.split(".");
+        if (items.length > 1) {
+            const column = items[items.length - 1];
+            return SequelizeUtils.getLiteralFullName(column, items.slice(0, items.length - 1));
+        }
+
+        return `\`${model.name}\`.\`${group}\``;
     }
 }

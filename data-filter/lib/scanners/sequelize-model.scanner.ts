@@ -95,7 +95,9 @@ export class SequelizeModelScanner {
         result.push(
             ...(attributes as string[]).map(a => ({
                 name: a,
-                key: SequelizeUtils.getAttributeFullName(a, path.path)
+                key: SequelizeUtils.getAttributeFullName(a, path.path),
+                literalKey: SequelizeUtils.getLiteralFullName(a, path.path),
+                isJson: SequelizeUtils.isColumnJson(model as typeof M, a)
             }))
         );
 
@@ -114,7 +116,9 @@ export class SequelizeModelScanner {
                     include.searchableAttributes ?? include.attributes
                 ).map(a => ({
                     name: a.name,
-                    key: SequelizeUtils.getAttributeFullName(a.name, [path.path, include.path].join("."))
+                    key: SequelizeUtils.getAttributeFullName(a.name, [path.path, include.path].join(".")),
+                    literalKey: SequelizeUtils.getLiteralFullName(a.name, [path.path, include.path].join(".")),
+                    isJson: a.isJson
                 }))
             );
         }
@@ -198,7 +202,7 @@ export class SequelizeModelScanner {
         return result;
     }
 
-    private findAssociation(model: typeof Model, obj: string): BaseAssociation {
+    private findAssociation(model: typeof Model, obj: string): BaseAssociation<any, any> {
         const associations = getAssociations(model.prototype);
 
         const association = associations.find(a => a.getAs() === obj);

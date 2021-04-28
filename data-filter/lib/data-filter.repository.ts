@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { FindOptions, Identifier, IncludeOptions, Model, Op, ProjectionAlias, WhereOptions } from "sequelize";
+import { FindOptions, Identifier, IncludeOptions, Model, Op, Utils, WhereOptions, Sequelize } from "sequelize";
+import * as sequelize from "sequelize";
 import { AccessControlAdapter, ExportAdapter, TranslateAdapter } from "./adapters";
 import { AttributesConfig } from "./models/attributes.model";
 import { DataFilterConfig } from "./models/data-filter.model";
@@ -190,7 +191,8 @@ export class DataFilterRepository<Data> {
         attributes.push(
             ...modelAttr.map(a => ({
                 name: a,
-                key: a
+                key: a,
+                isJson: SequelizeUtils.isColumnJson(this.model, a)
             }))
         );
 
@@ -279,13 +281,22 @@ export class DataFilterRepository<Data> {
         const generateFieldsObject = searchValue =>
             this.getSearchAttributes()
                 .map(a => {
+                    if (a.isJson) {
+                        const field = a.literalKey ?? `\`${this.model.name}\`.\`${a.key}\``;
+
+                        /**
+                         * literal function is not working of some reason...
+                         * This is the equivalent
+                         */
+                        const value = this.model.sequelize.escape(`%${searchValue.toUpperCase()}%`);
+                        return new Utils.Literal(`UPPER(JSON_EXTRACT(${field}, '$')) LIKE ${value}`);
+                    }
                     return {
                         [a.key]: {
                             [Op.like]: `%${searchValue}%`
                         }
                     };
-                })
-                .reduce((a, o) => Object.assign(a, o), {});
+                }).filter(x => !!x);
 
         const tokens = search.split(" ");
         where[Op.and].push(

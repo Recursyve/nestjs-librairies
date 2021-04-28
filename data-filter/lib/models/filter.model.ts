@@ -20,6 +20,7 @@ export interface FilterQueryModel {
     query?: QueryModel;
     order?: OrderModel;
     data?: object;
+    groupBy?: string;
 }
 
 export interface FilterResultModel<T> {

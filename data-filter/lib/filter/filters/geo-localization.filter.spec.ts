@@ -241,7 +241,6 @@ describe("GeoLocalizationTestFilter", () => {
         });
         expect(options).toBeDefined();
         expect(options).toStrictEqual<FindOptions>({
-            group: "Coords.id",
             include: [],
             where: {
                 [Op.and]: [
