@@ -1,13 +1,11 @@
-import { IncludeWhereModel } from "../models/include.model";
 import { AttributesHandler } from "../handlers/attributes.handler";
 import { PathConfig } from "../models/path.model";
 
-export function Where(where: IncludeWhereModel, required = true): PropertyDecorator {
+export function Paranoid(paranoid = true): PropertyDecorator {
     return (target: Object, propertyKey: string) => {
         const attribute = AttributesHandler.getAttribute(target, propertyKey);
         const path = attribute.path ?? {} as PathConfig;
-        path.where = where;
-        path.required = required;
+        path.paranoid = paranoid;
         attribute.setPath(path);
         AttributesHandler.saveAttribute(target, attribute);
     };

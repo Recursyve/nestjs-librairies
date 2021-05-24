@@ -2,14 +2,14 @@ import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdap
 import { SearchableAttributes } from "./decorators/seachable-attributes.decorator";
 import { databaseFactory } from "./test/database.factory";
 import { DataFilterRepository } from "./data-filter.repository";
-import { Attributes, Data, Include, Path } from "./decorators";
+import { Attributes, Data, Include, Path, Where } from "./decorators";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { Persons } from "./test/models/persons/persons.model";
 import { Coords } from "./test/models/coords/coords.model";
 import { Locations } from "./test/models/locations/locations.model";
 import { Distance } from "./decorators/distance.decorator";
-import { fn, literal } from "sequelize";
+import { fn, literal, Op } from "sequelize";
 
 @Data(Persons)
 @Attributes(["first_name", "last_name"])
@@ -17,13 +17,12 @@ import { fn, literal } from "sequelize";
 class PersonsTest {
     @Attributes(["cellphone"])
     @SearchableAttributes(["address", "postal_code"])
-    @Include({
-        path: "location",
+    @Include("location", {
         attributes: ["value"],
         searchableAttributes: ["value", "unique_code"],
         where: { value: option => option.value }
     })
-    @Path("coord")
+    @Where({ [Op.or]: () => [ { id: { [Op.ne]: null } } ] }, true)
     coord: Coords;
 
 }
@@ -38,8 +37,7 @@ class CustomAttributesTest {}
 class CustomCoordAttributesTest {
     @Attributes(["cellphone"])
     @Distance({ name: "distance", attribute: "geo_point", coordinates: option => option.coordinates })
-    @Include({ path: "location", attributes: ["value"], where: { value: option => option.value } })
-    @Path("coord")
+    @Include("location", { attributes: ["value"], where: { value: option => option.value } })
     coord: Coords;
 }
 
@@ -73,7 +71,8 @@ describe("DataFilterRepository", () => {
                         model: Coords,
                         attributes: ["cellphone", "id"],
                         order: undefined,
-                        required: false,
+                        required: true,
+                        paranoid: true,
                         separate: false,
                         include: [
                             {
@@ -82,6 +81,7 @@ describe("DataFilterRepository", () => {
                                 attributes: ["value", "id"],
                                 order: undefined,
                                 include: [],
+                                paranoid: true,
                                 required: false,
                                 separate: false
                             }
@@ -102,14 +102,25 @@ describe("DataFilterRepository", () => {
                         model: Coords,
                         attributes: ["cellphone", "id"],
                         order: undefined,
-                        required: false,
+                        required: true,
+                        paranoid: true,
                         separate: false,
+                        where: {
+                            [Op.or]: [
+                                {
+                                    id: {
+                                        [Op.ne]: null
+                                    }
+                                }
+                            ]
+                        },
                         include: [
                             {
                                 as: "location",
                                 model: Locations,
                                 attributes: ["value", "id"],
                                 order: undefined,
+                                paranoid: true,
                                 required: false,
                                 separate: false,
                                 include: [],
@@ -244,6 +255,7 @@ describe("DataFilterRepository", () => {
                         attributes: ["id"],
                         model: Coords,
                         order: undefined,
+                        paranoid: true,
                         required: false,
                         separate: false,
                         include: []
@@ -286,6 +298,7 @@ describe("DataFilterRepository", () => {
                             "id"
                         ],
                         order: undefined,
+                        paranoid: true,
                         required: false,
                         separate: false,
                         include: [
@@ -294,6 +307,7 @@ describe("DataFilterRepository", () => {
                                 model: Locations,
                                 attributes: ["value", "id"],
                                 order: undefined,
+                                paranoid: true,
                                 required: false,
                                 separate: false,
                                 include: [],

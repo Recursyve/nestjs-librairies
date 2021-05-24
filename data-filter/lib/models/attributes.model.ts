@@ -21,7 +21,8 @@ export class AttributesConfig implements AttributesConfigModel {
 
     constructor(public key: string) {
         this.path = {
-            path: key
+            path: key,
+            paranoid: true
         };
     }
 
@@ -63,7 +64,8 @@ export class AttributesConfig implements AttributesConfigModel {
 
     public transformPathConfig(options?: object): PathModel {
         if (!options) {
-            return this.path as PathModel;
+            const { where, ...path } = this.path;
+            return path as PathModel;
         }
 
         if (this.path.where) {
@@ -137,7 +139,8 @@ export class AttributesConfig implements AttributesConfigModel {
                 key: x.key,
                 attribute: x.transform(options, this.path.path),
                 path: (x.config as any).path ? {
-                    path: (x.config as any).path
+                    path: (x.config as any).path,
+                    paranoid: true
                 } : null
             } as CustomAttributesModel))
             .filter(x => x.attribute);
@@ -145,12 +148,16 @@ export class AttributesConfig implements AttributesConfigModel {
 
     private generateWhereConditions(model: IncludeWhereModel, options?: object): WhereOptions {
         const where = {};
-        for (const key in model) {
+        const keys = [
+            ...Object.keys(model),
+            ...Object.getOwnPropertySymbols(model)
+        ];
+        for (const key of keys) {
             if (!model.hasOwnProperty(key)) {
                 continue;
             }
 
-            const value = model[key](options);
+            const value = model[key as any](options);
             if (typeof value !== "undefined") {
                 where[key] = value;
             }

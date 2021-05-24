@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-access-control",
-    "version": "7.3.0",
+    "version": "7.3.2",
     "description": "NestJs AccessControl library",
     "main": "index.js",
     "scripts": {

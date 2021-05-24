@@ -6,6 +6,7 @@ export interface PathConfig {
     where?: IncludeWhereModel;
     required?: boolean;
     separate?: boolean;
+    paranoid?: boolean;
     order?: Order;
 }
 
@@ -15,5 +16,6 @@ export interface PathModel {
     where?: WhereOptions;
     required?: boolean;
     separate?: boolean;
+    paranoid?: boolean;
     order?: Order;
 }

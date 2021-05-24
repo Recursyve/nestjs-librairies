@@ -46,7 +46,11 @@ export class SequelizeModelScanner {
             includes[0].where = SequelizeUtils.mergeWhere(includes[0].where, path.where);
             includes[0].required = !!path.required;
         }
+        if (path.required) {
+            includes[0].required = true;
+        }
 
+        includes[0].paranoid = !!path.paranoid;
         includes[0].separate = !!path.separate;
         includes[0].order = path.order;
 
@@ -59,7 +63,8 @@ export class SequelizeModelScanner {
                         path: include.path,
                         where: include.where,
                         required: include.required,
-                        separate: include.separate
+                        separate: include.separate,
+                        paranoid: include.paranoid
                     },
                     [],
                     include.attributes,

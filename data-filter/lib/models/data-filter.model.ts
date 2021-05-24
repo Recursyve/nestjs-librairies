@@ -65,7 +65,8 @@ export class DataFilterConfig implements DataFilterConfigModel {
                 key: x.key,
                 attribute: x.transform(options),
                 path: (x.config as any).path ? {
-                    path: (x.config as any).path
+                    path: (x.config as any).path,
+                    paranoid: true
                 } : null
             } as CustomAttributesModel))
             .filter(x => x.attribute);
@@ -76,7 +77,8 @@ export class DataFilterConfig implements DataFilterConfigModel {
             .filter(x => x.config.path)
             .map(x => ({
                 attributes: [],
-                path: x.config.path
+                path: x.config.path,
+                paranoid: true
             }));
     }
 

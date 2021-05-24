@@ -12,6 +12,7 @@ export interface IncludeConfig {
     where?: IncludeWhereModel;
     required?: boolean;
     separate?: boolean;
+    paranoid?: boolean;
 }
 
 export interface IncludeModel {
@@ -22,4 +23,5 @@ export interface IncludeModel {
     where?: WhereOptions;
     required?: boolean;
     separate?: boolean;
+    paranoid?: boolean;
 }

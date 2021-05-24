@@ -44,6 +44,9 @@ export class SequelizeUtils {
                 if (where) {
                     aChild.where = where;
                 }
+                if (aChild.required || bChild.required) {
+                    aChild.required = true;
+                }
             } else {
                 a.push(bChild);
             }

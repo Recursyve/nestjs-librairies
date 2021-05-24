@@ -149,8 +149,8 @@ export class FilterService<Data> {
         this.addSearchCondition(options.search, findOptions);
         this.addOrderCondition(options.order, findOptions);
         delete options.page;
-        const values = await this.findValues(user, options, findOptions);
-        return await this.repository.downloadData(values, type, user.language, exportOptions);
+        const values = await (user ? this.findValues(user, options, findOptions) : this.findValues(options, findOptions));
+        return await this.repository.downloadData(values, type, user?.language ?? "fr", exportOptions);
     }
 
     public async getFindOptions(model: typeof M, query: QueryModel, data?: object): Promise<FindOptions> {
@@ -433,7 +433,7 @@ export class FilterService<Data> {
         }
 
         const order = this.getOrderOptions(filter.order);
-        const orderAttr = order[0]?.length === 2 ? order[0][order[0].length - 2] : undefined
+        const orderAttr = order?.[0]?.length === 2 ? order[0][order[0].length - 2] : undefined
         const values = await this.repository.model.findAll({
             ...options,
             attributes: orderAttr && orderAttr?.constructor?.name !== "Literal" ? ["id", orderAttr] : ["id"],
@@ -443,7 +443,7 @@ export class FilterService<Data> {
             order
         });
 
-        const group = filter.groupBy ? [SequelizeUtils.getGroupLiteral(this.repository.model, filter.groupBy)] : [];
+        const group = filter.groupBy ? [SequelizeUtils.getGroupLiteral(this.repository.model, filter.groupBy)] : undefined;
         return await this.repository.findAll({
             where: {
                 id: values.map(x => x.id)
