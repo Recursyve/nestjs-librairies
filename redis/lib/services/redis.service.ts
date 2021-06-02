@@ -30,12 +30,17 @@ export class RedisService {
         await this.client.del(key);
     }
 
-    public lpush(key: string, ...value: string[]): Promise<number> {
+    public async lpush(key: string, ...value: string[]): Promise<number> {
         if (!value.length) {
             return;
         }
 
-        return this.client.lpush(key, ...value);
+        let lastTotalLengthForKey = 0;
+        for (let i = 0; i < value.length; i += this.configService.lpushBlockSize) {
+            lastTotalLengthForKey = await this.client.lpush(key, ...value.slice(i, i + this.configService.lpushBlockSize));
+        }
+
+        return lastTotalLengthForKey;
     }
 
     public lrem(key: string, value: string, count: number = 0): Promise<number> {
