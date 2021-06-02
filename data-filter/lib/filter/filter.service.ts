@@ -493,6 +493,7 @@ export class FilterService<Data> {
         return [
             this.sequelizeModelScanner.getIncludes(model, {
                 path: filter.path,
+                paranoid: filter.paranoid,
                 where: this.generateWhereConditions(filter.where, data)
             }, [], [], true),
             this.getConditionInclude(model, filter.condition)

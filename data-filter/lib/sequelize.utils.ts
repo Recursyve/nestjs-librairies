@@ -47,6 +47,7 @@ export class SequelizeUtils {
                 if (aChild.required || bChild.required) {
                     aChild.required = true;
                 }
+                aChild.paranoid = !(aChild.paranoid === false || bChild.paranoid === false);
             } else {
                 a.push(bChild);
             }

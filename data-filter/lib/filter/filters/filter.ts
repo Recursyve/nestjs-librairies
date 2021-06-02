@@ -70,6 +70,7 @@ export abstract class Filter implements FilterDefinition {
     public condition?: FilterCondition;
     public pathCondition?: PathCondition;
     public private?: boolean;
+    public paranoid = true;
 
     public static validate(definition: FilterDefinition) {
         return definition["_type"] === "filter";
