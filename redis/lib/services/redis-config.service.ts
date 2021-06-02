@@ -9,6 +9,7 @@ export class RedisConfigService {
     public port: number;
     public password: string;
     public database: number;
+    public lpushBlockSize: number;
 
     constructor() {
         this.connectionString = process.env.REDIS_CONNECTION_STRING;
@@ -16,6 +17,7 @@ export class RedisConfigService {
         this.password = process.env.REDIS_PASSWORD;
         this.port = +process.env.REDIS_PORT ?? 6379;
         this.database = +process.env.REDIS_DATABASE ?? 0;
+        this.lpushBlockSize = process.env.REDIS_LPUSH_BLOCK_SIZE ? +process.env.REDIS_LPUSH_BLOCK_SIZE : 250;
     }
 
     public getConfig(): RedisOptions {
