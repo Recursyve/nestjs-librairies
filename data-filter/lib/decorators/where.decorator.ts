@@ -6,8 +6,7 @@ export function Where(where: IncludeWhereModel, required = false): PropertyDecor
     return (target: Object, propertyKey: string) => {
         const attribute = AttributesHandler.getAttribute(target, propertyKey);
         const path = attribute.path ?? {
-            paranoid: true,
-            subQuery: true
+            paranoid: true
         } as PathConfig;
         path.where = where;
         path.required = required;

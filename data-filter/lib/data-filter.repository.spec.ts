@@ -75,7 +75,6 @@ describe("DataFilterRepository", () => {
                         required: true,
                         paranoid: true,
                         separate: false,
-                        subQuery: true,
                         include: [
                             {
                                 as: "location",
@@ -85,8 +84,7 @@ describe("DataFilterRepository", () => {
                                 include: [],
                                 paranoid: true,
                                 required: false,
-                                separate: true,
-                                subQuery: true
+                                separate: true
                             }
                         ]
                     }
@@ -108,7 +106,6 @@ describe("DataFilterRepository", () => {
                         required: true,
                         paranoid: true,
                         separate: false,
-                        subQuery: true,
                         where: {
                             [Op.or]: [
                                 {
@@ -127,7 +124,6 @@ describe("DataFilterRepository", () => {
                                 paranoid: true,
                                 required: false,
                                 separate: true,
-                                subQuery: true,
                                 include: [],
                                 where: {
                                     value: "Montreal"
@@ -263,7 +259,6 @@ describe("DataFilterRepository", () => {
                         paranoid: true,
                         required: false,
                         separate: false,
-                        subQuery: true,
                         include: []
                     }
                 ]
@@ -307,7 +302,6 @@ describe("DataFilterRepository", () => {
                         paranoid: true,
                         required: false,
                         separate: false,
-                        subQuery: true,
                         include: [
                             {
                                 as: "location",
@@ -317,7 +311,6 @@ describe("DataFilterRepository", () => {
                                 paranoid: true,
                                 required: false,
                                 separate: false,
-                                subQuery: true,
                                 include: [],
                                 where: {
                                     value: "Montreal"

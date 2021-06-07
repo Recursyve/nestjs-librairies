@@ -9,7 +9,7 @@ import {
     WhereValue
 } from "sequelize";
 import { RuleModel } from "./filter";
-import { ArrayUtils } from "@recursyve/nestjs-common";
+import { ArrayUtils, TypeUtils } from "@recursyve/nestjs-common";
 
 export interface GeoPoint {
     type: "point",
@@ -55,7 +55,9 @@ export class SequelizeUtils {
                     aChild.separate = true;
                 }
                 aChild.paranoid = !(aChild.paranoid === false || bChild.paranoid === false);
-                aChild.subQuery = !(aChild.subQuery === false || bChild.subQuery === false);
+                if (TypeUtils.isNotNullOrUndefined(aChild.subQuery) || TypeUtils.isNotNullOrUndefined(bChild.subQuery)) {
+                    aChild.subQuery = aChild.subQuery ?? bChild.subQuery;
+                }
             } else {
                 a.push(bChild);
             }

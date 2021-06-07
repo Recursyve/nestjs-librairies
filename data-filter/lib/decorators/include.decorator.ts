@@ -15,13 +15,10 @@ export function Include(optionsOrPath: IncludeConfig | string, separateOrOptions
 
         // Simplify just passing the path.
         if (typeof optionsOrPath === "string") {
-            optionsOrPath = { path: optionsOrPath, separate, paranoid: true, subQuery: true, ...options };
+            optionsOrPath = { path: optionsOrPath, separate, paranoid: true, ...options };
         } else {
             if (!optionsOrPath.paranoid) {
                 optionsOrPath.paranoid = true;
-            }
-            if (!optionsOrPath.subQuery) {
-                optionsOrPath.subQuery = true;
             }
         }
 

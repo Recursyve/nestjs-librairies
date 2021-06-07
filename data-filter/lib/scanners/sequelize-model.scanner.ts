@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { TypeUtils } from "@recursyve/nestjs-common";
 import { FindAttributeOptions, IncludeOptions, Order } from "sequelize";
 import { Association, BaseAssociation, getAssociations, Model } from "sequelize-typescript";
 import { OrderModel } from "..";
@@ -52,9 +53,12 @@ export class SequelizeModelScanner {
         }
 
         includes[0].paranoid = !!path.paranoid;
-        includes[0].subQuery = !!path.subQuery;
         includes[0].separate = !!path.separate;
         includes[0].order = path.order;
+
+        if (TypeUtils.isNotNullOrUndefined(path.subQuery)) {
+            includes[0].subQuery = path.subQuery;
+        }
 
         const addIncludes: IncludeOptions[][] = [];
         for (const include of additionalIncludes) {
