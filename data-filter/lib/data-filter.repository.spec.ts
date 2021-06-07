@@ -2,7 +2,7 @@ import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdap
 import { SearchableAttributes } from "./decorators/seachable-attributes.decorator";
 import { databaseFactory } from "./test/database.factory";
 import { DataFilterRepository } from "./data-filter.repository";
-import { Attributes, Data, Include, Path, Where } from "./decorators";
+import { Attributes, Data, Include, Where } from "./decorators";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { Persons } from "./test/models/persons/persons.model";
@@ -20,7 +20,8 @@ class PersonsTest {
     @Include("location", {
         attributes: ["value"],
         searchableAttributes: ["value", "unique_code"],
-        where: { value: option => option.value }
+        where: { value: option => option.value },
+        separate: true
     })
     @Where({ [Op.or]: () => [ { id: { [Op.ne]: null } } ] }, true)
     coord: Coords;
@@ -74,6 +75,7 @@ describe("DataFilterRepository", () => {
                         required: true,
                         paranoid: true,
                         separate: false,
+                        subQuery: true,
                         include: [
                             {
                                 as: "location",
@@ -83,7 +85,8 @@ describe("DataFilterRepository", () => {
                                 include: [],
                                 paranoid: true,
                                 required: false,
-                                separate: false
+                                separate: true,
+                                subQuery: true
                             }
                         ]
                     }
@@ -105,6 +108,7 @@ describe("DataFilterRepository", () => {
                         required: true,
                         paranoid: true,
                         separate: false,
+                        subQuery: true,
                         where: {
                             [Op.or]: [
                                 {
@@ -122,7 +126,8 @@ describe("DataFilterRepository", () => {
                                 order: undefined,
                                 paranoid: true,
                                 required: false,
-                                separate: false,
+                                separate: true,
+                                subQuery: true,
                                 include: [],
                                 where: {
                                     value: "Montreal"
@@ -258,6 +263,7 @@ describe("DataFilterRepository", () => {
                         paranoid: true,
                         required: false,
                         separate: false,
+                        subQuery: true,
                         include: []
                     }
                 ]
@@ -301,6 +307,7 @@ describe("DataFilterRepository", () => {
                         paranoid: true,
                         required: false,
                         separate: false,
+                        subQuery: true,
                         include: [
                             {
                                 as: "location",
@@ -310,6 +317,7 @@ describe("DataFilterRepository", () => {
                                 paranoid: true,
                                 required: false,
                                 separate: false,
+                                subQuery: true,
                                 include: [],
                                 where: {
                                     value: "Montreal"

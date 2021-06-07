@@ -23,6 +23,7 @@ export class SequelizeModelScanner {
 
         const result: IncludeOptions[] = [];
         let includes: IncludeOptions[] = result;
+        let i = 0;
         for (const obj of objects) {
             const association = this.findAssociation(model, obj);
             includes.push({
@@ -33,7 +34,7 @@ export class SequelizeModelScanner {
                 required: false
             });
 
-            if (obj !== objects[objects.length - 1]) {
+            if (i++ < objects.length - 1) {
                 model = includes[0].model as unknown as typeof Model;
                 includes = includes[0].include as IncludeOptions[];
             }
@@ -51,6 +52,7 @@ export class SequelizeModelScanner {
         }
 
         includes[0].paranoid = !!path.paranoid;
+        includes[0].subQuery = !!path.subQuery;
         includes[0].separate = !!path.separate;
         includes[0].order = path.order;
 
@@ -61,10 +63,12 @@ export class SequelizeModelScanner {
                     includes[0].model as unknown as typeof Model,
                     {
                         path: include.path,
+                        order: include.order,
                         where: include.where,
                         required: include.required,
                         separate: include.separate,
-                        paranoid: include.paranoid
+                        paranoid: include.paranoid,
+                        subQuery: include.subQuery
                     },
                     [],
                     include.attributes,
@@ -184,6 +188,7 @@ export class SequelizeModelScanner {
         const column = values.pop();
         const result: IncludeOptions[] = [];
         let includes: IncludeOptions[] = result;
+        let i = 0;
         for (const value of values) {
             const association = this.findAssociation(model, value);
             includes.push({
@@ -197,7 +202,7 @@ export class SequelizeModelScanner {
                 } : undefined
             });
 
-            if (value !== values[values.length - 1]) {
+            if (i++ < values.length - 1) {
                 model = includes[0].model as unknown as typeof Model;
                 includes = includes[0].include as IncludeOptions[];
             }

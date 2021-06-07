@@ -135,7 +135,8 @@ export class DataFilterRepository<Data> {
             }),
             ...this._config.getCustomAttributesIncludes().map(x => this.sequelizeModelScanner.getIncludes(this.model, {
                 path: x.path,
-                paranoid: true
+                paranoid: x.paranoid,
+                subQuery: x.subQuery
             }, [], x.attributes))
         ];
 

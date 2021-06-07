@@ -22,7 +22,8 @@ export class AttributesConfig implements AttributesConfigModel {
     constructor(public key: string) {
         this.path = {
             path: key,
-            paranoid: true
+            paranoid: true,
+            subQuery: true
         };
     }
 

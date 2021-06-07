@@ -4,7 +4,7 @@ import {
     FindAttributeOptions,
     Includeable,
     IncludeOptions, literal,
-    Op, Utils,
+    Op, Order, OrderItem, Utils,
     WhereOptions,
     WhereValue
 } from "sequelize";
@@ -44,10 +44,18 @@ export class SequelizeUtils {
                 if (where) {
                     aChild.where = where;
                 }
+                const order = this.mergeOrder(aChild.order, bChild.order);
+                if (order) {
+                    aChild.order = order;
+                }
                 if (aChild.required || bChild.required) {
                     aChild.required = true;
                 }
+                if (aChild.separate || bChild.separate) {
+                    aChild.separate = true;
+                }
                 aChild.paranoid = !(aChild.paranoid === false || bChild.paranoid === false);
+                aChild.subQuery = !(aChild.subQuery === false || bChild.subQuery === false);
             } else {
                 a.push(bChild);
             }
@@ -103,6 +111,31 @@ export class SequelizeUtils {
             return null;
         }
         return Object.assign(a ?? {}, b ?? {});
+    }
+
+    public static mergeOrder(a: Order, b: Order): Order {
+        if (!a && !b) {
+            return null;
+        }
+        if (a && !b) {
+            return a;
+        }
+        if (!a && b) {
+            return b;
+        }
+
+        const res: OrderItem[] = [];
+        if (a instanceof Array) {
+            res.push(...a);
+        } else {
+            res.push(a);
+        }
+        if (b instanceof Array) {
+            res.push(...b);
+        } else {
+            res.push(b);
+        }
+        return res;
     }
 
     public static generateWhereValue(rule: RuleModel): WhereValue {

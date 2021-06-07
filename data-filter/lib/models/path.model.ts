@@ -7,6 +7,7 @@ export interface PathConfig {
     required?: boolean;
     separate?: boolean;
     paranoid?: boolean;
+    subQuery?: boolean;
     order?: Order;
 }
 
@@ -17,5 +18,6 @@ export interface PathModel {
     required?: boolean;
     separate?: boolean;
     paranoid?: boolean;
+    subQuery?: boolean;
     order?: Order;
 }
