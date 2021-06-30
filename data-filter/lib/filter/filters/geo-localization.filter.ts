@@ -9,6 +9,7 @@ import { FilterType } from "../type";
 export interface GeoLocalizationFilterDefinition {
     rootFilter: CoordinateFilter;
     group?: string;
+    srid?: number;
 }
 
 export class GeoLocalizationFilter extends GroupFilter implements GroupFilterDefinition, GeoLocalizationFilterDefinition {
@@ -18,6 +19,7 @@ export class GeoLocalizationFilter extends GroupFilter implements GroupFilterDef
     public type = FilterType.GeoLocalization;
     public rootFilter: CoordinateFilter;
     public valueFilter = new NumberFilter();
+    public srid?: number;
 
     constructor(definition: GeoLocalizationFilterDefinition) {
         super(definition);
@@ -29,7 +31,7 @@ export class GeoLocalizationFilter extends GroupFilter implements GroupFilterDef
             SequelizeUtils.getLiteralFullName(this.rootFilter.attribute, this.rootFilter.path) :
             this.rootFilter.attribute;
         const [latitude, longitude] = CoordinateFilter.getCoordinates(root);
-        const location = literal(`point(${latitude}, ${longitude})`);
+        const location = fn("ST_GeometryFromText", literal(`'POINT(${latitude} ${longitude})'`), this.srid ?? 0);
         return where(fn("ST_Distance_Sphere", literal(name), location), SequelizeUtils.generateWhereValue(value) as LogicType)
     }
 

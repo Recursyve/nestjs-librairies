@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import * as Redis from "ioredis";
+import { RedisArrayUtils } from "../utils/array.utils";
 import { RedisConfigService } from "./redis-config.service";
 
 @Injectable()
@@ -35,9 +36,14 @@ export class RedisService {
             return;
         }
 
+        const slices = RedisArrayUtils.getSlices(value, this.configService.lpushBlockSize);
         let lastTotalLengthForKey = 0;
-        for (let i = 0; i < value.length; i += this.configService.lpushBlockSize) {
-            lastTotalLengthForKey = await this.client.lpush(key, ...value.slice(i, i + this.configService.lpushBlockSize));
+        for (const slice of slices) {
+            if (!slice.length) {
+                continue;
+            }
+
+            lastTotalLengthForKey = await this.client.lpush(key, ...slice);
         }
 
         return lastTotalLengthForKey;
