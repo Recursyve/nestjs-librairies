@@ -23,4 +23,12 @@ export abstract class BaseFilter<T> implements FilterModel<T> {
             }
         }
     }
+
+    public async getExportedFieldsKeys(): Promise<string[]> {
+        return [];
+    }
+
+    public async getExportedFields(value: T): Promise<any[]> {
+        return [];
+    }
 }

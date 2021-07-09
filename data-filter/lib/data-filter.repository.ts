@@ -1,6 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { FindOptions, Identifier, IncludeOptions, Model, Op, Utils, WhereOptions, Sequelize } from "sequelize";
-import * as sequelize from "sequelize";
+import { FindOptions, Identifier, IncludeOptions, Model, Op, Utils, WhereOptions } from "sequelize";
 import { AccessControlAdapter, ExportAdapter, TranslateAdapter } from "./adapters";
 import { AttributesConfig } from "./models/attributes.model";
 import { DataFilterConfig } from "./models/data-filter.model";
@@ -218,44 +217,70 @@ export class DataFilterRepository<Data> {
         return attributes;
     }
 
-    public async downloadData(data: Data[], type: ExportTypes, lang: string, options?: any): Promise<Buffer | string> {
+    public async downloadData(data: Data[], type: ExportTypes, lang: string, options?: any): Promise<Buffer | string>;
+    public async downloadData(headers: string[], data: any[], type: ExportTypes, lang: string, options?: any): Promise<Buffer | string>;
+    public async downloadData(
+        dataOrHeaders: Data[] | string[],
+        typeOrData: ExportTypes | any[],
+        langOrType: string | ExportTypes,
+        optionsOrLang?: any | string,
+        options?: any
+    ): Promise<Buffer | string> {
+        let type: ExportTypes;
+        let headers: string[];
+        let data: any[];
+        let lang: string;
+
+        if (typeof typeOrData === "string") {
+            type = typeOrData;
+            lang = langOrType;
+            headers = await this.getExportsHeader(lang, this._config.exportColumns ?? []);
+            data = await this.getExportData(dataOrHeaders as Data[]);
+            options = optionsOrLang;
+        } else {
+            lang = optionsOrLang as string;
+            headers =  await this.getExportsHeader(lang, dataOrHeaders as string[]);
+            data = typeOrData;
+            type = langOrType as ExportTypes;
+        }
+
         switch (type) {
             case ExportTypes.XLSX:
-                return await this.downloadXlsx(data, lang);
+                return await this.downloadXlsx(headers, data);
             case ExportTypes.HTML:
-                return await this.downloadHtml(data, lang, options);
+                return await this.downloadHtml(headers, data, lang, options);
             case ExportTypes.CSV:
-                return await this.downloadCsv(data, lang);
+                return await this.downloadCsv(headers, data);
             case ExportTypes.PDF:
-                return await this.downloadPdf(data, lang, options);
+                return await this.downloadPdf(headers, data, options);
         }
     }
 
-    public async downloadXlsx(data: Data[], lang: string): Promise<Buffer> {
+    public async downloadXlsx(headers: string[], data: any[]): Promise<Buffer> {
         return XlsxUtils.arrayToXlsxBuffer(
-            this.getExportData(data),
+            data,
             this._config.model.getTableName() as string,
-            await this.getExportsHeader(lang)
+            headers
         );
     }
 
-    public async downloadHtml(data: Data[], lang: string, options?: any): Promise<string> {
+    public async downloadHtml(headers: string[], data: any[], lang: string, options?: any): Promise<string> {
         return this.exportAdapter.exportAsHtml(lang, {
             title: this._config.model.getTableName() as string,
-            columns: await this.getExportsHeader(lang),
-            data: this.getExportData(data)
+            columns: headers,
+            data: data
         }, options);
     }
 
-    public async downloadCsv(data: Data[], lang: string): Promise<Buffer> {
-        return await CsvUtils.arrayToCsvBuffer(this.getExportData(data), await this.getExportsHeader(lang));
+    public async downloadCsv(headers: string[], data: any[]): Promise<Buffer> {
+        return await CsvUtils.arrayToCsvBuffer(data, headers);
     }
 
-    public async downloadPdf(data: Data[], lang: string, options?: any): Promise<Buffer> {
+    public async downloadPdf(headers: string[], data: any[], lang: string, options?: any): Promise<Buffer> {
         return this.exportAdapter.exportAsPdf(lang, {
             title: this._config.model.getTableName() as string,
-            columns: await this.getExportsHeader(lang),
-            data: this.getExportData(data)
+            columns: headers,
+            data: data
         }, options);
     }
 
@@ -310,8 +335,8 @@ export class DataFilterRepository<Data> {
         );
     }
 
-    private getExportsHeader(lang: string, translateService = this.translateService): Promise<string[]> {
-        return Promise.all(this._config.exportColumns.map(x => translateService.getTranslation(lang, `exports.${x}`)));
+    private getExportsHeader(lang: string, headers: string[], translateService = this.translateService): Promise<string[]> {
+        return Promise.all(headers.map(x => translateService.getTranslation(lang, `exports.${x}`)));
     }
 
     private getExportData(data: Data[]): object[] {
