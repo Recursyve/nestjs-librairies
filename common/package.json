@@ -1,44 +1,44 @@
 {
-  "name": "@recursyve/nestjs-common",
-  "version": "7.0.3",
-  "description": "Recursyve's NestJs common librairy",
-  "main": "index.js",
-  "scripts": {
-    "watch": "gulp",
-    "build": "gulp build",
-    "build:lib": "gulp build-lib",
-    "lint": "gulp lint",
-    "publish-package": "npm run build:lib && npm publish dist --access public",
-    "publish-package:beta": "npm run publish-package -- --tag beta --access public",
-    "publish-package:dry-run": "npm run publish-package -- --dry-run"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Recursyve/nestjs-librairies/common"
-  },
-  "author": "Recursyve",
-  "license": "MIT",
-  "peerDependencies": {
-    "@nestjs/common": "^7.0.0",
-    "@nestjs/core": "^7.0.0",
-    "class-transformer": "^0.2.3",
-    "class-validator": "^0.11.1"
-  },
-  "dependencies": {
-    "moment": "^2.24.0"
-  },
-  "devDependencies": {
-    "@nestjs/common": "^7.0.0",
-    "@nestjs/core": "^7.0.0",
-    "@types/node": "^10.14.16",
-    "class-transformer": "^0.2.3",
-    "class-validator": "^0.11.1",
-    "gulp": "^4.0.2",
-    "gulp-copy": "^4.0.1",
-    "gulp-sourcemaps": "^2.6.5",
-    "gulp-typescript": "^5.0.1",
-    "reflect-metadata": "^0.1.13",
-    "rxjs": "^6.5.4",
-    "typescript": "^3.8.3"
-  }
+    "name": "@recursyve/nestjs-common",
+    "version": "8.0.0",
+    "description": "Recursyve's NestJs common librairy",
+    "main": "index.js",
+    "scripts": {
+        "watch": "gulp",
+        "build": "gulp build",
+        "build:lib": "gulp build-lib",
+        "lint": "gulp lint",
+        "publish-package": "npm run build:lib && npm publish dist --access public",
+        "publish-package:beta": "npm run publish-package -- --tag beta --access public",
+        "publish-package:dry-run": "npm run publish-package -- --dry-run"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Recursyve/nestjs-librairies/common"
+    },
+    "author": "Recursyve",
+    "license": "MIT",
+    "peerDependencies": {
+        "@nestjs/common": "^8.0.0",
+        "@nestjs/core": "^8.0.0",
+        "class-transformer": "^0.4.0",
+        "class-validator": "^0.13.0"
+    },
+    "dependencies": {
+        "moment": "^2.29.1"
+    },
+    "devDependencies": {
+        "@nestjs/common": "^8.0.0",
+        "@nestjs/core": "^8.0.0",
+        "@types/node": "^14.17.5",
+        "class-transformer": "^0.4.0",
+        "class-validator": "^0.13.1",
+        "gulp": "^4.0.2",
+        "gulp-copy": "^4.0.1",
+        "gulp-sourcemaps": "^3.0.0",
+        "gulp-typescript": "^5.0.1",
+        "reflect-metadata": "^0.1.13",
+        "rxjs": "^7.2.0",
+        "typescript": "^4.3.5"
+    }
 }
