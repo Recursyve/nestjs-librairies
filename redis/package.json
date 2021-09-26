@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-redis",
-    "version": "7.0.6",
+    "version": "7.0.8",
     "description": "Recursyve's NestJs Redis client",
     "main": "index.js",
     "scripts": {
@@ -23,12 +23,12 @@
         "@nestjs/core": "^7.0.0"
     },
     "dependencies": {
-        "ioredis": "^4.16.0"
+        "ioredis": "^4.27.9"
     },
     "devDependencies": {
         "@nestjs/common": "^7.0.0",
         "@nestjs/core": "^7.0.0",
-        "@types/ioredis": "^4.14.9",
+        "@types/ioredis": "^4.27.1",
         "@types/jest": "^26.0.23",
         "@types/node": "^10.14.16",
         "gulp": "^4.0.2",

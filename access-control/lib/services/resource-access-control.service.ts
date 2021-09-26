@@ -75,9 +75,7 @@ export class ResourceAccessControlService {
     }
 
     private async setAccessRules(user: Users, resources: AccessControlResources[]) {
-        [AccessActionType.Read, AccessActionType.Update, AccessActionType.Delete].forEach(async a => {
-            await this.setAccessAction(user, resources, a);
-        });
+        await Promise.all([AccessActionType.Read, AccessActionType.Update, AccessActionType.Delete].map((a) => this.setAccessAction(user, resources, a)));
     }
 
     private async setAccessAction(

@@ -7,5 +7,6 @@ export enum FilterType {
     Radio = "radio",
     Coordinate = "coordinate",
     Group = "group",
-    GeoLocalization = "geo_localization"
+    GeoLocalization = "geo_localization",
+    GeoBounds = "geo_bounds",
 }
