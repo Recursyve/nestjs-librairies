@@ -10,6 +10,20 @@ export class RedisKeyUtils {
         return `${this.prefix}:${user.id}-${user.role}:${table}:${action}`;
     }
 
+    public static userResourceActionWildcardKey(user: Users, table: string): string {
+        if (!user.role) {
+            return `${this.prefix}:${user.id}:${table}:wildcard`;
+        }
+        return `${this.prefix}:${user.id}-${user.role}:${table}:wildcard`;
+    }
+
+    public static userResourceActionConditionKey(user: Users, table: string): string {
+        if (!user.role) {
+            return `${this.prefix}:${user.id}:${table}::condition`;
+        }
+        return `${this.prefix}:${user.id}-${user.role}:${table}:condition`;
+    }
+
     public static userResourceActionPattern(user: Users, table: string): string {
         if (!user.role) {
             return `${this.prefix}:${user.id}:${table}:*`;
@@ -37,5 +51,12 @@ export class RedisKeyUtils {
             return `${this.prefix}:${user.id}:${table}`;
         }
         return `${this.prefix}:${user.id}-${user.role}:${table}`;
+    }
+
+    public static userAccessControlType(user: Users, table: string): string {
+        if (!user.role) {
+            return `${this.prefix}:${user.id}:${table}:type`;
+        }
+        return `${this.prefix}:${user.id}-${user.role}:${table}:type`;
     }
 }

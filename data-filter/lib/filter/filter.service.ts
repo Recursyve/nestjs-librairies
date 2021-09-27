@@ -467,8 +467,20 @@ export class FilterService<Data> {
             throw new Error("AccessControl isn't enable in your project");
         }
 
-        const ids = await this.accessControlAdapter.getResourceIds(this.repository.model, user);
-        return SequelizeUtils.mergeWhere({ id: ids }, where ?? {});
+        const resources = await this.accessControlAdapter.getResources(this.repository.model, user);
+        if (resources.ids) {
+            return SequelizeUtils.mergeWhere({ id: resources.ids }, where ?? {});
+        }
+        if (resources.where) {
+            return {
+                [Op.and]: [
+                    resources.where,
+                    where ?? {}
+                ]
+            };
+        }
+
+        return where;
     }
 
     private generateWhereConditions(model: IncludeWhereModel, data?: object): WhereOptions {

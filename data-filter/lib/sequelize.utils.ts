@@ -197,7 +197,7 @@ export class SequelizeUtils {
                 return { [Op.notLike]: `%${rule.value}` };
 
             case "is_empty":
-                return { [Op.eq]: "" };
+                return "";
 
             case "is_not_empty":
                 return { [Op.ne]: "" };
