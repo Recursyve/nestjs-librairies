@@ -295,7 +295,8 @@ export class SequelizeUtils {
     }
 
     public static isColumnJson(model: typeof M, name: string): boolean {
-        return (model.rawAttributes[name]?.type as AbstractDataTypeConstructor)?.key === "JSON";
+        const attr = model.rawAttributes[name] ?? Object.values(model.rawAttributes).find((x) => x.field === name);
+        return (attr?.type as AbstractDataTypeConstructor)?.key === "JSON";
     }
 
     public static getGroupLiteral(model: typeof M, group: string): string {
