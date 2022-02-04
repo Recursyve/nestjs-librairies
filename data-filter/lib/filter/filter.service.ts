@@ -439,10 +439,11 @@ export class FilterService<Data> {
         }
 
         const order = this.getOrderOptions(filter.order);
-        const orderAttr = order?.[0]?.length === 2 ? order[0][order[0].length - 2] : undefined
+        const orderPath = filter.order?.column?.split(".") ?? [];
+        const orderCol = orderPath.pop();
         const values = await this.repository.model.findAll({
             ...options,
-            attributes: orderAttr && orderAttr?.constructor?.name !== "Literal" ? ["id", orderAttr] : ["id"],
+            attributes: orderCol && !orderPath.length ? ["id", orderCol] : ["id"],
             limit: filter.page ? filter.page.size : null,
             offset: filter.page ? filter.page.number * filter.page.size : null,
             subQuery: false,
