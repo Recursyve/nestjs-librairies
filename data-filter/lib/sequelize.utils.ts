@@ -1,15 +1,17 @@
-import { Model } from "sequelize-typescript";
+import { ArrayUtils, TypeUtils } from "@recursyve/nestjs-common";
 import {
     AbstractDataTypeConstructor,
     FindAttributeOptions,
     Includeable,
-    IncludeOptions, literal,
-    Op, Order, OrderItem, Utils,
+    IncludeOptions,
+    Op,
+    Order,
+    OrderItem,
     WhereOptions,
     WhereValue
 } from "sequelize";
+import { Model } from "sequelize-typescript";
 import { RuleModel } from "./filter";
-import { ArrayUtils, TypeUtils } from "@recursyve/nestjs-common";
 
 export interface GeoPoint {
     type: "point",
@@ -295,7 +297,8 @@ export class SequelizeUtils {
     }
 
     public static isColumnJson(model: typeof M, name: string): boolean {
-        return (model.rawAttributes[name]?.type as AbstractDataTypeConstructor)?.key === "JSON";
+        const attr = model.rawAttributes[name] ?? Object.values(model.rawAttributes).find((x) => x.field === name);
+        return (attr?.type as AbstractDataTypeConstructor)?.key === "JSON";
     }
 
     public static getGroupLiteral(model: typeof M, group: string): string {
