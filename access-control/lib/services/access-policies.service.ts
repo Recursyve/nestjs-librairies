@@ -2,7 +2,7 @@ import { Injectable, Type } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
 import { Model } from "sequelize-typescript";
 import { POLICY_METADATA } from "../decorators/constant";
-import { AccessControlResources, Users } from "../models";
+import { PolicyResources, Users } from "../models";
 import { AccessPolicy } from "../policies";
 import { M } from "../utils";
 
@@ -16,12 +16,17 @@ export class AccessPoliciesService {
 
     constructor(private readonly moduleRef: ModuleRef) {}
 
-    public async execute(table: string, user: Users): Promise<AccessControlResources[]> {
+    public async execute(table: string, user: Users): Promise<PolicyResources> {
         const policy = this._policies.find(x => x.repository.tableName === table);
         if (!policy) {
-            return [];
+            return PolicyResources.resources([]);
         }
-        return await policy.getResources(user);
+        const res = await policy.getResources(user);
+        if (res instanceof Array) {
+            return PolicyResources.resources(res);
+        }
+
+        return res;
     }
 
     public registerPolicies(...policies: Type<AccessPolicy>[]): void {

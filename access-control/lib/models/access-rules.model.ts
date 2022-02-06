@@ -63,6 +63,10 @@ export class AccessRules {
         });
     }
 
+    public static fromString(rule: string): AccessRules {
+        return new AccessRules(JSON.parse(rule));
+    }
+
     public static fromPermissions(permissions: string[], options?: PermissionsOption): AccessRules;
     public static fromPermissions(permissions: string[], suffix?: string, options?: PermissionsOption): AccessRules;
     public static fromPermissions(permissions: string[], suffixOrOptions?: string | PermissionsOption, options?: PermissionsOption): AccessRules {

@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { TypeUtils } from "@recursyve/nestjs-common";
-import { FindAttributeOptions, IncludeOptions, Order } from "sequelize";
+import { FindAttributeOptions, IncludeOptions, literal, Order } from "sequelize";
 import { Association, BaseAssociation, getAssociations, Model } from "sequelize-typescript";
 import { OrderModel } from "..";
 import { IncludeModel } from "..";
@@ -144,20 +144,24 @@ export class SequelizeModelScanner {
             return;
         }
 
-        const order = [];
         const values = orderObj.column.split(".");
         const column = values.pop();
         for (const value of values) {
             const association = this.findAssociation(model, value);
             model = association.getAssociatedClass() as unknown as typeof Model;
-            order.push({
-                model,
-                as: association.getAs()
-            } as any);
         }
-        order.push(column);
-        order.push(orderObj.direction.toUpperCase());
-        return [order] as Order;
+        const col = SequelizeUtils.findColumnFieldName(model as typeof M, column);
+        let literalOrder = values.length ?
+            SequelizeUtils.getLiteralFullName(col, values) :
+            `\`${model.name}\`.\`${col}\``;
+        if (orderObj.nullLast && orderObj.direction === "asc") {
+            literalOrder = `-${literalOrder}`;
+            orderObj.direction = "desc";
+        }
+        if (orderObj.direction === "desc") {
+            literalOrder += ` DESC`;
+        }
+        return literal(literalOrder) as Order;
     }
 
     public getGroup(model: typeof Model, orderObj: OrderModel): string[] {

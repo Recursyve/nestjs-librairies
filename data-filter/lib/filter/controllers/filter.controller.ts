@@ -1,20 +1,36 @@
 import {
-    Body, Get, HttpCode, HttpStatus, Inject, Optional, Param, Post, Query, Req, UseGuards, UseInterceptors
+    Body,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Inject,
+    Optional,
+    Param,
+    Post,
+    Query,
+    Req,
+    UseGuards,
+    UseInterceptors
 } from "@nestjs/common";
 import { ExportTypes, FilterQueryModel, FilterResultModel, SelectFilterValue } from "../..";
+import { FILTER_OPTION } from "../../constant";
 import { UserDeserializer } from "../../deserializers";
 import { DataFilterUserModel } from "../../models/user.model";
+import { FilterOptionConfig } from "../filter.config";
 import { FilterService } from "../filter.service";
+import { FilterQueryGuard } from "../guards/filter-query.guard";
 import { DataFileDownloadInterceptor } from "../interceptors/data-file-download.interceptor";
 import { FilterConfigurationSearchModel } from "../models/filter-configuration-search.model";
 import { FilterConfigurationModel } from "../models/filter-configuration.model";
 import { FilterResourceValueModel } from "../models/filter-resource-value.model";
-import { FilterQueryGuard } from "../guards/filter-query.guard";
 
 export class FilterController<Data> {
     @Inject()
     @Optional()
     private readonly userUserDeserializer: UserDeserializer<DataFilterUserModel>;
+
+    @Inject(FILTER_OPTION)
+    private readonly option: FilterOptionConfig;
 
     constructor(protected readonly filterService: FilterService<Data>) {}
 
@@ -67,7 +83,7 @@ export class FilterController<Data> {
     }
 
     protected async getUser(req: any): Promise<DataFilterUserModel> {
-        if (!this.userUserDeserializer) {
+        if (!this.userUserDeserializer || this.option.disableAccessControl) {
             return null;
         }
 

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { FindOptions, Identifier, IncludeOptions, Model, Op, Utils, WhereOptions } from "sequelize";
+import { FindOptions, Identifier, IncludeOptions, Model, Op, Utils, where, WhereOptions } from "sequelize";
 import { AccessControlAdapter, ExportAdapter, TranslateAdapter } from "./adapters";
 import { AttributesConfig } from "./models/attributes.model";
 import { DataFilterConfig } from "./models/data-filter.model";
@@ -46,11 +46,24 @@ export class DataFilterRepository<Data> {
     }
 
     public async findByPkFromUser(user: DataFilterUserModel, identifier: Identifier, conditions?: object): Promise<Data> {
-        const ids = await this.accessControlAdapter.getResourceIds(this._config.model as any, user);
-        if (!ids.includes(identifier as number)) {
+        const resources = await this.accessControlAdapter.getResources(this._config.model as any, user);
+        if (resources.ids?.includes(identifier as number) || resources.all) {
+            return await this.findByPk(identifier, conditions);
+        }
+
+        if (resources.ids?.length) {
             return null;
         }
-        return await this.findByPk(identifier, conditions);
+        return await this.findOne({
+            where: {
+                [Op.and]: [
+                    {
+                        [this._config.model.primaryKeyAttribute]: identifier
+                    },
+                    resources.where ?? {}
+                ]
+            }
+        }, conditions);
     }
 
     public async findOne(options?: FindOptions, conditions?: object): Promise<Data> {
@@ -76,11 +89,11 @@ export class DataFilterRepository<Data> {
     }
 
     public async findAllFromUser(user: DataFilterUserModel, options?: FindOptions, conditions?: object): Promise<Data[]> {
-        const ids = await this.accessControlAdapter.getResourceIds(this._config.model as any, user);
+        options = options ?? {};
         return await this.findAll(
             {
                 ...options,
-                where: SequelizeUtils.mergeWhere({ id: ids }, options.where)
+                where: await this.mergeAccessControlCondition(options.where ?? {}, user)
             },
             conditions
         );
@@ -111,9 +124,7 @@ export class DataFilterRepository<Data> {
         Object.assign(findOptions, options);
         this.addSearchCondition(search, findOptions);
 
-        const ids = await this.accessControlAdapter.getResourceIds(this._config.model as any, user);
-        findOptions.where = SequelizeUtils.mergeWhere({ id: ids }, findOptions.where);
-
+        findOptions.where = await this.mergeAccessControlCondition(findOptions.where, user);
         const result = await this.model.findAll(findOptions);
         if (!result?.length) {
             return result as unknown as Data[];
@@ -367,5 +378,21 @@ export class DataFilterRepository<Data> {
         }
 
         return [data, key];
+    }
+
+    private async mergeAccessControlCondition(where: WhereOptions, user: DataFilterUserModel): Promise<WhereOptions> {
+        const resources = await this.accessControlAdapter.getResources(this._config.model as any, user);
+        if (resources.ids) {
+            return SequelizeUtils.mergeWhere({ id: resources.ids }, where);
+        } else if (resources.where) {
+            return {
+                [Op.and]: [
+                    where,
+                    resources.where
+                ]
+            }
+        }
+
+        return where;
     }
 }

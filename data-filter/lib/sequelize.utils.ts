@@ -1,15 +1,17 @@
-import { Model } from "sequelize-typescript";
+import { ArrayUtils, TypeUtils } from "@recursyve/nestjs-common";
 import {
     AbstractDataTypeConstructor,
     FindAttributeOptions,
     Includeable,
-    IncludeOptions, literal,
-    Op, Order, OrderItem, Utils,
+    IncludeOptions,
+    Op,
+    Order,
+    OrderItem,
     WhereOptions,
     WhereValue
 } from "sequelize";
+import { Model } from "sequelize-typescript";
 import { RuleModel } from "./filter";
-import { ArrayUtils, TypeUtils } from "@recursyve/nestjs-common";
 
 export interface GeoPoint {
     type: "point",
@@ -197,7 +199,7 @@ export class SequelizeUtils {
                 return { [Op.notLike]: `%${rule.value}` };
 
             case "is_empty":
-                return { [Op.eq]: "" };
+                return "";
 
             case "is_not_empty":
                 return { [Op.ne]: "" };

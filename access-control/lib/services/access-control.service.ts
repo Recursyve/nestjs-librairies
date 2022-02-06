@@ -4,14 +4,14 @@ import { CommandBus } from "@nestjs/cqrs";
 import { Model } from "sequelize-typescript";
 import { ResourceAccessControlService } from "./resource-access-control.service";
 import { AccessActionType, Users } from "../models";
-import { RedisKeyUtils } from "../utils";
+import { M, RedisKeyUtils } from "../utils";
 
 @Injectable()
 export class AccessControlService {
     constructor(private readonly redisService: RedisService, private readonly commandBus: CommandBus) {}
 
     public forModel(model: typeof Model): ResourceAccessControlService {
-        const service = new ResourceAccessControlService(model.tableName);
+        const service = new ResourceAccessControlService(model as typeof M);
         service.redisService = this.redisService;
         service.commandBus = this.commandBus;
         return service;
