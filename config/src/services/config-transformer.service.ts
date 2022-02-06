@@ -5,7 +5,7 @@ import { Injectable, Type } from "@nestjs/common";
 export class ConfigTransformerService {
     constructor(private scanner: VariableScanner) {}
 
-    public transform(config: Type<any>): any {
+    public transform(config: Type): any {
         const variables = this.scanner.getVariables(config);
         const instance = new config();
 

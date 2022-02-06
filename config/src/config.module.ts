@@ -12,7 +12,7 @@ import { ConfigUtils } from "./config.utils";
     ]
 })
 export class ConfigModule {
-    public static forRoot(...configs: Type<any>[]): DynamicModule {
+    public static forRoot(...configs: Type[]): DynamicModule {
         return {
             module: ConfigModule,
             global: true,
@@ -25,7 +25,7 @@ export class ConfigModule {
         };
     }
 
-    public static forFeature(...configs: Type<any>[]): DynamicModule {
+    public static forFeature(...configs: Type[]): DynamicModule {
         return {
             module: ConfigModule,
             providers: configs.map((config) => ({
