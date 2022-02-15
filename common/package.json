@@ -21,6 +21,7 @@
     "peerDependencies": {
         "@nestjs/common": ">=8.0.0",
         "@nestjs/core": ">=8.0.0",
+        "@nestjs/platform-express": ">=8.0.0",
         "class-transformer": "^0.5.0",
         "class-validator": "^0.13.0"
     },
@@ -30,6 +31,8 @@
     "devDependencies": {
         "@nestjs/common": "^8.2.6",
         "@nestjs/core": "^8.2.6",
+        "@types/express": "^4.17.13",
+        "@types/multer": "^1.4.7",
         "@types/node": "^17.0.15",
         "class-transformer": "^0.5.1",
         "class-validator": "^0.13.2",
