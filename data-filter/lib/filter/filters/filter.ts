@@ -1,14 +1,14 @@
-import { DataFilterUserModel } from "../..";
+import { fn, LogicType, Op, Sequelize, where, WhereOperators, WhereOptions } from "sequelize";
+import { DataFilterUserModel, FilterOperatorTypes } from "../..";
 import { TranslateAdapter } from "../../adapters/translate.adapter";
-import { FilterUtils } from "../filter.utils";
-import { CustomOperator, FilterOperators, FilterOperatorTypes } from "../operators";
-import { FilterType } from "../type";
-import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
-import { Op, where, WhereOperators, WhereOptions } from "sequelize";
-import { QueryModel, QueryRuleModel } from "../models/query.model";
-import { SequelizeUtils } from "../../sequelize.utils";
-import { RuleModel } from "../models/rule.model";
 import { IncludeWhereModel } from "../../models/include.model";
+import { SequelizeUtils } from "../../sequelize.utils";
+import { FilterUtils } from "../filter.utils";
+import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
+import { QueryModel, QueryRuleModel } from "../models/query.model";
+import { RuleModel } from "../models/rule.model";
+import { CustomOperator, FilterOperators } from "../operators";
+import { FilterType } from "../type";
 
 export type Condition = "and" | "or";
 
@@ -20,6 +20,11 @@ export interface FilterConditionRule extends RuleModel {
 export interface FilterCondition {
     condition: Condition;
     rules: (FilterConditionRule | FilterCondition)[];
+}
+
+export interface JsonConfig {
+    type: "array" | "object";
+    path?: string;
 }
 
 export type PathCondition = boolean | {
@@ -35,6 +40,7 @@ export interface BaseFilterDefinition {
     group?: string;
     where?: IncludeWhereModel;
     pathCondition?: PathCondition;
+    json?: JsonConfig;
 
     /**
      * Private means that the config will not be returned.
@@ -69,6 +75,7 @@ export abstract class Filter implements FilterDefinition {
     public path?: string;
     public condition?: FilterCondition;
     public pathCondition?: PathCondition;
+    public json?: JsonConfig;
     public private?: boolean;
     public paranoid = true;
 
@@ -150,12 +157,9 @@ export abstract class Filter implements FilterDefinition {
             rule.operation = op.operator;
         }
 
-        const value = SequelizeUtils.generateWhereValue(rule);
-        const where = (value === undefined || this.having) ?
+        const where = (rule?.value === undefined || this.having) ?
             this.getConditionWhereOptions(null) :
-            this.getConditionWhereOptions({
-                [name]: value
-            });
+            this.getConditionWhereOptions(this.transformCondition(rule, name));
 
         return this.getOperatorWhereOptions(rule.operation, where, rule.value);
     }
@@ -279,5 +283,46 @@ export abstract class Filter implements FilterDefinition {
         }
 
         return rules;
+    }
+
+    private transformCondition(rule: QueryRuleModel, name: string): WhereOptions {
+        if (!this.json) {
+            return {
+                [name]: SequelizeUtils.generateWhereValue(rule)
+            };
+        }
+
+        if (this.json.type === "array") {
+            return this.transformForJsonArray(rule, name);
+        }
+
+        const colName = this.path ? Sequelize.col(name) : Sequelize.literal(name);
+        const value = SequelizeUtils.generateWhereValue(rule);
+        if (this.json.path) {
+            return Sequelize.where(Sequelize.fn("JSON_EXTRACT", colName, this.json.path), value as LogicType);
+        }
+
+        return Sequelize.where(Sequelize.fn("JSON_EXTRACT", colName), value as LogicType);
+    }
+
+    private transformForJsonArray(rule: QueryRuleModel, name: string): WhereOptions {
+        const colName = this.path ? Sequelize.col(name) : Sequelize.literal(name);
+        if (rule.operation === FilterOperatorTypes.Contains || rule.operation === FilterOperatorTypes.NotContains) {
+            /**
+             * We override the rule to use an equal or not equal with a JSON_CONTAINS function
+             */
+            const newRule = {
+                operation: rule.operation === FilterOperatorTypes.Contains ? FilterOperatorTypes.Equal : FilterOperatorTypes.NotEqual,
+                value: true
+            }
+
+            const value = typeof rule.value === "string" ? `"${rule.value}"` : rule.value;
+            if (this.json.path) {
+                return where(fn("JSON_CONTAINS", colName, value, this.json.path), SequelizeUtils.generateWhereValue(newRule as RuleModel) as LogicType)
+            }
+            return where(fn("JSON_CONTAINS", colName, value), SequelizeUtils.generateWhereValue(newRule as RuleModel) as LogicType)
+        }
+
+        return null;
     }
 }
