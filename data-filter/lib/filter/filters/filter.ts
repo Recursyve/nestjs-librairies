@@ -296,13 +296,7 @@ export abstract class Filter implements FilterDefinition {
             return this.transformForJsonArray(rule, name);
         }
 
-        const colName = this.path ? Sequelize.col(name) : Sequelize.literal(name);
-        const value = SequelizeUtils.generateWhereValue(rule);
-        if (this.json.path) {
-            return Sequelize.where(Sequelize.fn("JSON_EXTRACT", colName, this.json.path), value as LogicType);
-        }
-
-        return Sequelize.where(Sequelize.fn("JSON_EXTRACT", colName), value as LogicType);
+        return this.transformForJsonObject(rule, name);
     }
 
     private transformForJsonArray(rule: QueryRuleModel, name: string): WhereOptions {
@@ -324,5 +318,15 @@ export abstract class Filter implements FilterDefinition {
         }
 
         return null;
+    }
+
+    private transformForJsonObject(rule: QueryRuleModel, name: string): WhereOptions {
+        const colName = this.path ? Sequelize.col(name) : Sequelize.literal(name);
+        const value = SequelizeUtils.generateWhereValue(rule);
+        if (this.json.path) {
+            return Sequelize.where(Sequelize.fn("JSON_EXTRACT", colName, this.json.path), value as LogicType);
+        }
+
+        return Sequelize.where(Sequelize.fn("JSON_EXTRACT", colName), value as LogicType);
     }
 }
