@@ -76,6 +76,14 @@ export class RedisService {
         return +(await this.client.zscore(key, value));
     }
 
+    public ping(): Promise<[Error | null, string]> {
+        return new Promise((resolve, reject) => {
+            this.client.ping((error, response) => {
+                resolve([error, response]);
+            })
+        })
+    }
+
     public scan(pattern: string): Promise<string[]> {
         return new Promise<string[]>((resolve, reject) => {
             const stream = this.client.scanStream({
