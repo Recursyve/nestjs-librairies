@@ -25,3 +25,4 @@ export class RedisModule implements OnModuleDestroy {
 
 export * from "./services/redis.service";
 export * from "./services/redis-config.service";
+export * from "./health-indicators/redis-health.indicator";
