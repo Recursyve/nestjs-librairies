@@ -12,7 +12,7 @@ export class XlsxUtils {
         const aoa: any[][] = rows.map((row: Object) => {
             // Replace undefined values.
             ObjectUtils.forEachProperty(row, (value: any) => {
-                return value ? value : "N/A";
+                return value !== null && value !== undefined ? value : "N/A";
             });
 
             return ObjectUtils.objectToArrayOfProperties(row);
