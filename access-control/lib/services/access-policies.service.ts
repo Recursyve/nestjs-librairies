@@ -26,7 +26,6 @@ export class AccessPoliciesService {
         }
 
         try {
-
             this.logger.verbose(`Getting resources for user ${user.id}`, policy.name);
             const res = await policy.getResources(user);
             this.logger.verbose(`Resources found for user ${user.id}`, policy.name);
@@ -34,7 +33,6 @@ export class AccessPoliciesService {
             if (res instanceof Array) {
                 return PolicyResources.resources(res);
             }
-
 
             return res;
         } catch (e) {

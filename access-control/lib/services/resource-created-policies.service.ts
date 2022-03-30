@@ -32,7 +32,6 @@ export class ResourceCreatedPoliciesService {
                 this.logger.error("", e, policy.name);
                 return [];
             }
-
         }))
             .then(res => res.reduce((all, current) => [...all, ...current], []))
             .then(res => res.map(x => ({ ...x, resourceId: resource.id })));
