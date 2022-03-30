@@ -4,10 +4,30 @@ export class RedisKeyUtils {
     public static prefix = "access-control";
 
     public static userResourceActionKey(user: Users, table: string, action: AccessActionType): string {
+        if (!user.role) {
+            return `${this.prefix}:${user.id}:${table}:${action}`;
+        }
         return `${this.prefix}:${user.id}-${user.role}:${table}:${action}`;
     }
 
+    public static userResourceActionWildcardKey(user: Users, table: string): string {
+        if (!user.role) {
+            return `${this.prefix}:${user.id}:${table}:wildcard`;
+        }
+        return `${this.prefix}:${user.id}-${user.role}:${table}:wildcard`;
+    }
+
+    public static userResourceActionConditionKey(user: Users, table: string): string {
+        if (!user.role) {
+            return `${this.prefix}:${user.id}:${table}::condition`;
+        }
+        return `${this.prefix}:${user.id}-${user.role}:${table}:condition`;
+    }
+
     public static userResourceActionPattern(user: Users, table: string): string {
+        if (!user.role) {
+            return `${this.prefix}:${user.id}:${table}:*`;
+        }
         return `${this.prefix}:${user.id}-${user.role}:${table}:*`;
     }
 
@@ -16,6 +36,9 @@ export class RedisKeyUtils {
     }
 
     public static userResourceIdKey(table: string, resourceId: number, user: Users): string {
+        if (!user.role) {
+            return `${this.prefix}:${table}:${resourceId}:${user.id}`;
+        }
         return `${this.prefix}:${table}:${resourceId}:${user.id}-${user.role}`;
     }
 
@@ -24,6 +47,16 @@ export class RedisKeyUtils {
     }
 
     public static userAccessControl(user: Users, table: string): string {
+        if (!user.role) {
+            return `${this.prefix}:${user.id}:${table}`;
+        }
         return `${this.prefix}:${user.id}-${user.role}:${table}`;
+    }
+
+    public static userAccessControlType(user: Users, table: string): string {
+        if (!user.role) {
+            return `${this.prefix}:${user.id}:${table}:type`;
+        }
+        return `${this.prefix}:${user.id}-${user.role}:${table}:type`;
     }
 }

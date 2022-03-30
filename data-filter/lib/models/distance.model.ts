@@ -7,6 +7,7 @@ export interface DistanceConfig {
     coordinates: (option?) => [number, number];
     name: string;
     path?: string;
+    srid?: number;
 }
 
 export class DistanceAttributesConfig implements CustomAttributesConfig<DistanceConfig> {
@@ -33,7 +34,7 @@ export class DistanceAttributesConfig implements CustomAttributesConfig<Distance
         }
 
         const name = path ? SequelizeUtils.getLiteralFullName(this.config.attribute, path) : this.config.attribute;
-        const location = literal(`point(${latitude}, ${longitude})`);
+        const location = fn("ST_GeometryFromText", literal(`'POINT(${latitude} ${longitude})'`), this.config.srid ?? 0);
         return [fn("ST_Distance_Sphere", literal(name), location), this.config.name ?? this.key];
     }
 }

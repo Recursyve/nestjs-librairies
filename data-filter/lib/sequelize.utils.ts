@@ -1,47 +1,64 @@
-import { Model } from "sequelize-typescript";
+import { ArrayUtils, TypeUtils } from "@recursyve/nestjs-common";
 import {
     AbstractDataTypeConstructor,
     FindAttributeOptions,
     Includeable,
     IncludeOptions,
     Op,
+    Order,
+    OrderItem,
     WhereOptions,
     WhereValue
 } from "sequelize";
+import { Model } from "sequelize-typescript";
 import { RuleModel } from "./filter";
-import { ArrayUtils } from "@recursyve/nestjs-common";
 
 export interface GeoPoint {
     type: "point",
     coordinates: number[];
 }
 
-export class M extends Model<M> {}
+export class M extends Model {}
 
 export class SequelizeUtils {
-    public static reduceIncludes(includes: IncludeOptions[][]): Includeable[] {
+    public static reduceIncludes(includes: IncludeOptions[][], ignoreAttributes = false): Includeable[] {
         let include: IncludeOptions[] = [];
         for (const i of includes) {
-            include = this.mergeIncludes(include, i);
+            include = this.mergeIncludes(include, i, ignoreAttributes);
         }
 
         return include;
     }
 
-    public static mergeIncludes(a: IncludeOptions[] = [], b: IncludeOptions[] = []) {
+    public static mergeIncludes(a: IncludeOptions[] = [], b: IncludeOptions[] = [], ignoreAttributes = false) {
         for (const bChild of b) {
             const aChild = a.find(value => value.model === bChild.model && value.as === bChild.as);
             if (aChild) {
                 aChild.include = this.mergeIncludes(
                     (aChild.include as IncludeOptions[]) ?? [],
-                    (bChild.include as IncludeOptions[]) ?? []
+                    (bChild.include as IncludeOptions[]) ?? [],
+                    ignoreAttributes
                 );
-                if (aChild.attributes || bChild.attributes) {
+                if ((aChild.attributes || bChild.attributes) && !ignoreAttributes) {
                     aChild.attributes = this.mergeAttributes(aChild, bChild);
                 }
                 const where = this.mergeWhere(aChild.where, bChild.where);
                 if (where) {
                     aChild.where = where;
+                }
+                const order = this.mergeOrder(aChild.order, bChild.order);
+                if (order) {
+                    aChild.order = order;
+                }
+                if (aChild.required || bChild.required) {
+                    aChild.required = true;
+                }
+                if (aChild.separate || bChild.separate) {
+                    aChild.separate = true;
+                }
+                aChild.paranoid = !(aChild.paranoid === false || bChild.paranoid === false);
+                if (TypeUtils.isNotNullOrUndefined(aChild.subQuery) || TypeUtils.isNotNullOrUndefined(bChild.subQuery)) {
+                    aChild.subQuery = aChild.subQuery ?? bChild.subQuery;
                 }
             } else {
                 a.push(bChild);
@@ -98,6 +115,31 @@ export class SequelizeUtils {
             return null;
         }
         return Object.assign(a ?? {}, b ?? {});
+    }
+
+    public static mergeOrder(a: Order, b: Order): Order {
+        if (!a && !b) {
+            return null;
+        }
+        if (a && !b) {
+            return a;
+        }
+        if (!a && b) {
+            return b;
+        }
+
+        const res: OrderItem[] = [];
+        if (a instanceof Array) {
+            res.push(...a);
+        } else {
+            res.push(a);
+        }
+        if (b instanceof Array) {
+            res.push(...b);
+        } else {
+            res.push(b);
+        }
+        return res;
     }
 
     public static generateWhereValue(rule: RuleModel): WhereValue {
@@ -157,7 +199,7 @@ export class SequelizeUtils {
                 return { [Op.notLike]: `%${rule.value}` };
 
             case "is_empty":
-                return { [Op.eq]: "" };
+                return "";
 
             case "is_not_empty":
                 return { [Op.ne]: "" };
@@ -168,8 +210,15 @@ export class SequelizeUtils {
         return `$${path}.${attribute}$`;
     }
 
-    public static getLiteralFullName(attribute: string, path: string) {
-        return `\`${path.split(".").join("->")}\`.\`${attribute}\``;
+    public static getLiteralFullName(attribute: string, path: string | string[]) {
+        if (typeof path === "string") {
+            path = path.split(".");
+        }
+        return `\`${path.join("->")}\`.\`${attribute}\``;
+    }
+
+    public static getOrderFullName(attribute: string, path: string[]) {
+        return `${path.join("->")}.${attribute}`;
     }
 
     public static getModelSearchableAttributes(model: typeof M): string[] {
@@ -184,16 +233,25 @@ export class SequelizeUtils {
         });
     }
 
-    public static getModelFieldAttributes(model: typeof M, fields: string[]): string[] {
+    public static getModelSearchableFieldAttributes(model: typeof M, fields: string[]): string[] {
         const attributes = model.rawAttributes;
-        return fields.map(x => {
-            const attr = attributes[x];
-            if (!attr) {
-                return x;
-            }
+        return fields
+            .filter(x => {
+                const attr = attributes[x];
+                if (!attr) {
+                    return false;
+                }
 
-            return attr.field ? attr.field : x;
-        })
+                return !["DATE", "DATEONLY", "VIRTUAL"].some(t => t === (attr.type as AbstractDataTypeConstructor).key);
+            }).
+            map(x => {
+                const attr = attributes[x];
+                if (!attr) {
+                    return x;
+                }
+
+                return attr.field ? attr.field : x;
+            })
     }
 
     public static reduceModelFromPath(model: M, path: string) {
@@ -225,5 +283,31 @@ export class SequelizeUtils {
         }
 
         return model;
+    }
+
+    public static findColumnFieldName(model: typeof M, name: string): string {
+        const field = Object.keys(model.rawAttributes).find((key) => {
+            if (key === name) {
+                return true;
+            }
+
+            return model.rawAttributes[key].field === name;
+        });
+        return model.rawAttributes[field].field ?? name;
+    }
+
+    public static isColumnJson(model: typeof M, name: string): boolean {
+        const attr = model.rawAttributes[name] ?? Object.values(model.rawAttributes).find((x) => x.field === name);
+        return (attr?.type as AbstractDataTypeConstructor)?.key === "JSON";
+    }
+
+    public static getGroupLiteral(model: typeof M, group: string): string {
+        const items = group.split(".");
+        if (items.length > 1) {
+            const column = items[items.length - 1];
+            return SequelizeUtils.getLiteralFullName(column, items.slice(0, items.length - 1));
+        }
+
+        return `\`${model.name}\`.\`${group}\``;
     }
 }

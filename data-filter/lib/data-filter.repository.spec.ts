@@ -1,21 +1,29 @@
 import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdapter } from "./adapters";
+import { SearchableAttributes } from "./decorators/seachable-attributes.decorator";
 import { databaseFactory } from "./test/database.factory";
 import { DataFilterRepository } from "./data-filter.repository";
-import { Attributes, Data, Include, Path } from "./decorators";
+import { Attributes, Data, Include, Where } from "./decorators";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { Persons } from "./test/models/persons/persons.model";
 import { Coords } from "./test/models/coords/coords.model";
 import { Locations } from "./test/models/locations/locations.model";
 import { Distance } from "./decorators/distance.decorator";
-import { fn, literal } from "sequelize";
+import { fn, literal, Op } from "sequelize";
 
 @Data(Persons)
 @Attributes(["first_name", "last_name"])
+@SearchableAttributes(["first_name"])
 class PersonsTest {
     @Attributes(["cellphone"])
-    @Include({ path: "location", attributes: ["value"], where: { value: option => option.value } })
-    @Path("coord")
+    @SearchableAttributes(["address", "postal_code"])
+    @Include("location", {
+        attributes: ["value"],
+        searchableAttributes: ["value", "unique_code"],
+        where: { value: option => option.value },
+        separate: true
+    })
+    @Where({ [Op.or]: () => [ { id: { [Op.ne]: null } } ] }, true)
     coord: Coords;
 
 }
@@ -30,8 +38,7 @@ class CustomAttributesTest {}
 class CustomCoordAttributesTest {
     @Attributes(["cellphone"])
     @Distance({ name: "distance", attribute: "geo_point", coordinates: option => option.coordinates })
-    @Include({ path: "location", attributes: ["value"], where: { value: option => option.value } })
-    @Path("coord")
+    @Include("location", { attributes: ["value"], where: { value: option => option.value } })
     coord: Coords;
 }
 
@@ -58,20 +65,26 @@ describe("DataFilterRepository", () => {
             const options = repository.generateFindOptions();
             expect(options).toBeDefined();
             expect(options).toStrictEqual({
-                attributes: ["first_name", "last_name"],
+                attributes: ["id", "first_name", "last_name"],
                 include: [
                     {
                         as: "coord",
                         model: Coords,
                         attributes: ["cellphone", "id"],
-                        required: false,
+                        order: undefined,
+                        required: true,
+                        paranoid: true,
+                        separate: false,
                         include: [
                             {
                                 as: "location",
                                 model: Locations,
                                 attributes: ["value", "id"],
+                                order: undefined,
                                 include: [],
-                                required: false
+                                paranoid: true,
+                                required: false,
+                                separate: true
                             }
                         ]
                     }
@@ -83,19 +96,34 @@ describe("DataFilterRepository", () => {
             const options = repository.generateFindOptions({ value: "Montreal" });
             expect(options).toBeDefined();
             expect(options).toStrictEqual({
-                attributes: ["first_name", "last_name"],
+                attributes: ["id", "first_name", "last_name"],
                 include: [
                     {
                         as: "coord",
                         model: Coords,
                         attributes: ["cellphone", "id"],
-                        required: false,
+                        order: undefined,
+                        required: true,
+                        paranoid: true,
+                        separate: false,
+                        where: {
+                            [Op.or]: [
+                                {
+                                    id: {
+                                        [Op.ne]: null
+                                    }
+                                }
+                            ]
+                        },
                         include: [
                             {
                                 as: "location",
                                 model: Locations,
                                 attributes: ["value", "id"],
+                                order: undefined,
+                                paranoid: true,
                                 required: false,
+                                separate: true,
                                 include: [],
                                 where: {
                                     value: "Montreal"
@@ -105,6 +133,33 @@ describe("DataFilterRepository", () => {
                     }
                 ]
             });
+        });
+
+        it("generateOrderInclude should return a valid Sequelize Includes array", () => {
+            const includes = repository.generateOrderInclude({
+                column: "coord.location.value",
+                direction: "desc"
+            });
+            expect(includes).toBeDefined();
+            expect(includes).toStrictEqual([
+                {
+                    model: Coords,
+                    as: "coord",
+                    attributes: [],
+                    include: [
+                        {
+                            model: Locations,
+                            as: "location",
+                            attributes: ["value"],
+                            include: [],
+                            required: false,
+                            through: undefined
+                        }
+                    ],
+                    required: false,
+                    through: undefined
+                }
+            ]);
         });
 
         it("reduceObject should return a valid PersonsTest object", () => {
@@ -133,6 +188,42 @@ describe("DataFilterRepository", () => {
             });
             expect(person).toStrictEqual(res);
         });
+
+        it("getSearchableFields should return only searchable fields", () => {
+            const fields = repository.getSearchAttributes();
+            expect(fields).toBeDefined();
+            expect(fields).toEqual([
+                {
+                    key: "first_name",
+                    name: "first_name",
+                    isJson: false
+                },
+                {
+                    literalKey: "`coord`.`address`",
+                    key: "$coord.address$",
+                    name: "address",
+                    isJson: false
+                },
+                {
+                    literalKey: "`coord`.`postal_code`",
+                    key: "$coord.postal_code$",
+                    name: "postal_code",
+                    isJson: false
+                },
+                {
+                    literalKey: "`coord->location`.`value`",
+                    key: "$coord.location.value$",
+                    name: "value",
+                    isJson: false
+                },
+                {
+                    literalKey: "`coord->location`.`unique_code`",
+                    key: "$coord.location.unique_code$",
+                    name: "unique_code",
+                    isJson: false
+                }
+            ])
+        });
     });
 
     describe("CustomAttributesTest", () => {
@@ -154,6 +245,7 @@ describe("DataFilterRepository", () => {
             expect(options).toBeDefined();
             expect(options).toStrictEqual({
                 attributes: [
+                    "id",
                     "first_name",
                     "last_name",
                     [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"), literal(`point(${45.8797953}, ${-73.2815516})`)), "distance"]
@@ -163,7 +255,10 @@ describe("DataFilterRepository", () => {
                         as: "coord",
                         attributes: ["id"],
                         model: Coords,
+                        order: undefined,
+                        paranoid: true,
                         required: false,
+                        separate: false,
                         include: []
                     }
                 ]
@@ -190,6 +285,7 @@ describe("DataFilterRepository", () => {
             expect(options).toBeDefined();
             expect(options).toStrictEqual({
                 attributes: [
+                    "id",
                     "first_name",
                     "last_name"
                 ],
@@ -202,13 +298,19 @@ describe("DataFilterRepository", () => {
                             [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"), literal(`point(${45.8797953}, ${-73.2815516})`)), "distance"],
                             "id"
                         ],
+                        order: undefined,
+                        paranoid: true,
                         required: false,
+                        separate: false,
                         include: [
                             {
                                 as: "location",
                                 model: Locations,
                                 attributes: ["value", "id"],
+                                order: undefined,
+                                paranoid: true,
                                 required: false,
+                                separate: false,
                                 include: [],
                                 where: {
                                     value: "Montreal"

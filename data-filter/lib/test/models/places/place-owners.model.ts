@@ -16,7 +16,7 @@ import { Places } from "./places.model";
 @Table({
     tableName: "place_owners"
 })
-export class PlaceOwners extends Model<PlaceOwners> {
+export class PlaceOwners extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column

@@ -19,7 +19,7 @@ import { Persons } from "../persons/persons.model";
     tableName: "owners",
     comment: "owner"
 })
-export class Owners extends Model<Owners> {
+export class Owners extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column

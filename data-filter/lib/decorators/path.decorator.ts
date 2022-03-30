@@ -6,7 +6,8 @@ export function Path(path: string, where?: IncludeWhereModel, required?: boolean
     return (target: Object, propertyKey: string) => {
         const attribute = AttributesHandler.getAttribute(target, propertyKey);
         const config = {
-            path
+            path,
+            paranoid: true
         } as PathConfig;
         if (where) {
             config.where = where;

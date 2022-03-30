@@ -17,7 +17,7 @@ import { ContractSystems } from "../contracts/contract-systems.model";
     tableName: "systems",
     comment: "system"
 })
-export class Systems extends Model<Systems> {
+export class Systems extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column

@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import * as Redis from "ioredis";
+import { RedisArrayUtils } from "../utils/array.utils";
 import { RedisConfigService } from "./redis-config.service";
 
 @Injectable()
@@ -7,7 +8,7 @@ export class RedisService {
     private readonly client: Redis.Redis;
 
     constructor(private readonly configService: RedisConfigService) {
-        this.client = new Redis(configService.getConfig());
+        this.client = configService.getRedisInstance();
     }
 
     public async disconnect(): Promise<void> {
@@ -30,12 +31,22 @@ export class RedisService {
         await this.client.del(key);
     }
 
-    public lpush(key: string, ...value: string[]): Promise<number> {
+    public async lpush(key: string, ...value: string[]): Promise<number> {
         if (!value.length) {
             return;
         }
 
-        return this.client.lpush(key, ...value);
+        const slices = RedisArrayUtils.getSlices(value, this.configService.lpushBlockSize);
+        let lastTotalLengthForKey = 0;
+        for (const slice of slices) {
+            if (!slice.length) {
+                continue;
+            }
+
+            lastTotalLengthForKey = await this.client.lpush(key, ...slice);
+        }
+
+        return lastTotalLengthForKey;
     }
 
     public lrem(key: string, value: string, count: number = 0): Promise<number> {
@@ -63,6 +74,14 @@ export class RedisService {
 
     public async zscore(key: string, value: string): Promise<number> {
         return +(await this.client.zscore(key, value));
+    }
+
+    public ping(): Promise<[Error | null, string]> {
+        return new Promise((resolve, reject) => {
+            this.client.ping((error, response) => {
+                resolve([error, response]);
+            })
+        })
     }
 
     public scan(pattern: string): Promise<string[]> {

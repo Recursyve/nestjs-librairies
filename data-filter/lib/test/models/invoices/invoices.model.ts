@@ -4,7 +4,7 @@ import { AutoIncrement, Column, CreatedAt, DeletedAt, Model, PrimaryKey, Table, 
     tableName: "invoices",
     comment: "invoice"
 })
-export class Invoices extends Model<Invoices> {
+export class Invoices extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column

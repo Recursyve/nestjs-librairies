@@ -9,31 +9,45 @@ import { M } from "../utils";
 @Injectable()
 export class ResourceCreatedPoliciesService {
     private readonly logger = new Logger();
+
+    constructor(private readonly moduleRef: ModuleRef) {
+    }
+
     private _policies: ResourceCreatedPolicy<any>[] = [];
 
     public get policies(): ResourceCreatedPolicy<any>[] {
         return this._policies;
     }
 
-    constructor(private readonly moduleRef: ModuleRef) {}
-
     public async execute(table: string, resource: any): Promise<UserResources[]> {
         const policies = this._policies.filter(x => x.repository.tableName === table && !x.parentRepository);
+
         const policiesRes = await Promise.all(policies.map(async policy => {
-            this.logger.verbose(`Getting users for resource ${resource.id}`, policy.name);
-            const users = await policy.handle(resource);
-            this.logger.verbose(`${users.length} users found for resource ${resource.id}`, policy.name);
-            return users;
+            try {
+                this.logger.verbose(`Getting users for resource ${resource.id}`, policy.name);
+                const users = await policy.handle(resource);
+                this.logger.verbose(`${users.length} users found for resource ${resource.id}`, policy.name);
+                return users;
+            } catch (e) {
+                this.logger.error("", e, policy.name);
+                return [];
+            }
+
         }))
             .then(res => res.reduce((all, current) => [...all, ...current], []))
             .then(res => res.map(x => ({ ...x, resourceId: resource.id })));
 
         const parentPolicies = this._policies.filter(x => x.parentRepository && x.parentRepository.tableName === table);
         const parentPoliciesRes = await Promise.all(parentPolicies.map(async policy => {
-            this.logger.verbose(`Getting users for resource ${resource.id}`, policy.name);
-            const users = await policy.handle(resource);
-            this.logger.verbose(`${users.length} users found for resource ${resource.id}`, policy.name);
-            return users;
+            try {
+                this.logger.verbose(`Getting users for resource ${resource.id}`, policy.name);
+                const users = await policy.handle(resource);
+                this.logger.verbose(`${users.length} users found for resource ${resource.id}`, policy.name);
+                return users;
+            } catch (e) {
+                this.logger.error("", e, policy.name);
+                return [];
+            }
         }));
 
         return parentPoliciesRes.reduce((all, current) => [...all, ...current], policiesRes);

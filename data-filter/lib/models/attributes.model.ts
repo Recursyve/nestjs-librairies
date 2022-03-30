@@ -1,4 +1,4 @@
-import { FindAttributeOptions, WhereOptions } from "sequelize";
+import { FindAttributeOptions, Order, WhereOptions } from "sequelize";
 import { IncludeConfig, IncludeModel, IncludeWhereModel } from "./include.model";
 import { PathConfig, PathModel } from "./path.model";
 import { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
@@ -13,14 +13,16 @@ export interface AttributesConfigModel {
 
 export class AttributesConfig implements AttributesConfigModel {
     public attributes?: FindAttributeOptions;
-    public path?: PathConfig;
+    public searchableAttributes?: string[];
+    public path: PathConfig;
     public includes: IncludeConfig[] = [];
     public customAttributes: CustomAttributesConfig[] = [];
     public ignoreInSearch = false;
 
     constructor(public key: string) {
         this.path = {
-            path: key
+            path: key,
+            paranoid: true
         };
     }
 
@@ -28,12 +30,28 @@ export class AttributesConfig implements AttributesConfigModel {
         this.attributes = attributes;
     }
 
-    public setPath(path?: PathConfig) {
+    public setSearchableAttributes(attributes: string[]) {
+        this.searchableAttributes = attributes;
+    }
+
+    public setPath(path: PathConfig) {
         this.path = path;
+    }
+
+    public containsPath(path: string) {
+        return this.path?.path.startsWith(path);
     }
 
     public setIgnoreInPath(ignore: boolean) {
         this.ignoreInSearch = ignore;
+    }
+
+    public setSeparate(): void {
+        this.path.separate = true;
+    }
+
+    public setOrder(order: Order): void {
+        this.path.order = order;
     }
 
     public addInclude(include: IncludeConfig) {
@@ -46,7 +64,8 @@ export class AttributesConfig implements AttributesConfigModel {
 
     public transformPathConfig(options?: object): PathModel {
         if (!options) {
-            return this.path as PathModel;
+            const { where, ...path } = this.path;
+            return path as PathModel;
         }
 
         if (this.path.where) {
@@ -98,14 +117,12 @@ export class AttributesConfig implements AttributesConfigModel {
             })
             .map(x => {
                 if (!options) {
-                    return {
-                        path: x.path,
-                        attributes: x.attributes
-                    };
+                    const { where, ...values } = x;
+                    return values;
                 }
 
                 if (!x.where) {
-                    return { path: x.path, attributes: x.attributes };
+                    return x;
                 }
 
                 return {
@@ -122,7 +139,8 @@ export class AttributesConfig implements AttributesConfigModel {
                 key: x.key,
                 attribute: x.transform(options, this.path.path),
                 path: (x.config as any).path ? {
-                    path: (x.config as any).path
+                    path: (x.config as any).path,
+                    paranoid: true
                 } : null
             } as CustomAttributesModel))
             .filter(x => x.attribute);
@@ -130,12 +148,16 @@ export class AttributesConfig implements AttributesConfigModel {
 
     private generateWhereConditions(model: IncludeWhereModel, options?: object): WhereOptions {
         const where = {};
-        for (const key in model) {
+        const keys = [
+            ...Object.keys(model),
+            ...Object.getOwnPropertySymbols(model)
+        ];
+        for (const key of keys) {
             if (!model.hasOwnProperty(key)) {
                 continue;
             }
 
-            const value = model[key](options);
+            const value = model[key as any](options);
             if (typeof value !== "undefined") {
                 where[key] = value;
             }

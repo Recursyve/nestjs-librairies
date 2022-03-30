@@ -2,6 +2,7 @@ import { FindAttributeOptions } from "sequelize";
 import { Model } from "sequelize-typescript";
 import { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
 import { IncludeConfig } from "./include.model";
+import { M, SequelizeUtils } from "../sequelize.utils";
 
 export interface DataFilterConfigModel {
     model: typeof Model;
@@ -13,15 +14,25 @@ export interface DataFilterConfigModel {
 export class DataFilterConfig implements DataFilterConfigModel {
     public model: typeof Model;
     public attributes?: FindAttributeOptions;
+    public searchableAttributes?: string[];
     public exportColumns?: string[];
     public customAttributes: CustomAttributesConfig[] = [];
+    public ignoreInSearch = false;
 
     public setModel(model: typeof Model) {
         this.model = model;
     }
 
+    public setIgnoreInPath(ignore: boolean) {
+        this.ignoreInSearch = ignore;
+    }
+
     public setAttributes(attributes?: FindAttributeOptions) {
         this.attributes = attributes;
+    }
+
+    public setSearchableAttributes(attributes: string[]) {
+        this.searchableAttributes = attributes;
     }
 
     public setExportColumns(exportColumns: string[]) {
@@ -36,7 +47,8 @@ export class DataFilterConfig implements DataFilterConfigModel {
         const customAttributes = this.getCustomAttributes(options);
         if (this.attributes) {
             return [
-                ...this.attributes as string[],
+                "id",
+                ...(this.attributes as string[]),
                 ...customAttributes.map(x => x.attribute)
             ];
         }
@@ -53,7 +65,8 @@ export class DataFilterConfig implements DataFilterConfigModel {
                 key: x.key,
                 attribute: x.transform(options),
                 path: (x.config as any).path ? {
-                    path: (x.config as any).path
+                    path: (x.config as any).path,
+                    paranoid: true
                 } : null
             } as CustomAttributesModel))
             .filter(x => x.attribute);
@@ -64,7 +77,24 @@ export class DataFilterConfig implements DataFilterConfigModel {
             .filter(x => x.config.path)
             .map(x => ({
                 attributes: [],
-                path: x.config.path
+                path: x.config.path,
+                paranoid: true
             }));
+    }
+
+    public getSearchableAttributes(): string[] {
+        if (this.ignoreInSearch) {
+            return [];
+        }
+
+        if (this.searchableAttributes) {
+            return SequelizeUtils.getModelSearchableFieldAttributes(this.model as typeof M, this.searchableAttributes);
+        }
+
+        const searchableAttributes = SequelizeUtils.getModelSearchableAttributes(this.model as typeof M);
+        const attributes = SequelizeUtils.getModelSearchableFieldAttributes(this.model as typeof M, this.attributes as string[] ?? []);
+        return attributes.length ?
+            (attributes as string[])?.filter(x => searchableAttributes.some(attr => attr === x)) :
+            searchableAttributes;
     }
 }

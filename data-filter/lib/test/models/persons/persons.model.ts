@@ -16,7 +16,7 @@ import { Coords } from "../coords/coords.model";
     tableName: "persons",
     comment: "person"
 })
-export class Persons extends Model<Persons> {
+export class Persons extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column

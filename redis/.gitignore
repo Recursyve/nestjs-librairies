@@ -168,3 +168,5 @@ fabric.properties
 
 build/
 dist/
+
+.idea

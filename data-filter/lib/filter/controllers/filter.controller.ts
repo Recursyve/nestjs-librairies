@@ -1,10 +1,24 @@
 import {
-    Body, Get, HttpCode, HttpStatus, Inject, Optional, Param, Post, Query, Req, UseInterceptors
+    Body,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Inject,
+    Optional,
+    Param,
+    Post,
+    Query,
+    Req,
+    UseGuards,
+    UseInterceptors
 } from "@nestjs/common";
 import { ExportTypes, FilterQueryModel, FilterResultModel, SelectFilterValue } from "../..";
+import { FILTER_OPTION } from "../../constant";
 import { UserDeserializer } from "../../deserializers";
 import { DataFilterUserModel } from "../../models/user.model";
+import { FilterOptionConfig } from "../filter.config";
 import { FilterService } from "../filter.service";
+import { FilterQueryGuard } from "../guards/filter-query.guard";
 import { DataFileDownloadInterceptor } from "../interceptors/data-file-download.interceptor";
 import { FilterConfigurationSearchModel } from "../models/filter-configuration-search.model";
 import { FilterConfigurationModel } from "../models/filter-configuration.model";
@@ -15,10 +29,14 @@ export class FilterController<Data> {
     @Optional()
     private readonly userUserDeserializer: UserDeserializer<DataFilterUserModel>;
 
+    @Inject(FILTER_OPTION)
+    private readonly option: FilterOptionConfig;
+
     constructor(protected readonly filterService: FilterService<Data>) {}
 
     @Post("filter")
     @HttpCode(HttpStatus.OK)
+    @UseGuards(FilterQueryGuard)
     public async filter(@Body() query: FilterQueryModel, @Req() req: any): Promise<FilterResultModel<Data>> {
         const user = await this.getUser(req);
         return user ? this.filterService.filter(user, query) : this.filterService.filter(query);
@@ -64,8 +82,8 @@ export class FilterController<Data> {
         return await this.filterService.searchConfigValues(search, await this.getUser(req) ?? {} as DataFilterUserModel);
     }
 
-    private async getUser(req: any): Promise<DataFilterUserModel> {
-        if (!this.userUserDeserializer) {
+    protected async getUser(req: any): Promise<DataFilterUserModel> {
+        if (!this.userUserDeserializer || this.option.disableAccessControl) {
             return null;
         }
 

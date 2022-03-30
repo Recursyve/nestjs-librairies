@@ -5,6 +5,15 @@ import { FilterType } from "../type";
 import { BaseFilterDefinition, Filter } from "./filter";
 import * as moment from "moment";
 
+// Filters a row by exact date given in the rules. We strip the time from the date.
+//
+// Depending on the inclusivity of your request we use the start of day or end of day, for example if the rule's value
+// is "2020-03-06T00:55:12";
+//  - And its operator is LessOrEqual we will output "< 2020-03-06T00:00:00" to exclude the given day.
+//  - And its operator is Less, we will output "< 2020-03-06T23:59:59" to include the given day.
+//
+// For Between and NotBetween operators, we always include the given first day and last day, so make sure to shrink your
+// timeframe by one day for each side you don't want to include.
 export class DateFilter extends Filter {
     public type = FilterType.Date;
     public operators = [...DateOperators];
@@ -53,6 +62,8 @@ export class DateFilter extends Filter {
                 return this.getGreaterWhereOptions(rule, end);
             case FilterOperatorTypes.GreaterOrEqual:
                 return this.getGreaterOrEqualWhereOptions(rule, start);
+            default:
+                return super.getWhereOptions(rule);
         }
     }
 

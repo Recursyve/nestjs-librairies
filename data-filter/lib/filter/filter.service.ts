@@ -1,5 +1,5 @@
 import { Injectable, Type } from "@nestjs/common";
-import { CountOptions, FindOptions, Includeable, IncludeOptions, Op, Order, WhereOptions } from "sequelize";
+import { col, CountOptions, FindOptions, Includeable, IncludeOptions, Op, Order, WhereOptions } from "sequelize";
 import { ExportTypes, FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
@@ -58,6 +58,9 @@ export class FilterService<Data> {
             }
 
             const config = await (this.definitions[key] as FilterDefinition).getConfig(key, user);
+            if (!config) {
+                continue;
+            }
             result.push({
                 ...config,
                 id: key,
@@ -115,10 +118,17 @@ export class FilterService<Data> {
         const [userOrOpt, opt] = args;
         const options = opt ? opt : userOrOpt as FilterQueryModel;
         const user = opt ? userOrOpt as DataFilterUserModel : null;
+        if (!options.order || !options.order.column) {
+            options.order = {
+                column: "id",
+                direction: "asc"
+            };
+        }
 
         const countOptions = await this.getFindOptions(this.repository.model, options.query, options.data);
         this.addSearchCondition(options.search, countOptions);
         this.addOrderCondition(options.order, countOptions);
+        this.addGroupOption(options, countOptions);
 
         const total = await (user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions));
         const values = await (user ? this.findValues(user, options, countOptions) : this.findValues(options, countOptions));
@@ -139,8 +149,14 @@ export class FilterService<Data> {
         this.addSearchCondition(options.search, findOptions);
         this.addOrderCondition(options.order, findOptions);
         delete options.page;
-        const values = await this.findValues(user, options, findOptions);
-        return await this.repository.downloadData(values, type, user.language, exportOptions);
+        const values = await (user ? this.findValues(user, options, findOptions) : this.findValues(options, findOptions));
+        const headers = await this.model.getExportedFieldsKeys();
+        if (headers.length) {
+            const data = await Promise.all(values.map((value) => this.model.getExportedFields(value)));
+            return await this.repository.downloadData(headers, data, type, user?.language ?? "fr", exportOptions);
+        } else {
+            return await this.repository.downloadData(values, type, user?.language ?? "fr", exportOptions);
+        }
     }
 
     public async getFindOptions(model: typeof M, query: QueryModel, data?: object): Promise<FindOptions> {
@@ -149,9 +165,8 @@ export class FilterService<Data> {
          */
         GeoLocalizationFilter.reset();
 
-        let option: FindOptions = {
-            group: `${model.name}.id`
-        };
+        query = this.addDefaultFilter(query);
+        let option: FindOptions = {};
         if (query) {
             const whereConditions = [];
             const havingConditions = [];
@@ -163,8 +178,12 @@ export class FilterService<Data> {
                 having: query.condition === "and" ? { [Op.and]: havingConditions } : { [Op.or]: havingConditions }
             };
 
-            await this.generateWhereOptions(query, whereConditions);
+            const paranoid = await this.generateWhereOptions(query, whereConditions);
             await this.generateHavingOptions(query, havingConditions);
+
+            if (!paranoid) {
+                option.paranoid = paranoid;
+            }
 
             if (!havingConditions.length) {
                 delete option.having;
@@ -229,7 +248,7 @@ export class FilterService<Data> {
                 includes.push(...this.getFilterInclude(model, filter as FilterDefinition, data));
             }
         }
-        return SequelizeUtils.reduceIncludes(includes);
+        return SequelizeUtils.reduceIncludes(includes, true);
     }
 
     private getConditionInclude(model: typeof M, condition: FilterCondition): IncludeOptions[] {
@@ -245,24 +264,25 @@ export class FilterService<Data> {
             }
             const r = rule as FilterConditionRule;
             if (r.path) {
-                includes.push(...this.sequelizeModelScanner.getIncludes(model, { path: r.path }, [], { include: [] }));
+                includes.push(...this.sequelizeModelScanner.getIncludes(model, { path: r.path }, [], { include: [] }, true));
             }
         }
         return includes;
     }
 
-    private async generateWhereOptions(query: QueryModel, options: WhereOptions[]) {
+    private async generateWhereOptions(query: QueryModel, options: WhereOptions[]): Promise<boolean> {
         if (!query.rules) {
             return;
         }
 
+        let paranoid = true;
         for (const rule of query.rules) {
             const c = rule as QueryModel;
             if (c.condition) {
                 const conditions = [];
                 const op = c.condition === "and" ? Op.and : Op.or;
                 const where = { [op]: conditions };
-                await this.generateWhereOptions(c, conditions);
+                paranoid = paranoid && await this.generateWhereOptions(c, conditions);
 
                 if (where[op as any].length) {
                     options.push(where);
@@ -284,7 +304,10 @@ export class FilterService<Data> {
                     options.push(filterOptions);
                 }
             }
+            paranoid = filter.paranoid ?? true;
         }
+
+        return paranoid;
     }
 
     private async generateHavingOptions(query: QueryModel, options: WhereOptions[]) {
@@ -323,41 +346,12 @@ export class FilterService<Data> {
     }
 
     private addSearchCondition(search: FilterSearchModel, options: CountOptions): void {
-        if (!search?.value?.length) {
+        const value = search?.value?.toString();
+        if (!value?.length) {
             return;
         }
 
-        const repoOption = this.repository.generateFindOptions({});
-        options.include = SequelizeUtils.mergeIncludes(
-            options.include as IncludeOptions[],
-            repoOption.include as IncludeOptions[]
-        );
-
-        if (!options.where) {
-            options.where = { [Op.and]: [] };
-        }
-
-        const where = options.where;
-        const generateFieldsObject = searchValue =>
-            this.repository
-                .getSearchAttributes()
-                .map(a => {
-                    return {
-                        [a.key]: {
-                            [Op.like]: `%${searchValue}%`
-                        }
-                    };
-                })
-                .reduce((a, o) => Object.assign(a, o), {});
-
-        const tokens = search.value.split(" ");
-        where[Op.and].push(
-            tokens.map(t => {
-                return {
-                    [Op.or]: generateFieldsObject(t)
-                };
-            })
-        );
+        this.repository.addSearchCondition(search.value, options);
     }
 
     private addOrderCondition(order: OrderModel, options: CountOptions): void {
@@ -377,6 +371,26 @@ export class FilterService<Data> {
             options.include as IncludeOptions[],
             includes as IncludeOptions[]
         );
+    }
+
+    private addGroupOption(query: FilterQueryModel, options: CountOptions): void {
+        if (query?.order?.column === "") {
+            return;
+        }
+
+        const rule = this.definitions[query.order.column] as OrderRuleDefinition;
+        if (rule && OrderRule.validate(rule)) {
+            return;
+        }
+
+        const model = this.repository.model;
+        const values = query?.order?.column.split(".");
+        const column = values.pop();
+        if (!values.length) {
+            options.group = [`${model.name}.id`, `${model.name}.${SequelizeUtils.findColumnFieldName(model, column)}`];
+        } else {
+            options.group = [`${model.name}.id`, ...this.sequelizeModelScanner.getGroup(model, query.order)];
+        }
     }
 
     private async countTotalValues(user: DataFilterUserModel, options: FindOptions): Promise<number>;
@@ -425,18 +439,25 @@ export class FilterService<Data> {
         }
 
         const order = this.getOrderOptions(filter.order);
+        const orderPath = filter.order?.column?.split(".") ?? [];
+        const orderCol = orderPath.pop();
         const values = await this.repository.model.findAll({
             ...options,
+            attributes: orderCol && !orderPath.length ? ["id", orderCol] : ["id"],
             limit: filter.page ? filter.page.size : null,
             offset: filter.page ? filter.page.number * filter.page.size : null,
             subQuery: false,
             order
         });
+
+        const group = filter.groupBy ? [SequelizeUtils.getGroupLiteral(this.repository.model, filter.groupBy)] : undefined;
         return await this.repository.findAll({
             where: {
                 id: values.map(x => x.id)
             },
-            order
+            order,
+            paranoid: options.paranoid,
+            group
         }, filter.data ?? {});
     }
 
@@ -447,8 +468,20 @@ export class FilterService<Data> {
             throw new Error("AccessControl isn't enable in your project");
         }
 
-        const ids = await this.accessControlAdapter.getResourceIds(this.repository.model, user);
-        return SequelizeUtils.mergeWhere({ id: ids }, where ?? {});
+        const resources = await this.accessControlAdapter.getResources(this.repository.model, user);
+        if (resources.ids) {
+            return SequelizeUtils.mergeWhere({ id: resources.ids }, where ?? {});
+        }
+        if (resources.where) {
+            return {
+                [Op.and]: [
+                    resources.where,
+                    where ?? {}
+                ]
+            };
+        }
+
+        return where;
     }
 
     private generateWhereConditions(model: IncludeWhereModel, data?: object): WhereOptions {
@@ -479,8 +512,9 @@ export class FilterService<Data> {
         return [
             this.sequelizeModelScanner.getIncludes(model, {
                 path: filter.path,
+                paranoid: filter.paranoid,
                 where: this.generateWhereConditions(filter.where, data)
-            }, []),
+            }, [], [], true),
             this.getConditionInclude(model, filter.condition)
         ];
     }
@@ -496,5 +530,29 @@ export class FilterService<Data> {
         }
 
         return [[rule.getOrderOption(), orderObj.direction.toUpperCase()]];
+    }
+
+    private addDefaultFilter(query: QueryModel): QueryModel {
+        if (!this.model.defaultFilter) {
+            return query;
+        }
+
+        if (this.model.defaultFilter.required) {
+            if (query?.condition !== "and") {
+                query = {
+                    condition: "and",
+                    rules: [query]
+                };
+            }
+        } else {
+            if (query?.condition !== "or") {
+                query = {
+                    condition: "or",
+                    rules: [query]
+                };
+            }
+        }
+        query.rules.push(this.model.defaultFilter.filter);
+        return query;
     }
 }

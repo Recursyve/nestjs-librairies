@@ -12,6 +12,7 @@ export interface FilterSearchModel {
 export interface OrderModel {
     column: string;
     direction: "asc" | "desc" | "";
+    nullLast?: boolean;
 }
 
 export interface FilterQueryModel {
@@ -20,6 +21,7 @@ export interface FilterQueryModel {
     query?: QueryModel;
     order?: OrderModel;
     data?: object;
+    groupBy?: string;
 }
 
 export interface FilterResultModel<T> {
