@@ -6,6 +6,10 @@ import { M } from "../utils";
 export abstract class AccessPolicy {
     public repository: typeof M;
 
+    public get name(): string {
+        return (this as any).constructor.name;
+    }
+
     /**
      * @deprecated
      */
