@@ -12,9 +12,12 @@ import { FilterType } from "../type";
 
 export type Condition = "and" | "or";
 
-export interface FilterConditionRule extends RuleModel {
+// TODO: Deprecate key to use attribute instead to be consistant with the BaseFilterDefinition
+export interface FilterConditionRule {
     key: string;
     path?: string;
+    operation: FilterOperators;
+    value: (unknown | unknown[]) | ((value: unknown | unknown[]) => unknown | unknown[])
 }
 
 export interface FilterCondition {
@@ -158,8 +161,8 @@ export abstract class Filter implements FilterDefinition {
         }
 
         const where = (rule?.value === undefined || this.having) ?
-            this.getConditionWhereOptions(null) :
-            this.getConditionWhereOptions(this.transformCondition(rule, name));
+            this.getConditionWhereOptions(null, rule) :
+            this.getConditionWhereOptions(this.transformCondition(rule, name), rule);
 
         return this.getOperatorWhereOptions(rule.operation, where, rule.value);
     }
@@ -196,31 +199,37 @@ export abstract class Filter implements FilterDefinition {
         return rules.every(x => this.pathCondition[x.id] === x.value);
     }
 
-    protected getConditionWhereOptions(where: WhereOptions): WhereOptions {
+    protected getConditionWhereOptions(where: WhereOptions, rule: QueryRuleModel): WhereOptions {
         if (!this.condition) {
             return where;
         }
 
         const conditions = where ? [where] : [];
         const option = this.condition.condition === "and" ? { [Op.and]: conditions } : { [Op.or]: conditions };
-        this.generateRuleWhereOptions(this.condition, conditions);
+        this.generateRuleWhereOptions(this.condition, conditions, rule);
         return option;
     }
 
-    protected generateRuleWhereOptions(filter: FilterCondition, options: WhereOptions[]) {
+    protected generateRuleWhereOptions(filter: FilterCondition, options: WhereOptions[], parentRule: QueryRuleModel) {
         for (const rule of filter.rules) {
             const c = rule as FilterCondition;
             if (c.condition) {
                 const conditions = [];
                 options.push(c.condition === "and" ? { [Op.and]: conditions } : { [Op.or]: [] });
-                this.generateRuleWhereOptions(c, conditions);
+                this.generateRuleWhereOptions(c, conditions, parentRule);
                 continue;
             }
 
-            const r = rule as FilterConditionRule;
+            let r = rule as FilterConditionRule;
             const name = r.path ? SequelizeUtils.getAttributeFullName(r.key, r.path) : r.key;
+            if (typeof r.value === "function") {
+                r = {
+                    ...r,
+                    value: r.value(parentRule.value)
+                }
+            }
             options.push({
-                [name]: SequelizeUtils.generateWhereValue(rule as RuleModel)
+                [name]: SequelizeUtils.generateWhereValue(r as RuleModel)
             });
         }
     }

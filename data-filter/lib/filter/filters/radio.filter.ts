@@ -69,7 +69,7 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
 
         const conditions = [];
         const where = option.condition.condition === "and" ? { [Op.and]: conditions } : { [Op.or]: conditions };
-        this.generateRuleWhereOptions(option.condition, conditions);
+        this.generateRuleWhereOptions(option.condition, conditions, rule);
         conditions.push(
             super.getWhereOptions({
                 ...rule,

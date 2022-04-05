@@ -17,3 +17,9 @@ All notable changes to the @recursyve/nestjs-data-filter project will be documen
 ### Added
 
 - Support for JSON column in filters [#43](https://github.com/Recursyve/nestjs-librairies/pull/43)
+
+## [8.1.2] - 2022-04-04
+
+### Changed
+ 
+- Condition in filter configuration now accept a function as a value to allow the runtime rule value to used instead of juste a *hardcoded* value
