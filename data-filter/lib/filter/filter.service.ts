@@ -50,14 +50,14 @@ export class FilterService<Data> {
         );
     }
 
-    public async getConfig(user?: DataFilterUserModel): Promise<FilterConfigurationModel[]> {
+    public async getConfig(req: any, user?: DataFilterUserModel): Promise<FilterConfigurationModel[]> {
         const result: FilterConfigurationModel[] = [];
         for (const key in this.definitions) {
             if (!this.definitions.hasOwnProperty(key) || OrderRule.validate(this.definitions[key] as OrderRuleDefinition)) {
                 continue;
             }
 
-            const config = await (this.definitions[key] as FilterDefinition).getConfig(key, user);
+            const config = await (this.definitions[key] as FilterDefinition).getConfig(key, req, user);
             if (!config) {
                 continue;
             }
@@ -72,6 +72,7 @@ export class FilterService<Data> {
     }
 
     public async searchConfigValues(
+        request: any,
         search: FilterConfigurationSearchModel,
         user?: DataFilterUserModel
     ): Promise<SelectFilterValue[]> {
@@ -81,20 +82,20 @@ export class FilterService<Data> {
 
         const filter = this.definitions[search.id];
         if (filter instanceof SelectFilter) {
-            return await filter.values(search.value, user);
+            return await filter.values({ value: search.value, user, request });
         }
 
         return [];
     }
 
-    public async findResourceValueById(search: FilterResourceValueModel, user?: DataFilterUserModel): Promise<SelectFilterValue> {
+    public async findResourceValueById(request: any, search: FilterResourceValueModel, user?: DataFilterUserModel): Promise<SelectFilterValue> {
         if (!this.definitions.hasOwnProperty(search.id)) {
             return;
         }
 
         const filter = this.definitions[search.id];
         if (filter instanceof SelectFilter && filter.getResourceById) {
-            return await filter.getResourceById(search.resourceId, user);
+            return await filter.getResourceById({ id: search.resourceId, user, request });
         }
 
         return;

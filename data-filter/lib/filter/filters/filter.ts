@@ -55,7 +55,7 @@ export interface FilterDefinition extends BaseFilterDefinition {
     type: FilterType;
     operators: (FilterOperatorTypes | CustomOperator)[];
 
-    getConfig(key: string, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel>;
+    getConfig<Request>(key: string, req: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel>;
     getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions>;
     getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions>;
     usePathCondition(query: QueryModel): boolean;
@@ -107,7 +107,7 @@ export abstract class Filter implements FilterDefinition {
         return this;
     }
 
-    public async getConfig(key: string, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
+    public async getConfig<Request = any>(key: string, request: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
         if (this.private) {
             return;
         }

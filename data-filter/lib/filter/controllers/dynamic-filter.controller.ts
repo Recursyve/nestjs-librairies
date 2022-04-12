@@ -66,7 +66,7 @@ export abstract class DynamicFilterController<Data> {
 
     @Get("filter/config")
     public async getFilterConfig(@Req() req: any): Promise<FilterConfigurationModel[]> {
-        return await this.filterService.getConfig(await this.getUser(req) ?? {} as DataFilterUserModel);
+        return await this.filterService.getConfig(req, await this.getUser(req) ?? {} as DataFilterUserModel);
     }
 
     @Get("filter/config/id")
@@ -74,7 +74,7 @@ export abstract class DynamicFilterController<Data> {
         @Query() search: FilterResourceValueModel,
         @Req() req: any
     ): Promise<SelectFilterValue> {
-        return await this.filterService.findResourceValueById(search, await this.getUser(req) ?? {} as DataFilterUserModel);
+        return await this.filterService.findResourceValueById(search, req, await this.getUser(req) ?? {} as DataFilterUserModel);
     }
 
     @Get("filter/config/value")
@@ -82,7 +82,7 @@ export abstract class DynamicFilterController<Data> {
         @Query() search: FilterConfigurationSearchModel,
         @Req() req: any
     ): Promise<SelectFilterValue[]> {
-        return await this.filterService.searchConfigValues(search, await this.getUser(req) ?? {} as DataFilterUserModel);
+        return await this.filterService.searchConfigValues(search, req, await this.getUser(req) ?? {} as DataFilterUserModel);
     }
 
     protected async getUser(req: any): Promise<DataFilterUserModel> {
