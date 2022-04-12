@@ -71,7 +71,7 @@ export class FilterController<Data> {
         @Query() search: FilterResourceValueModel,
         @Req() req: any
     ): Promise<SelectFilterValue> {
-        return await this.filterService.findResourceValueById(search, req, await this.getUser(req) ?? {} as DataFilterUserModel);
+        return await this.filterService.findResourceValueById(req, search, await this.getUser(req) ?? {} as DataFilterUserModel);
     }
 
     @Get("filter/config/value")
@@ -79,7 +79,7 @@ export class FilterController<Data> {
         @Query() search: FilterConfigurationSearchModel,
         @Req() req: any
     ): Promise<SelectFilterValue[]> {
-        return await this.filterService.searchConfigValues(search, req, await this.getUser(req) ?? {} as DataFilterUserModel);
+        return await this.filterService.searchConfigValues(req, search, await this.getUser(req) ?? {} as DataFilterUserModel);
     }
 
     protected async getUser(req: any): Promise<DataFilterUserModel> {

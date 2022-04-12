@@ -50,14 +50,14 @@ export class FilterService<Data> {
         );
     }
 
-    public async getConfig(req: any, user?: DataFilterUserModel): Promise<FilterConfigurationModel[]> {
+    public async getConfig(request: any, user?: DataFilterUserModel): Promise<FilterConfigurationModel[]> {
         const result: FilterConfigurationModel[] = [];
         for (const key in this.definitions) {
             if (!this.definitions.hasOwnProperty(key) || OrderRule.validate(this.definitions[key] as OrderRuleDefinition)) {
                 continue;
             }
 
-            const config = await (this.definitions[key] as FilterDefinition).getConfig(key, req, user);
+            const config = await (this.definitions[key] as FilterDefinition).getConfig(key, request, user);
             if (!config) {
                 continue;
             }

@@ -58,3 +58,9 @@ SelectFilter({
     getResourceById: ({ id, user, req }) => Promise.resolve({ id: "test", name: "TEST!" })
 })
 ```
+
+## [8.2.1] - 2022-04-12
+
+### Bugfix
+
+- Fix FilterController call to the FilterService
