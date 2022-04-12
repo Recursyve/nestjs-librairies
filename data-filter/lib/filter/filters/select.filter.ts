@@ -12,14 +12,14 @@ export interface SelectFilterValue {
 export interface SelectFilterDefinition<T> {
     values: (value: unknown, user?: any) => Promise<SelectFilterValue[]>;
     lazyLoading?: boolean;
-    getResourceById?: (id: number, user?: any) => Promise<SelectFilterValue>;
+    getResourceById?: (id: number | string, user?: any) => Promise<SelectFilterValue>;
 }
 
 export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T> {
     public type = FilterType.Select;
     public operators = [...SelectOperators];
     public values: (value: unknown, user?: any) => Promise<SelectFilterValue[]>;
-    public getResourceById: (id: number, user?: any) => Promise<SelectFilterValue>;
+    public getResourceById: (id: number | string, user?: any) => Promise<SelectFilterValue>;
     public lazyLoading;
 
     constructor(definition: BaseFilterDefinition & SelectFilterDefinition<T>) {
