@@ -107,7 +107,7 @@ export abstract class Filter implements FilterDefinition {
         return this;
     }
 
-    public async getConfig<Request = any>(key: string, req: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
+    public async getConfig<Request = any>(key: string, request: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
         if (this.private) {
             return;
         }

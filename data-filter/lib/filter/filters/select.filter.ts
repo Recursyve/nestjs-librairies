@@ -12,26 +12,26 @@ export interface SelectFilterValue {
 export interface SelectFilterGetValuesOptions<T = any, User = any, Request = any> {
     value: T;
     user?: User;
-    req?: Request
+    request?: Request
 }
 
 export interface SelectFilterGetResourceOptions<User = any, Request = any> {
     id: number | string;
     user?: User;
-    req?: Request
+    request?: Request
 }
 
 export interface SelectFilterDefinition<T> {
-    values: ({ value, user, req }: SelectFilterGetValuesOptions) => Promise<SelectFilterValue[]>;
+    values: ({ value, user, request }: SelectFilterGetValuesOptions) => Promise<SelectFilterValue[]>;
     lazyLoading?: boolean;
-    getResourceById?: ({ id, user, req }: SelectFilterGetResourceOptions) => Promise<SelectFilterValue>;
+    getResourceById?: ({ id, user, request }: SelectFilterGetResourceOptions) => Promise<SelectFilterValue>;
 }
 
 export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T> {
     public type = FilterType.Select;
     public operators = [...SelectOperators];
-    public values: ({ value, user, req }: SelectFilterGetValuesOptions) => Promise<SelectFilterValue[]>;
-    public getResourceById: ({ id, user, req }: SelectFilterGetResourceOptions) => Promise<SelectFilterValue>;
+    public values: ({ value, user, request }: SelectFilterGetValuesOptions) => Promise<SelectFilterValue[]>;
+    public getResourceById: ({ id, user, request }: SelectFilterGetResourceOptions) => Promise<SelectFilterValue>;
     public lazyLoading;
 
     constructor(definition: BaseFilterDefinition & SelectFilterDefinition<T>) {
@@ -42,15 +42,15 @@ export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T>
         }
     }
 
-    public async getConfig<Request>(key: string, req: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
+    public async getConfig<Request>(key: string, request: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
         if (this.private) {
             return;
         }
 
-        const config = await super.getConfig(key, req, user);
+        const config = await super.getConfig(key, request, user);
         return {
             ...config,
-            values: this.lazyLoading ? [] : await this.values({ value: null, user, req }),
+            values: this.lazyLoading ? [] : await this.values({ value: null, user, request }),
             lazyLoading: this.lazyLoading
         };
     }

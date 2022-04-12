@@ -72,7 +72,7 @@ export class FilterService<Data> {
     }
 
     public async searchConfigValues(
-        req: any,
+        request: any,
         search: FilterConfigurationSearchModel,
         user?: DataFilterUserModel
     ): Promise<SelectFilterValue[]> {
@@ -82,20 +82,20 @@ export class FilterService<Data> {
 
         const filter = this.definitions[search.id];
         if (filter instanceof SelectFilter) {
-            return await filter.values({ value: search.value, user, req });
+            return await filter.values({ value: search.value, user, request });
         }
 
         return [];
     }
 
-    public async findResourceValueById(req: any, search: FilterResourceValueModel, user?: DataFilterUserModel): Promise<SelectFilterValue> {
+    public async findResourceValueById(request: any, search: FilterResourceValueModel, user?: DataFilterUserModel): Promise<SelectFilterValue> {
         if (!this.definitions.hasOwnProperty(search.id)) {
             return;
         }
 
         const filter = this.definitions[search.id];
         if (filter instanceof SelectFilter && filter.getResourceById) {
-            return await filter.getResourceById({ id: search.resourceId, user, req });
+            return await filter.getResourceById({ id: search.resourceId, user, request });
         }
 
         return;
