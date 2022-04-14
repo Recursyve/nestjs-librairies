@@ -42,7 +42,7 @@ export class SequelizeModelScanner {
         }
 
         if (attributes) {
-            includes[0].attributes = ignoreAttributes ? [] : SequelizeUtils.mergeAttributes(includes[0], { attributes: attributes });
+            includes[0].attributes = ignoreAttributes ? [] : SequelizeUtils.mergeAttributes(includes[0].attributes, attributes);
         }
         if (path.where) {
             includes[0].where = SequelizeUtils.mergeWhere(includes[0].where, path.where);

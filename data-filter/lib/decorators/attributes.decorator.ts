@@ -1,14 +1,14 @@
-import { ProjectionAlias } from "sequelize";
+import { FindAttributeOptions } from "sequelize";
 import { AttributesHandler } from "../handlers/attributes.handler";
 import { DataFilterHandler } from "../handlers/data-filter.handler";
 
-export function Attributes(attributes?: (string | ProjectionAlias)[]): PropertyDecorator & ClassDecorator {
+export function Attributes(attributes?: FindAttributeOptions): PropertyDecorator & ClassDecorator {
     return (target: Object, propertyKey?: string) => {
         defineAttributesMetadata(target, propertyKey, attributes);
     };
 }
 
-function defineAttributesMetadata(target: Object, propertyKey?: string, options?: (string | ProjectionAlias)[]) {
+function defineAttributesMetadata(target: Object, propertyKey?: string, options?: FindAttributeOptions) {
     if (!propertyKey) {
         const dataFilter = DataFilterHandler.getDataFilter(target);
         dataFilter.setAttributes(options);

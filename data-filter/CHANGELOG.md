@@ -64,3 +64,9 @@ SelectFilter({
 ### Bugfix
 
 - Fix FilterController call to the FilterService
+
+## [8.2.3] - 2022-04-15
+
+### Added
+
+- Support of FindAttributeOptions in @Attributes instead of just an array

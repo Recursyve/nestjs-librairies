@@ -40,7 +40,7 @@ export class SequelizeUtils {
                     ignoreAttributes
                 );
                 if ((aChild.attributes || bChild.attributes) && !ignoreAttributes) {
-                    aChild.attributes = this.mergeAttributes(aChild, bChild);
+                    aChild.attributes = this.mergeAttributes(aChild.attributes, bChild.attributes);
                 }
                 const where = this.mergeWhere(aChild.where, bChild.where);
                 if (where) {
@@ -68,16 +68,16 @@ export class SequelizeUtils {
         return a;
     }
 
-    public static mergeAttributes(a: IncludeOptions, b: IncludeOptions): FindAttributeOptions {
-        if (a.attributes instanceof Array && b.attributes instanceof Array) {
-            return ArrayUtils.uniqueValues([...a.attributes, ...b.attributes, "id"], x => x);
-        } else if (a.attributes instanceof Array) {
-            return ArrayUtils.uniqueValues([...a.attributes, "id"], x => x);
-        } else if (b.attributes instanceof Array) {
-            return ArrayUtils.uniqueValues([...b.attributes, "id"], x => x);
-        } else if (a.attributes || b.attributes) {
-            const aAttributes = (a.attributes ?? {}) as { include: string[]; exclude: string[] };
-            const bAttributes = (b.attributes ?? {}) as { include: string[]; exclude: string[] };
+    public static mergeAttributes(a: FindAttributeOptions, b: FindAttributeOptions): FindAttributeOptions {
+        if (a instanceof Array && b instanceof Array) {
+            return ArrayUtils.uniqueValues([...a, ...b, "id"], x => x);
+        } else if (a instanceof Array) {
+            return ArrayUtils.uniqueValues([...a, "id"], x => x);
+        } else if (b instanceof Array) {
+            return ArrayUtils.uniqueValues([...b, "id"], x => x);
+        } else if (a || b) {
+            const aAttributes = (a ?? {}) as { include: string[]; exclude: string[] };
+            const bAttributes = (b ?? {}) as { include: string[]; exclude: string[] };
             const result: { include?: string[]; exclude?: string[] } = {};
 
             if (aAttributes.include?.length) {
@@ -108,6 +108,26 @@ export class SequelizeUtils {
             return result as FindAttributeOptions;
         }
         return undefined;
+    }
+
+    public static ensureAttributesValidity(attribute: FindAttributeOptions): FindAttributeOptions {
+        if (attribute instanceof Array) {
+            if (attribute.find((x) => x === "id")) {
+                return attribute;
+            }
+            return [
+                "id",
+                ...attribute
+            ];
+        }
+
+        if (attribute.exclude) {
+            return {
+                exclude: attribute.exclude.filter((x) => x !== "id")
+            }
+        }
+
+        return attribute;
     }
 
     public static mergeWhere(a: WhereOptions, b: WhereOptions): WhereOptions {

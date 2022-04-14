@@ -46,11 +46,15 @@ export class DataFilterConfig implements DataFilterConfigModel {
     public transformAttributesConfig(options?: object): FindAttributeOptions {
         const customAttributes = this.getCustomAttributes(options);
         if (this.attributes) {
-            return [
-                "id",
-                ...(this.attributes as string[]),
-                ...customAttributes.map(x => x.attribute)
-            ];
+            if (this.customAttributes.length) {
+                return SequelizeUtils.ensureAttributesValidity(
+                    SequelizeUtils.mergeAttributes(this.attributes, {
+                        include: customAttributes.map(x => x.attribute)
+                    })
+                );
+            }
+
+            return SequelizeUtils.ensureAttributesValidity(this.attributes);
         }
         if (!this.attributes && customAttributes.length) {
             return {
