@@ -19,6 +19,10 @@ export class DataFilterRepository<Data> {
     private _config: DataFilterConfig;
     private _definitions: AttributesConfig[];
 
+    public get model(): typeof M {
+        return this._config.model as typeof M;
+    }
+
     constructor(
         private dataDef: any,
         private dataFilterScanner: DataFilterScanner,
@@ -28,10 +32,6 @@ export class DataFilterRepository<Data> {
         private exportAdapter: ExportAdapter
     ) {
         this.init();
-    }
-
-    public get model(): typeof M {
-        return this._config.model as typeof M;
     }
 
     public async findByPk(identifier: Identifier, options?: FindOptions, conditions?: object): Promise<Data> {
