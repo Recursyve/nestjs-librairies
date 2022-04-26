@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { FindOptions, Identifier, IncludeOptions, Model, Op, Utils, where, WhereOptions } from "sequelize";
+import { FindOptions, Identifier, IncludeOptions, Model, Op, Utils, WhereOptions } from "sequelize";
 import { AccessControlAdapter, ExportAdapter, TranslateAdapter } from "./adapters";
 import { AttributesConfig } from "./models/attributes.model";
 import { DataFilterConfig } from "./models/data-filter.model";
@@ -19,10 +19,6 @@ export class DataFilterRepository<Data> {
     private _config: DataFilterConfig;
     private _definitions: AttributesConfig[];
 
-    public get model(): typeof M {
-        return this._config.model as typeof M;
-    }
-
     constructor(
         private dataDef: any,
         private dataFilterScanner: DataFilterScanner,
@@ -32,6 +28,10 @@ export class DataFilterRepository<Data> {
         private exportAdapter: ExportAdapter
     ) {
         this.init();
+    }
+
+    public get model(): typeof M {
+        return this._config.model as typeof M;
     }
 
     public async findByPk(identifier: Identifier, options?: FindOptions, conditions?: object): Promise<Data> {
@@ -75,6 +75,16 @@ export class DataFilterRepository<Data> {
             return result as unknown as Data;
         }
         return this.reduceObject(result);
+    }
+
+    public async findOneFromUser(user: DataFilterUserModel, options: FindOptions = {}, conditions?: object): Promise<Data> {
+        return this.findOne(
+            {
+                ...options,
+                where: await this.mergeAccessControlCondition(options.where ?? {}, user)
+            },
+            conditions
+        );
     }
 
     public async findAll(options?: FindOptions, conditions?: object): Promise<Data[]> {
@@ -250,7 +260,7 @@ export class DataFilterRepository<Data> {
             options = optionsOrLang;
         } else {
             lang = optionsOrLang as string;
-            headers =  await this.getExportsHeader(lang, dataOrHeaders as string[]);
+            headers = await this.getExportsHeader(lang, dataOrHeaders as string[]);
             data = typeOrData;
             type = langOrType as ExportTypes;
         }
@@ -390,7 +400,7 @@ export class DataFilterRepository<Data> {
                     where,
                     resources.where
                 ]
-            }
+            };
         }
 
         return where;
