@@ -76,3 +76,10 @@ SelectFilter({
 ### Changed
 
 - Update the minimal required Sequelize version to 6.19.0
+
+
+## [8.3.1] - 2022-04-28
+
+### Added
+
+- Added findOneFromUser in DataFilterRepository
