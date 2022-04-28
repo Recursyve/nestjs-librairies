@@ -1,4 +1,4 @@
-import { Col, Fn, Literal } from "sequelize/types/lib/utils";
+import { Col, Fn, Literal } from "sequelize/types/utils";
 
 export type OrderItemColumn = string | Col | Fn | Literal;
 

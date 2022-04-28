@@ -1,5 +1,5 @@
 import { WhereOptions } from "sequelize";
-import { Where } from "sequelize/types/lib/utils";
+import { Where } from "sequelize/types/utils";
 
 export enum FilterOperatorTypes {
     Equal = "equal",

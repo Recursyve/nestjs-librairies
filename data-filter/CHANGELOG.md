@@ -70,3 +70,9 @@ SelectFilter({
 ### Added
 
 - Support of FindAttributeOptions in @Attributes instead of just an array
+
+## [8.3.0] - 2022-04-19
+
+### Changed
+
+- Update the minimal required Sequelize version to 6.19.0

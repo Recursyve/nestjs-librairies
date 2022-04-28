@@ -1,4 +1,4 @@
-import { Where } from "sequelize/types/lib/utils";
+import { Where } from "sequelize/types/utils";
 import { M } from "../sequelize.utils";
 
 export class AccessControlResources {

@@ -7,10 +7,10 @@ import {
     Op,
     Order,
     OrderItem,
-    WhereOptions,
-    WhereValue
+    WhereOptions
 } from "sequelize";
 import { Model } from "sequelize-typescript";
+import { WhereAttributeHashValue } from "sequelize/types/model";
 import { RuleModel } from "./filter";
 
 export interface GeoPoint {
@@ -162,7 +162,7 @@ export class SequelizeUtils {
         return res;
     }
 
-    public static generateWhereValue(rule: RuleModel): WhereValue {
+    public static generateWhereValue(rule: RuleModel): WhereAttributeHashValue<any> {
         switch (rule.operation) {
             case "equal":
                 return rule.value as any;
