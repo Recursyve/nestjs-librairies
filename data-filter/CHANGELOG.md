@@ -77,9 +77,14 @@ SelectFilter({
 
 - Update the minimal required Sequelize version to 6.19.0
 
-
 ## [8.3.1] - 2022-04-28
 
 ### Added
 
 - Added findOneFromUser in DataFilterRepository
+
+## [8.3.2] - 2022-04-30
+
+### Bugfix
+
+- Fix an issue with the DataFilterRepository search when a where condition is passed, but without an `[Op.and]` as root condition  

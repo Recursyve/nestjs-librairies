@@ -323,6 +323,8 @@ export class DataFilterRepository<Data> {
 
         if (!options.where) {
             options.where = { [Op.and]: [] };
+        } else {
+            options.where = { [Op.and]: [options.where] };
         }
 
         const where = options.where;
