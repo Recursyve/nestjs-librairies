@@ -446,7 +446,7 @@ export class FilterService<Data> {
             ...options,
             attributes: orderCol && !orderPath.length ? ["id", orderCol] : ["id"],
             limit: filter.page ? filter.page.size : null,
-            offset: filter.page ? filter.page.number * filter.page.size : null,
+            offset: filter.page ? filter.page.number * filter.page.size + (filter.page.offset ?? 0) : null,
             subQuery: false,
             order
         });
