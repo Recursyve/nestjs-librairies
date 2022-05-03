@@ -3,6 +3,7 @@ import { QueryModel } from "../filter/models/query.model";
 export interface FilterPageMode {
     number: number;
     size: number;
+    offset?: number;
 }
 
 export interface FilterSearchModel {
