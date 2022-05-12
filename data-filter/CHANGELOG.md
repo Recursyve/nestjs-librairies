@@ -88,3 +88,10 @@ SelectFilter({
 ### Bugfix
 
 - Fix an issue with the DataFilterRepository search when a where condition is passed, but without an `[Op.and]` as root condition  
+
+## [8.3.4] - 2022-05-12
+
+### Changed
+
+- You can now order by more then one columns with Filters
+- You can now use two differents column for latitude and longitude with the `@Distance` custom attributes.
