@@ -1,4 +1,4 @@
-import { Literal } from "sequelize/types/lib/utils";
+import { Literal } from "sequelize/types/utils";
 import { EnumOrderRule } from "./enum.order-rule";
 
 describe("EnumOrderRule", () => {

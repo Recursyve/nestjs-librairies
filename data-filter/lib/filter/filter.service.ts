@@ -1,5 +1,5 @@
 import { Injectable, Type } from "@nestjs/common";
-import { col, CountOptions, FindOptions, Includeable, IncludeOptions, Op, Order, WhereOptions } from "sequelize";
+import { CountOptions, FindOptions, Includeable, IncludeOptions, Op, Order, OrderItem, WhereOptions } from "sequelize";
 import { ExportTypes, FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
@@ -12,7 +12,12 @@ import { M, SequelizeUtils } from "../sequelize.utils";
 import { BaseFilter } from "./base-filter";
 import { FilterUtils } from "./filter.utils";
 import {
-    Filter, FilterCondition, FilterConditionRule, FilterDefinition, SelectFilter, SelectFilterValue
+    Filter,
+    FilterCondition,
+    FilterConditionRule,
+    FilterDefinition,
+    SelectFilter,
+    SelectFilterValue
 } from "./filters";
 import { GeoLocalizationFilter } from "./filters/geo-localization.filter";
 import { GroupFilter, GroupFilterDefinition } from "./filters/group.filter";
@@ -119,17 +124,13 @@ export class FilterService<Data> {
         const [userOrOpt, opt] = args;
         const options = opt ? opt : userOrOpt as FilterQueryModel;
         const user = opt ? userOrOpt as DataFilterUserModel : null;
-        if (!options.order || !options.order.column) {
-            options.order = {
-                column: "id",
-                direction: "asc"
-            };
-        }
+
+        options.order = this.normalizeOrder(options.order);
 
         const countOptions = await this.getFindOptions(this.repository.model, options.query, options.data);
         this.addSearchCondition(options.search, countOptions);
         this.addOrderCondition(options.order, countOptions);
-        this.addGroupOption(options, countOptions);
+        this.addGroupOption(options.order, countOptions);
 
         const total = await (user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions));
         const values = await (user ? this.findValues(user, options, countOptions) : this.findValues(options, countOptions));
@@ -147,6 +148,9 @@ export class FilterService<Data> {
         exportOptions?: object
     ): Promise<Buffer | string> {
         const findOptions = await this.getFindOptions(this.repository.model, options.query);
+
+        options.order = this.normalizeOrder(options.order);
+
         this.addSearchCondition(options.search, findOptions);
         this.addOrderCondition(options.order, findOptions);
         delete options.page;
@@ -243,7 +247,7 @@ export class FilterService<Data> {
                     includes.push(...this.getFilterInclude(model, f.valueFilter, data));
                 } else {
                     const valueFiler = await f.getValueFilter(r.value[0]);
-                    includes.push(...this.getFilterInclude(model, valueFiler as FilterDefinition, data))
+                    includes.push(...this.getFilterInclude(model, valueFiler as FilterDefinition, data));
                 }
             } else {
                 includes.push(...this.getFilterInclude(model, filter as FilterDefinition, data));
@@ -355,42 +359,48 @@ export class FilterService<Data> {
         this.repository.addSearchCondition(search.value, options);
     }
 
-    private addOrderCondition(order: OrderModel, options: CountOptions): void {
-        if (!order || order.direction === "") {
+    private addOrderCondition(orders: OrderModel[], options: CountOptions): void {
+        if (orders.every(order => !order.direction)) {
             return;
         }
 
-        const rule = this.definitions[order.column] as OrderRuleDefinition;
-        const includes = rule && OrderRule.validate(rule) ?
-            this.sequelizeModelScanner.getIncludes(this.repository.model, { path: rule.path }, []) :
-            this.repository.generateOrderInclude(order);
-        if (!includes.length) {
-            return;
+        for (const order of orders) {
+            const rule = this.definitions[order.column] as OrderRuleDefinition;
+            const includes = rule && OrderRule.validate(rule) ?
+                this.sequelizeModelScanner.getIncludes(this.repository.model, { path: rule.path }, []) :
+                this.repository.generateOrderInclude(order);
+
+            if (!includes.length) {
+                continue;
+            }
+
+            options.include = SequelizeUtils.mergeIncludes(
+                options.include as IncludeOptions[],
+                includes as IncludeOptions[]
+            );
         }
 
-        options.include = SequelizeUtils.mergeIncludes(
-            options.include as IncludeOptions[],
-            includes as IncludeOptions[]
-        );
+
     }
 
-    private addGroupOption(query: FilterQueryModel, options: CountOptions): void {
-        if (query?.order?.column === "") {
-            return;
-        }
-
-        const rule = this.definitions[query.order.column] as OrderRuleDefinition;
-        if (rule && OrderRule.validate(rule)) {
-            return;
-        }
-
+    private addGroupOption(orders: OrderModel[], options: CountOptions): void {
         const model = this.repository.model;
-        const values = query?.order?.column.split(".");
-        const column = values.pop();
-        if (!values.length) {
-            options.group = [`${model.name}.id`, `${model.name}.${SequelizeUtils.findColumnFieldName(model, column)}`];
-        } else {
-            options.group = [`${model.name}.id`, ...this.sequelizeModelScanner.getGroup(model, query.order)];
+        options.group = [`${model.name}.id`];
+
+        for (const order of orders) {
+            const rule = this.definitions[order.column] as OrderRuleDefinition;
+            if (rule && OrderRule.validate(rule)) {
+                continue;
+            }
+
+
+            const values = order.column.split(".");
+            const column = values.pop();
+            if (!values.length) {
+                options.group.push(`${model.name}.${SequelizeUtils.findColumnFieldName(model, column)}`);
+            } else {
+                options.group.push(...this.sequelizeModelScanner.getGroup(model, order));
+            }
         }
     }
 
@@ -439,12 +449,15 @@ export class FilterService<Data> {
             options.where = await this.getAccessControlWhereCondition(options.where, userOrOFilter as Users);
         }
 
-        const order = this.getOrderOptions(filter.order);
-        const orderPath = filter.order?.column?.split(".") ?? [];
-        const orderCol = orderPath.pop();
+        const order = this.getOrderOptions(filter.order as OrderModel[]);
+
+        const nonNestedOrderColumns = (filter.order as OrderModel[])
+            .map(order => order.column)
+            .filter(column => column && !column.includes("."));
+
         const values = await this.repository.model.findAll({
             ...options,
-            attributes: orderCol && !orderPath.length ? ["id", orderCol] : ["id"],
+            attributes: ["id", ...nonNestedOrderColumns],
             limit: filter.page ? filter.page.size : null,
             offset: filter.page ? filter.page.number * filter.page.size + (filter.page.offset ?? 0) : null,
             subQuery: false,
@@ -520,17 +533,27 @@ export class FilterService<Data> {
         ];
     }
 
-    private getOrderOptions(orderObj: OrderModel): Order {
-        if (!orderObj || !orderObj.column || orderObj.direction === "") {
-            return;
+    private getOrderOptions(orders: OrderModel | OrderModel[]): Order {
+        if (!Array.isArray(orders)) {
+            orders = [orders];
         }
 
-        const rule = this.definitions[orderObj.column] as OrderRuleDefinition;
-        if (!rule || !OrderRule.validate(rule)) {
-            return this.sequelizeModelScanner.getOrder(this.repository.model, orderObj);
+        const generatedOrder: Order = [];
+
+        for (const order of orders) {
+            if (!order?.column || !order.direction) {
+                continue;
+            }
+
+            const rule = this.definitions[order.column] as OrderRuleDefinition;
+            if (!rule || !OrderRule.validate(rule)) {
+                generatedOrder.push(this.sequelizeModelScanner.getOrder(this.repository.model, order) as OrderItem);
+            } else {
+                generatedOrder.push([rule.getOrderOption(), order.direction.toUpperCase()]);
+            }
         }
 
-        return [[rule.getOrderOption(), orderObj.direction.toUpperCase()]];
+        return generatedOrder;
     }
 
     private addDefaultFilter(query: QueryModel): QueryModel {
@@ -555,5 +578,46 @@ export class FilterService<Data> {
         }
         query.rules.push(this.model.defaultFilter.filter);
         return query;
+    }
+
+    private normalizeOrder(orders: OrderModel | OrderModel[]): OrderModel[] {
+        if (!Array.isArray(orders)) {
+            orders = [orders];
+        }
+
+        orders = orders?.filter(order => order?.column);
+
+        if (!orders?.length) {
+            orders = [{
+                column: "id",
+                direction: "asc"
+            }];
+        }
+
+        return orders;
+    }
+
+    private getNonNestedOrderColumns(orders: OrderModel[]): string[] {
+        return orders.filter(order => order.column && !order.column.includes(".")).map(order => order.column);
+
+        const columns = [];
+
+        if (!orders) return columns;
+
+        for (const order of orders) {
+            if (!order.column) continue;
+
+            const lastColSeparatorIndex = order.column.lastIndexOf(".");
+
+            if (lastColSeparatorIndex !== -1) {
+                const column = order.column.substring(lastColSeparatorIndex + 1);
+
+                if (column) {
+                    columns.push(column);
+                }
+            }
+        }
+
+        return columns;
     }
 }
