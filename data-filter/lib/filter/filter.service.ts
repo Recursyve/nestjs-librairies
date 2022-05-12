@@ -599,25 +599,5 @@ export class FilterService<Data> {
 
     private getNonNestedOrderColumns(orders: OrderModel[]): string[] {
         return orders.filter(order => order.column && !order.column.includes(".")).map(order => order.column);
-
-        const columns = [];
-
-        if (!orders) return columns;
-
-        for (const order of orders) {
-            if (!order.column) continue;
-
-            const lastColSeparatorIndex = order.column.lastIndexOf(".");
-
-            if (lastColSeparatorIndex !== -1) {
-                const column = order.column.substring(lastColSeparatorIndex + 1);
-
-                if (column) {
-                    columns.push(column);
-                }
-            }
-        }
-
-        return columns;
     }
 }
