@@ -39,8 +39,8 @@ export class GeoBoundsFilter extends Filter implements BaseGeoBoundsFilterDefini
         const point = this.attribute ??
             fn(
                 "Point",
-                this.path ? literal(SequelizeUtils.getLiteralFullName(this.latAttribute, this.path)) : this.latAttribute,
-                this.path ? literal(SequelizeUtils.getLiteralFullName(this.lngAttribute, this.path)) : this.lngAttribute
+                this.path ? literal(SequelizeUtils.getLiteralFullName(this.lngAttribute, this.path)) : this.lngAttribute,
+                this.path ? literal(SequelizeUtils.getLiteralFullName(this.latAttribute, this.path)) : this.latAttribute
             );
         return where(
             fn("ST_Contains", polygon, point),
