@@ -140,7 +140,7 @@ export class SequelizeModelScanner {
     }
 
     public getOrder(model: typeof Model, orderObj: OrderModel): Order {
-        if (!orderObj || !orderObj.column || orderObj.direction === "") {
+        if (!orderObj?.column || !orderObj.direction) {
             return;
         }
 
