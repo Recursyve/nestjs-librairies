@@ -10,7 +10,7 @@ import {
     WhereOptions
 } from "sequelize";
 import { Model } from "sequelize-typescript";
-import { WhereAttributeHashValue } from "sequelize/types/model";
+import { ProjectionAlias, WhereAttributeHashValue } from "sequelize/types/model";
 import { RuleModel } from "./filter";
 
 export interface GeoPoint {
@@ -69,17 +69,41 @@ export class SequelizeUtils {
     }
 
     public static mergeAttributes(a: FindAttributeOptions, b: FindAttributeOptions): FindAttributeOptions {
+        type Attr = { exclude?: string[]; include?: (string | ProjectionAlias)[]; };
+
         if (a instanceof Array && b instanceof Array) {
             return ArrayUtils.uniqueValues([...a, ...b, "id"], x => x);
-        } else if (a instanceof Array) {
-            return ArrayUtils.uniqueValues([...a, "id"], x => x);
-        } else if (b instanceof Array) {
-            return ArrayUtils.uniqueValues([...b, "id"], x => x);
         } else if (a || b) {
-            const aAttributes = (a ?? {}) as { include: string[]; exclude: string[] };
-            const bAttributes = (b ?? {}) as { include: string[]; exclude: string[] };
-            const result: { include?: string[]; exclude?: string[] } = {};
+            const aAttributes = (a ?? {}) as Attr;
+            const bAttributes = (b ?? {}) as Attr;
 
+            if (aAttributes.include && !b) {
+                return a;
+            }
+
+            if (bAttributes.include && !a) {
+                return b;
+            }
+
+            if (a instanceof Array) {
+                const bAttr = (b ?? {}) as Attr;
+                if (bAttr.include?.length) {
+                    return [...a, ...bAttr.include];
+                }
+
+                return b ? [...a] : b;
+            }
+
+            if (b instanceof Array) {
+                const aAttr = (a ?? {}) as Attr;
+                if (aAttr.include?.length) {
+                    return [...b, ...aAttr.include];
+                }
+
+                return a ? [...b] : a;
+            }
+
+            const result: Attr = {};
             if (aAttributes.include?.length) {
                 result.include = [...aAttributes.include];
             }

@@ -2,6 +2,14 @@ import { SequelizeUtils } from "./sequelize.utils";
 
 describe("SequelizeUtils", () => {
     describe("mergeAttributes", () => {
+        it("Merge no attributes should return no attributes", () => {
+            const a = undefined;
+            const b = undefined;
+
+            const res = SequelizeUtils.mergeAttributes(a, b);
+            expect(res).toEqual(undefined);
+        });
+
         it("Merge array attributes should merge in one array", () => {
             const a = ["id", "name"];
             const b = ["email", "phone"];
@@ -24,6 +32,34 @@ describe("SequelizeUtils", () => {
 
             const res = SequelizeUtils.mergeAttributes(a, b);
             expect(res).toEqual({ exclude: ["attr_to_remove", "other_attr_to_remove"] });
+        });
+
+        it("Merge array and no attributes should return no attributes", () => {
+            const a = ["id", "name"];
+            const b = undefined;
+
+            const res = SequelizeUtils.mergeAttributes(a, b);
+            expect(res).toEqual(undefined);
+
+            const a2 = undefined;
+            const b2 = ["id", "name"];
+
+            const res2 = SequelizeUtils.mergeAttributes(a2, b2);
+            expect(res2).toEqual(undefined);
+        });
+
+        it("Merge include object and no attributes should return the include object", () => {
+            const a = { include: ["new_attr"] };
+            const b = undefined;
+
+            const res = SequelizeUtils.mergeAttributes(a, b);
+            expect(res).toEqual({ include: ["new_attr"] });
+
+            const a2 = undefined;
+            const b2 = { include: ["new_attr"] };
+
+            const res2 = SequelizeUtils.mergeAttributes(a2, b2);
+            expect(res2).toEqual({ include: ["new_attr"] });
         });
     });
 });

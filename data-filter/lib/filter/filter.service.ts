@@ -1,5 +1,16 @@
 import { Injectable, Type } from "@nestjs/common";
-import { CountOptions, FindOptions, Includeable, IncludeOptions, Op, Order, OrderItem, WhereOptions } from "sequelize";
+import {
+    CountOptions,
+    FindOptions,
+    Includeable,
+    IncludeOptions,
+    literal,
+    Op,
+    Order,
+    OrderItem,
+    WhereOptions
+} from "sequelize";
+import { ProjectionAlias } from "sequelize/types/model";
 import { ExportTypes, FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
@@ -393,6 +404,9 @@ export class FilterService<Data> {
                 continue;
             }
 
+            if (this.repository.hasCustomAttribute(order.column)) {
+                continue;
+            }
 
             const values = order.column.split(".");
             const column = values.pop();
@@ -453,11 +467,12 @@ export class FilterService<Data> {
 
         const nonNestedOrderColumns = (filter.order as OrderModel[])
             .map(order => order.column)
-            .filter(column => column && !column.includes("."));
+            .filter(column => column && !column.includes(".") && !this.repository.hasCustomAttribute(column));
+        const customAttributes = this.getOrderCustomAttribute(filter.order as OrderModel[], filter.data);
 
         const values = await this.repository.model.findAll({
             ...options,
-            attributes: ["id", ...nonNestedOrderColumns],
+            attributes: ["id", ...nonNestedOrderColumns, ...customAttributes],
             limit: filter.page ? filter.page.size : null,
             offset: filter.page ? filter.page.number * filter.page.size + (filter.page.offset ?? 0) : null,
             subQuery: false,
@@ -545,6 +560,11 @@ export class FilterService<Data> {
                 continue;
             }
 
+            if (this.repository.hasCustomAttribute(order.column)) {
+                generatedOrder.push([literal(order.column), order.direction.toUpperCase()]);
+                continue;
+            }
+
             const rule = this.definitions[order.column] as OrderRuleDefinition;
             if (!rule || !OrderRule.validate(rule)) {
                 generatedOrder.push(this.sequelizeModelScanner.getOrder(this.repository.model, order) as OrderItem);
@@ -554,6 +574,26 @@ export class FilterService<Data> {
         }
 
         return generatedOrder;
+    }
+
+    private getOrderCustomAttribute(orders: OrderModel | OrderModel[], data?: object): ProjectionAlias[] {
+        if (!Array.isArray(orders)) {
+            orders = [orders];
+        }
+
+        const attributes: ProjectionAlias[] = [];
+        for (const order of orders) {
+            if (!this.repository.hasCustomAttribute(order.column)) {
+                continue;
+            }
+
+            const customAttribute = this.repository.getCustomAttribute(order.column);
+            const attribute = customAttribute.transform(data) as ProjectionAlias;
+            if (attribute) {
+                attributes.push(attribute);
+            }
+        }
+        return attributes;
     }
 
     private addDefaultFilter(query: QueryModel): QueryModel {

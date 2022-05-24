@@ -43,7 +43,7 @@ export class GeoBoundsFilter extends Filter implements BaseGeoBoundsFilterDefini
                 this.path ? literal(SequelizeUtils.getLiteralFullName(this.latAttribute, this.path)) : this.latAttribute
             );
         return where(
-            fn("ST_Contains", polygon, point),
+            fn("ST_Contains", polygon, this.srid ? fn("ST_SRID", point, this.srid) : point),
             literal(`${rule.operation === FilterOperatorTypes.Equal ? 1 : 0}`)
         );
     }

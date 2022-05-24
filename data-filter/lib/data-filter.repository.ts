@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { FindOptions, Identifier, IncludeOptions, Model, Op, Utils, WhereOptions } from "sequelize";
 import { AccessControlAdapter, ExportAdapter, TranslateAdapter } from "./adapters";
 import { AttributesConfig } from "./models/attributes.model";
+import { CustomAttributesConfig } from "./models/custom-attributes.model";
 import { DataFilterConfig } from "./models/data-filter.model";
 import { ExportTypes } from "./models/export-types.model";
 import { OrderModel } from "./models/filter.model";
@@ -179,6 +180,10 @@ export class DataFilterRepository<Data> {
             return [];
         }
 
+        if (this.hasCustomAttribute(order.column)) {
+            return [];
+        }
+
         return this.sequelizeModelScanner.getOrderIncludes(this.model, order);
     }
 
@@ -236,6 +241,14 @@ export class DataFilterRepository<Data> {
         }
 
         return attributes;
+    }
+
+    public hasCustomAttribute(name: string): boolean {
+        return !!this._config.customAttributes.find((x) => x.config.name === name);
+    }
+
+    public getCustomAttribute(name: string): CustomAttributesConfig {
+        return this._config.customAttributes.find((x) => x.config.name === name);
     }
 
     public async downloadData(data: Data[], type: ExportTypes, lang: string, options?: any): Promise<Buffer | string>;

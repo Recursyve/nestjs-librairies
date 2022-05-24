@@ -93,5 +93,12 @@ SelectFilter({
 
 ### Changed
 
-- You can now order by more then one columns with Filters
-- You can now use two differents column for latitude and longitude with the `@Distance` custom attributes.
+- You can now order by more than one column with Filters
+- You can now use two different columns for latitude and longitude with the `@Distance` custom attributes.
+
+## [8.3.5] - 2022-05-20
+
+### Bugfix
+
+- Fix order by custom column with filters
+- Fix an issue with the GeoBoundsFilter when using the srid config 
