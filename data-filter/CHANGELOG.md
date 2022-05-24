@@ -96,7 +96,7 @@ SelectFilter({
 - You can now order by more than one column with Filters
 - You can now use two different columns for latitude and longitude with the `@Distance` custom attributes.
 
-## [8.3.5] - 2022-05-20
+## [8.3.6] - 2022-05-24
 
 ### Bugfix
 

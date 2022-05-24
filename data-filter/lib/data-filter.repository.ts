@@ -180,8 +180,13 @@ export class DataFilterRepository<Data> {
             return [];
         }
 
-        if (this.hasCustomAttribute(order.column)) {
-            return [];
+        const customAttr = this.getCustomAttribute(order.column);
+        if (customAttr) {
+            if (!customAttr.config.path) {
+                return [];
+            }
+
+            return this.sequelizeModelScanner.getIncludes(this.model, { path: customAttr.config.path }, []);
         }
 
         return this.sequelizeModelScanner.getOrderIncludes(this.model, order);

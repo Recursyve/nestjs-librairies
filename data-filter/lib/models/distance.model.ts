@@ -53,8 +53,8 @@ export class DistanceAttributesConfig implements CustomAttributesConfig<Distance
             return literal(path ? SequelizeUtils.getLiteralFullName(att, path) : att);
         }
 
-        const lat = path ? SequelizeUtils.getLiteralFullName((this.config as DistanceConfigWithLatLng).latAttribute, path) : (this.config as DistanceConfigWithLatLng).latAttribute;
-        const lng = path ? SequelizeUtils.getLiteralFullName((this.config as DistanceConfigWithLatLng).lngAttribute, path) : (this.config as DistanceConfigWithLatLng).lngAttribute;
+        const lat = path ? literal(SequelizeUtils.getLiteralFullName((this.config as DistanceConfigWithLatLng).latAttribute, path)) : (this.config as DistanceConfigWithLatLng).latAttribute;
+        const lng = path ? literal(SequelizeUtils.getLiteralFullName((this.config as DistanceConfigWithLatLng).lngAttribute, path)) : (this.config as DistanceConfigWithLatLng).lngAttribute;
         const point = fn("Point", lng, lat);
         return this.config.srid ? fn("ST_SRID", point, this.config.srid) : point;
     }
