@@ -105,7 +105,7 @@ export class ResourceAccessControlService {
     private async getResourcesForAction(user: Users, action: AccessActionType): Promise<Resources> {
         const type = await this.accessControlsType(user);
 
-        if (type === PolicyResourceTypes.Resources) {
+        if (!type || type === PolicyResourceTypes.Resources) {
             const ids = await this.redisService
                 .lrange(RedisKeyUtils.userResourceActionKey(user, this.table, action), 0, -1)
                 .then(result => result.map(x => +x));

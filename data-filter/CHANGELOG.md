@@ -102,3 +102,10 @@ SelectFilter({
 
 - Fix order by custom column with filters
 - Fix an issue with the GeoBoundsFilter when using the srid config 
+
+
+## [8.3.7] - 2022-05-25
+
+### Bugfix
+
+- Fix for custom attribute column when using nullLast

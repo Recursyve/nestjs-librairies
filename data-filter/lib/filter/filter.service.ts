@@ -561,7 +561,9 @@ export class FilterService<Data> {
             }
 
             if (this.repository.hasCustomAttribute(order.column)) {
-                generatedOrder.push([literal(order.column), order.direction.toUpperCase()]);
+                const column = order.nullLast ? `-${order.column}` : order.column;
+                const direction = order.nullLast ? order.direction === "asc" ? "desc" : "asc" : order.direction;
+                generatedOrder.push([literal(column), direction.toUpperCase()]);
                 continue;
             }
 
