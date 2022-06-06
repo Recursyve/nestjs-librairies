@@ -22,6 +22,11 @@ export class TextFilter extends Filter {
         }
 
         const config = await super.getConfig(key, request, user);
+
+        if (!config) {
+            return null;
+        }
+
         return {
             ...config,
            mask: this.mask
