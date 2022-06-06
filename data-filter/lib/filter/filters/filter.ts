@@ -1,5 +1,5 @@
 import { fn, LogicType, Op, Sequelize, where, WhereOperators, WhereOptions } from "sequelize";
-import { DataFilterUserModel, FilterOperatorTypes } from "../..";
+import { DataFilterUserModel, FilterOperatorTypes, SelectFilterGetValuesOptions, SelectFilterValue } from "../..";
 import { TranslateAdapter } from "../../adapters/translate.adapter";
 import { IncludeWhereModel } from "../../models/include.model";
 import { SequelizeUtils } from "../../sequelize.utils";
@@ -34,6 +34,11 @@ export type PathCondition = boolean | {
     [filter: string]: any;
 }
 
+export interface EnabledConfig<User = any, Request = any> {
+    user?: User;
+    request?: Request
+}
+
 export interface BaseFilterDefinition {
     attribute: string;
     path?: string;
@@ -44,6 +49,7 @@ export interface BaseFilterDefinition {
     where?: IncludeWhereModel;
     pathCondition?: PathCondition;
     json?: JsonConfig;
+    enabled?: ({ user, request }: EnabledConfig) => Promise<boolean>;
 
     /**
      * Private means that the config will not be returned.
@@ -80,6 +86,7 @@ export abstract class Filter implements FilterDefinition {
     public pathCondition?: PathCondition;
     public json?: JsonConfig;
     public private?: boolean;
+    public enabled?: ({ user, request }: EnabledConfig) => Promise<boolean>;
     public paranoid = true;
 
     public static validate(definition: FilterDefinition) {
@@ -109,6 +116,10 @@ export abstract class Filter implements FilterDefinition {
 
     public async getConfig<Request = any>(key: string, request: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
         if (this.private) {
+            return;
+        }
+
+        if (this.enabled && !(await this.enabled({ user, request }))) {
             return;
         }
 

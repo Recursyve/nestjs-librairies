@@ -43,10 +43,6 @@ export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T>
     }
 
     public async getConfig<Request>(key: string, request: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
-        if (this.private) {
-            return;
-        }
-
         const config = await super.getConfig(key, request, user);
         return {
             ...config,
