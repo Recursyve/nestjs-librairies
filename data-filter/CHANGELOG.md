@@ -109,3 +109,9 @@ SelectFilter({
 ### Bugfix
 
 - Fix for custom attribute column when using nullLast
+
+## [8.4.0] - 2022-06-07
+
+### Added
+
+- You can now disable a filter by setting the disabled function in the filter config
