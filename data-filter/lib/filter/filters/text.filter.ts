@@ -17,15 +17,16 @@ export class TextFilter extends Filter {
     }
 
     public async getConfig<Request>(key: string, request: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
-        if (this.private) {
-            return;
-        }
-
         if (!this.mask) {
             return super.getConfig(key, request, user);
         }
 
         const config = await super.getConfig(key, request, user);
+
+        if (!config) {
+            return null;
+        }
+
         return {
             ...config,
            mask: this.mask
