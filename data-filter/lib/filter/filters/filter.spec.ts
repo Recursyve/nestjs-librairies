@@ -138,25 +138,25 @@ describe("Filter", () => {
             const filter = new TextFilter({
                 attribute: "test"
             });
-            const config = filter.getConfig(null, null, null);
+            const config = await filter.getConfig(null, null, null);
             expect(config).toBeDefined()
         })
 
         it("with enabled returning true it should return the config", async () => {
             const filter = new TextFilter({
                 attribute: "test",
-                enabled: ({ user, request }) => true
+                enabled: async ({ user, request }) => true
             });
-            const config = filter.getConfig(null, null, null);
+            const config = await filter.getConfig(null, null, null);
             expect(config).toBeDefined()
         })
 
         it("with enabled returning false it should return null", async () => {
             const filter = new TextFilter({
                 attribute: "test",
-                enabled: ({ user, request }) => false
+                enabled: async ({ user, request }) => false
             });
-            const config = filter.getConfig(null, null, null);
+            const config = await filter.getConfig(null, null, null);
             expect(config).toBeNull()
         })
     })

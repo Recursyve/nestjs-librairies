@@ -49,7 +49,7 @@ export interface BaseFilterDefinition {
     where?: IncludeWhereModel;
     pathCondition?: PathCondition;
     json?: JsonConfig;
-    enabled?: ({ user, request }: EnabledConfig) => boolean;
+    enabled?: ({ user, request }: EnabledConfig) => Promise<boolean>;
 
     /**
      * Private means that the config will not be returned.
@@ -86,7 +86,7 @@ export abstract class Filter implements FilterDefinition {
     public pathCondition?: PathCondition;
     public json?: JsonConfig;
     public private?: boolean;
-    public enabled?: ({ user, request }: EnabledConfig) => boolean;
+    public enabled?: ({ user, request }: EnabledConfig) => Promise<boolean>;
     public paranoid = true;
 
     public static validate(definition: FilterDefinition) {
@@ -119,7 +119,7 @@ export abstract class Filter implements FilterDefinition {
             return null;
         }
 
-        if (this.enabled && !(this.enabled({ user, request }))) {
+        if (this.enabled && !(await this.enabled({ user, request }))) {
             return null;
         }
 
