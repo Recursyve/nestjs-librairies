@@ -3,7 +3,12 @@ import { QueryRuleModel } from "../models";
 import { DateOperators, FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
 import { BaseFilterDefinition, Filter } from "./filter";
-import * as moment from "moment";
+import { addMilliseconds, endOfDay, parseJSON, startOfDay } from "date-fns";
+import { getTimezoneOffset } from "date-fns-tz";
+
+export interface DateFilterDefinition {
+    defaultTimezone?: string;
+}
 
 // Filters a row by exact date given in the rules. We strip the time from the date.
 //
@@ -18,21 +23,22 @@ export class DateFilter extends Filter {
     public type = FilterType.Date;
     public operators = [...DateOperators];
 
-    constructor(definition: BaseFilterDefinition) {
+    private readonly defaultTimezone;
+
+    constructor(definition: BaseFilterDefinition & DateFilterDefinition) {
         super(definition);
+
+        this.defaultTimezone = definition.defaultTimezone ?? "America/Montreal";
     }
 
     public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions> {
+        // TODO: Check if the client sends us a timezone
+        const offsetMilliseconds = getTimezoneOffset(this.defaultTimezone);
+
         if (rule.operation === FilterOperatorTypes.Between || rule.operation === FilterOperatorTypes.NotBetween) {
             const values = [
-                moment(rule.value[0])
-                    .startOf("day")
-                    .utcOffset(-5, true)
-                    .format(),
-                moment(rule.value[1])
-                    .endOf("day")
-                    .utcOffset(-5, true)
-                    .format()
+                addMilliseconds(startOfDay(parseJSON(rule.value[0])), offsetMilliseconds).toISOString(),
+                addMilliseconds(endOfDay(parseJSON(rule.value[1])), offsetMilliseconds).toISOString()
             ];
             return super.getWhereOptions({
                 ...rule,
@@ -40,15 +46,10 @@ export class DateFilter extends Filter {
             });
         }
 
-        // TODO: Do not hard code timezone offset
-        const start = moment(rule.value)
-            .startOf("day")
-            .utcOffset(-5, true)
-            .format();
-        const end = moment(rule.value)
-            .endOf("day")
-            .utcOffset(-5, true)
-            .format();
+        const parsedValue = parseJSON(rule.value as any);
+        const start = addMilliseconds(startOfDay(parsedValue), offsetMilliseconds).toISOString()
+        const end = addMilliseconds(endOfDay(parsedValue), offsetMilliseconds).toISOString()
+
         switch (rule.operation) {
             case FilterOperatorTypes.Equal:
                 return this.getEqualWhereOptions(rule, start, end);
