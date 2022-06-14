@@ -292,6 +292,8 @@ export class DataFilterRepository<Data> {
                 return await this.downloadCsv(headers, data);
             case ExportTypes.PDF:
                 return await this.downloadPdf(headers, data, options);
+            case ExportTypes.ZIP:
+                return await this.downloadZip(headers, data, options);
         }
     }
 
@@ -317,6 +319,14 @@ export class DataFilterRepository<Data> {
 
     public async downloadPdf(headers: string[], data: any[], lang: string, options?: any): Promise<Buffer> {
         return this.exportAdapter.exportAsPdf(lang, {
+            title: this._config.model.getTableName() as string,
+            columns: headers,
+            data: data
+        }, options);
+    }
+
+    public async downloadZip(headers: string[], data: any[], lang: string, options?: any): Promise<Buffer> {
+        return this.exportAdapter.exportAsZip(lang, {
             title: this._config.model.getTableName() as string,
             columns: headers,
             data: data
