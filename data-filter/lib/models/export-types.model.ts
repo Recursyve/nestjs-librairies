@@ -3,4 +3,5 @@ export enum ExportTypes {
     HTML= "html",
     CSV= "csv",
     PDF= "pdf",
+    ZIP= "zip",
 }

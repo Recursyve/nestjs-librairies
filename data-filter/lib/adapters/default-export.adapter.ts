@@ -10,4 +10,8 @@ export class DefaultExportAdapter extends ExportAdapter {
     public exportAsPdf(language: string, data: ExportData, options?: any): Promise<Buffer> {
         throw new Error("DataFilter doesn't provide a default PDF export. To enable it, add a custom ExportAdapter");
     }
+
+    exportAsZip(language: string, data: ExportData, options?: any): Promise<Buffer> {
+        throw new Error("DataFilter doesn't provide a default Zip export. To enable it, add a custom ExportAdapter");
+    }
 }
