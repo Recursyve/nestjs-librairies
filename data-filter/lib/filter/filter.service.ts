@@ -166,9 +166,9 @@ export class FilterService<Data> {
         this.addOrderCondition(options.order, findOptions);
         delete options.page;
         const values = await (user ? this.findValues(user, options, findOptions) : this.findValues(options, findOptions));
-        const headers = await this.model.getExportedFieldsKeys();
+        const headers = await this.model.getExportedFieldsKeys(type);
         if (headers.length) {
-            const data = await Promise.all(values.map((value) => this.model.getExportedFields(value)));
+            const data = await Promise.all(values.map((value) => this.model.getExportedFields(value, user?.language ?? "fr", type)));
             return await this.repository.downloadData(headers, data, type, user?.language ?? "fr", exportOptions);
         } else {
             return await this.repository.downloadData(values, type, user?.language ?? "fr", exportOptions);
