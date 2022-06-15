@@ -3,6 +3,7 @@ import { TranslateAdapter } from "../adapters/translate.adapter";
 import { Filter, FilterDefinition, GroupFilter, GroupFilterDefinition } from "./filters";
 import { DefaultFilterDefinition } from "./filters/default.filter";
 import { FilterConfig, FilterModel } from "./models";
+import { ExportTypes } from "../models/export-types.model";
 
 export abstract class BaseFilter<T> implements FilterModel<T> {
     private _translateService: TranslateAdapter;
@@ -31,11 +32,11 @@ export abstract class BaseFilter<T> implements FilterModel<T> {
         return this._translateService;
     }
 
-    public async getExportedFieldsKeys(): Promise<string[]> {
+    public async getExportedFieldsKeys(type?: ExportTypes): Promise<string[]> {
         return [];
     }
 
-    public async getExportedFields(value: T, lang?: string): Promise<any[]> {
+    public async getExportedFields(value: T, lang?: string, type?: ExportTypes): Promise<any[]> {
         return [];
     }
 }
