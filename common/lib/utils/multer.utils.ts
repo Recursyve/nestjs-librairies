@@ -1,4 +1,5 @@
 import { UnsupportedMediaTypeException } from "@nestjs/common";
+import { Request } from "express";
 
 export class MulterUtils {
     public static filterFileExtensions(mimetypes: string[]): any {
