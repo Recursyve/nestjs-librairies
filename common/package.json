@@ -1,7 +1,7 @@
 {
     "name": "@recursyve/nestjs-common",
-    "version": "8.1.0",
-    "description": "Recursyve's NestJs common librairy",
+    "version": "8.1.1",
+    "description": "Recursyve's NestJs common library",
     "main": "index.js",
     "scripts": {
         "watch": "gulp",

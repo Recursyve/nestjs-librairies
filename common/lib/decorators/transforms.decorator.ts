@@ -1,5 +1,9 @@
 import { Transform } from "class-transformer";
 
+export interface TransformsDecoratorOptions {
+    each?: boolean;
+}
+
 const transformNullOrUndefined = (value) => {
     return value === "undefined" ?
         undefined : value === "null" ?
@@ -7,7 +11,8 @@ const transformNullOrUndefined = (value) => {
 };
 
 export const TransformNullOrUndefined = () => Transform(({ value }) => transformNullOrUndefined(value));
-export const TransformBoolean = () => Transform(({ value }) => {
+
+const transformBoolean = (value) => {
     if (typeof value === "boolean") {
         return value;
     }
@@ -18,8 +23,23 @@ export const TransformBoolean = () => Transform(({ value }) => {
     }
 
     return value === "true";
+}
+
+/**
+ * Transforms a form data field from string to boolean
+ * If the value is null or undefined, it stays null or undefined
+ * @param opts.each: If the value is an array, transforms all elements of the array
+ */
+export const TransformBoolean = (opts?: TransformsDecoratorOptions) => Transform(({ value }) => {
+    const { each } = opts ?? {};
+    if (each && Array.isArray(value)) {
+        return value.map(x => transformBoolean(x));
+    }
+
+    return transformBoolean(value);
 });
-export const TransformNumber = () => Transform(({ value }) => {
+
+const transformNumber = (value) => {
     if (typeof value === "number") {
         return value;
     }
@@ -30,8 +50,23 @@ export const TransformNumber = () => Transform(({ value }) => {
     }
 
     return +value;
+}
+
+/**
+ * Transforms a form data field from string to number
+ * If the value is null or undefined, it stays null or undefined
+ * @param opts.each: If the value is an array, transforms all elements of the array
+ */
+export const TransformNumber = (opts?: TransformsDecoratorOptions) => Transform(({ value }) => {
+    const { each } = opts ?? {};
+    if (each && Array.isArray(value)) {
+        return value.map(x => transformNumber(x));
+    }
+
+    return transformNumber(value);
 });
-export const TransformJson = () => Transform(({ value }) => {
+
+const transformJson = (value) => {
     const nullOrUndefined = transformNullOrUndefined(value);
     if (!nullOrUndefined) {
         return nullOrUndefined;
@@ -42,4 +77,33 @@ export const TransformJson = () => Transform(({ value }) => {
     }
 
     return JSON.parse(value);
+}
+
+/**
+ * Transforms a form data field from string to json
+ * If the value is null or undefined, it stays null or undefined
+ * @param opts.each: If the value is an array, transforms all elements of the array
+ */
+export const TransformJson = (opts?: TransformsDecoratorOptions) => Transform(({ value }) => {
+    const { each } = opts ?? {};
+    if (each && Array.isArray(value)) {
+        return value.map(x => transformJson(x));
+    }
+
+    return transformJson(value);
+});
+
+/**
+ * Transforms a form data field in an array if the value is not an array.
+ * If the value is null or undefined, it stays null or undefined
+ */
+export const TransformArray = () => Transform(({ value }) => {
+    const nullOrUndefined = transformNullOrUndefined(value);
+    if (!nullOrUndefined) {
+        return nullOrUndefined;
+    }
+
+    if (!value) return undefined;
+    if (!Array.isArray(value)) return [value];
+    return value;
 });
