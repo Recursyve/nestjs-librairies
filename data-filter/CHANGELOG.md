@@ -115,3 +115,9 @@ SelectFilter({
 ### Added
 
 - You can now disable a filter by setting the disabled function in the filter config
+
+## [8.4.5] - 2022-07-05
+
+### Added
+
+- Added DateOnlyFilter for `DATEONLY` columns
