@@ -7,6 +7,7 @@ import { addMilliseconds, endOfDay, parseJSON, startOfDay } from "date-fns";
 import { getTimezoneOffset } from "date-fns-tz";
 
 export interface DateFilterDefinition {
+    skipTimezone?: boolean;
     defaultTimezone?: string;
 }
 
@@ -19,11 +20,12 @@ export interface DateFilterDefinition {
 //
 // For Between and NotBetween operators, we always include the given first day and last day, so make sure to shrink your
 // timeframe by one day for each side you don't want to include.
-export class DateFilter extends Filter {
+export class DateFilter extends Filter implements DateFilterDefinition {
     public type = FilterType.Date;
     public operators = [...DateOperators];
 
-    private readonly defaultTimezone;
+    public readonly defaultTimezone: string;
+    public readonly skipTimezone: boolean;
 
     constructor(definition: BaseFilterDefinition & DateFilterDefinition) {
         super(definition);
@@ -36,10 +38,13 @@ export class DateFilter extends Filter {
         const offsetMilliseconds = getTimezoneOffset(this.defaultTimezone);
 
         if (rule.operation === FilterOperatorTypes.Between || rule.operation === FilterOperatorTypes.NotBetween) {
-            const values = [
-                addMilliseconds(startOfDay(parseJSON(rule.value[0])), offsetMilliseconds).toISOString(),
-                addMilliseconds(endOfDay(parseJSON(rule.value[1])), offsetMilliseconds).toISOString()
-            ];
+            const values = this.skipTimezone
+                ? rule.value
+                :
+                [
+                    addMilliseconds(startOfDay(parseJSON(rule.value[0])), offsetMilliseconds).toISOString(),
+                    addMilliseconds(endOfDay(parseJSON(rule.value[1])), offsetMilliseconds).toISOString()
+                ];
             return super.getWhereOptions({
                 ...rule,
                 value: values
@@ -47,8 +52,8 @@ export class DateFilter extends Filter {
         }
 
         const parsedValue = parseJSON(rule.value as any);
-        const start = addMilliseconds(startOfDay(parsedValue), offsetMilliseconds).toISOString()
-        const end = addMilliseconds(endOfDay(parsedValue), offsetMilliseconds).toISOString()
+        const start = this.skipTimezone ? rule.value as string : addMilliseconds(startOfDay(parsedValue), offsetMilliseconds).toISOString();
+        const end = this.skipTimezone ? rule.value as string : addMilliseconds(endOfDay(parsedValue), offsetMilliseconds).toISOString();
 
         switch (rule.operation) {
             case FilterOperatorTypes.Equal:
