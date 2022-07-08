@@ -17,7 +17,7 @@ import { defaultFilterOptionConfig, FilterOptionConfig } from "./filter/filter.c
 import { FILTER_OPTION } from "./constant";
 
 export interface DataFilterConfig {
-    imports?: Array<Type<any> | DynamicModule | Promise<DynamicModule> | ForwardReference>;
+    imports?: Array<Type | DynamicModule | Promise<DynamicModule> | ForwardReference>;
     deserializer?: Provider;
     accessControlAdapter?: Provider;
     translateAdapter?: Provider;
@@ -26,7 +26,7 @@ export interface DataFilterConfig {
 }
 
 export interface DataFilterFeatureConfig extends DataFilterConfig {
-    filters: { filter: Type<BaseFilter<any>>; inject?: any[] }[];
+    filters: { filter: Type<BaseFilter<any>>; inject?: any[]; disableAccessControl?: boolean; }[];
 }
 
 @Global()
@@ -100,7 +100,7 @@ export class DataFilterModule {
                         useFactory: FilterFactory(x.filter),
                         inject: x.inject ?? []
                     },
-                    createFilterProvider(x.filter)
+                    createFilterProvider(x.filter, x.disableAccessControl)
                 ]))
             ],
             exports: [

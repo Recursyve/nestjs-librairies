@@ -48,7 +48,8 @@ export class FilterService<Data> {
         private translateAdapter: TranslateAdapter,
         private model: BaseFilter<Data>,
         private sequelizeModelScanner: SequelizeModelScanner,
-        private dataFilter: DataFilterService
+        private dataFilter: DataFilterService,
+        private options?: { disableAccessControl?: boolean }
     ) {
         this.init();
     }
@@ -62,7 +63,8 @@ export class FilterService<Data> {
                 dataDefinition: dataDef
             } as BaseFilter<T>,
             this.sequelizeModelScanner,
-            this.dataFilter
+            this.dataFilter,
+            this.options
         );
     }
 
@@ -491,6 +493,10 @@ export class FilterService<Data> {
     }
 
     private async getAccessControlWhereCondition(where: WhereOptions, user: DataFilterUserModel): Promise<WhereOptions> {
+        if (this.options?.disableAccessControl) {
+            return where;
+        }
+
         if (!user) {
             throw new Error("No user found");
         } else if (!this.accessControlAdapter) {
