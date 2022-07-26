@@ -30,7 +30,7 @@ export class SequelizeModelScanner {
             includes.push({
                 as: association.getAs() as string,
                 model: association.getAssociatedClass(),
-                attributes: ignoreAttributes ? [] : undefined,
+                attributes: ignoreAttributes ? [] : { include: [] },
                 include: [],
                 required: false
             });

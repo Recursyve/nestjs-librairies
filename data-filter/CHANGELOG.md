@@ -121,3 +121,10 @@ SelectFilter({
 ### Added
 
 - Added DateOnlyFilter for `DATEONLY` columns
+
+
+## [8.4.7] - 2022-07-26
+
+### Bugfix
+
+- Fix attributes not merging correctly with `@Include`
