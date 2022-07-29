@@ -88,19 +88,19 @@ export class SequelizeUtils {
             if (a instanceof Array) {
                 const bAttr = (b ?? {}) as Attr;
                 if (bAttr.include?.length) {
-                    return [...a, ...bAttr.include];
+                    return ArrayUtils.uniqueValues([...a, ...bAttr.include, "id"], x => x);
                 }
 
-                return b ? [...a] : b;
+                return b ? ArrayUtils.uniqueValues([...a, "id"], x => x) : b;
             }
 
             if (b instanceof Array) {
                 const aAttr = (a ?? {}) as Attr;
                 if (aAttr.include?.length) {
-                    return [...b, ...aAttr.include];
+                    return ArrayUtils.uniqueValues([...b, ...aAttr.include, "id"], x => x);
                 }
 
-                return a ? [...b] : a;
+                return a ? ArrayUtils.uniqueValues([...b, "id"], x => x) : a;
             }
 
             const result: Attr = {};

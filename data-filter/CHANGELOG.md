@@ -128,3 +128,9 @@ SelectFilter({
 ### Bugfix
 
 - Fix attributes not merging correctly with `@Include`
+
+## [8.4.8] - 2022-07-29
+
+### Bugfix
+
+- Fix empty attributes array in `@Include` not adding the `id` by default

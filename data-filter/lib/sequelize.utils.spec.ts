@@ -61,5 +61,19 @@ describe("SequelizeUtils", () => {
             const res2 = SequelizeUtils.mergeAttributes(a2, b2);
             expect(res2).toEqual({ include: ["new_attr"] });
         });
+
+        it("Merge include empty object and empty attributes should return the attribute with the id", () => {
+            const a = { include: [] };
+            const b = [];
+
+            const res = SequelizeUtils.mergeAttributes(a, b);
+            expect(res).toEqual(["id"]);
+
+            const a2 = [];
+            const b2 = { include: [] };
+
+            const res2 = SequelizeUtils.mergeAttributes(a2, b2);
+            expect(res2).toEqual(["id"]);
+        });
     });
 });
