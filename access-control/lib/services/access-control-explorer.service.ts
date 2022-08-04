@@ -2,9 +2,14 @@ import { Injectable, Type } from "@nestjs/common";
 import { InstanceWrapper } from "@nestjs/core/injector/instance-wrapper";
 import { Module } from "@nestjs/core/injector/module";
 import { ModulesContainer } from "@nestjs/core/injector/modules-container";
-import { CREATED_POLICY_METADATA, POLICY_METADATA, UPDATED_POLICY_METADATA } from "../decorators/constant";
+import {
+    CREATED_POLICY_METADATA,
+    DELETED_POLICY_METADATA,
+    POLICY_METADATA,
+    UPDATED_POLICY_METADATA
+} from "../decorators/constant";
 import { AccessControlObjects } from "../models";
-import { AccessPolicy, ResourceCreatedPolicy, ResourceUpdatedPolicy } from "../policies";
+import { AccessPolicy, ResourceCreatedPolicy, ResourceDeletedPolicy, ResourceUpdatedPolicy } from "../policies";
 
 @Injectable()
 export class AccessControlExplorerService {
@@ -22,11 +27,15 @@ export class AccessControlExplorerService {
         const updatedPolicies = this.flatMap<ResourceUpdatedPolicy<any>>(modules, instance =>
             this.filterProvider(instance, UPDATED_POLICY_METADATA)
         );
+        const deletedPolicies = this.flatMap<ResourceDeletedPolicy<any>>(modules, instance =>
+            this.filterProvider(instance, DELETED_POLICY_METADATA)
+        );
 
         return {
             policies,
             createdPolicies,
-            updatedPolicies
+            updatedPolicies,
+            deletedPolicies
         };
     }
 
@@ -37,7 +46,7 @@ export class AccessControlExplorerService {
         return items.filter(element => !!element) as Type<T>[];
     }
 
-    public filterProvider(wrapper: InstanceWrapper, metadataKey: string): Type<any> | undefined {
+    public filterProvider(wrapper: InstanceWrapper, metadataKey: string): Type | undefined {
         const { instance } = wrapper;
         if (!instance) {
             return undefined;
@@ -45,11 +54,11 @@ export class AccessControlExplorerService {
         return this.extractMetadata(instance, metadataKey);
     }
 
-    public extractMetadata(instance: Object, metadataKey: string): Type<any> {
+    public extractMetadata(instance: Object, metadataKey: string): Type {
         if (!instance.constructor) {
             return;
         }
         const metadata = Reflect.getMetadata(metadataKey, instance.constructor);
-        return metadata ? (instance.constructor as Type<any>) : undefined;
+        return metadata ? (instance.constructor as Type) : undefined;
     }
 }
