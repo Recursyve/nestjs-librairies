@@ -1,7 +1,7 @@
 {
-    "name": "@recursyve/nestjs-access-control",
-    "version": "8.0.2",
-    "description": "NestJs AccessControl library",
+    "name": "@recursyve/nestjs-access-control-sequelize",
+    "version": "8.0.0",
+    "description": "Sequelize utilities for Recursyve's NestJs AccessControl library",
     "main": "index.js",
     "scripts": {
         "watch": "gulp",
@@ -14,7 +14,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/Recursyve/nestjs-librairies/access-control"
+        "url": "https://github.com/Recursyve/nestjs-librairies/access-control-sequelize"
     },
     "author": "Recursyve",
     "license": "MIT",
