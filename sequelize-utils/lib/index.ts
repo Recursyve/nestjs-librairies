@@ -1,4 +1,4 @@
-export * from "./models/database-entities.model";
+export * from "./models/sequelize-entities.model";
 
 export * from "./repositories/database-read-repository";
 export * from "./repositories/database-repository";

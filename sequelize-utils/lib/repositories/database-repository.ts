@@ -1,9 +1,9 @@
 import { DestroyOptions, Identifier, UpdateOptions } from "sequelize";
-import { DatabaseEntities } from "../models/database-entities.model";
+import { SequelizeEntities } from "../models/sequelize-entities.model";
 import { SequelizeReadRepository } from "./database-read-repository";
 
-export class SequelizeRepository<T extends DatabaseEntities, CreateDto = T, UpdateDto = T> extends SequelizeReadRepository<T> {
-    constructor(repository: typeof DatabaseEntities) {
+export class SequelizeRepository<T extends SequelizeEntities, CreateDto = T, UpdateDto = T> extends SequelizeReadRepository<T> {
+    constructor(repository: typeof SequelizeEntities) {
         super(repository);
     }
 

@@ -1,8 +1,8 @@
 import { CountOptions, FindOptions, Identifier } from "sequelize";
-import { DatabaseEntities } from "../models/database-entities.model";
+import { SequelizeEntities } from "../models/sequelize-entities.model";
 
-export class SequelizeReadRepository<T extends DatabaseEntities> {
-    constructor(protected repository: typeof DatabaseEntities) {}
+export class SequelizeReadRepository<T extends SequelizeEntities> {
+    constructor(protected repository: typeof SequelizeEntities) {}
 
     public findByPk(identifier: Identifier, options?: FindOptions): Promise<T> {
         return this.repository.findByPk(identifier, options) as unknown as Promise<T>;
