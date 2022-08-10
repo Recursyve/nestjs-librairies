@@ -20,7 +20,7 @@ export class AccessControlResourceDeletedHandler implements ICommandHandler<Reso
 
         const results = await this.resourceDeletedPolicyService.execute(command.table, command.resource);
         if (results) {
-            await this.resourceEventService.removeUserResources(results);
+            await this.resourceEventService.updatedUserResources(results);
         }
     }
 }

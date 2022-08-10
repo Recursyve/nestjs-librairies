@@ -2,7 +2,7 @@ import { Injectable, Logger, Type } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
 import { Model } from "sequelize-typescript";
 import { FROM_POLICY_METADATA, UPDATED_POLICY_METADATA } from "../decorators/constant";
-import { DeletedResources } from "../models/deleted-resources.model";
+import { UserResources } from "../models";
 import { ResourceDeletedPolicy } from "../policies";
 import { M } from "../utils";
 
@@ -19,7 +19,7 @@ export class ResourceDeletedPoliciesService {
         return this._policies;
     }
 
-    public async execute(table: string, resource: any): Promise<DeletedResources[]> {
+    public async execute(table: string, resource: any): Promise<UserResources[]> {
         const policies = this._policies.filter(x => x.repository.tableName === table && !x.parentRepository);
         const policiesRes = await Promise.all(policies.map(async policy => {
             try {
@@ -32,8 +32,7 @@ export class ResourceDeletedPoliciesService {
                 return [];
             }
         }))
-            .then(res => res.reduce((all, current) => [...all, ...current], []))
-            .then(res => res.map(x => ({ ...x, resourceId: resource.id })));
+            .then(res => res.flatMap(x => ({ ...x, resourceId: resource.id })));
 
         const parentPolicies = this._policies.filter(x => x.parentRepository && x.parentRepository.tableName === table);
         const parentPoliciesRes = await Promise.all(parentPolicies.map(async policy => {
@@ -48,7 +47,10 @@ export class ResourceDeletedPoliciesService {
             }
         }));
 
-        return parentPoliciesRes.reduce((all, current) => [...all, ...current], policiesRes);
+        return [
+            ...policiesRes,
+            ...parentPoliciesRes.flat()
+        ];
     }
 
     public registerPolicies(...policies: Type<ResourceDeletedPolicy<any>>[]): void {

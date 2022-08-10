@@ -33,8 +33,7 @@ export class ResourceCreatedPoliciesService {
                 return [];
             }
         }))
-            .then(res => res.reduce((all, current) => [...all, ...current], []))
-            .then(res => res.map(x => ({ ...x, resourceId: resource.id })));
+            .then(res => res.flatMap(x => ({ ...x, resourceId: resource.id })));
 
         const parentPolicies = this._policies.filter(x => x.parentRepository && x.parentRepository.tableName === table);
         const parentPoliciesRes = await Promise.all(parentPolicies.map(async policy => {
@@ -49,7 +48,10 @@ export class ResourceCreatedPoliciesService {
             }
         }));
 
-        return parentPoliciesRes.reduce((all, current) => [...all, ...current], policiesRes);
+        return [
+            ...policiesRes,
+            ...parentPoliciesRes.flat()
+        ];
     }
 
     public registerPolicies(...policies: Type<ResourceCreatedPolicy<any>>[]): void {
