@@ -1,33 +1,32 @@
 import { Injectable, Logger, Type } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
 import { Model } from "sequelize-typescript";
-import { CREATED_POLICY_METADATA, FROM_POLICY_METADATA } from "../decorators/constant";
+import { FROM_POLICY_METADATA, UPDATED_POLICY_METADATA } from "../decorators/constant";
 import { UserResources } from "../models";
-import { ResourceCreatedPolicy } from "../policies";
+import { ResourceDeletedPolicy } from "../policies";
 import { M } from "../utils";
 
 @Injectable()
-export class ResourceCreatedPoliciesService {
+export class ResourceDeletedPoliciesService {
     private readonly logger = new Logger();
 
     constructor(private readonly moduleRef: ModuleRef) {
     }
 
-    private _policies: ResourceCreatedPolicy<any>[] = [];
+    private _policies: ResourceDeletedPolicy<any>[] = [];
 
-    public get policies(): ResourceCreatedPolicy<any>[] {
+    public get policies(): ResourceDeletedPolicy<any>[] {
         return this._policies;
     }
 
     public async execute(table: string, resource: any): Promise<UserResources[]> {
         const policies = this._policies.filter(x => x.repository.tableName === table && !x.parentRepository);
-
         const policiesRes = await Promise.all(policies.map(async policy => {
             try {
-                this.logger.verbose(`Getting users for resource ${resource.id}`, policy.name);
-                const users = await policy.handle(resource);
-                this.logger.verbose(`${users.length} users found for resource ${resource.id}`, policy.name);
-                return users;
+                this.logger.verbose(`Getting deleted resource for resource ${resource.id}`, policy.name);
+                const resources = await policy.handle(resource);
+                this.logger.verbose(`${resources.length} deleted resources found for resource ${resource.id}`, policy.name);
+                return resources;
             } catch (e) {
                 this.logger.error("", e, policy.name);
                 return [];
@@ -38,10 +37,10 @@ export class ResourceCreatedPoliciesService {
         const parentPolicies = this._policies.filter(x => x.parentRepository && x.parentRepository.tableName === table);
         const parentPoliciesRes = await Promise.all(parentPolicies.map(async policy => {
             try {
-                this.logger.verbose(`Getting users for resource ${resource.id}`, policy.name);
-                const users = await policy.handle(resource);
-                this.logger.verbose(`${users.length} users found for resource ${resource.id}`, policy.name);
-                return users;
+                this.logger.verbose(`Getting deleted resource for resource ${resource.id}`, policy.name);
+                const resources = await policy.handle(resource);
+                this.logger.verbose(`${resources.length} deleted resources found for resource ${resource.id}`, policy.name);
+                return resources;
             } catch (e) {
                 this.logger.error("", e, policy.name);
                 return [];
@@ -54,11 +53,11 @@ export class ResourceCreatedPoliciesService {
         ];
     }
 
-    public registerPolicies(...policies: Type<ResourceCreatedPolicy<any>>[]): void {
+    public registerPolicies(...policies: Type<ResourceDeletedPolicy<any>>[]): void {
         policies.forEach(policy => this.registerPolicy(policy));
     }
 
-    private registerPolicy(policy: Type<ResourceCreatedPolicy<any>>): void {
+    private registerPolicy(policy: Type<ResourceDeletedPolicy<any>>): void {
         const instance = this.moduleRef.get(policy, { strict: false });
         if (!instance) {
             return;
@@ -73,11 +72,11 @@ export class ResourceCreatedPoliciesService {
         this._policies.push(instance);
     }
 
-    private reflectModel(policy: Type<ResourceCreatedPolicy<any>>): typeof Model {
-        return Reflect.getMetadata(CREATED_POLICY_METADATA, policy);
+    private reflectModel(policy: Type<ResourceDeletedPolicy<any>>): typeof Model {
+        return Reflect.getMetadata(UPDATED_POLICY_METADATA, policy);
     }
 
-    private reflectParentModel(policy: Type<ResourceCreatedPolicy<any>>): typeof Model {
+    private reflectParentModel(policy: Type<ResourceDeletedPolicy<any>>): typeof Model {
         return Reflect.getMetadata(FROM_POLICY_METADATA, policy);
     }
 }
