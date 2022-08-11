@@ -1,6 +1,6 @@
 import { Inject, mixin } from "@nestjs/common";
 import { ResourceAccessControlService, Users } from "@recursyve/nestjs-access-control";
-import { DatabaseEntities, SequelizeReadRepository, SequelizeRepository } from "@recursyve/nestjs-sequelize-utils";
+import { SequelizeEntities, SequelizeReadRepository, SequelizeRepository } from "@recursyve/nestjs-sequelize-utils";
 import { FindOptions, Identifier, Op, WhereOptions } from "sequelize";
 import { AbstractConstructor, Constructor } from "../utils/contructor";
 
@@ -22,7 +22,7 @@ export const mixinAccessControlRepository = <T>() => {
         base: C,
     ): AccessControlRepositoryDefinitionCtor<T> & C {
         class Repository extends base {
-            private repository: typeof DatabaseEntities;
+            private repository: typeof SequelizeEntities;
 
             // @ts-ignore
             @Inject()
@@ -109,17 +109,17 @@ export const mixinAccessControlRepository = <T>() => {
     }
 }
 
-export const _SequelizeAccessControlRepository = <T extends DatabaseEntities>() => mixinAccessControlRepository<T>()(
+export const _SequelizeAccessControlRepository = <T extends SequelizeEntities>() => mixinAccessControlRepository<T>()(
     class extends SequelizeRepository<T> {
-        constructor(repository: typeof DatabaseEntities) {
+        constructor(repository: typeof SequelizeEntities) {
             super(repository);
         }
     }
 )
 
-export const _SequelizeAccessControlReadRepository = <T extends DatabaseEntities>() => mixinAccessControlRepository<T>()(
+export const _SequelizeAccessControlReadRepository = <T extends SequelizeEntities>() => mixinAccessControlRepository<T>()(
     class extends SequelizeReadRepository<T> {
-        constructor(repository: typeof DatabaseEntities) {
+        constructor(repository: typeof SequelizeEntities) {
             super(repository);
         }
     }
