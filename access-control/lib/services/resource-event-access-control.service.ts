@@ -11,8 +11,8 @@ export class ResourceEventAccessControlService<T extends Model<T>> {
         return this.commandBus.execute(new ResourceCreatedCommand(table, resource));
     }
 
-    public onResourceDeleted(table: string, resourceId: number): Promise<any> {
-        return this.commandBus.execute(new ResourceDeletedCommand(table, resourceId));
+    public onResourceDeleted(table: string, resource: T, resourceId: number): Promise<any> {
+        return this.commandBus.execute(new ResourceDeletedCommand(table, resource, resourceId));
     }
 
     public onResourceUpdated(table: string, before: T, after: T): Promise<any> {

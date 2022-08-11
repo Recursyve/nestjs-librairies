@@ -22,7 +22,7 @@
         "@nestjs/common": ">=8.0.0",
         "@nestjs/core": ">=8.0.0",
         "@nestjs/sequelize": ">=8.0.0",
-        "@recursyve/nestjs-access-control": ">=8.0.0",
+        "@recursyve/nestjs-access-control": ">=8.1.0",
         "@recursyve/nestjs-sequelize-utils": ">=8.0.0",
         "sequelize": ">=6.0.0",
         "sequelize-typescript": ">=2.1.0"
