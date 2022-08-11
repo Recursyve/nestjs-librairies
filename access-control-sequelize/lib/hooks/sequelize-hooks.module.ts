@@ -45,7 +45,7 @@ export class SequelizeHooksAccessControlModule implements OnModuleInit {
             });
 
             (model as unknown as typeof M).addHook("afterDestroy", "access-control-deleted-policy-hook", async (instance: M, options) => {
-                await this.resourceEventAccessControlService.onResourceDeleted(model.tableName, instance.getDataValue("id"));
+                await this.resourceEventAccessControlService.onResourceDeleted(model.tableName, instance, instance.getDataValue("id"));
             });
         }
     }
