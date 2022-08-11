@@ -1,14 +1,10 @@
-import { AllowNull, AutoIncrement, BelongsToMany, Column, Model, PrimaryKey, Table } from "sequelize-typescript";
+import { SequelizeEntities } from "@recursyve/nestjs-sequelize-utils";
+import { AllowNull, BelongsToMany, Column, Table } from "sequelize-typescript";
 import { AccountDevices } from "./account-devices";
 import { Devices } from "./devices";
 
 @Table
-export class Accounts extends Model {
-    @PrimaryKey
-    @AutoIncrement
-    @Column
-    id: number;
-
+export class Accounts extends SequelizeEntities {
     @AllowNull(false)
     @Column
     userId: string;
