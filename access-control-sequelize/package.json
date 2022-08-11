@@ -36,7 +36,7 @@
         "@nestjs/terminus": "^9.1.0",
         "@nestjs/testing": "^9.0.8",
         "@recursyve/eslint-config-node": "^1.0.1",
-        "@recursyve/nestjs-access-control": "^8.0.2",
+        "@recursyve/nestjs-access-control": "^8.1.0",
         "@recursyve/nestjs-redis": "^8.1.1",
         "@recursyve/nestjs-sequelize-utils": "/Users/julien/git/Recursyve/nestjs-librairies/sequelize-utils/dist",
         "@types/jest": "^28.1.6",

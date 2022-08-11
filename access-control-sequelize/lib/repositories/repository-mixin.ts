@@ -37,7 +37,7 @@ export const mixinAccessControlRepository = <T>() => {
             public async findByPkFromUser(identifier: Identifier, user: Users, options?: FindOptions): Promise<T> {
                 const resources = await this.resourceAccessControlService.getResources(user);
                 if (resources.ids) {
-                    if (resources.ids.findIndex((resourceId) => resourceId === identifier) < 0) {
+                    if (!resources.ids.some((resourceId) => resourceId === identifier)) {
                         return null;
                     }
 

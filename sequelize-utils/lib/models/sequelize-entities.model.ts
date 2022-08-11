@@ -22,21 +22,4 @@ export class SequelizeEntities extends Model {
 /**
  * @deprecated: Use SequelizeEntities instead
  */
-export class DatabaseEntities extends Model {
-    @AutoIncrement
-    @PrimaryKey
-    @Column
-    id: number;
-
-    @CreatedAt
-    @Column({ field: "created_at" })
-    createdAt: Date;
-
-    @UpdatedAt
-    @Column({ field: "updated_at" })
-    updatedAt: Date;
-
-    @DeletedAt
-    @Column({ field: "deleted_at" })
-    deletedAt: Date;
-}
+export class DatabaseEntities extends SequelizeEntities {}
