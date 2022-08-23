@@ -1,5 +1,6 @@
 export * from "./filters";
 export * from "./models";
+export * from "./order-rules"
 export * from "./filter.service";
 export * from "./base-filter"
 export * from "./filter.service"

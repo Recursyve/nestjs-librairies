@@ -4,6 +4,7 @@ import { Filter, FilterDefinition, GroupFilter, GroupFilterDefinition } from "./
 import { DefaultFilterDefinition } from "./filters/default.filter";
 import { FilterConfig, FilterModel } from "./models";
 import { ExportTypes } from "../models/export-types.model";
+import { DefaultOrderRule } from "./order-rules/default.order-rule";
 
 export abstract class BaseFilter<T> implements FilterModel<T> {
     private _translateService: TranslateAdapter;
@@ -11,6 +12,7 @@ export abstract class BaseFilter<T> implements FilterModel<T> {
     [name: string]: FilterConfig | unknown;
     public abstract dataDefinition: Type<T>;
     public defaultFilter?: DefaultFilterDefinition;
+    public defaultOrderRule?: DefaultOrderRule;
 
     public set translateService(translateService: TranslateAdapter) {
         this._translateService = translateService;

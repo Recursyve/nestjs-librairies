@@ -559,6 +559,10 @@ export class FilterService<Data> {
             orders = [orders];
         }
 
+        if (this.model.defaultOrderRule) {
+            orders = [this.model.defaultOrderRule.order, ...orders];
+        }
+
         const generatedOrder: Order = [];
 
         for (const order of orders) {

@@ -134,3 +134,11 @@ SelectFilter({
 ### Bugfix
 
 - Fix empty attributes array in `@Include` not adding the `id` by default
+
+
+## [8.5.0] - 2022-08-23
+
+### Added
+
+- Added `IfOrderRule` to generate `If(...)` order rule for MySQL
+- Added default order in base filter

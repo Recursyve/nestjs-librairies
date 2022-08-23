@@ -3,7 +3,7 @@ import { InjectModel, SequelizeModule } from "@nestjs/sequelize";
 import { Test } from "@nestjs/testing";
 import { ResourceAccessControlService } from "@recursyve/nestjs-access-control";
 import { Sequelize } from "sequelize-typescript";
-import { _SequelizeAccessControlRepository } from "../lib/repositories/repository-mixin";
+import { _SequelizeAccessControlRepository } from "../lib/repositories/repositories";
 import { AccountDevices } from "./models/account-devices";
 import { Accounts } from "./models/accounts";
 import { Devices } from "./models/devices";

@@ -14,7 +14,7 @@ import {
     ResourceEventAccessControlService,
     ResourceEventService,
     ResourceCreatedPoliciesService,
-    ResourceUpdatedPoliciesService
+    ResourceUpdatedPoliciesService, ResourceDeletedPoliciesService
 } from "./services";
 
 @Global()
@@ -26,6 +26,7 @@ import {
         AccessControlExplorerService,
         ResourceEventService,
         ResourceCreatedPoliciesService,
+        ResourceDeletedPoliciesService,
         ResourceUpdatedPoliciesService,
         ResourceEventAccessControlService,
         AccessControlGetResourcesHandler,
@@ -39,14 +40,16 @@ export class AccessControlCoreModule implements OnModuleInit {
     constructor(
         private accessPoliciesService: AccessPoliciesService,
         private resourceCreatedPoliciesService: ResourceCreatedPoliciesService,
+        private resourceDeletedPoliciesService: ResourceDeletedPoliciesService,
         private resourceUpdatedPoliciesService: ResourceUpdatedPoliciesService,
         private explorer: AccessControlExplorerService
     ) {}
 
     public onModuleInit(): void {
-        const { policies, createdPolicies, updatedPolicies } = this.explorer.explore();
+        const { policies, createdPolicies, updatedPolicies, deletedPolicies } = this.explorer.explore();
         this.accessPoliciesService.registerPolicies(...policies);
         this.resourceCreatedPoliciesService.registerPolicies(...createdPolicies);
+        this.resourceDeletedPoliciesService.registerPolicies(...deletedPolicies);
         this.resourceUpdatedPoliciesService.registerPolicies(...updatedPolicies);
     }
 }
