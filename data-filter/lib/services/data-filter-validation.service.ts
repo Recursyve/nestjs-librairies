@@ -33,11 +33,10 @@ export class DataFilterValidationService implements OnModuleInit {
             await this.dataFilterService.for(dataTarget as Type).findOne({ logging: false });
         } catch (e) {
             const targetName = (dataTarget as Type).name;
-
             if (e instanceof DatabaseError || e instanceof ValidationErrorItem) {
                 this.logger.error(`Error while validating data '${targetName}': ${e.message}`);
             } else {
-                this.logger.error(`Error while validating data '${targetName}': ${e}`)
+                this.logger.error(`Error while validating data '${targetName}': ${e}`);
             }
         }
     }
