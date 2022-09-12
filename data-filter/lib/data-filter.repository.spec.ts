@@ -70,7 +70,7 @@ describe("DataFilterRepository", () => {
                     {
                         as: "coord",
                         model: Coords,
-                        attributes: ["cellphone", "id"],
+                        attributes: ["id", "cellphone"],
                         order: undefined,
                         required: true,
                         paranoid: true,
@@ -101,7 +101,7 @@ describe("DataFilterRepository", () => {
                     {
                         as: "coord",
                         model: Coords,
-                        attributes: ["cellphone", "id"],
+                        attributes: ["id", "cellphone"],
                         order: undefined,
                         required: true,
                         paranoid: true,
