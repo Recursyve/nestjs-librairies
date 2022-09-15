@@ -49,7 +49,7 @@ export class DataFilterRepository<Data> {
     public async findByPkFromUser(user: DataFilterUserModel, identifier: Identifier, conditions?: object): Promise<Data> {
         const resources = await this.accessControlAdapter.getResources(this._config.model as any, user);
         if (resources.ids?.includes(identifier as number) || resources.all) {
-            return await this.findByPk(identifier, conditions);
+            return await this.findByPk(identifier, {}, conditions);
         }
 
         if (resources.ids?.length) {
