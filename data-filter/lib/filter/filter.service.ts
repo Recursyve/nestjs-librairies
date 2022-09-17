@@ -581,7 +581,7 @@ export class FilterService<Data> {
             if (!rule || !OrderRule.validate(rule)) {
                 generatedOrder.push(this.sequelizeModelScanner.getOrder(this.repository.model, order) as OrderItem);
             } else {
-                generatedOrder.push([rule.getOrderOption(), order.direction.toUpperCase()]);
+                generatedOrder.push([rule.getOrderOption(this.repository.model), order.direction.toUpperCase()]);
             }
         }
 

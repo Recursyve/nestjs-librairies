@@ -1,5 +1,5 @@
-import { literal } from "sequelize";
-import { SequelizeUtils } from "../../sequelize.utils";
+import { col, fn, literal } from "sequelize";
+import { M, SequelizeUtils } from "../../sequelize.utils";
 import { BaseOrderRuleDefinition, OrderItemColumn, OrderRule } from "./order-rule";
 
 export interface IfOrderRuleDefinition {
@@ -17,8 +17,8 @@ export class IfOrderRule extends OrderRule implements IfOrderRuleDefinition {
         super(definition);
     }
 
-    public getOrderOption(): OrderItemColumn {
-        const order = `IF(${this.path ? SequelizeUtils.getLiteralFullName(this.attribute, this.path) : this.attribute}='${this.valueEquals}',${this.priority ?? 1},${this.fallbackPriority ?? 0})`;
+    public getOrderOption(model: typeof M): OrderItemColumn {
+        const order = `IF(${this.path ? SequelizeUtils.getLiteralFullName(this.attribute, this.path) : `\`${model.name}\`.\`${this.attribute}\``}='${this.valueEquals}',${this.priority ?? 1},${this.fallbackPriority ?? 0})`;
         return literal(order);
     }
 }

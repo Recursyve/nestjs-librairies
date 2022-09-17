@@ -142,3 +142,9 @@ SelectFilter({
 
 - Added `IfOrderRule` to generate `If(...)` order rule for MySQL
 - Added default order in base filter
+
+## [8.5.1] - 2022-09-17
+
+### Bugfix
+
+- Fix `IfOrderRule` possible ambiguous column name

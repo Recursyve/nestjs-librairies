@@ -1,4 +1,5 @@
 import { Col, Fn, Literal } from "sequelize/types/utils";
+import { M } from "../../sequelize.utils";
 
 export type OrderItemColumn = string | Col | Fn | Literal;
 
@@ -8,7 +9,7 @@ export interface BaseOrderRuleDefinition {
 }
 
 export interface OrderRuleDefinition extends BaseOrderRuleDefinition {
-    getOrderOption(): OrderItemColumn;
+    getOrderOption(model: typeof M): OrderItemColumn;
 }
 
 export abstract class OrderRule implements OrderRuleDefinition {
@@ -27,5 +28,5 @@ export abstract class OrderRule implements OrderRuleDefinition {
         return definition["_type"] === "order_rule";
     }
 
-    public abstract getOrderOption(): OrderItemColumn;
+    public abstract getOrderOption(model: typeof M): OrderItemColumn;
 }
