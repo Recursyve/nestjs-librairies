@@ -14,7 +14,8 @@ import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { createFilterProvider } from "./filter/filter.provider";
 import { defaultFilterOptionConfig, FilterOptionConfig } from "./filter/filter.config";
-import { FILTER_OPTION } from "./constant";
+import { FILTER_OPTION, VALIDATE_DATA } from "./constant";
+import { DataFilterValidationService } from "./services/data-filter-validation.service";
 
 export interface DataFilterConfig {
     imports?: Array<Type | DynamicModule | Promise<DynamicModule> | ForwardReference>;
@@ -23,6 +24,7 @@ export interface DataFilterConfig {
     translateAdapter?: Provider;
     exportAdapter?: Provider;
     filter?: FilterOptionConfig;
+    validateData?: boolean;
 }
 
 export interface DataFilterFeatureConfig extends DataFilterConfig {
@@ -57,7 +59,8 @@ export class DataFilterModule {
             filter: {
                 ...defaultFilterOptionConfig,
                 ...(option?.filter ?? {})
-            }
+            },
+            validateData: option?.validateData ?? false
         };
         return {
             module: DataFilterModule,
@@ -67,10 +70,15 @@ export class DataFilterModule {
                     provide: FILTER_OPTION,
                     useValue: option.filter
                 },
+                {
+                    provide: VALIDATE_DATA,
+                    useValue: option.validateData
+                },
                 option.deserializer,
                 option.accessControlAdapter,
                 option.translateAdapter,
-                option.exportAdapter
+                option.exportAdapter,
+                DataFilterValidationService
             ],
             exports: [
                 FILTER_OPTION,
