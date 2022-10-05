@@ -32,7 +32,7 @@ export class ResourceUpdatedPoliciesService {
                 return [];
             }
         }))
-            .then(res => res.flatMap(x => ({ ...x, resourceId: before.id })));
+            .then(res => res.flat().map(x => ({ ...x, resourceId: before.id })));
 
         const parentPolicies = this._policies.filter(x => x.parentRepository && x.parentRepository.tableName === table);
         const parentPoliciesRes = await Promise.all(parentPolicies.map(async policy => {
