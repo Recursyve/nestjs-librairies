@@ -11,6 +11,7 @@ export abstract class BaseFilter<T> implements FilterModel<T> {
 
     [name: string]: FilterConfig | unknown;
     public abstract dataDefinition: Type<T>;
+    public exportDataDefinition?: Type<T>;
     public defaultFilter?: DefaultFilterDefinition;
     public defaultOrderRule?: DefaultOrderRule;
 

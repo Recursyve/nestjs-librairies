@@ -148,3 +148,10 @@ SelectFilter({
 ### Bugfix
 
 - Fix `IfOrderRule` possible ambiguous column name
+
+
+## [8.5.2] - 2022-10-5
+
+### Added
+
+- Added `exportRepository` in BaseFilter to defined a custom DataDefinition for when downloading data.

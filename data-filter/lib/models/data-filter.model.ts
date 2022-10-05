@@ -80,7 +80,7 @@ export class DataFilterConfig implements DataFilterConfigModel {
         return this.customAttributes
             .filter(x => x.config.path)
             .map(x => ({
-                attributes: [],
+                attributes: { include: [] },
                 path: x.config.path,
                 paranoid: true
             }));

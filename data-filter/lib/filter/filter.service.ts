@@ -42,6 +42,7 @@ import { OrderRule, OrderRuleDefinition } from "./order-rules/order-rule";
 export class FilterService<Data> {
     private definitions: { [name: string]: FilterDefinition | GroupFilterDefinition | OrderRuleDefinition };
     private repository: DataFilterRepository<Data>;
+    private exportRepository: DataFilterRepository<Data>;
 
     constructor(
         private accessControlAdapter: AccessControlAdapter,
@@ -61,7 +62,7 @@ export class FilterService<Data> {
             {
                 ...this.model,
                 dataDefinition: dataDef
-            } as BaseFilter<T>,
+            } as unknown as BaseFilter<T>,
             this.sequelizeModelScanner,
             this.dataFilter,
             this.options
@@ -160,14 +161,14 @@ export class FilterService<Data> {
         options: FilterQueryModel,
         exportOptions?: object
     ): Promise<Buffer | string> {
-        const findOptions = await this.getFindOptions(this.repository.model, options.query);
+        const findOptions = await this.getFindOptions(this.exportRepository.model, options.query);
 
         options.order = this.normalizeOrder(options.order);
 
         this.addSearchCondition(options.search, findOptions);
         this.addOrderCondition(options.order, findOptions);
         delete options.page;
-        const values = await (user ? this.findValues(user, options, findOptions) : this.findValues(options, findOptions));
+        const values = await (user ? this.findValues(user, options, findOptions, this.exportRepository) : this.findValues(options, findOptions, this.exportRepository));
         const headers = await this.model.getExportedFieldsKeys(type);
         if (headers.length) {
             const data = await Promise.all(values.map((value) => this.model.getExportedFields(value, user?.language ?? "fr", type)));
@@ -213,6 +214,7 @@ export class FilterService<Data> {
 
     private init() {
         this.repository = this.dataFilter.for(this.model.dataDefinition);
+        this.exportRepository = this.dataFilter.for(this.model.exportDataDefinition ?? this.model.dataDefinition);
         this.model.translateService = this.translateAdapter;
 
         this.definitions = {};
@@ -451,17 +453,19 @@ export class FilterService<Data> {
         }
     }
 
-    private async findValues<Users extends DataFilterUserModel>(user: Users, filter: FilterQueryModel, options: FindOptions): Promise<Data[]>;
-    private async findValues<Users extends DataFilterUserModel>(filter: FilterQueryModel, options: FindOptions): Promise<Data[]>;
-    private async findValues<Users extends DataFilterUserModel>(...args: [Users | FilterQueryModel, FilterQueryModel | FindOptions, FindOptions?]): Promise<Data[]> {
-        const [userOrOFilter, filterOrOpt, opt] = args;
-        const options = opt ? opt : filterOrOpt as FindOptions;
-        const filter = opt ? filterOrOpt as FilterQueryModel : userOrOFilter as FilterQueryModel;
+    private async findValues<Users extends DataFilterUserModel>(user: Users, filter: FilterQueryModel, options: FindOptions, repository?: DataFilterRepository<Data>): Promise<Data[]>;
+    private async findValues<Users extends DataFilterUserModel>(filter: FilterQueryModel, options: FindOptions, repository?: DataFilterRepository<Data>): Promise<Data[]>;
+    private async findValues<Users extends DataFilterUserModel>(...args: [Users | FilterQueryModel, FilterQueryModel | FindOptions, FindOptions | DataFilterRepository<Data>, DataFilterRepository<Data>?]): Promise<Data[]> {
+        const [userOrOFilter, filterOrOpt, optOrRepo, repo] = args;
+        const options = optOrRepo && !(optOrRepo instanceof DataFilterRepository) ? optOrRepo : filterOrOpt as FindOptions;
+        const filter = optOrRepo && !(optOrRepo instanceof DataFilterRepository) ? filterOrOpt as FilterQueryModel : userOrOFilter as FilterQueryModel;
+
+        const repository = repo ?? optOrRepo as DataFilterRepository<Data> ?? this.repository;
 
         /**
          * This means that findValues was called with a user
          */
-        if (opt) {
+        if (repo) {
             options.where = await this.getAccessControlWhereCondition(options.where, userOrOFilter as Users);
         }
 
@@ -469,10 +473,10 @@ export class FilterService<Data> {
 
         const nonNestedOrderColumns = (filter.order as OrderModel[])
             .map(order => order.column)
-            .filter(column => column && !column.includes(".") && !this.repository.hasCustomAttribute(column));
+            .filter(column => column && !column.includes(".") && !repository.hasCustomAttribute(column));
         const customAttributes = this.getOrderCustomAttribute(filter.order as OrderModel[], filter.data);
 
-        const values = await this.repository.model.findAll({
+        const values = await repository.model.findAll({
             ...options,
             attributes: ["id", ...nonNestedOrderColumns, ...customAttributes],
             limit: filter.page ? filter.page.size : null,
@@ -481,8 +485,8 @@ export class FilterService<Data> {
             order
         });
 
-        const group = filter.groupBy ? [SequelizeUtils.getGroupLiteral(this.repository.model, filter.groupBy)] : undefined;
-        return await this.repository.findAll({
+        const group = filter.groupBy ? [SequelizeUtils.getGroupLiteral(repository.model, filter.groupBy)] : undefined;
+        return await repository.findAll({
             where: {
                 id: values.map(x => x.id)
             },
