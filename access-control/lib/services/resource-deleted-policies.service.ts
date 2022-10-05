@@ -1,7 +1,7 @@
 import { Injectable, Logger, Type } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
 import { Model } from "sequelize-typescript";
-import { FROM_POLICY_METADATA, UPDATED_POLICY_METADATA } from "../decorators/constant";
+import { DELETED_POLICY_METADATA, FROM_POLICY_METADATA } from "../decorators/constant";
 import { UserResources } from "../models";
 import { ResourceDeletedPolicy } from "../policies";
 import { M } from "../utils";
@@ -73,7 +73,7 @@ export class ResourceDeletedPoliciesService {
     }
 
     private reflectModel(policy: Type<ResourceDeletedPolicy<any>>): typeof Model {
-        return Reflect.getMetadata(UPDATED_POLICY_METADATA, policy);
+        return Reflect.getMetadata(DELETED_POLICY_METADATA, policy);
     }
 
     private reflectParentModel(policy: Type<ResourceDeletedPolicy<any>>): typeof Model {
