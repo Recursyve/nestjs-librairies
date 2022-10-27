@@ -1,4 +1,4 @@
-import { CreateOptions, DestroyOptions, FindOrCreateOptions, Identifier, UpdateOptions } from "sequelize";
+import { BulkCreateOptions, CreateOptions, DestroyOptions, FindOrCreateOptions, Identifier, UpdateOptions } from "sequelize";
 import { SequelizeEntities } from "../models/sequelize-entities.model";
 import { SequelizeReadRepository } from "./database-read-repository";
 
@@ -13,8 +13,8 @@ export class SequelizeRepository<T extends SequelizeEntities, CreateDto = T, Upd
         return this.repository.create(dto as any) as Promise<T>;
     }
 
-    public bulkCreate<Options>(dto: CreateDto | Partial<T>, options?: Options & CreateOptions);
-    public bulkCreate<Options>(dto: CreateDto | Partial<T>, options: Options & CreateOptions);
+    public bulkCreate<Options>(dto: CreateDto | Partial<T>, options?: Options & BulkCreateOptions);
+    public bulkCreate<Options>(dto: CreateDto | Partial<T>, options: Options & BulkCreateOptions);
     public bulkCreate<Options>(dto: CreateDto | Partial<T>): Promise<T[]> {
         return this.repository.bulkCreate(dto as any) as unknown as Promise<T[]>;
     }
