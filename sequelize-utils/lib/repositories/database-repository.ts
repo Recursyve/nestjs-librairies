@@ -1,4 +1,4 @@
-import { BulkCreateOptions, CreateOptions, DestroyOptions, FindOrCreateOptions, Identifier, UpdateOptions } from "sequelize";
+import { Attributes, BulkCreateOptions, CreateOptions, DestroyOptions, FindOrCreateOptions, Identifier, UpdateOptions } from "sequelize";
 import { SequelizeEntities } from "../models/sequelize-entities.model";
 import { SequelizeReadRepository } from "./database-read-repository";
 
@@ -7,37 +7,30 @@ export class SequelizeRepository<T extends SequelizeEntities, CreateDto = T, Upd
         super(repository);
     }
 
-    public create<Options>(dto: CreateDto | Partial<T>, options?: Options & CreateOptions);
-    public create<Options>(dto: CreateDto | Partial<T>, options: Options & CreateOptions);
-    public create<Options>(dto: CreateDto | Partial<T>): Promise<T> {
-        return this.repository.create(dto as any) as Promise<T>;
+    public create<Options>(dto: CreateDto | Partial<T>, options?: Options & CreateOptions<Attributes<T>>){
+        return this.repository.create(dto as any, options) as unknown as Promise<T>;
     }
 
-    public bulkCreate<Options>(dto: CreateDto | Partial<T>, options?: Options & BulkCreateOptions);
-    public bulkCreate<Options>(dto: CreateDto | Partial<T>, options: Options & BulkCreateOptions);
-    public bulkCreate<Options>(dto: CreateDto | Partial<T>): Promise<T[]> {
-        return this.repository.bulkCreate(dto as any) as unknown as Promise<T[]>;
+    public bulkCreate<Options>(dto: CreateDto | Partial<T>, options?: Options & BulkCreateOptions<Attributes<T>>) {
+        return this.repository.bulkCreate(dto as any, options) as unknown as Promise<T[]>;
     }
 
-    public findOrCreate<Options>(options: FindOrCreateOptions, args?: Options): Promise<[T, boolean]>;
-    public findOrCreate<Options>(options: FindOrCreateOptions, args: Options) : Promise<[T, boolean]>;
-    public findOrCreate<Options>(options: FindOrCreateOptions): Promise<[T, boolean]> {
+    public findOrCreate<Options>(options: FindOrCreateOptions, args?: Options): Promise<[T, boolean]> {
         return (this.repository.findOrCreate(options)) as Promise<[T, boolean]>;
     }
 
-    public async updateByPk<Options>(identifier: Identifier, dto: UpdateDto | Partial<T>, options?: Options): Promise<T>;
-    public async updateByPk<Options>(identifier: Identifier, dto: UpdateDto | Partial<T>, options: Options): Promise<T>;
-    public async updateByPk<Options>(identifier: Identifier, dto: UpdateDto | Partial<T>): Promise<T> {
-        const [, entities] = await this.repository.update(dto, {
+    public async updateByPk<Options>(identifier: Identifier, dto: UpdateDto | Partial<T>, options?: Options & UpdateOptions<Attributes<T>>): Promise<T> {
+        const [_, entities] = await this.repository.update(dto, {
+            returning: true,
             where: {
                 [this.repository.primaryKeyAttribute]: identifier
             },
-            returning: true
+            ...options as unknown as any
         });
         return entities[0] as unknown as T;
     }
 
-    public async update<Options>(dto: UpdateDto | Partial<T>, options?: Options & UpdateOptions): Promise<void> {
+    public async update<Options>(dto: UpdateDto | Partial<T>, options?: Options & UpdateOptions<Attributes<T>>): Promise<void> {
         await this.repository.update(dto, options);
     }
 
