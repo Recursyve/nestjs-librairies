@@ -457,10 +457,12 @@ export class FilterService<Data> {
     private async findValues<Users extends DataFilterUserModel>(filter: FilterQueryModel, options: FindOptions, repository?: DataFilterRepository<Data>): Promise<Data[]>;
     private async findValues<Users extends DataFilterUserModel>(...args: [Users | FilterQueryModel, FilterQueryModel | FindOptions, FindOptions | DataFilterRepository<Data>, DataFilterRepository<Data>?]): Promise<Data[]> {
         const [userOrOFilter, filterOrOpt, optOrRepo, repo] = args;
-        const options = optOrRepo && !(optOrRepo instanceof DataFilterRepository) ? optOrRepo : filterOrOpt as FindOptions;
-        const filter = optOrRepo && !(optOrRepo instanceof DataFilterRepository) ? filterOrOpt as FilterQueryModel : userOrOFilter as FilterQueryModel;
+        const optOrRepoIsRepo = optOrRepo instanceof DataFilterRepository;
 
-        const repository = repo ?? optOrRepo as DataFilterRepository<Data> ?? this.repository;
+        const options = optOrRepo && !optOrRepoIsRepo ? optOrRepo : filterOrOpt as FindOptions;
+        const filter = optOrRepo && !optOrRepoIsRepo ? filterOrOpt as FilterQueryModel : userOrOFilter as FilterQueryModel;
+
+        const repository = repo ?? (optOrRepoIsRepo ? optOrRepo : this.repository);
 
         /**
          * This means that findValues was called with a user
