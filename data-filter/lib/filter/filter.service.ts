@@ -460,7 +460,7 @@ export class FilterService<Data> {
         const options = optOrRepo && !(optOrRepo instanceof DataFilterRepository) ? optOrRepo : filterOrOpt as FindOptions;
         const filter = optOrRepo && !(optOrRepo instanceof DataFilterRepository) ? filterOrOpt as FilterQueryModel : userOrOFilter as FilterQueryModel;
 
-        const repository = repo ?? optOrRepo as DataFilterRepository<Data> ?? this.repository;
+        const repository = repo ?? optOrRepo instanceof DataFilterRepository ? optOrRepo as DataFilterRepository<any> : this.repository;
 
         /**
          * This means that findValues was called with a user
