@@ -155,3 +155,9 @@ SelectFilter({
 ### Added
 
 - Added `exportRepository` in BaseFilter to defined a custom DataDefinition for when downloading data.
+
+## [8.5.3] - 2022-11-02
+
+### Bugfix
+
+- Fix issues caused by the `exportRepository`
