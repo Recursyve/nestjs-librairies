@@ -1,16 +1,15 @@
 import { Injectable, Logger, Type } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
-import { Model } from "sequelize-typescript";
+import { DatabaseAdapter } from "../adapters/database.adapter";
 import { FROM_POLICY_METADATA, UPDATED_POLICY_METADATA } from "../decorators/constant";
 import { UserResources } from "../models";
 import { ResourceUpdatedPolicy } from "../policies";
-import { M } from "../utils";
 
 @Injectable()
 export class ResourceUpdatedPoliciesService {
     private readonly logger = new Logger();
 
-    constructor(private readonly moduleRef: ModuleRef) {
+    constructor(private readonly moduleRef: ModuleRef, private readonly databaseAdapter: DatabaseAdapter) {
     }
 
     private _policies: ResourceUpdatedPolicy<any>[] = [];
@@ -20,7 +19,7 @@ export class ResourceUpdatedPoliciesService {
     }
 
     public async execute(table: string, before: any, after: any): Promise<UserResources[]> {
-        const policies = this._policies.filter(x => x.repository.tableName === table && !x.parentRepository);
+        const policies = this._policies.filter(x => x.resourceName === table && !x.parentResourceName);
         const policiesRes = await Promise.all(policies.map(async policy => {
             try {
                 this.logger.verbose(`Getting users for resource ${before.id}`, policy.name);
@@ -34,7 +33,7 @@ export class ResourceUpdatedPoliciesService {
         }))
             .then(res => res.flat().map(x => ({ ...x, resourceId: before.id })));
 
-        const parentPolicies = this._policies.filter(x => x.parentRepository && x.parentRepository.tableName === table);
+        const parentPolicies = this._policies.filter(x => x.parentResourceName && x.parentResourceName === table);
         const parentPoliciesRes = await Promise.all(parentPolicies.map(async policy => {
             try {
                 this.logger.verbose(`Getting users for resource ${before.id}`, policy.name);
@@ -64,19 +63,19 @@ export class ResourceUpdatedPoliciesService {
         }
 
         const target = this.reflectModel(policy);
-        instance.repository = target as typeof M;
+        instance.resourceName = this.databaseAdapter.getResourceName(target);
 
         const parent = this.reflectParentModel(policy);
-        instance.parentRepository = parent as typeof M;
+        instance.parentResourceName = this.databaseAdapter.getResourceName(parent);
 
         this._policies.push(instance);
     }
 
-    private reflectModel(policy: Type<ResourceUpdatedPolicy<any>>): typeof Model {
+    private reflectModel(policy: Type<ResourceUpdatedPolicy<any>>): any {
         return Reflect.getMetadata(UPDATED_POLICY_METADATA, policy);
     }
 
-    private reflectParentModel(policy: Type<ResourceUpdatedPolicy<any>>): typeof Model {
+    private reflectParentModel(policy: Type<ResourceUpdatedPolicy<any>>): any {
         return Reflect.getMetadata(FROM_POLICY_METADATA, policy);
     }
 }

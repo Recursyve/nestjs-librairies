@@ -1,16 +1,15 @@
 import { Injectable, Logger, Type } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
-import { Model } from "sequelize-typescript";
+import { DatabaseAdapter } from "../adapters/database.adapter";
 import { POLICY_METADATA } from "../decorators/constant";
 import { PolicyResources, Users } from "../models";
 import { AccessPolicy } from "../policies";
-import { M } from "../utils";
 
 @Injectable()
 export class AccessPoliciesService {
     private readonly logger = new Logger();
 
-    constructor(private readonly moduleRef: ModuleRef) {
+    constructor(private readonly moduleRef: ModuleRef, private readonly databaseAdapter: DatabaseAdapter) {
     }
 
     private _policies: AccessPolicy[] = [];
@@ -20,7 +19,7 @@ export class AccessPoliciesService {
     }
 
     public async execute(table: string, user: Users): Promise<PolicyResources> {
-        const policy = this._policies.find(x => x.repository.tableName === table);
+        const policy = this._policies.find(x => x.resournceName === table);
         if (!policy) {
             return PolicyResources.resources([]);
         }
@@ -54,11 +53,11 @@ export class AccessPoliciesService {
         }
 
         const target = this.reflectModel(policy);
-        instance.repository = target as typeof M;
+        instance.resournceName = this.databaseAdapter.getResourceName(target);
         this._policies.push(instance);
     }
 
-    private reflectModel(policy: Type<AccessPolicy>): typeof Model {
+    private reflectModel(policy: Type<AccessPolicy>): any {
         return Reflect.getMetadata(POLICY_METADATA, policy);
     }
 }

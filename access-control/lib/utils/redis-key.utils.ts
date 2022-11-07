@@ -3,60 +3,60 @@ import { AccessActionType, Users } from "../models";
 export class RedisKeyUtils {
     public static prefix = "access-control";
 
-    public static userResourceActionKey(user: Users, table: string, action: AccessActionType): string {
+    public static userResourceActionKey(user: Users, resourceName: string, action: AccessActionType): string {
         if (!user.role) {
-            return `${this.prefix}:${user.id}:${table}:${action}`;
+            return `${this.prefix}:${user.id}:${resourceName}:${action}`;
         }
-        return `${this.prefix}:${user.id}-${user.role}:${table}:${action}`;
+        return `${this.prefix}:${user.id}-${user.role}:${resourceName}:${action}`;
     }
 
-    public static userResourceActionWildcardKey(user: Users, table: string): string {
+    public static userResourceActionWildcardKey(user: Users, resourceName: string): string {
         if (!user.role) {
-            return `${this.prefix}:${user.id}:${table}:wildcard`;
+            return `${this.prefix}:${user.id}:${resourceName}:wildcard`;
         }
-        return `${this.prefix}:${user.id}-${user.role}:${table}:wildcard`;
+        return `${this.prefix}:${user.id}-${user.role}:${resourceName}:wildcard`;
     }
 
-    public static userResourceActionConditionKey(user: Users, table: string): string {
+    public static userResourceActionConditionKey(user: Users, resourceName: string): string {
         if (!user.role) {
-            return `${this.prefix}:${user.id}:${table}::condition`;
+            return `${this.prefix}:${user.id}:${resourceName}::condition`;
         }
-        return `${this.prefix}:${user.id}-${user.role}:${table}:condition`;
+        return `${this.prefix}:${user.id}-${user.role}:${resourceName}:condition`;
     }
 
-    public static userResourceActionPattern(user: Users, table: string): string {
+    public static userResourceActionPattern(user: Users, resourceName: string): string {
         if (!user.role) {
-            return `${this.prefix}:${user.id}:${table}:*`;
+            return `${this.prefix}:${user.id}:${resourceName}:*`;
         }
-        return `${this.prefix}:${user.id}-${user.role}:${table}:*`;
+        return `${this.prefix}:${user.id}-${user.role}:${resourceName}:*`;
     }
 
-    public static resourceActionPattern(table: string): string {
-        return `${this.prefix}:*:${table}:*`;
+    public static resourceActionPattern(resourceName: string): string {
+        return `${this.prefix}:*:${resourceName}:*`;
     }
 
-    public static userResourceIdKey(table: string, resourceId: number, user: Users): string {
+    public static userResourceIdKey(resourceName: string, resourceId: number, user: Users): string {
         if (!user.role) {
-            return `${this.prefix}:${table}:${resourceId}:${user.id}`;
+            return `${this.prefix}:${resourceName}:${resourceId}:${user.id}`;
         }
-        return `${this.prefix}:${table}:${resourceId}:${user.id}-${user.role}`;
+        return `${this.prefix}:${resourceName}:${resourceId}:${user.id}-${user.role}`;
     }
 
-    public static userResourceIdPattern(table: string, resourceId: number): string {
-        return `${this.prefix}:${table}:${resourceId}:*`;
+    public static userResourceIdPattern(resourceName: string, resourceId: number): string {
+        return `${this.prefix}:${resourceName}:${resourceId}:*`;
     }
 
-    public static userAccessControl(user: Users, table: string): string {
+    public static userAccessControl(user: Users, resourceName: string): string {
         if (!user.role) {
-            return `${this.prefix}:${user.id}:${table}`;
+            return `${this.prefix}:${user.id}:${resourceName}`;
         }
-        return `${this.prefix}:${user.id}-${user.role}:${table}`;
+        return `${this.prefix}:${user.id}-${user.role}:${resourceName}`;
     }
 
-    public static userAccessControlType(user: Users, table: string): string {
+    public static userAccessControlType(user: Users, resourceName: string): string {
         if (!user.role) {
-            return `${this.prefix}:${user.id}:${table}:type`;
+            return `${this.prefix}:${user.id}:${resourceName}:type`;
         }
-        return `${this.prefix}:${user.id}-${user.role}:${table}:type`;
+        return `${this.prefix}:${user.id}-${user.role}:${resourceName}:type`;
     }
 }

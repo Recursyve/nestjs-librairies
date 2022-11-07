@@ -1,10 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { CommandBus } from "@nestjs/cqrs";
-import { Model } from "sequelize-typescript";
 import { ResourceCreatedCommand, ResourceDeletedCommand, ResourceUpdatedCommand } from "../commands";
 
 @Injectable()
-export class ResourceEventAccessControlService<T extends Model<T>> {
+export class ResourceEventAccessControlService<T> {
     constructor(private readonly commandBus: CommandBus) {}
 
     public onResourceCreated(table: string, resource: T): Promise<any> {

@@ -1,4 +1,3 @@
-import { WhereOptions } from "sequelize";
 import { AccessRules } from "./access-rules.model";
 
 export enum PolicyResourceTypes {
@@ -7,7 +6,7 @@ export enum PolicyResourceTypes {
     Condition = "condition"
 }
 
-export interface PolicyResourcesCondition {
+export interface PolicyResourcesCondition<WhereOptions> {
     where: WhereOptions;
     rules: AccessRules;
 }
@@ -15,7 +14,7 @@ export interface PolicyResourcesCondition {
 export class PolicyResources {
     public wildcard?: AccessRules;
     public resources?: AccessControlResources[];
-    public condition?: PolicyResourcesCondition;
+    public condition?: PolicyResourcesCondition<any>;
 
     public get type(): PolicyResourceTypes {
         if (this.wildcard) {
@@ -28,7 +27,7 @@ export class PolicyResources {
         return PolicyResourceTypes.Resources;
     }
 
-    private constructor({ wildcard, resources, condition }: { wildcard?: AccessRules; resources?: AccessControlResources[]; condition?: PolicyResourcesCondition }) {
+    private constructor({ wildcard, resources, condition }: { wildcard?: AccessRules; resources?: AccessControlResources[]; condition?: PolicyResourcesCondition<any> }) {
         this.wildcard = wildcard;
         this.resources = resources;
         this.condition = condition;
@@ -42,7 +41,7 @@ export class PolicyResources {
         return new PolicyResources({ resources })
     }
 
-    public static condition(where: WhereOptions, rules: AccessRules): PolicyResources {
+    public static condition(where: any, rules: AccessRules): PolicyResources {
         return new PolicyResources({ condition: { where, rules } })
     }
 }
@@ -55,9 +54,9 @@ export interface AccessControlResources {
 export class Resources {
     public all?: boolean;
     public ids?: number[];
-    public where?: WhereOptions;
+    public where?: any;
 
-    private constructor({ all, ids, where }: { all?: boolean; ids?: number[]; where?: WhereOptions }) {
+    private constructor({ all, ids, where }: { all?: boolean; ids?: number[]; where?: any }) {
         this.all = all;
         this.ids = ids;
         this.where = where;
@@ -71,7 +70,7 @@ export class Resources {
         return new Resources({ ids });
     }
 
-    public static fromCondition(where: WhereOptions): Resources {
+    public static fromCondition(where: any): Resources {
         return new Resources({ where });
     }
 }

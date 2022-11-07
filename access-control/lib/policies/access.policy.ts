@@ -1,10 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { AccessControlResources, PolicyResources, Users } from "../models";
-import { M } from "../utils";
 
 @Injectable()
 export abstract class AccessPolicy {
-    public repository: typeof M;
+    public resournceName: string;
 
     public get name(): string {
         return (this as any).constructor.name;

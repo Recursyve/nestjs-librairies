@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Inject, Injectable, Type } from "@nestjs/common";
 import { ModuleRef, Reflector } from "@nestjs/core";
-import { Model } from "sequelize-typescript";
+import { DatabaseAdapter } from "../adapters/database.adapter";
 import { ACCESS_CONTROL_MODELS } from "../constant";
 import { ACCESS_CONTROL_ROUTES, FALLBACK_ACCESS_CONTROL_GUARDS, NEEDS_ACCESS_ACTIONS } from "../decorators/constant";
 import { UserDeserializer } from "../deserializers";
@@ -9,13 +9,14 @@ import { AccessControlService } from "../services";
 
 @Injectable()
 export class AccessControlGuard implements CanActivate {
-    private resources: { [resource: string]: typeof Model };
+    private resources: { [resource: string]: unknown };
     private routes: string[];
 
     constructor(
-        @Inject(ACCESS_CONTROL_MODELS) private readonly models: (typeof Model)[],
+        @Inject(ACCESS_CONTROL_MODELS) private readonly models: any[],
         private readonly reflector: Reflector,
         private readonly accessControlService: AccessControlService,
+        private readonly databaseAdapter: DatabaseAdapter,
         private readonly userDeserializer: UserDeserializer,
         private readonly moduleRef: ModuleRef
     ) {
@@ -37,7 +38,7 @@ export class AccessControlGuard implements CanActivate {
         request.resources = this.getModels(request.route.path, needsAccessActions);
         const user = await this.userDeserializer.deserializeUser(request);
 
-        const data: [AccessAction, typeof Model][] = needsAccessActions.map<[AccessAction, typeof Model]>((x, i) => [
+        const data: [AccessAction, any][] = needsAccessActions.map<[AccessAction, any]>((x, i) => [
             x,
             request.resources[i]
         ]);
@@ -75,7 +76,7 @@ export class AccessControlGuard implements CanActivate {
         return shouldActivate.length && shouldActivate.every(activate => activate);
     }
 
-    public getModels(path: string, actions: AccessAction[]): typeof Model[] {
+    public getModels(path: string, actions: AccessAction[]): any[] {
         const model = [];
         for (const action of actions) {
             const param = `/:${action.resourceIdParameterName}`;
@@ -107,7 +108,7 @@ export class AccessControlGuard implements CanActivate {
 
             for (const route of routes) {
                 if (this.resources[route]) {
-                    throw new Error(`${route} is already associated to a model (${this.resources[route].tableName})`);
+                    throw new Error(`${route} is already associated to a model (${this.databaseAdapter?.getResourceName(this.resources[route])})`);
                 }
                 this.resources[route] = model;
             }
