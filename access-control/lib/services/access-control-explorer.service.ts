@@ -2,8 +2,9 @@ import { Injectable, Type } from "@nestjs/common";
 import { InstanceWrapper } from "@nestjs/core/injector/instance-wrapper";
 import { Module } from "@nestjs/core/injector/module";
 import { ModulesContainer } from "@nestjs/core/injector/modules-container";
+import { IDatabaseAdapter } from "../adapters";
 import {
-    CREATED_POLICY_METADATA,
+    CREATED_POLICY_METADATA, DATABASE_ADAPTER_METADATA,
     DELETED_POLICY_METADATA,
     POLICY_METADATA,
     UPDATED_POLICY_METADATA
@@ -30,12 +31,16 @@ export class AccessControlExplorerService {
         const deletedPolicies = this.flatMap<ResourceDeletedPolicy<any>>(modules, instance =>
             this.filterProvider(instance, DELETED_POLICY_METADATA)
         );
+        const databaseAdapters = this.flatMap<IDatabaseAdapter>(modules, instance =>
+            this.filterProvider(instance, DATABASE_ADAPTER_METADATA)
+        );
 
         return {
             policies,
             createdPolicies,
             updatedPolicies,
-            deletedPolicies
+            deletedPolicies,
+            databaseAdapters,
         };
     }
 

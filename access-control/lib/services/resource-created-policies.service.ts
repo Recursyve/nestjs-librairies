@@ -1,15 +1,21 @@
-import { Injectable, Logger, Type } from "@nestjs/common";
+import { Inject, Injectable, Logger, Optional, Type } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
-import { DatabaseAdapter } from "../adapters/database.adapter";
+import { ACCESS_CONTROL_DEFAULT_DATABASE } from "../constant";
 import { CREATED_POLICY_METADATA, FROM_POLICY_METADATA } from "../decorators/constant";
 import { UserResources } from "../models";
+import { PolicyConfig } from "../models/policy-config.model";
 import { ResourceCreatedPolicy } from "../policies";
+import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
 
 @Injectable()
 export class ResourceCreatedPoliciesService {
     private readonly logger = new Logger();
 
-    constructor(private readonly moduleRef: ModuleRef, private readonly databaseAdapter: DatabaseAdapter) {}
+    constructor(
+        @Optional() @Inject(ACCESS_CONTROL_DEFAULT_DATABASE) private type: string,
+        private readonly moduleRef: ModuleRef,
+        private databaseAdaptersRegistry: DatabaseAdaptersRegistry
+    ) {}
 
     private _policies: ResourceCreatedPolicy<any>[] = [];
 
@@ -62,16 +68,18 @@ export class ResourceCreatedPoliciesService {
             return;
         }
 
-        const target = this.reflectModel(policy);
-        instance.resourceName = this.databaseAdapter.getResourceName(target);
+        const config = this.reflectModel(policy);
+        const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(instance.type ?? this.type)
+        instance.type = config.type ?? this.type;
+        instance.resourceName = databaseAdapter.getResourceName(config.model);
 
         const parent = this.reflectParentModel(policy);
-        instance.parentResourceName = this.databaseAdapter.getResourceName(parent);
+        instance.parentResourceName = databaseAdapter.getResourceName(parent);
 
         this._policies.push(instance);
     }
 
-    private reflectModel(policy: Type<ResourceCreatedPolicy<any>>): any {
+    private reflectModel(policy: Type<ResourceCreatedPolicy<any>>): PolicyConfig {
         return Reflect.getMetadata(CREATED_POLICY_METADATA, policy);
     }
 

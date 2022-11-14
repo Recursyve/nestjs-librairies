@@ -1,6 +1,7 @@
 export * from "./access-control.service";
 export * from "./access-control-explorer.service";
 export * from "./access-policies.service";
+export * from "./database-adapters.registry";
 export * from "./resource-access-control.service";
 export * from "./resource-created-policies.service";
 export * from "./resource-deleted-policies.service";

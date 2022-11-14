@@ -6,3 +6,4 @@ export const DELETED_POLICY_METADATA = "__deletedPolicy__";
 export const FROM_POLICY_METADATA = "__fromPolicy__";
 export const NEEDS_ACCESS_ACTIONS = "__needsAccessActions__";
 export const FALLBACK_ACCESS_CONTROL_GUARDS = "__fallbackAccessControlGuards__";
+export const DATABASE_ADAPTER_METADATA = "__databaseAdapter__";

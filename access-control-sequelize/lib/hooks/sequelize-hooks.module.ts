@@ -1,6 +1,8 @@
 import { Module, OnModuleInit } from "@nestjs/common";
-import { M, ResourceEventAccessControlService } from "@recursyve/nestjs-access-control";
-import { Sequelize } from "sequelize-typescript";
+import { ResourceEventAccessControlService } from "@recursyve/nestjs-access-control";
+import { Model, Sequelize } from "sequelize-typescript";
+
+class M extends Model {}
 
 @Module({})
 export class SequelizeHooksAccessControlModule implements OnModuleInit {

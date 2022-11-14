@@ -1,25 +1,24 @@
-import { CanActivate, ExecutionContext, Inject, Injectable, Type } from "@nestjs/common";
+import { CanActivate, ExecutionContext, Injectable, OnModuleInit, Type } from "@nestjs/common";
 import { ModuleRef, Reflector } from "@nestjs/core";
-import { DatabaseAdapter } from "../adapters/database.adapter";
-import { ACCESS_CONTROL_MODELS } from "../constant";
 import { ACCESS_CONTROL_ROUTES, FALLBACK_ACCESS_CONTROL_GUARDS, NEEDS_ACCESS_ACTIONS } from "../decorators/constant";
 import { UserDeserializer } from "../deserializers";
 import { AccessAction } from "../models";
-import { AccessControlService } from "../services";
+import { AccessControlService, DatabaseAdaptersRegistry } from "../services";
 
 @Injectable()
-export class AccessControlGuard implements CanActivate {
+export class AccessControlGuard implements CanActivate, OnModuleInit {
     private resources: { [resource: string]: unknown };
     private routes: string[];
 
     constructor(
-        @Inject(ACCESS_CONTROL_MODELS) private readonly models: any[],
         private readonly reflector: Reflector,
         private readonly accessControlService: AccessControlService,
-        private readonly databaseAdapter: DatabaseAdapter,
+        private readonly databaseAdaptersRegistry: DatabaseAdaptersRegistry,
         private readonly userDeserializer: UserDeserializer,
         private readonly moduleRef: ModuleRef
-    ) {
+    ) {}
+
+    public onModuleInit(): void {
         this.init();
     }
 
@@ -100,7 +99,8 @@ export class AccessControlGuard implements CanActivate {
 
     private init(): void {
         this.resources = {};
-        for (const model of this.models) {
+        const models = this.databaseAdaptersRegistry.getModels();
+        for (const model of models) {
             const routes = this.reflectModelRoutes(model);
             if (!routes) {
                 continue;
@@ -108,7 +108,7 @@ export class AccessControlGuard implements CanActivate {
 
             for (const route of routes) {
                 if (this.resources[route]) {
-                    throw new Error(`${route} is already associated to a model (${this.databaseAdapter?.getResourceName(this.resources[route])})`);
+                    throw new Error(`${route} is already associated to a model`);
                 }
                 this.resources[route] = model;
             }

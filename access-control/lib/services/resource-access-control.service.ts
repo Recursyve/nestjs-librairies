@@ -1,7 +1,7 @@
 import { Inject, Injectable, Optional } from "@nestjs/common";
 import { CommandBus } from "@nestjs/cqrs";
 import { RedisService } from "@recursyve/nestjs-redis";
-import { DatabaseAdapter } from "../adapters/database.adapter";
+import { IDatabaseAdapter } from "../adapters";
 import { GetResourcesCommand } from "../commands";
 import {
     AccessActionType,
@@ -13,7 +13,9 @@ import {
     Resources,
     Users
 } from "../models";
+import { PolicyConfig } from "../models/policy-config.model";
 import { RedisKeyUtils } from "../utils";
+import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
 
 @Injectable()
 export class ResourceAccessControlService {
@@ -22,19 +24,28 @@ export class ResourceAccessControlService {
     @Inject()
     public commandBus: CommandBus;
     @Inject()
-    public databaseAdapter: DatabaseAdapter;
+    public databaseAdaptersRegistry: DatabaseAdaptersRegistry;
 
+    private _databaseAdapter: IDatabaseAdapter;
     private _resourceName: string
+
+    private get databaseAdapter(): IDatabaseAdapter {
+        if (!this._databaseAdapter) {
+            this._databaseAdapter = this.databaseAdaptersRegistry.getAdapter(this.config.type);
+        }
+
+        return this._databaseAdapter;
+    }
 
     private get resourceName(): string {
         if (!this._resourceName) {
-            this._resourceName = this.databaseAdapter.getResourceName(this.model);
+            this._resourceName = this.databaseAdapter.getResourceName(this.config.model);
         }
 
         return this._resourceName;
     }
 
-    constructor(@Optional() private model: any) {}
+    constructor(@Optional() private config: PolicyConfig) {}
 
     public async getResources(user: Users): Promise<Resources> {
         const exist = await this.accessControlsExists(user);
@@ -201,7 +212,7 @@ export class ResourceAccessControlService {
             return AccessRules.none();
         }
 
-        const exist = await this.databaseAdapter.checkIfResourceExist(this.model, resourceId, condition.where);
+        const exist = await this.databaseAdapter.checkIfResourceExist(this.config.model, resourceId, condition.where);
         if (!exist) {
             return AccessRules.none();
         }

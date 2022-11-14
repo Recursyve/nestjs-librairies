@@ -3,6 +3,7 @@ import { UserResources } from "../models";
 
 @Injectable()
 export abstract class ResourceUpdatedPolicy<T> {
+    public type: string;
     public resourceName: string;
     public parentResourceName: string;
 
