@@ -11,7 +11,7 @@ export class SequelizeDatabaseAdapter implements IDatabaseAdapter {
     }
 
     public getResourceName(model: typeof Model): string {
-        return model.tableName;
+        return `${model.tableName}-sequelize`;
     }
 
     public checkIfResourceExist(model: typeof SequelizeEntities, resourceId: number, condition: any): Promise<boolean> {

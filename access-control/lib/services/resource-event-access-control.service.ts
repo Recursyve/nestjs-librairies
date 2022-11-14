@@ -6,15 +6,15 @@ import { ResourceCreatedCommand, ResourceDeletedCommand, ResourceUpdatedCommand 
 export class ResourceEventAccessControlService<T> {
     constructor(private readonly commandBus: CommandBus) {}
 
-    public onResourceCreated(table: string, resource: T): Promise<any> {
-        return this.commandBus.execute(new ResourceCreatedCommand(table, resource));
+    public onResourceCreated(resourceName: string, resource: T): Promise<any> {
+        return this.commandBus.execute(new ResourceCreatedCommand(resourceName, resource));
     }
 
-    public onResourceDeleted(table: string, resource: T, resourceId: number): Promise<any> {
-        return this.commandBus.execute(new ResourceDeletedCommand(table, resource, resourceId));
+    public onResourceDeleted(resourceName: string, resource: T, resourceId: number): Promise<any> {
+        return this.commandBus.execute(new ResourceDeletedCommand(resourceName, resource, resourceId));
     }
 
-    public onResourceUpdated(table: string, before: T, after: T): Promise<any> {
-        return this.commandBus.execute(new ResourceUpdatedCommand(table, before, after));
+    public onResourceUpdated(resourceName: string, before: T, after: T): Promise<any> {
+        return this.commandBus.execute(new ResourceUpdatedCommand(resourceName, before, after));
     }
 }

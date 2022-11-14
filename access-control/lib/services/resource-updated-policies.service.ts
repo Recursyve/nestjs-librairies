@@ -23,8 +23,8 @@ export class ResourceUpdatedPoliciesService {
         return this._policies;
     }
 
-    public async execute(table: string, before: any, after: any): Promise<UserResources[]> {
-        const policies = this._policies.filter(x => x.resourceName === table && !x.parentResourceName);
+    public async execute(resourceName: string, before: any, after: any): Promise<UserResources[]> {
+        const policies = this._policies.filter(x => x.resourceName === resourceName && !x.parentResourceName);
         const policiesRes = await Promise.all(policies.map(async policy => {
             try {
                 this.logger.verbose(`Getting users for resource ${before.id}`, policy.name);
@@ -38,7 +38,7 @@ export class ResourceUpdatedPoliciesService {
         }))
             .then(res => res.flat().map(x => ({ ...x, resourceId: before.id })));
 
-        const parentPolicies = this._policies.filter(x => x.parentResourceName && x.parentResourceName === table);
+        const parentPolicies = this._policies.filter(x => x.parentResourceName && x.parentResourceName === resourceName);
         const parentPoliciesRes = await Promise.all(parentPolicies.map(async policy => {
             try {
                 this.logger.verbose(`Getting users for resource ${before.id}`, policy.name);
@@ -68,12 +68,14 @@ export class ResourceUpdatedPoliciesService {
         }
 
         const config = this.reflectModel(policy);
-        const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(instance.type ?? this.type)
+        const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.type ?? this.type)
         instance.type = config.type ?? this.type;
         instance.resourceName = databaseAdapter.getResourceName(config.model);
 
         const parent = this.reflectParentModel(policy);
-        instance.parentResourceName = databaseAdapter.getResourceName(parent);
+        if (parent) {
+            instance.parentResourceName = databaseAdapter.getResourceName(parent);
+        }
 
         this._policies.push(instance);
     }

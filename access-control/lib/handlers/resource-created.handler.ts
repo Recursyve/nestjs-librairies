@@ -12,8 +12,8 @@ export class AccessControlResourceCreatedHandler implements ICommandHandler<Reso
     ) {}
 
     public async execute(command: ResourceCreatedCommand<any>): Promise<void> {
-        this.eventBus.publish(new ResourceCreatedEvent(command.table, command.resource));
-        const results = await this.resourceCreatedPolicyService.execute(command.table, command.resource);
+        this.eventBus.publish(new ResourceCreatedEvent(command.resourceName, command.resource));
+        const results = await this.resourceCreatedPolicyService.execute(command.resourceName, command.resource);
         if (results) {
             await this.resourceEventService.addUserResources(results);
         }

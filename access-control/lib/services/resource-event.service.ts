@@ -15,8 +15,8 @@ export class ResourceEventService {
         );
     }
 
-    public async removeUserResource(table: string, resourceId: number): Promise<void> {
-        await this.redisService.scanDel(RedisKeyUtils.userResourceIdPattern(table, resourceId));
+    public async removeUserResource(resourceName: string, resourceId: number): Promise<void> {
+        await this.redisService.scanDel(RedisKeyUtils.userResourceIdPattern(resourceName, resourceId));
     }
 
     public async updatedUserResources(resources: UserResources[]): Promise<void> {
