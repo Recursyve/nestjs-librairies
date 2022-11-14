@@ -1,8 +1,14 @@
 import { CanActivate, ExecutionContext, Injectable, OnModuleInit, Type } from "@nestjs/common";
 import { ModuleRef, Reflector } from "@nestjs/core";
-import { ACCESS_CONTROL_ROUTES, FALLBACK_ACCESS_CONTROL_GUARDS, NEEDS_ACCESS_ACTIONS } from "../decorators/constant";
+import {
+    ACCESS_CONTROL_RESOURCE,
+    ACCESS_CONTROL_ROUTES,
+    FALLBACK_ACCESS_CONTROL_GUARDS,
+    NEEDS_ACCESS_ACTIONS
+} from "../decorators/constant";
 import { UserDeserializer } from "../deserializers";
 import { AccessAction } from "../models";
+import { AccessControlResourceConfig } from "../models/access-control-resource.model";
 import { AccessControlService, DatabaseAdaptersRegistry } from "../services";
 
 @Injectable()
@@ -34,12 +40,33 @@ export class AccessControlGuard implements CanActivate, OnModuleInit {
         }
 
         const request = context.switchToHttp().getRequest();
-        request.resources = this.getModels(request.route.path, needsAccessActions);
         const user = await this.userDeserializer.deserializeUser(request);
+
+        const controllerResource = this.reflector.get<AccessControlResourceConfig>(ACCESS_CONTROL_RESOURCE, context.getClass());
+        const methodResource = this.reflector.get<AccessControlResourceConfig>(ACCESS_CONTROL_RESOURCE, context.getHandler());
+        if (!controllerResource && !methodResource) {
+            request.resources = this.getModels(request.route.path, needsAccessActions);
+        }
+
+        const getResource = (action: AccessAction, index: number) => {
+            if (!controllerResource && !methodResource) {
+                return request.resources[index];
+            }
+
+            if (controllerResource?.paramId === action.resourceIdParameterName) {
+                return controllerResource.model;
+            }
+
+            if (methodResource?.paramId === action.resourceIdParameterName) {
+                return methodResource.model;
+            }
+
+            return null;
+        };
 
         const data: [AccessAction, any][] = needsAccessActions.map<[AccessAction, any]>((x, i) => [
             x,
-            request.resources[i]
+            getResource(x, i)
         ]);
 
         for (const [accessAction, resource] of data) {
