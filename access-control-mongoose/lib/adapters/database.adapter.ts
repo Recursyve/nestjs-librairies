@@ -18,7 +18,7 @@ export class MongooseDatabaseAdapter implements IDatabaseAdapter {
         return `${m.collection.name}-mongoose`;
     }
 
-    public checkIfResourceExist(model: Model<any>, resourceId: any, condition: any): Promise<boolean> {
+    public checkIfResourceExist(model: Model<any>, resourceId: string, condition: any): Promise<boolean> {
         const m = this.connection.models[model.name];
         if (!m) {
             throw new Error("Model not found");

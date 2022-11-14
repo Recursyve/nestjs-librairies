@@ -4,7 +4,7 @@ export interface UserResources {
     userId: string;
     rules: AccessRules;
 
-    table?: string;
-    resourceId?: number;
+    resourceName?: string;
+    resourceId?: number | string;
     userRole?: string;
 }

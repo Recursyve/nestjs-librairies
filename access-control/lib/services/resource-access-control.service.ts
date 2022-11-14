@@ -56,18 +56,6 @@ export class ResourceAccessControlService {
         return await this.getResourcesForAction(user, AccessActionType.Read);
     }
 
-    /**
-     * @deprecated: Use getResources instead
-     */
-    public async getResourceIds(user: Users): Promise<number[]> {
-        const exist = await this.accessControlsExists(user);
-        if (!exist) {
-            return await this.fetchResources(user).then((x) => x.ids ?? []);
-        }
-
-        return await this.getResourcesForAction(user, AccessActionType.Read).then((x) => x.ids ?? []);
-    }
-
     public async accessControlsExists(user: Users): Promise<boolean> {
         return !!(await this.redisService.get(RedisKeyUtils.userAccessControl(user, this.resourceName)));
     }

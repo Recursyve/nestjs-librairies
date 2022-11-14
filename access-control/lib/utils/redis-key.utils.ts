@@ -35,14 +35,14 @@ export class RedisKeyUtils {
         return `${this.prefix}:*:${resourceName}:*`;
     }
 
-    public static userResourceIdKey(resourceName: string, resourceId: number, user: Users): string {
+    public static userResourceIdKey(resourceName: string, resourceId: number | string, user: Users): string {
         if (!user.role) {
             return `${this.prefix}:${resourceName}:${resourceId}:${user.id}`;
         }
         return `${this.prefix}:${resourceName}:${resourceId}:${user.id}-${user.role}`;
     }
 
-    public static userResourceIdPattern(resourceName: string, resourceId: number): string {
+    public static userResourceIdPattern(resourceName: string, resourceId: number | string): string {
         return `${this.prefix}:${resourceName}:${resourceId}:*`;
     }
 

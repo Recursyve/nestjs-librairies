@@ -15,7 +15,7 @@ export abstract class ResourceCreatedPolicy<T> {
         const result = await this.getPolicies(resource);
         return result
             .filter(x => !!x)
-            .map(x => ({ ...x, table: this.resourceName }));
+            .map(x => ({ ...x, resourceName: this.resourceName }));
     }
 
     protected async getPolicies(resource: T): Promise<UserResources[]> {

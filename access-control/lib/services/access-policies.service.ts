@@ -23,8 +23,8 @@ export class AccessPoliciesService {
         return this._policies;
     }
 
-    public async execute(table: string, user: Users): Promise<PolicyResources> {
-        const policy = this._policies.find(x => x.resourceName === table);
+    public async execute(resourceName: string, user: Users): Promise<PolicyResources> {
+        const policy = this._policies.find(x => x.resourceName === resourceName);
         if (!policy) {
             return PolicyResources.resources([]);
         }

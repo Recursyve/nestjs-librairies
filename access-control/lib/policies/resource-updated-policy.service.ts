@@ -15,7 +15,7 @@ export abstract class ResourceUpdatedPolicy<T> {
         const result = await this.getPolicies(before, after);
         return result
             .filter(x => !!x)
-            .map(x => ({ ...x, table: this.resourceName }));
+            .map(x => ({ ...x, resourceName: this.resourceName }));
     }
 
     protected async getPolicies(before: T, after: T): Promise<UserResources[]> {

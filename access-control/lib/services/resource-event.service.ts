@@ -15,7 +15,7 @@ export class ResourceEventService {
         );
     }
 
-    public async removeUserResource(resourceName: string, resourceId: number): Promise<void> {
+    public async removeUserResource(resourceName: string, resourceId: number | string): Promise<void> {
         await this.redisService.scanDel(RedisKeyUtils.userResourceIdPattern(resourceName, resourceId));
     }
 
@@ -23,7 +23,7 @@ export class ResourceEventService {
         await Promise.all(
             resources.map(resource =>
                 this.redisService.del(
-                    RedisKeyUtils.userResourceIdKey(resource.table, resource.resourceId, {
+                    RedisKeyUtils.userResourceIdKey(resource.resourceName, resource.resourceId, {
                         id: resource.userId,
                         role: resource.userRole
                     } as Users)
@@ -46,7 +46,7 @@ export class ResourceEventService {
                     RedisKeyUtils.userResourceActionKey({
                         id: user.userId,
                         role: user.userRole
-                    } as Users, user.table, action),
+                    } as Users, user.resourceName, action),
                     user.resourceId.toString()
                 )
             )
@@ -61,7 +61,7 @@ export class ResourceEventService {
                     RedisKeyUtils.userResourceActionKey({
                         id: user.userId,
                         role: user.userRole
-                    } as Users, user.table, action),
+                    } as Users, user.resourceName, action),
                     user.resourceId.toString()
                 )
             )
@@ -74,7 +74,7 @@ export class ResourceEventService {
                     RedisKeyUtils.userResourceActionKey({
                         id: user.userId,
                         role: user.userRole
-                    } as Users, user.table, action),
+                    } as Users, user.resourceName, action),
                     user.resourceId.toString()
                 )
             )

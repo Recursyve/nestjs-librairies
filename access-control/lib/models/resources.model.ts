@@ -47,16 +47,16 @@ export class PolicyResources {
 }
 
 export interface AccessControlResources {
-    resourceId: number;
+    resourceId: number | string;
     rules: AccessRules;
 }
 
 export class Resources {
     public all?: boolean;
-    public ids?: number[];
+    public ids?: (number | string)[];
     public where?: any;
 
-    private constructor({ all, ids, where }: { all?: boolean; ids?: number[]; where?: any }) {
+    private constructor({ all, ids, where }: { all?: boolean; ids?: (number | string)[]; where?: any }) {
         this.all = all;
         this.ids = ids;
         this.where = where;
@@ -66,7 +66,7 @@ export class Resources {
         return new Resources({ all: true });
     }
 
-    public static fromIds(ids: number[]): Resources {
+    public static fromIds(ids: (number | string)[]): Resources {
         return new Resources({ ids });
     }
 
