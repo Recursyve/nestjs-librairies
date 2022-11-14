@@ -3,6 +3,12 @@ import * as Redis from "ioredis";
 import { RedisArrayUtils } from "../utils/array.utils";
 import { RedisConfigService } from "./redis-config.service";
 
+export interface RedidSetOptions {
+    // ex: seconds, px: milliseconds
+    unit: "ex" | "px";
+    duration: number;
+}
+
 @Injectable()
 export class RedisService {
     private readonly client: Redis.Redis;
@@ -19,8 +25,8 @@ export class RedisService {
         return (await this.client.exists(key)) > 0;
     }
 
-    public set(key: string, value: string): Promise<any> {
-        return this.client.set(key, value);
+    public set(key: string, value: string, options?: RedidSetOptions): Promise<any> {
+        return this.client.set(key, value, options?.unit, options?.duration);
     }
 
     public get(key: string): Promise<string> {
