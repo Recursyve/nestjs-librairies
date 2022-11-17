@@ -1,4 +1,4 @@
-import { AccessActionType, Users } from "../models";
+import { AccessActionType, ResourceId, Users } from "../models";
 
 export class RedisKeyUtils {
     public static prefix = "access-control";
@@ -35,14 +35,14 @@ export class RedisKeyUtils {
         return `${this.prefix}:*:${resourceName}:*`;
     }
 
-    public static userResourceIdKey(resourceName: string, resourceId: number | string, user: Users): string {
+    public static userResourceIdKey(resourceName: string, resourceId: ResourceId, user: Users): string {
         if (!user.role) {
             return `${this.prefix}:${resourceName}:${resourceId}:${user.id}`;
         }
         return `${this.prefix}:${resourceName}:${resourceId}:${user.id}-${user.role}`;
     }
 
-    public static userResourceIdPattern(resourceName: string, resourceId: number | string): string {
+    public static userResourceIdPattern(resourceName: string, resourceId: ResourceId): string {
         return `${this.prefix}:${resourceName}:${resourceId}:*`;
     }
 

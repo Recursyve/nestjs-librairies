@@ -13,7 +13,7 @@ export class MongooseDatabaseAdapter implements IDatabaseAdapter {
     public getResourceName(model: Model<any>): string {
         const m = this.connection.models[model.name];
         if (!m) {
-            throw new Error("Model not found");
+            throw new Error(`Mongoose model '${model}' not found`);
         }
         return `${m.collection.name}-mongoose`;
     }
@@ -21,7 +21,7 @@ export class MongooseDatabaseAdapter implements IDatabaseAdapter {
     public checkIfResourceExist(model: Model<any>, resourceId: string, condition: any): Promise<boolean> {
         const m = this.connection.models[model.name];
         if (!m) {
-            throw new Error("Model not found");
+            throw new Error(`Mongoose model '${model}' not found`);
         }
         return m
             .count({

@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { RedisService } from "@recursyve/nestjs-redis";
-import { AccessActionType, UserResources, Users } from "../models";
+import { AccessActionType, ResourceId, UserResources, Users } from "../models";
 import { RedisKeyUtils } from "../utils";
 
 @Injectable()
@@ -15,7 +15,7 @@ export class ResourceEventService {
         );
     }
 
-    public async removeUserResource(resourceName: string, resourceId: number | string): Promise<void> {
+    public async removeUserResource(resourceName: string, resourceId: ResourceId): Promise<void> {
         await this.redisService.scanDel(RedisKeyUtils.userResourceIdPattern(resourceName, resourceId));
     }
 

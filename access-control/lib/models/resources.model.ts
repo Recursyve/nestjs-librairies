@@ -1,5 +1,7 @@
 import { AccessRules } from "./access-rules.model";
 
+export type ResourceId = number | string;
+
 export enum PolicyResourceTypes {
     Wildcard = "wildcard",
     Resources = "resources",
@@ -47,16 +49,16 @@ export class PolicyResources {
 }
 
 export interface AccessControlResources {
-    resourceId: number | string;
+    resourceId: ResourceId;
     rules: AccessRules;
 }
 
 export class Resources {
     public all?: boolean;
-    public ids?: (number | string)[];
+    public ids?: ResourceId[];
     public where?: any;
 
-    private constructor({ all, ids, where }: { all?: boolean; ids?: (number | string)[]; where?: any }) {
+    private constructor({ all, ids, where }: { all?: boolean; ids?: ResourceId[]; where?: any }) {
         this.all = all;
         this.ids = ids;
         this.where = where;
@@ -66,7 +68,7 @@ export class Resources {
         return new Resources({ all: true });
     }
 
-    public static fromIds(ids: (number | string)[]): Resources {
+    public static fromIds(ids: ResourceId[]): Resources {
         return new Resources({ ids });
     }
 
