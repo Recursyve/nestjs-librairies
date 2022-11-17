@@ -68,8 +68,9 @@ export class ResourceDeletedPoliciesService {
         }
 
         const config = this.reflectModel(policy);
-        const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.type ?? this.type)
         instance.type = config.type ?? this.type;
+
+        const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.type ?? this.type)
         instance.resourceName = databaseAdapter.getResourceName(config.model);
 
         const parent = this.reflectParentModel(policy);

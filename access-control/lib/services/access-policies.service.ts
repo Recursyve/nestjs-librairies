@@ -58,8 +58,9 @@ export class AccessPoliciesService {
         }
 
         const config = this.reflectModel(policy);
-        const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.type ?? this.type)
         instance.type = config.type ?? this.type;
+
+        const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.type ?? this.type)
         instance.resourceName = databaseAdapter.getResourceName(config.model);
         this._policies.push(instance);
     }
