@@ -1,24 +1,30 @@
-import { CanActivate, ExecutionContext, Inject, Injectable, Type } from "@nestjs/common";
+import { CanActivate, ExecutionContext, Injectable, OnModuleInit, Type } from "@nestjs/common";
 import { ModuleRef, Reflector } from "@nestjs/core";
-import { Model } from "sequelize-typescript";
-import { ACCESS_CONTROL_MODELS } from "../constant";
-import { ACCESS_CONTROL_ROUTES, FALLBACK_ACCESS_CONTROL_GUARDS, NEEDS_ACCESS_ACTIONS } from "../decorators/constant";
+import {
+    ACCESS_CONTROL_RESOURCE,
+    ACCESS_CONTROL_ROUTES,
+    FALLBACK_ACCESS_CONTROL_GUARDS,
+    NEEDS_ACCESS_ACTIONS
+} from "../decorators/constant";
 import { UserDeserializer } from "../deserializers";
 import { AccessAction } from "../models";
-import { AccessControlService } from "../services";
+import { AccessControlResourceConfig } from "../models/access-control-resource.model";
+import { AccessControlService, DatabaseAdaptersRegistry } from "../services";
 
 @Injectable()
-export class AccessControlGuard implements CanActivate {
-    private resources: { [resource: string]: typeof Model };
+export class AccessControlGuard implements CanActivate, OnModuleInit {
+    private resources: { [resource: string]: unknown };
     private routes: string[];
 
     constructor(
-        @Inject(ACCESS_CONTROL_MODELS) private readonly models: (typeof Model)[],
         private readonly reflector: Reflector,
         private readonly accessControlService: AccessControlService,
+        private readonly databaseAdaptersRegistry: DatabaseAdaptersRegistry,
         private readonly userDeserializer: UserDeserializer,
         private readonly moduleRef: ModuleRef
-    ) {
+    ) {}
+
+    public onModuleInit(): void {
         this.init();
     }
 
@@ -34,12 +40,33 @@ export class AccessControlGuard implements CanActivate {
         }
 
         const request = context.switchToHttp().getRequest();
-        request.resources = this.getModels(request.route.path, needsAccessActions);
         const user = await this.userDeserializer.deserializeUser(request);
 
-        const data: [AccessAction, typeof Model][] = needsAccessActions.map<[AccessAction, typeof Model]>((x, i) => [
+        const controllerResource = this.reflector.get<AccessControlResourceConfig>(ACCESS_CONTROL_RESOURCE, context.getClass());
+        const methodResource = this.reflector.get<AccessControlResourceConfig>(ACCESS_CONTROL_RESOURCE, context.getHandler());
+        if (!controllerResource && !methodResource) {
+            request.resources = this.getModels(request.route.path, needsAccessActions);
+        }
+
+        const getResource = (action: AccessAction, index: number) => {
+            if (!controllerResource && !methodResource) {
+                return request.resources[index];
+            }
+
+            if (controllerResource?.paramId === action.resourceIdParameterName) {
+                return controllerResource.model;
+            }
+
+            if (methodResource?.paramId === action.resourceIdParameterName) {
+                return methodResource.model;
+            }
+
+            return null;
+        };
+
+        const data: [AccessAction, any][] = needsAccessActions.map<[AccessAction, any]>((x, i) => [
             x,
-            request.resources[i]
+            getResource(x, i)
         ]);
 
         for (const [accessAction, resource] of data) {
@@ -75,7 +102,7 @@ export class AccessControlGuard implements CanActivate {
         return shouldActivate.length && shouldActivate.every(activate => activate);
     }
 
-    public getModels(path: string, actions: AccessAction[]): typeof Model[] {
+    public getModels(path: string, actions: AccessAction[]): any[] {
         const model = [];
         for (const action of actions) {
             const param = `/:${action.resourceIdParameterName}`;
@@ -99,7 +126,8 @@ export class AccessControlGuard implements CanActivate {
 
     private init(): void {
         this.resources = {};
-        for (const model of this.models) {
+        const models = this.databaseAdaptersRegistry.getModels();
+        for (const model of models) {
             const routes = this.reflectModelRoutes(model);
             if (!routes) {
                 continue;
@@ -107,7 +135,7 @@ export class AccessControlGuard implements CanActivate {
 
             for (const route of routes) {
                 if (this.resources[route]) {
-                    throw new Error(`${route} is already associated to a model (${this.resources[route].tableName})`);
+                    throw new Error(`${route} is already associated to a model`);
                 }
                 this.resources[route] = model;
             }

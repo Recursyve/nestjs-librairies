@@ -1,5 +1,6 @@
 import { ICommand } from "@nestjs/cqrs";
+import { ResourceId } from "../models";
 
 export class ResourceDeletedCommand<T> implements ICommand {
-    constructor(public table: string, public resource: T, public resourceId: number) {}
+    constructor(public resourceName: string, public resource: T, public resourceId: ResourceId) {}
 }

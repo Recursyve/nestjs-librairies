@@ -5,7 +5,7 @@ import { FindOptions, Identifier, Op, WhereOptions } from "sequelize";
 
 export class AccessControlRepository<T extends SequelizeEntities> extends ResourceAccessControlService {
     constructor(protected repository: typeof SequelizeEntities) {
-        super(repository);
+        super({ model: repository, type: "sequelize" });
     }
 
     public async findByPkFromUser(identifier: Identifier, resources: Resources, options?: FindOptions): Promise<T> {

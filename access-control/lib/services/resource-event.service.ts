@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { RedisService } from "@recursyve/nestjs-redis";
-import { AccessActionType, UserResources, Users } from "../models";
+import { AccessActionType, ResourceId, UserResources, Users } from "../models";
 import { RedisKeyUtils } from "../utils";
 
 @Injectable()
@@ -15,15 +15,15 @@ export class ResourceEventService {
         );
     }
 
-    public async removeUserResource(table: string, resourceId: number): Promise<void> {
-        await this.redisService.scanDel(RedisKeyUtils.userResourceIdPattern(table, resourceId));
+    public async removeUserResource(resourceName: string, resourceId: ResourceId): Promise<void> {
+        await this.redisService.scanDel(RedisKeyUtils.userResourceIdPattern(resourceName, resourceId));
     }
 
     public async updatedUserResources(resources: UserResources[]): Promise<void> {
         await Promise.all(
             resources.map(resource =>
                 this.redisService.del(
-                    RedisKeyUtils.userResourceIdKey(resource.table, resource.resourceId, {
+                    RedisKeyUtils.userResourceIdKey(resource.resourceName, resource.resourceId, {
                         id: resource.userId,
                         role: resource.userRole
                     } as Users)
@@ -46,7 +46,7 @@ export class ResourceEventService {
                     RedisKeyUtils.userResourceActionKey({
                         id: user.userId,
                         role: user.userRole
-                    } as Users, user.table, action),
+                    } as Users, user.resourceName, action),
                     user.resourceId.toString()
                 )
             )
@@ -61,7 +61,7 @@ export class ResourceEventService {
                     RedisKeyUtils.userResourceActionKey({
                         id: user.userId,
                         role: user.userRole
-                    } as Users, user.table, action),
+                    } as Users, user.resourceName, action),
                     user.resourceId.toString()
                 )
             )
@@ -74,7 +74,7 @@ export class ResourceEventService {
                     RedisKeyUtils.userResourceActionKey({
                         id: user.userId,
                         role: user.userRole
-                    } as Users, user.table, action),
+                    } as Users, user.resourceName, action),
                     user.resourceId.toString()
                 )
             )

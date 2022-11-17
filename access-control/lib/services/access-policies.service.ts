@@ -1,17 +1,21 @@
-import { Injectable, Logger, Type } from "@nestjs/common";
+import { Inject, Injectable, Logger, Optional, Type } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
-import { Model } from "sequelize-typescript";
+import { ACCESS_CONTROL_DEFAULT_DATABASE } from "../constant";
 import { POLICY_METADATA } from "../decorators/constant";
 import { PolicyResources, Users } from "../models";
+import { PolicyConfig } from "../models/policy-config.model";
 import { AccessPolicy } from "../policies";
-import { M } from "../utils";
+import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
 
 @Injectable()
 export class AccessPoliciesService {
     private readonly logger = new Logger();
 
-    constructor(private readonly moduleRef: ModuleRef) {
-    }
+    constructor(
+        @Optional() @Inject(ACCESS_CONTROL_DEFAULT_DATABASE) private type: string,
+        private readonly moduleRef: ModuleRef,
+        private databaseAdaptersRegistry: DatabaseAdaptersRegistry
+    ) {}
 
     private _policies: AccessPolicy[] = [];
 
@@ -19,8 +23,8 @@ export class AccessPoliciesService {
         return this._policies;
     }
 
-    public async execute(table: string, user: Users): Promise<PolicyResources> {
-        const policy = this._policies.find(x => x.repository.tableName === table);
+    public async execute(resourceName: string, user: Users): Promise<PolicyResources> {
+        const policy = this._policies.find(x => x.resourceName === resourceName);
         if (!policy) {
             return PolicyResources.resources([]);
         }
@@ -53,12 +57,15 @@ export class AccessPoliciesService {
             return;
         }
 
-        const target = this.reflectModel(policy);
-        instance.repository = target as typeof M;
+        const config = this.reflectModel(policy);
+        instance.type = config.type ?? this.type;
+
+        const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.type ?? this.type)
+        instance.resourceName = databaseAdapter.getResourceName(config.model);
         this._policies.push(instance);
     }
 
-    private reflectModel(policy: Type<AccessPolicy>): typeof Model {
+    private reflectModel(policy: Type<AccessPolicy>): PolicyConfig {
         return Reflect.getMetadata(POLICY_METADATA, policy);
     }
 }

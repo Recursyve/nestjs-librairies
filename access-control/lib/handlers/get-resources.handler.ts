@@ -8,6 +8,6 @@ export class AccessControlGetResourcesHandler implements ICommandHandler<GetReso
     constructor(private accessPolicyService: AccessPoliciesService) {}
 
     public async execute(command: GetResourcesCommand): Promise<PolicyResources> {
-        return await this.accessPolicyService.execute(command.table, command.user);
+        return await this.accessPolicyService.execute(command.resourceName, command.user);
     }
 }

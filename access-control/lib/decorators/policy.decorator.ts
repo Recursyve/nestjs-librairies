@@ -1,8 +1,10 @@
-import { M } from "../utils";
+import { PolicyConfig } from "../models/policy-config.model";
 import { POLICY_METADATA } from "./constant";
 
-export function Policy(model: typeof M): ClassDecorator {
+export function Policy(model: any, option?: Omit<PolicyConfig, "model">): ClassDecorator {
     return (target: object) => {
-        Reflect.defineMetadata(POLICY_METADATA, model, target);
+        const config: Partial<PolicyConfig> = option ?? {};
+        config.model = model;
+        Reflect.defineMetadata(POLICY_METADATA, config, target);
     };
 }

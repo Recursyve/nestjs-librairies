@@ -1,6 +1,8 @@
 import { Module, OnModuleInit } from "@nestjs/common";
-import { M, ResourceEventAccessControlService } from "@recursyve/nestjs-access-control";
-import { Sequelize } from "sequelize-typescript";
+import { ResourceEventAccessControlService } from "@recursyve/nestjs-access-control";
+import { Model, Sequelize } from "sequelize-typescript";
+
+class M extends Model {}
 
 @Module({})
 export class SequelizeHooksAccessControlModule implements OnModuleInit {
@@ -10,7 +12,7 @@ export class SequelizeHooksAccessControlModule implements OnModuleInit {
         for (const model of this.sequelize.modelManager.all) {
 
             (model as unknown as typeof M).addHook("afterCreate", "access-control-created-policy-hook", async (instance: M, options) => {
-                await this.resourceEventAccessControlService.onResourceCreated(model.tableName, instance);
+                await this.resourceEventAccessControlService.onResourceCreated(`${model.tableName}-sequelize`, instance);
             });
 
             /**
@@ -18,7 +20,7 @@ export class SequelizeHooksAccessControlModule implements OnModuleInit {
              */
             (model as unknown as typeof M).addHook("afterBulkCreate", "access-control-bulk-created-policy-hook", async (instances: M[], options) => {
                 await Promise.all(
-                    instances.map((instance) => this.resourceEventAccessControlService.onResourceCreated(model.tableName, instance))
+                    instances.map((instance) => this.resourceEventAccessControlService.onResourceCreated(`${model.tableName}-sequelize`, instance))
                 );
             });
 
@@ -33,7 +35,7 @@ export class SequelizeHooksAccessControlModule implements OnModuleInit {
             (model as unknown as typeof M).addHook("afterUpdate", "access-control-updated-policy-hook", async (instance: M, options) => {
                 const previous = new (instance as any).constructor(instance.toJSON()) as M;
                 previous.set(instance.previous());
-                await this.resourceEventAccessControlService.onResourceUpdated(model.tableName, previous, instance);
+                await this.resourceEventAccessControlService.onResourceUpdated(`${model.tableName}-sequelize`, previous, instance);
             });
 
             /**
@@ -45,7 +47,7 @@ export class SequelizeHooksAccessControlModule implements OnModuleInit {
             });
 
             (model as unknown as typeof M).addHook("afterDestroy", "access-control-deleted-policy-hook", async (instance: M, options) => {
-                await this.resourceEventAccessControlService.onResourceDeleted(model.tableName, instance, instance.getDataValue("id"));
+                await this.resourceEventAccessControlService.onResourceDeleted(`${model.tableName}-sequelize`, instance, instance.getDataValue("id"));
             });
         }
     }

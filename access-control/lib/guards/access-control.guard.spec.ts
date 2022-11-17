@@ -15,11 +15,7 @@ describe("AccessControlGuard", () => {
     let guard: AccessControlGuard;
 
     beforeAll(() => {
-        guard = new AccessControlGuard([
-            ModelTest1 as any,
-            ModelTest2 as any,
-            ModelTest3 as any
-        ], null, null, null, null);
+        guard = new AccessControlGuard(null, null, null, null, null);
     });
 
     it("getModels should return appropriated models", () => {
