@@ -1,4 +1,4 @@
 export interface FilterResourceValueModel {
     id: string;
-    resourceId: ResourceId;
+    resourceId: number | string;
 }

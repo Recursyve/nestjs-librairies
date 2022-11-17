@@ -5,7 +5,7 @@ import { BaseFilterDefinition, Filter } from "./filter";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
 
 export interface SelectFilterValue {
-    id: ResourceId;
+    id: number | string;
     name: string;
 }
 
@@ -16,7 +16,7 @@ export interface SelectFilterGetValuesOptions<T = any, User = any, Request = any
 }
 
 export interface SelectFilterGetResourceOptions<User = any, Request = any> {
-    id: ResourceId;
+    id: number | string;
     user?: User;
     request?: Request
 }
