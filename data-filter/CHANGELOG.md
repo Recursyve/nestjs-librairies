@@ -161,3 +161,9 @@ SelectFilter({
 ### Bugfix
 
 - Fix issues caused by the `exportRepository`
+
+## [8.5.4] - 2022-11-16
+
+### Bugfix
+
+- Fix issues with OrderRules
