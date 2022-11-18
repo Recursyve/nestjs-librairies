@@ -76,7 +76,8 @@ export class ResourceCreatedPoliciesService {
 
         const parent = this.reflectParentModel(policy);
         if (parent) {
-            instance.parentResourceName = databaseAdapter.getResourceName(parent);
+            const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(parent.type ?? this.type)
+            instance.parentResourceName = databaseAdapter.getResourceName(parent.model);
         }
 
         this._policies.push(instance);
@@ -86,7 +87,7 @@ export class ResourceCreatedPoliciesService {
         return Reflect.getMetadata(CREATED_POLICY_METADATA, policy);
     }
 
-    private reflectParentModel(policy: Type<ResourceCreatedPolicy<any>>): any {
+    private reflectParentModel(policy: Type<ResourceCreatedPolicy<any>>): PolicyConfig {
         return Reflect.getMetadata(FROM_POLICY_METADATA, policy);
     }
 }
