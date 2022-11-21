@@ -9,7 +9,7 @@ import {
     AccessRules,
     PolicyResources,
     PolicyResourcesCondition,
-    PolicyResourceTypes,
+    PolicyResourceTypes, ResourceId,
     Resources,
     Users
 } from "../models";
@@ -64,7 +64,7 @@ export class ResourceAccessControlService {
         return await this.redisService.get(RedisKeyUtils.userAccessControlType(user, this.resourceName)) as PolicyResourceTypes;
     }
 
-    public async getAccessRules(user: Users, resourceId: number): Promise<AccessRules> {
+    public async getAccessRules(user: Users, resourceId: ResourceId): Promise<AccessRules> {
         const res = await this.redisService.get(RedisKeyUtils.userResourceIdKey(this.resourceName, resourceId, user));
         if (res) {
             return AccessRules.fromString(res);
@@ -96,7 +96,7 @@ export class ResourceAccessControlService {
         }
     }
 
-    private async fetchAccessRules(user: Users, resourceId: number): Promise<AccessRules> {
+    private async fetchAccessRules(user: Users, resourceId: ResourceId): Promise<AccessRules> {
         const exist = await this.accessControlsExists(user);
         if (!exist) {
             await this.fetchResources(user);
@@ -116,7 +116,7 @@ export class ResourceAccessControlService {
         if (!type || type === PolicyResourceTypes.Resources) {
             const ids = await this.redisService
                 .lrange(RedisKeyUtils.userResourceActionKey(user, this.resourceName, action), 0, -1)
-                .then(result => result.map(x => +x));
+                .then(result => result.map(x => Number.isInteger(x) ? +x : x));
             return Resources.fromIds(ids);
         }
         if (type === PolicyResourceTypes.Wildcard) {
@@ -163,7 +163,7 @@ export class ResourceAccessControlService {
         await this.redisService.lpush(RedisKeyUtils.userResourceActionKey(user, this.resourceName, action), ...values);
     }
 
-    private async generateAccessRule(user: Users, resourceId: number): Promise<AccessRules> {
+    private async generateAccessRule(user: Users, resourceId: ResourceId): Promise<AccessRules> {
         const type = await this.accessControlsType(user);
         if (type === PolicyResourceTypes.Resources) {
             const r = await this.resourceHasAction(user, resourceId, AccessActionType.Read);
@@ -180,13 +180,13 @@ export class ResourceAccessControlService {
         return AccessRules.none();
     }
 
-    private async resourceHasAction(user: Users, resourceId: number, action: AccessActionType): Promise<boolean> {
+    private async resourceHasAction(user: Users, resourceId: ResourceId, action: AccessActionType): Promise<boolean> {
         const res = await this.redisService.lrange(
             RedisKeyUtils.userResourceActionKey(user, this.resourceName, action),
             0,
             -1
         );
-        return res.findIndex(value => +value === +resourceId) >= 0;
+        return res.findIndex(value => Number.isInteger(resourceId) ? +value === +resourceId : value === resourceId) >= 0;
     }
 
     private async getResourceCondition(user: Users): Promise<PolicyResourcesCondition<any>> {
@@ -194,7 +194,7 @@ export class ResourceAccessControlService {
         return JSON.parse(res) as PolicyResourcesCondition<any>;
     }
 
-    private async fetchResourceRule(user: Users, resourceId: number): Promise<AccessRules> {
+    private async fetchResourceRule(user: Users, resourceId: ResourceId): Promise<AccessRules> {
         const condition = await this.getResourceCondition(user);
         if (!condition.where || !condition.rules) {
             return AccessRules.none();
