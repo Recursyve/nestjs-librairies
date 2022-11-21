@@ -1,5 +1,5 @@
-import { VariableHandler } from "../handlers/variable.handler";
 import { VariableConfig, VariableModel } from "../models/variable.model";
+import { ConfigHandler } from "../handlers/config.handler";
 
 export function Variable(requiredOrVariableNameOrConfig: boolean | string | VariableConfig): PropertyDecorator;
 export function Variable(target: Object, propertyKey: string): void;
@@ -33,7 +33,7 @@ export function Variable(...args: any[]): PropertyDecorator {
 }
 
 function annotate(target: Object, propertyKey: string, config: VariableConfig = {}) {
-    let variable = VariableHandler.getVariable(target, propertyKey);
+    let variable = ConfigHandler.getVariable(target, propertyKey);
     if (!variable) {
         variable = {
             propertyKey
@@ -52,5 +52,5 @@ function annotate(target: Object, propertyKey: string, config: VariableConfig = 
         variable.required = true;
     }
 
-    VariableHandler.saveVariable(target, variable);
+    ConfigHandler.saveVariable(target, variable);
 }

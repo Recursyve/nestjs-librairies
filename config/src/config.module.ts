@@ -1,8 +1,10 @@
-import { DynamicModule, Global, Module, Type } from "@nestjs/common";
-import { configFactory } from "./config.factory";
+import { DynamicModule, Global, Module, Provider, Type } from "@nestjs/common";
 import { ConfigTransformerService } from "./services/config-transformer.service";
 import { VariableScanner } from "./scanners/variable.scanner";
 import { ConfigUtils } from "./config.utils";
+import { ConfigHandler } from "./handlers/config.handler";
+import { configFactory } from "./config.factory";
+import { EnvironmentConfigProvider } from "./providers/environment.config-provider";
 
 @Global()
 @Module({
@@ -16,11 +18,7 @@ export class ConfigModule {
         return {
             module: ConfigModule,
             global: true,
-            providers: configs.map((config) => ({
-                provide: ConfigUtils.getProviderToken(config),
-                useFactory: configFactory(config),
-                inject: [ConfigTransformerService]
-            })),
+            providers: configs.map((config) => createConfigProvider(config)),
             exports: configs.map((config) => ConfigUtils.getProviderToken(config))
         };
     }
@@ -28,12 +26,18 @@ export class ConfigModule {
     public static forFeature(...configs: Type[]): DynamicModule {
         return {
             module: ConfigModule,
-            providers: configs.map((config) => ({
-                provide: ConfigUtils.getProviderToken(config),
-                useFactory: configFactory(config),
-                inject: [ConfigTransformerService]
-            })),
+            providers: configs.map((config) => createConfigProvider(config)),
             exports: configs.map((config) => ConfigUtils.getProviderToken(config))
         };
     }
 }
+
+export const createConfigProvider = (target: Type): Provider => {
+    const config = ConfigHandler.getConfig(target);
+
+    return {
+        provide: ConfigUtils.getProviderToken(target),
+        useFactory: configFactory(target),
+        inject: [ConfigTransformerService, config.provider ?? EnvironmentConfigProvider]
+    };
+};

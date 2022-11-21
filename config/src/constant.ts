@@ -1,1 +1,1 @@
-export const VARIABLES = "__VARIABLES__";
+export const CONFIG = "__CONFIG__";

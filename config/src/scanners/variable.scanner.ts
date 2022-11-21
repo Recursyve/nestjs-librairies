@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import { VARIABLES } from "../constant";
 import { VariableModel } from "../models/variable.model";
+import { ConfigHandler } from "../handlers/config.handler";
 
 @Injectable()
 export class VariableScanner {
     public getVariables(target: any): VariableModel[] {
-        return Reflect.getMetadata(VARIABLES, target.prototype) ?? [];
+        return ConfigHandler.getConfig(target)?.variables;
     }
 }

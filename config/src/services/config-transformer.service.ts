@@ -1,23 +1,33 @@
 import { VariableScanner } from "../scanners/variable.scanner";
 import { Injectable, Type } from "@nestjs/common";
+import { ConfigProvider } from "../providers/config-provider";
 
 @Injectable()
 export class ConfigTransformerService {
-    constructor(private scanner: VariableScanner) {}
+    constructor(private scanner: VariableScanner, private configProvider: ConfigProvider) {
+    }
 
-    public transform(config: Type): any {
-        const variables = this.scanner.getVariables(config);
-        const instance = new config();
+    public async transform(target: Type): Promise<Record<string, any>> {
+        const variables = this.scanner.getVariables(target);
+        const instance = new target();
+
+        const undefinedVariableNames = [];
 
         for (const variable of variables) {
-            Object.assign(instance, {
-                [variable.propertyKey]: process.env[variable.variableName]
-            });
-
-            if (!process.env[variable.variableName] && variable.required) {
-                throw new Error(`You must define the following environment variable: ${variable.variableName}`);
+            const variableValue = await this.configProvider.getValue(variable.variableName);
+            if (variableValue === null || variableValue === undefined) {
+                undefinedVariableNames.push(variable.variableName);
             }
+
+            Object.assign(instance, {
+                [variable.propertyKey]: variableValue
+            });
         }
+
+        if (undefinedVariableNames.length) {
+            throw new Error(`The following variable must be defined in provider '${this.configProvider.constructor.name}': ${JSON.stringify(undefinedVariableNames)}`);
+        }
+
         return instance;
     }
 }
