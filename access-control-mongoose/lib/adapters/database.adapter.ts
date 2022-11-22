@@ -1,5 +1,5 @@
 import { InjectConnection } from "@nestjs/mongoose";
-import { DatabaseAdapter, IDatabaseAdapter } from "@recursyve/nestjs-access-control";
+import { DatabaseAdapter, IDatabaseAdapter, ResourceId } from "@recursyve/nestjs-access-control";
 import { Connection, Model } from "mongoose";
 
 @DatabaseAdapter({ type: "mongoose" })
@@ -16,6 +16,10 @@ export class MongooseDatabaseAdapter implements IDatabaseAdapter {
             throw new Error(`Mongoose model '${model}' not found`);
         }
         return `${m.collection.name}-mongoose`;
+    }
+
+    public parseIds(model: Model<any>, ids: string | string[]): ResourceId | ResourceId[] {
+        return ids;
     }
 
     public checkIfResourceExist(model: Model<any>, resourceId: string, condition: any): Promise<boolean> {

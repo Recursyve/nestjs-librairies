@@ -116,7 +116,7 @@ export class ResourceAccessControlService {
         if (!type || type === PolicyResourceTypes.Resources) {
             const ids = await this.redisService
                 .lrange(RedisKeyUtils.userResourceActionKey(user, this.resourceName, action), 0, -1)
-                .then(result => result.map(x => Number.isInteger(x) ? +x : x));
+                .then(result => this.databaseAdapter.parseIds(this.config.model, result) as ResourceId[]);
             return Resources.fromIds(ids);
         }
         if (type === PolicyResourceTypes.Wildcard) {
@@ -186,7 +186,7 @@ export class ResourceAccessControlService {
             0,
             -1
         );
-        return res.findIndex(value => Number.isInteger(resourceId) ? +value === +resourceId : value === resourceId) >= 0;
+        return res.findIndex(value => resourceId === this.databaseAdapter.parseIds(this.config.model, value)) >= 0;
     }
 
     private async getResourceCondition(user: Users): Promise<PolicyResourcesCondition<any>> {
