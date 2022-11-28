@@ -9,7 +9,8 @@ import {
     AccessRules,
     PolicyResources,
     PolicyResourcesCondition,
-    PolicyResourceTypes, ResourceId,
+    PolicyResourceTypes,
+    ResourceId,
     Resources,
     Users
 } from "../models";
@@ -65,12 +66,14 @@ export class ResourceAccessControlService {
     }
 
     public async getAccessRules(user: Users, resourceId: ResourceId): Promise<AccessRules> {
-        const res = await this.redisService.get(RedisKeyUtils.userResourceIdKey(this.resourceName, resourceId, user));
+        const parsedResourceId = this.databaseAdapter.parseIds(this.config.model, resourceId.toString()) as ResourceId;
+
+        const res = await this.redisService.get(RedisKeyUtils.userResourceIdKey(this.resourceName, parsedResourceId, user));
         if (res) {
             return AccessRules.fromString(res);
         }
 
-        return await this.fetchAccessRules(user, resourceId);
+        return await this.fetchAccessRules(user, parsedResourceId);
     }
 
     private async fetchResources(user: Users): Promise<Resources> {
