@@ -1,3 +1,3 @@
-export interface ConfigProvider {
-    getValue(key: string): Promise<string>;
+export abstract class ConfigProvider {
+    public abstract getValue(key: string): Promise<string>;
 }

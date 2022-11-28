@@ -5,6 +5,7 @@ import { ConfigUtils } from "./config.utils";
 import { ConfigHandler } from "./handlers/config.handler";
 import { configFactory } from "./config.factory";
 import { EnvironmentConfigProvider } from "./providers/environment.config-provider";
+import { ConfigProvider } from "./providers/config-provider";
 
 @Global()
 @Module({
@@ -18,7 +19,14 @@ export class ConfigModule {
         return {
             module: ConfigModule,
             global: true,
-            providers: configs.map((config) => createConfigProvider(config)),
+            providers: [
+                EnvironmentConfigProvider,
+                {
+                    provide: ConfigProvider,
+                    useClass: EnvironmentConfigProvider
+                },
+                ...configs.map((config) => createConfigProvider(config))
+            ],
             exports: configs.map((config) => ConfigUtils.getProviderToken(config))
         };
     }
@@ -34,6 +42,8 @@ export class ConfigModule {
 
 export const createConfigProvider = (target: Type): Provider => {
     const config = ConfigHandler.getConfig(target);
+
+    console.log(config);
 
     return {
         provide: ConfigUtils.getProviderToken(target),

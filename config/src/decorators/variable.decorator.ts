@@ -6,6 +6,7 @@ export function Variable(target: Object, propertyKey: string): void;
 export function Variable(...args: any[]): PropertyDecorator {
     if (args.length >= 2) {
         const [target, propertyName] = args;
+        console.log(target);
 
         annotate(target, propertyName);
         return;
