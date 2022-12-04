@@ -15,6 +15,11 @@ export class ConfigTransformerService {
             });
 
             if (!process.env[variable.variableName] && variable.required) {
+                if (process.env.NODE_ENV === "test" || !!process.env.CI) {
+                    console.log(`The following environment variable is not defined: ${variable.variableName}. Skipping for test mode.`);
+                    continue;
+                }
+
                 throw new Error(`You must define the following environment variable: ${variable.variableName}`);
             }
         }
