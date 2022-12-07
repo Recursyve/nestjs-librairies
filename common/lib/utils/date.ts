@@ -1,5 +1,5 @@
-import { Moment } from "moment";
-import * as moment from "moment";
+import { add, differenceInDays, format } from "date-fns";
+import { frCA, enCA } from "date-fns/locale";
 
 export class DateUtils {
     /**
@@ -56,23 +56,24 @@ export class DateUtils {
     }
 
     public static getDatesBetween(
-        start: Moment,
-        end: Moment,
-        granularity: "day" | "month" | "week",
+        start: Date,
+        end: Date,
+        granularity: "days" | "months" | "weeks",
         untilToday: boolean = false
-    ): Moment[] {
-        const dates = [start.clone()];
+    ): Date[] {
+        const dates: Date[] = [start];
 
-        const now = moment();
-
-        while (start.add(1, granularity).diff(end) < 0 && (!untilToday || start.diff(now) < 0)) {
-            dates.push(start.clone());
+        const now = new Date();
+        let nextDate = add(start, { [granularity]: 1 });
+        while (differenceInDays(nextDate, end) < 0 && (!untilToday || differenceInDays(nextDate, now) < 0)) {
+            dates.push(nextDate);
+            nextDate = add(start, { [granularity]: 1 });
         }
         return dates;
     }
 
     public static format(lang: string, date: Date): string {
-        moment.locale(lang);
-        return moment(date).format("LL");
+        const locales = { fr: frCA, en: enCA }
+        return format(date, "LL", { locale: locales[lang] });
     }
 }

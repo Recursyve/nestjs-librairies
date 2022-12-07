@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import * as Redis from "ioredis";
+import Redis from "ioredis";
 import { RedisOptions } from "ioredis";
 
 @Injectable()
@@ -40,7 +40,7 @@ export class RedisConfigService {
         return option;
     }
 
-    public getRedisInstance(): Redis.Redis {
+    public getRedisInstance(): Redis {
         const options = this.getConfig();
         if (this.connectionString) {
             return new Redis(this.connectionString, options);
