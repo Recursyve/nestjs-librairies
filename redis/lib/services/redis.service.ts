@@ -1,11 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import * as Redis from "ioredis";
+import Redis from "ioredis";
 import { RedisArrayUtils } from "../utils/array.utils";
 import { RedisConfigService } from "./redis-config.service";
 
 export interface RedidSetOptions {
     // ex: seconds, px: milliseconds
-    unit: "ex" | "px";
+    unit: "EX" | "PX";
     duration: number;
 }
 
@@ -13,7 +13,7 @@ export type RedisValue = string | Buffer | number;
 
 @Injectable()
 export class RedisService {
-    private readonly client: Redis.Redis;
+    private readonly client: Redis;
 
     constructor(private readonly configService: RedisConfigService) {
         this.client = configService.getRedisInstance();

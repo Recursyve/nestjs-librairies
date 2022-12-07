@@ -1,6 +1,9 @@
 import { ArgumentMetadata, Injectable, PipeTransform } from "@nestjs/common";
 import { ValidationPipe } from "./validation.pipe";
 
+/**
+ * @deprecated Use @Transform decorators instead
+ */
 @Injectable()
 export class FormDataPipe implements PipeTransform<any> {
     public transform(value: any, metadata: ArgumentMetadata) {

@@ -10,16 +10,16 @@ import { Transform } from "class-transformer";
 @EnvironmentConfig()
 class EnvironmentConfigModel {
     @Variable(false)
-    DB_HOST: string;
+    DB_HOST!: string;
 
     @Variable({
         variableName: "DB_NAME",
         required: false
     })
-    dbName: string;
+    dbName?: string;
 
     @Variable
-    DB_PORT: string;
+    DB_PORT!: string;
 }
 
 class DefaultConfigModel {
