@@ -48,6 +48,6 @@ export const createConfigProvider = (target: Type): Provider => {
     return {
         provide: ConfigUtils.getProviderToken(target),
         useFactory: configFactory(target),
-        inject: [ConfigTransformerService, config.provider ?? EnvironmentConfigProvider]
+        inject: [ConfigTransformerService]
     };
 };

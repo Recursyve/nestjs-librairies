@@ -8,8 +8,7 @@ export class SequelizeConfigProvider implements ConfigProvider, OnModuleInit {
     private repository = this.sequelize.model("configs") as typeof SequelizeConfigsModel;
     private configs: SequelizeConfigsModel[] = [];
 
-    constructor(private sequelize: Sequelize) {
-    }
+    constructor(private sequelize: Sequelize) {}
 
     public async onModuleInit(): Promise<void> {
         if (!this.repository) {
