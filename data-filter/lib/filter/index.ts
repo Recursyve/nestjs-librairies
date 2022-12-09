@@ -3,7 +3,6 @@ export * from "./models";
 export * from "./order-rules"
 export * from "./filter.service";
 export * from "./base-filter"
-export * from "./filter.service"
 export * from "./controllers/dynamic-filter.controller"
 export * from "./controllers/filter.controller"
 export * from "./decorators/inject-filter.decorator"

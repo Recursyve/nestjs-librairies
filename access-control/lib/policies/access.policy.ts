@@ -1,21 +1,16 @@
 import { Injectable } from "@nestjs/common";
-import { AccessControlResources, PolicyResources, Users } from "../models";
-import { M } from "../utils";
+import { PolicyResources, Users } from "../models";
 
 @Injectable()
 export abstract class AccessPolicy {
-    public repository: typeof M;
+    public type: string;
+    public resourceName: string;
 
     public get name(): string {
         return (this as any).constructor.name;
     }
 
-    /**
-     * @deprecated
-     */
-    public async getResources(user: Users): Promise<AccessControlResources[]>;
-    public async getResources(user: Users): Promise<PolicyResources>;
-    public async getResources(user: Users): Promise<PolicyResources | AccessControlResources[]> {
+    public async getResources(user: Users): Promise<PolicyResources> {
         return PolicyResources.resources([]);
     }
 }

@@ -1,18 +1,16 @@
 import { fn, LogicType, Op, Sequelize, where, WhereOperators, WhereOptions } from "sequelize";
-import { DataFilterUserModel, FilterOperatorTypes, SelectFilterGetValuesOptions, SelectFilterValue } from "../..";
+import { DataFilterUserModel } from "../../models/user.model";
 import { TranslateAdapter } from "../../adapters/translate.adapter";
 import { IncludeWhereModel } from "../../models/include.model";
 import { SequelizeUtils } from "../../sequelize.utils";
 import { FilterUtils } from "../filter.utils";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
-import { QueryModel, QueryRuleModel } from "../models/query.model";
+import { QueryModel, QueryRuleModel, Condition } from "../models/query.model";
 import { RuleModel } from "../models/rule.model";
-import { CustomOperator, FilterOperators } from "../operators";
+import { CustomOperator, FilterOperators, FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
 
-export type Condition = "and" | "or";
-
-// TODO: Deprecate key to use attribute instead to be consistant with the BaseFilterDefinition
+// TODO: Deprecate key to use attribute instead to be consistent with the BaseFilterDefinition
 export interface FilterConditionRule {
     key: string;
     path?: string;
@@ -226,7 +224,7 @@ export abstract class Filter implements FilterDefinition {
             const c = rule as FilterCondition;
             if (c.condition) {
                 const conditions = [];
-                options.push(c.condition === "and" ? { [Op.and]: conditions } : { [Op.or]: [] });
+                options.push(c.condition === "and" ? { [Op.and]: conditions } : { [Op.or]: conditions });
                 this.generateRuleWhereOptions(c, conditions, parentRule);
                 continue;
             }

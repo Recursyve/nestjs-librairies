@@ -14,7 +14,7 @@ import {
     ResourceEventAccessControlService,
     ResourceEventService,
     ResourceCreatedPoliciesService,
-    ResourceUpdatedPoliciesService, ResourceDeletedPoliciesService
+    ResourceUpdatedPoliciesService, ResourceDeletedPoliciesService, DatabaseAdaptersRegistry
 } from "./services";
 
 @Global()
@@ -39,6 +39,7 @@ import {
 export class AccessControlCoreModule implements OnModuleInit {
     constructor(
         private accessPoliciesService: AccessPoliciesService,
+        private databaseAdaptersRegistry: DatabaseAdaptersRegistry,
         private resourceCreatedPoliciesService: ResourceCreatedPoliciesService,
         private resourceDeletedPoliciesService: ResourceDeletedPoliciesService,
         private resourceUpdatedPoliciesService: ResourceUpdatedPoliciesService,
@@ -46,7 +47,8 @@ export class AccessControlCoreModule implements OnModuleInit {
     ) {}
 
     public onModuleInit(): void {
-        const { policies, createdPolicies, updatedPolicies, deletedPolicies } = this.explorer.explore();
+        const { policies, createdPolicies, updatedPolicies, deletedPolicies, databaseAdapters } = this.explorer.explore();
+        this.databaseAdaptersRegistry.registerAdapters(...databaseAdapters);
         this.accessPoliciesService.registerPolicies(...policies);
         this.resourceCreatedPoliciesService.registerPolicies(...createdPolicies);
         this.resourceDeletedPoliciesService.registerPolicies(...deletedPolicies);

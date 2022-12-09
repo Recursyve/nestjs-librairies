@@ -1,17 +1,21 @@
-import { Injectable, Logger, Type } from "@nestjs/common";
+import { Inject, Injectable, Logger, Optional, Type } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
-import { Model } from "sequelize-typescript";
+import { ACCESS_CONTROL_DEFAULT_DATABASE } from "../constant";
 import { CREATED_POLICY_METADATA, FROM_POLICY_METADATA } from "../decorators/constant";
 import { UserResources } from "../models";
+import { PolicyConfig } from "../models/policy-config.model";
 import { ResourceCreatedPolicy } from "../policies";
-import { M } from "../utils";
+import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
 
 @Injectable()
 export class ResourceCreatedPoliciesService {
     private readonly logger = new Logger();
 
-    constructor(private readonly moduleRef: ModuleRef) {
-    }
+    constructor(
+        @Optional() @Inject(ACCESS_CONTROL_DEFAULT_DATABASE) private type: string,
+        private readonly moduleRef: ModuleRef,
+        private databaseAdaptersRegistry: DatabaseAdaptersRegistry
+    ) {}
 
     private _policies: ResourceCreatedPolicy<any>[] = [];
 
@@ -19,8 +23,8 @@ export class ResourceCreatedPoliciesService {
         return this._policies;
     }
 
-    public async execute(table: string, resource: any): Promise<UserResources[]> {
-        const policies = this._policies.filter(x => x.repository.tableName === table && !x.parentRepository);
+    public async execute(resourceName: string, resource: any): Promise<UserResources[]> {
+        const policies = this._policies.filter(x => x.resourceName === resourceName && !x.parentResourceName);
 
         const policiesRes = await Promise.all(policies.map(async policy => {
             try {
@@ -35,7 +39,7 @@ export class ResourceCreatedPoliciesService {
         }))
             .then(res => res.flat().map(x => ({ ...x, resourceId: resource.id })));
 
-        const parentPolicies = this._policies.filter(x => x.parentRepository && x.parentRepository.tableName === table);
+        const parentPolicies = this._policies.filter(x => x.parentResourceName && x.parentResourceName === resourceName);
         const parentPoliciesRes = await Promise.all(parentPolicies.map(async policy => {
             try {
                 this.logger.verbose(`Getting users for resource ${resource.id}`, policy.name);
@@ -64,20 +68,26 @@ export class ResourceCreatedPoliciesService {
             return;
         }
 
-        const target = this.reflectModel(policy);
-        instance.repository = target as typeof M;
+        const config = this.reflectModel(policy);
+        instance.type = config.type ?? this.type;
+
+        const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.type ?? this.type)
+        instance.resourceName = databaseAdapter.getResourceName(config.model);
 
         const parent = this.reflectParentModel(policy);
-        instance.parentRepository = parent as typeof M;
+        if (parent) {
+            const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(parent.type ?? this.type)
+            instance.parentResourceName = databaseAdapter.getResourceName(parent.model);
+        }
 
         this._policies.push(instance);
     }
 
-    private reflectModel(policy: Type<ResourceCreatedPolicy<any>>): typeof Model {
+    private reflectModel(policy: Type<ResourceCreatedPolicy<any>>): PolicyConfig {
         return Reflect.getMetadata(CREATED_POLICY_METADATA, policy);
     }
 
-    private reflectParentModel(policy: Type<ResourceCreatedPolicy<any>>): typeof Model {
+    private reflectParentModel(policy: Type<ResourceCreatedPolicy<any>>): PolicyConfig {
         return Reflect.getMetadata(FROM_POLICY_METADATA, policy);
     }
 }

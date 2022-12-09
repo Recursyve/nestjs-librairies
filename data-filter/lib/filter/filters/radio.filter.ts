@@ -1,11 +1,11 @@
 import { Op, WhereOptions } from "sequelize";
-import { DataFilterUserModel, FilterCondition } from "../..";
+import { DataFilterUserModel } from "../../models/user.model";
 import { FilterUtils } from "../filter.utils";
 import { QueryRuleModel } from "../models";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
-import { BaseFilterDefinition, Filter } from "./filter";
+import { BaseFilterDefinition, Filter, FilterCondition } from "./filter";
 
 export interface RadioFilterOption {
     key: string;
@@ -73,7 +73,7 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
         const where = option.condition.condition === "and" ? { [Op.and]: conditions } : { [Op.or]: conditions };
         this.generateRuleWhereOptions(option.condition, conditions, rule);
         conditions.push(
-            super.getWhereOptions({
+            await super.getWhereOptions({
                 ...rule,
                 value: option.value,
                 operation: option.operator || rule.operation

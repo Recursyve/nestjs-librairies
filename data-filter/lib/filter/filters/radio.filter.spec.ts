@@ -1,9 +1,10 @@
+import { Op, WhereOptions } from "sequelize";
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
 import { FilterUtils } from "../filter.utils";
-import { RadioFilter } from "./radio.filter";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
-import { FilterType } from "../type";
 import { FilterOperatorTypes } from "../operators";
+import { FilterType } from "../type";
+import { RadioFilter } from "./radio.filter";
 
 describe("RadioFilter", () => {
     describe("getConfig", () => {
@@ -165,6 +166,70 @@ describe("RadioFilter", () => {
                     {
                         key: "no",
                         name: FilterUtils.getRadioOptionTranslationKey("test", "no")
+                    }
+                ]
+            });
+        });
+    });
+
+    describe("getWhereOptions", () => {
+        it("with conditions should include all conditions in the where options", async () => {
+            const filter = new RadioFilter({
+                attribute: "test",
+                options: [
+                    {
+                        key: "no",
+                        value: null,
+                        operator: FilterOperatorTypes.IsNotNull,
+                        condition: {
+                            condition: "or",
+                            rules: [
+                                {
+                                    condition: "or",
+                                    rules: [
+                                        {
+                                            key: "test_2",
+                                            operation: FilterOperatorTypes.IsNotNull,
+                                            value: null
+                                        },
+                                        {
+                                            key: "test_2",
+                                            operation: FilterOperatorTypes.IsNotEmpty,
+                                            value: null
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            });
+            const options = await filter.getWhereOptions({
+                id: "test",
+                value: "no",
+                operation: FilterOperatorTypes.Equal
+            });
+            expect(options).toBeDefined();
+            expect(options).toStrictEqual<WhereOptions>({
+                [Op.or]: [
+                    {
+                        [Op.or]: [
+                            {
+                                test_2: {
+                                    [Op.ne]: null
+                                }
+                            },
+                            {
+                                test_2: {
+                                    [Op.ne]: ""
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "test": {
+                            [Op.ne]: null
+                        }
                     }
                 ]
             });

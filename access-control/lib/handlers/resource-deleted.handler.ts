@@ -12,13 +12,13 @@ export class AccessControlResourceDeletedHandler implements ICommandHandler<Reso
     ) {}
 
     public async execute(command: ResourceDeletedCommand<any>): Promise<void> {
-        this.eventBus.publish(new ResourceDeletedEvent(command.table, command.resource));
+        this.eventBus.publish(new ResourceDeletedEvent(command.resourceName, command.resource));
 
         if (command.resourceId) {
-            await this.resourceEventService.removeUserResource(command.table, command.resourceId);
+            await this.resourceEventService.removeUserResource(command.resourceName, command.resourceId);
         }
 
-        const results = await this.resourceDeletedPolicyService.execute(command.table, command.resource);
+        const results = await this.resourceDeletedPolicyService.execute(command.resourceName, command.resource);
         if (results) {
             await this.resourceEventService.updatedUserResources(results);
         }

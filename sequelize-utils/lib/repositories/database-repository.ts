@@ -11,7 +11,7 @@ export class SequelizeRepository<T extends SequelizeEntities, CreateDto = T, Upd
         return this.repository.create(dto as any, options) as unknown as Promise<T>;
     }
 
-    public bulkCreate<Options>(dto: CreateDto | Partial<T>, options?: Options & BulkCreateOptions<Attributes<T>>) {
+    public bulkCreate<Options>(dto: (CreateDto | Partial<T>)[], options?: Options & BulkCreateOptions<Attributes<T>>) {
         return this.repository.bulkCreate(dto as any, options) as unknown as Promise<T[]>;
     }
 
@@ -34,11 +34,12 @@ export class SequelizeRepository<T extends SequelizeEntities, CreateDto = T, Upd
         await this.repository.update(dto, options);
     }
 
-    public async destroyByPk(identifier: Identifier): Promise<void> {
+    public async destroyByPk(identifier: Identifier, options?: Omit<DestroyOptions, "where">): Promise<void> {
         await this.repository.destroy({
             where: {
                 [this.repository.primaryKeyAttribute]: identifier
-            }
+            },
+            ...(options ?? {})
         });
     }
 

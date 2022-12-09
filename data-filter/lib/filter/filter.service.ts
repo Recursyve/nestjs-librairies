@@ -474,7 +474,14 @@ export class FilterService<Data> {
         const order = this.getOrderOptions(filter.order as OrderModel[]);
 
         const nonNestedOrderColumns = (filter.order as OrderModel[])
-            .map(order => order.column)
+            .map(order => {
+                const rule = this.definitions[order.column] as OrderRuleDefinition;
+                if (!rule || !OrderRule.validate(rule)) {
+                    return order.column;
+                } else {
+                    return [rule.path ?? "", rule.attribute].join(".");
+                }
+            })
             .filter(column => column && !column.includes(".") && !repository.hasCustomAttribute(column));
         const customAttributes = this.getOrderCustomAttribute(filter.order as OrderModel[], filter.data);
 

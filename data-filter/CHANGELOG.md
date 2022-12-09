@@ -161,3 +161,16 @@ SelectFilter({
 ### Bugfix
 
 - Fix issues caused by the `exportRepository`
+
+## [8.5.4] - 2022-11-16
+
+### Bugfix
+
+- Fix issues with OrderRules
+
+
+## [8.5.5] - 2022-10-01
+
+### Bugfix
+
+- Fix issues with RadioFilter conditions in options
