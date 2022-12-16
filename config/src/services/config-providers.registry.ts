@@ -13,7 +13,7 @@ export class ConfigProvidersRegistry {
     constructor(private readonly moduleRef: ModuleRef) {
     }
 
-    public registerConfigProviders(...providers: Type<IConfigProvider>[]): void {
+    public registerConfigProviders(providers: Type<IConfigProvider>[]): void {
         for (const provider of providers) {
             const instance = this.moduleRef.get(provider, { strict: false });
             if (!instance) {

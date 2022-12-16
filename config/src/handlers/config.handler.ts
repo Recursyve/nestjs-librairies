@@ -5,15 +5,16 @@ import { VariableModel } from "../models/variable.model";
 import { Type } from "@nestjs/common";
 
 export class ConfigHandler {
-    public static getConfig(target: Type<any>): ConfigModel {
+    public static getConfig(target: Type): ConfigModel {
         return Reflect.getMetadata(CONFIG, target) ?? { variables: [] };
     }
 
-    public static saveConfig(target: Type<any>, config: ConfigModel): void {
+    public static saveConfig(target: Type, config: ConfigModel): void {
         Reflect.defineMetadata(CONFIG, config, target);
+        console.log(this.getConfig(target));
     }
 
-    public static getVariable(target: Type<any>, propertyKey: string): VariableModel {
+    public static getVariable(target: Type, propertyKey: string): VariableModel {
         const config = ConfigHandler.getConfig(target);
         if (!config?.variables) {
             return null;
@@ -22,7 +23,7 @@ export class ConfigHandler {
         return config.variables.find(variable => variable.propertyKey === propertyKey);
     }
 
-    public static saveVariable(target: Type<any>, variableConfig: VariableModel): void {
+    public static saveVariable(target: Type, variableConfig: VariableModel): void {
         const config = ConfigHandler.getConfig(target);
 
         const variableIndex = config.variables.findIndex(variable => variable.propertyKey === variableConfig.propertyKey);

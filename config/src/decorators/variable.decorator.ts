@@ -1,18 +1,18 @@
 import { VariableConfig, VariableModel } from "../models/variable.model";
 import { ConfigHandler } from "../handlers/config.handler";
+import { Type } from "@nestjs/common";
 
 export function Variable(requiredOrVariableNameOrConfig: boolean | string | VariableConfig): PropertyDecorator;
 export function Variable(target: Object, propertyKey: string): void;
 export function Variable(...args: any[]): PropertyDecorator {
     if (args.length >= 2) {
         const [target, propertyName] = args;
-        console.log(target);
 
         annotate(target, propertyName);
         return;
     }
 
-    return (target: Object, propertyKey: string) => {
+    return (target: Type, propertyKey: string) => {
         const [requiredOrVariableNameOrConfig] = args;
 
         let config: VariableConfig;
@@ -33,7 +33,7 @@ export function Variable(...args: any[]): PropertyDecorator {
     };
 }
 
-function annotate(target: Object, propertyKey: string, config: VariableConfig = {}) {
+function annotate(target: Type, propertyKey: string, config: VariableConfig = {}) {
     let variable = ConfigHandler.getVariable(target, propertyKey);
     if (!variable) {
         variable = {

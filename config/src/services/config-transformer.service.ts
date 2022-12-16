@@ -1,36 +1,48 @@
 import { VariableScanner } from "../scanners/variable.scanner";
 import { Injectable, Type } from "@nestjs/common";
-import { IConfigProvider } from "../providers/i-config-provider";
+import { ConfigProvidersRegistry } from "./config-providers.registry";
+import { ConfigHandler } from "../handlers/config.handler";
+import { ConfigModelNotFoundError } from "../errors/config-model-not-found.error";
+import { EnvironmentConfigProvider } from "../providers/environment.config-provider";
+import { ConfigProviderHandler } from "../handlers/config-provider.handler";
 
 @Injectable()
 export class ConfigTransformerService {
-    constructor(private scanner: VariableScanner, private configProvider: IConfigProvider) {
+    constructor(private scanner: VariableScanner, private configProviderRegistry: ConfigProvidersRegistry) {
     }
 
-    public async transform(target: Type): Promise<Record<string, any>> {
-        const variables = this.scanner.getVariables(target);
-        const instance = new target();
+    public async transform(configType: Type): Promise<Record<string, any>> {
+        const config = ConfigHandler.getConfig(configType);
+        if (!config) {
+            throw new ConfigModelNotFoundError(configType);
+        }
+
+        const configProviderConfig = ConfigProviderHandler.getConfig(config.provider ?? EnvironmentConfigProvider);
+        const configProvider = this.configProviderRegistry.getConfigProvider(configProviderConfig.type);
+
+        const variables = this.scanner.getVariables(configType);
+        const configInstance = new configType();
 
         const undefinedVariableNames = [];
         for (const variable of variables) {
-            const variableValue = await this.configProvider.getValue(variable.variableName);
+            const variableValue = await configProvider.getValue(variable.variableName);
             if (variableValue === null || variableValue === undefined) {
                 undefinedVariableNames.push(variable.variableName);
             }
 
-            Object.assign(instance, {
+            Object.assign(configInstance, {
                 [variable.propertyKey]: variableValue
             });
         }
 
         if (undefinedVariableNames.length) {
             if (process.env.NODE_ENV === "test" || !!process.env.CI) {
-                console.log(`The following variable must be defined in provider '${this.configProvider.constructor.name}': ${JSON.stringify(undefinedVariableNames)}. Skipping for test mode.`);
+                console.log(`The following variable must be defined in provider '${configProvider.constructor.name}': ${JSON.stringify(undefinedVariableNames)}. Skipping for test mode.`);
             } else {
-                throw new Error(`The following variable must be defined in provider '${this.configProvider.constructor.name}': ${JSON.stringify(undefinedVariableNames)}`);
+                throw new Error(`The following variable must be defined in provider '${configProvider.constructor.name}': ${JSON.stringify(undefinedVariableNames)}`);
             }
         }
 
-        return instance;
+        return configInstance;
     }
 }
