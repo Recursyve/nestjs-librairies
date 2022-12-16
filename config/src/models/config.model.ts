@@ -1,4 +1,4 @@
-import { ConfigProvider } from "../providers/config-provider";
+import { IConfigProvider } from "../providers/i-config-provider";
 import { VariableModel } from "./variable.model";
 import { Type } from "@nestjs/common";
 
@@ -7,5 +7,5 @@ export interface ConfigModel extends ConfigConfig {
 }
 
 export interface ConfigConfig {
-    provider: Type<ConfigProvider>;
+    provider?: Type<IConfigProvider>;
 }

@@ -1,10 +1,10 @@
 import { VariableScanner } from "../scanners/variable.scanner";
 import { Injectable, Type } from "@nestjs/common";
-import { ConfigProvider } from "../providers/config-provider";
+import { IConfigProvider } from "../providers/i-config-provider";
 
 @Injectable()
 export class ConfigTransformerService {
-    constructor(private scanner: VariableScanner, private configProvider: ConfigProvider) {
+    constructor(private scanner: VariableScanner, private configProvider: IConfigProvider) {
     }
 
     public async transform(target: Type): Promise<Record<string, any>> {

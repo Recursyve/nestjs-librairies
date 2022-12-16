@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import { ConfigProvider } from "./config-provider";
+import { IConfigProvider } from "./i-config-provider";
 
 @Injectable()
-export class EnvironmentConfigProvider implements ConfigProvider {
+export class EnvironmentConfigProvider implements IConfigProvider {
     public getValue(key: string): Promise<string> {
         return Promise.resolve(process.env[key]);
     }

@@ -5,7 +5,7 @@ import { ConfigUtils } from "./config.utils";
 import { ConfigHandler } from "./handlers/config.handler";
 import { configFactory } from "./config.factory";
 import { EnvironmentConfigProvider } from "./providers/environment.config-provider";
-import { ConfigProvider } from "./providers/config-provider";
+import { IConfigProvider } from "./providers/i-config-provider";
 
 @Global()
 @Module({
@@ -22,7 +22,7 @@ export class ConfigModule {
             providers: [
                 EnvironmentConfigProvider,
                 {
-                    provide: ConfigProvider,
+                    provide: IConfigProvider,
                     useClass: EnvironmentConfigProvider
                 },
                 ...configs.map((config) => createConfigProvider(config))
