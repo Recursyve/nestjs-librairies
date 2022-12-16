@@ -5,6 +5,6 @@ export const Config = (config: Partial<ConfigConfig>): ClassDecorator => {
     return (target: any) => {
         const targetConfig = ConfigHandler.getConfig(target);
         Object.assign(targetConfig, config);
-        ConfigHandler.saveConfig(target, targetConfig);
+        ConfigHandler.saveConfig(target.constructor, targetConfig);
     };
 }

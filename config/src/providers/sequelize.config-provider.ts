@@ -1,9 +1,11 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
-import { IConfigProvider } from "./i-config-provider";
+import { IConfigProvider } from "./config.provider";
 import { Sequelize } from "sequelize";
 import { SequelizeConfigsModel } from "../models/sequelize-configs.model";
+import { ConfigProvider } from "../decorators";
 
 @Injectable()
+@ConfigProvider("sequelize")
 export class SequelizeConfigProvider implements IConfigProvider, OnModuleInit {
     private repository = this.sequelize.model("configs") as typeof SequelizeConfigsModel;
     private configs: SequelizeConfigsModel[] = [];

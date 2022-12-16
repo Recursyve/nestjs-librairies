@@ -1,4 +1,4 @@
-import { IConfigProvider } from "../providers/i-config-provider";
+import { IConfigProvider } from "../providers/config.provider";
 import { VariableModel } from "./variable.model";
 import { Type } from "@nestjs/common";
 

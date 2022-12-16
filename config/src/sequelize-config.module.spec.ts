@@ -1,11 +1,9 @@
-import { ConfigProvider, Variable } from "./decorators";
+import { Variable } from "./decorators";
 import { Test, TestingModule } from "@nestjs/testing";
 import { SequelizeModule } from "@nestjs/sequelize";
 import { ConfigModule } from "./config.module";
 import { ConfigUtils } from "./config.utils";
-import { EnvironmentConfigProvider } from "./providers/environment.config-provider";
 
-@ConfigProvider(EnvironmentConfigProvider)
 class SequelizeConfigTest {
     @Variable
     name: string;
@@ -27,8 +25,8 @@ describe("SequelizeConfigModule", () => {
     });
 
     it("Config should be provided in module", async () => {
-       const config = moduleRef.get<SequelizeConfigTest>(ConfigUtils.getProviderToken(SequelizeConfigTest));
+        const config = moduleRef.get<SequelizeConfigTest>(ConfigUtils.getProviderToken(SequelizeConfigTest));
 
-       expect(config).toBeDefined();
+        expect(config).toBeDefined();
     });
 });

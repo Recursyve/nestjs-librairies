@@ -1,4 +1,3 @@
-import { VariableScanner } from "../scanners/variable.scanner";
 import { Injectable, Type } from "@nestjs/common";
 import { ConfigProvidersRegistry } from "./config-providers.registry";
 import { ConfigHandler } from "../handlers/config.handler";
@@ -8,7 +7,7 @@ import { ConfigProviderHandler } from "../handlers/config-provider.handler";
 
 @Injectable()
 export class ConfigTransformerService {
-    constructor(private scanner: VariableScanner, private configProviderRegistry: ConfigProvidersRegistry) {
+    constructor(private configProviderRegistry: ConfigProvidersRegistry) {
     }
 
     public async transform(configType: Type): Promise<Record<string, any>> {
@@ -20,7 +19,7 @@ export class ConfigTransformerService {
         const configProviderConfig = ConfigProviderHandler.getConfig(config.provider ?? EnvironmentConfigProvider);
         const configProvider = this.configProviderRegistry.getConfigProvider(configProviderConfig.type);
 
-        const variables = this.scanner.getVariables(configType);
+        const variables = ConfigHandler.getConfig(configType).variables;
         const configInstance = new configType();
 
         const undefinedVariableNames = [];

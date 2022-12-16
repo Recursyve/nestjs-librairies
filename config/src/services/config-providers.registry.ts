@@ -1,5 +1,5 @@
 import { Injectable, Type } from "@nestjs/common";
-import { IConfigProvider } from "../providers/i-config-provider";
+import { IConfigProvider } from "../providers/config.provider";
 import { ModuleRef } from "@nestjs/core";
 import { ConfigProviderNotFoundInModuleError } from "../errors/config-provider-not-found-in-module.error";
 import { ConfigProviderHandler } from "../handlers/config-provider.handler";

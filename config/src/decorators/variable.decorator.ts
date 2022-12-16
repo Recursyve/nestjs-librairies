@@ -8,11 +8,11 @@ export function Variable(...args: any[]): PropertyDecorator {
     if (args.length >= 2) {
         const [target, propertyName] = args;
 
-        annotate(target, propertyName);
+        annotate(target.constructor, propertyName);
         return;
     }
 
-    return (target: Type, propertyKey: string) => {
+    return (target: Object, propertyKey: string) => {
         const [requiredOrVariableNameOrConfig] = args;
 
         let config: VariableConfig;
@@ -29,7 +29,7 @@ export function Variable(...args: any[]): PropertyDecorator {
             };
         }
 
-        annotate(target, propertyKey, config);
+        annotate(target.constructor as any, propertyKey, config);
     };
 }
 

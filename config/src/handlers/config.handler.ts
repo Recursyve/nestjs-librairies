@@ -11,7 +11,6 @@ export class ConfigHandler {
 
     public static saveConfig(target: Type, config: ConfigModel): void {
         Reflect.defineMetadata(CONFIG, config, target);
-        console.log(this.getConfig(target));
     }
 
     public static getVariable(target: Type, propertyKey: string): VariableModel {
