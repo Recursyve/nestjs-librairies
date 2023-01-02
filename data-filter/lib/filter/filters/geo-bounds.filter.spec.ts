@@ -145,7 +145,7 @@ describe("GeoBoundsFilter", () => {
                     fn(
                         "ST_Contains",
                         fn("ST_GeometryFromText", literal("'POLYGON((45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516))'"), 0),
-                        fn("Point", "latitude", "longitude")
+                        fn("Point", "longitude", "latitude")
                     ),
                     literal("1")
                 )

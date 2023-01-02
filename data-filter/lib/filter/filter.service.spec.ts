@@ -130,18 +130,21 @@ describe("FilterService", () => {
                     as: "system",
                     model: Systems,
                     required: false,
+                    paranoid: true,
                     attributes: [],
                     include: [
                         {
                             as: "place",
                             model: Places,
                             required: false,
+                            paranoid: true,
                             attributes: [],
                             include: [
                                 {
                                     as: "owners",
                                     model: Owners,
                                     required: false,
+                                    paranoid: true,
                                     attributes: [],
                                     include: [
                                         {
@@ -150,6 +153,7 @@ describe("FilterService", () => {
                                             order: undefined,
                                             required: false,
                                             separate: false,
+                                            paranoid: false,
                                             attributes: [],
                                             include: []
                                         }
@@ -170,6 +174,7 @@ describe("FilterService", () => {
                             model: Visits,
                             order: undefined,
                             required: false,
+                            paranoid: true,
                             separate: false,
                             attributes: [],
                             include: []

@@ -229,3 +229,10 @@ SelectFilter({
 ### Bugfix
 
 - Fix issue with the groupBy options of the FilterQueryModel.
+
+
+## [9.0.0] - 2023-01-02
+
+### Added
+
+- Upgrade @nestjs dependencies to 9.x.x

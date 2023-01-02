@@ -48,7 +48,8 @@ describe("DataFilterScanner", () => {
             key: "coord",
             attributes: ["cellphone"],
             path: {
-                path: "coord"
+                path: "coord",
+                paranoid: true
             },
             customAttributes: [],
             includes: []
@@ -57,14 +58,16 @@ describe("DataFilterScanner", () => {
             key: "places",
             attributes: [],
             path: {
-                path: "owner.places"
+                path: "owner.places",
+                paranoid: true
             },
             customAttributes: [],
             includes: [
                 {
                     path: "system",
                     attributes: ["file_number"],
-                    where: { file_number: option => option.file_number }
+                    where: { file_number: option => option.file_number },
+                    paranoid: true
                 }
             ]
         });
