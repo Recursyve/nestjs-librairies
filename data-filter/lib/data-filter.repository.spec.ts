@@ -244,15 +244,15 @@ describe("DataFilterRepository", () => {
             expect(options).toBeDefined();
             expect(options).toStrictEqual({
                 attributes: [
-                    "id",
                     "first_name",
                     "last_name",
-                    [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"), literal(`point(${45.8797953}, ${-73.2815516})`)), "distance"]
+                    [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"), fn("ST_GeometryFromText", literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), "distance"],
+                    "id"
                 ],
                 include: [
                     {
                         as: "coord",
-                        attributes: ["id"],
+                        attributes: undefined,
                         model: Coords,
                         order: undefined,
                         paranoid: true,
@@ -294,7 +294,7 @@ describe("DataFilterRepository", () => {
                         model: Coords,
                         attributes: [
                             "cellphone",
-                            [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"), literal(`point(${45.8797953}, ${-73.2815516})`)), "distance"],
+                            [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"),  fn("ST_GeometryFromText", literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), "distance"],
                             "id"
                         ],
                         order: undefined,

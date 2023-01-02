@@ -21,28 +21,37 @@ describe("SequelizeModelScanner", () => {
         expect(includes).toStrictEqual([
             {
                 as: "systems",
-                attributes: undefined,
+                attributes: {
+                    include: []
+                },
                 model: Systems,
                 required: false,
                 include: [
                     {
                         as: "contracts",
-                        attributes: undefined,
+                        attributes: {
+                            include: []
+                        },
                         model: ContractSystems,
                         required: false,
                         include: [
                             {
                                 as: "contract",
-                                attributes: undefined,
+                                attributes: {
+                                    include: []
+                                },
                                 model: Contracts,
                                 required: false,
                                 include: [
                                     {
                                         as: "invoice",
-                                        attributes: undefined,
+                                        attributes: {
+                                            include: []
+                                        },
                                         order: undefined,
                                         model: Invoices,
                                         required: false,
+                                        paranoid: false,
                                         separate: false,
                                         include: []
                                     }
@@ -68,22 +77,29 @@ describe("SequelizeModelScanner", () => {
         expect(includes).toStrictEqual([
             {
                 as: "system",
-                attributes: undefined,
+                attributes: {
+                    include: []
+                },
                 model: Systems,
                 required: false,
                 include: [
                     {
                         as: "place",
-                        attributes: undefined,
+                        attributes: {
+                            include: []
+                        },
                         model: Places,
                         required: false,
                         include: [
                             {
                                 as: "owners",
-                                attributes: undefined,
+                                attributes: {
+                                    include: []
+                                },
                                 order: undefined,
                                 model: Owners,
                                 required: false,
+                                paranoid: false,
                                 separate: false,
                                 include: [
                                     {
@@ -92,14 +108,18 @@ describe("SequelizeModelScanner", () => {
                                         order: undefined,
                                         model: Persons,
                                         required: false,
+                                        paranoid: false,
                                         separate: false,
                                         include: [
                                             {
                                                 as: "coord",
-                                                attributes: undefined,
+                                                attributes: {
+                                                    include: []
+                                                },
                                                 order: undefined,
                                                 model: Coords,
                                                 required: false,
+                                                paranoid: false,
                                                 separate: false,
                                                 include: []
                                             }

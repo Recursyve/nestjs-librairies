@@ -285,6 +285,10 @@ export abstract class Filter implements FilterDefinition {
             return where;
         }
 
+        if (!op.where && !op.operator) {
+            return null;
+        }
+
         if (!op.where) {
             return where;
         }

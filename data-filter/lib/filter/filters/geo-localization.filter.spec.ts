@@ -165,7 +165,7 @@ describe("GeoLocalizationFilter", () => {
             });
             expect(options).toBeDefined();
             expect(options).toStrictEqual<WhereOptions>(
-                where(fn("ST_Distance_Sphere", literal("test"), literal(`point(${45.8797953}, ${-73.2815516})`)), {
+                where(fn("ST_Distance_Sphere", literal("test"), fn("ST_GeometryFromText", literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), {
                     [Op.lte]: 1000
                 })
             );
@@ -244,10 +244,10 @@ describe("GeoLocalizationTestFilter", () => {
             include: [],
             where: {
                 [Op.and]: [
-                    where(fn("ST_Distance_Sphere", literal("geo_point"), literal(`point(${45.8797953}, ${-73.2815516})`)), {
+                    where(fn("ST_Distance_Sphere", literal("geo_point"), fn("ST_GeometryFromText", literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), {
                         [Op.lte]: 25000
                     }),
-                    where(fn("ST_Distance_Sphere", literal("geo_point"), literal(`point(${45.8797953}, ${-73.2815516})`)), {
+                    where(fn("ST_Distance_Sphere", literal("geo_point"), fn("ST_GeometryFromText",  literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), {
                         [Op.lte]: 5000
                     }),
                 ]

@@ -134,10 +134,13 @@ describe("Filter", () => {
     });
 
     describe("getConfig", () => {
+        const translationService = { getTranslation: (language: string, key: string) => Promise.resolve(key) };
+
         it("with enabled undefined it should return the config", async () => {
             const filter = new TextFilter({
                 attribute: "test"
             });
+            filter.translateService = translationService;
             const config = await filter.getConfig(null, null, null);
             expect(config).toBeDefined()
         })
@@ -147,6 +150,7 @@ describe("Filter", () => {
                 attribute: "test",
                 enabled: async ({ user, request }) => true
             });
+            filter.translateService = translationService;
             const config = await filter.getConfig(null, null, null);
             expect(config).toBeDefined()
         })
@@ -156,6 +160,7 @@ describe("Filter", () => {
                 attribute: "test",
                 enabled: async ({ user, request }) => false
             });
+            filter.translateService = translationService;
             const config = await filter.getConfig(null, null, null);
             expect(config).toBeNull()
         })
