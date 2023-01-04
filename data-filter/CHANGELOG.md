@@ -236,3 +236,9 @@ SelectFilter({
 ### Added
 
 - Upgrade @nestjs dependencies to 9.x.x
+
+## [9.0.1] - 2023-01-04
+
+### Bugfix
+
+- Fix for strict mode
