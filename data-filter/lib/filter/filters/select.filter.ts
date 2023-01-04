@@ -24,14 +24,14 @@ export interface SelectFilterGetResourceOptions<User = any, Request = any> {
 export interface SelectFilterDefinition<T> {
     values: ({ value, user, request }: SelectFilterGetValuesOptions) => Promise<SelectFilterValue[]>;
     lazyLoading?: boolean;
-    getResourceById?: ({ id, user, request }: SelectFilterGetResourceOptions) => Promise<SelectFilterValue>;
+    getResourceById?: ({ id, user, request }: SelectFilterGetResourceOptions) => Promise<SelectFilterValue | null>;
 }
 
 export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T> {
     public type = FilterType.Select;
     public operators = [...SelectOperators];
     public values: ({ value, user, request }: SelectFilterGetValuesOptions) => Promise<SelectFilterValue[]>;
-    public getResourceById: ({ id, user, request }: SelectFilterGetResourceOptions) => Promise<SelectFilterValue>;
+    public getResourceById: ({ id, user, request }: SelectFilterGetResourceOptions) => Promise<SelectFilterValue | null>;
     public lazyLoading;
 
     constructor(definition: BaseFilterDefinition & SelectFilterDefinition<T>) {

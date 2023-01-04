@@ -174,3 +174,10 @@ SelectFilter({
 ### Bugfix
 
 - Fix issues with RadioFilter conditions in options
+
+
+## [8.5.6] - 2023-01-04
+
+### Bugfix
+
+- Fix for strict typings

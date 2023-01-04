@@ -107,7 +107,7 @@ export class FilterService<Data> {
         return [];
     }
 
-    public async findResourceValueById(request: any, search: FilterResourceValueModel, user?: DataFilterUserModel): Promise<SelectFilterValue> {
+    public async findResourceValueById(request: any, search: FilterResourceValueModel, user?: DataFilterUserModel): Promise<SelectFilterValue | null> {
         if (!this.definitions.hasOwnProperty(search.id)) {
             return;
         }

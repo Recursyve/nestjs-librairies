@@ -73,7 +73,7 @@ export abstract class DynamicFilterController<Data> {
     public async searchFilterResourceValue(
         @Query() search: FilterResourceValueModel,
         @Req() req: any
-    ): Promise<SelectFilterValue> {
+    ): Promise<SelectFilterValue | null> {
         return await this.filterService.findResourceValueById(req, search, await this.getUser(req) ?? {} as DataFilterUserModel);
     }
 
