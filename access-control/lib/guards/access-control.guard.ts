@@ -36,6 +36,9 @@ export class AccessControlGuard implements CanActivate {
         const request = context.switchToHttp().getRequest();
         request.resources = this.getModels(request.route.path, needsAccessActions);
         const user = await this.userDeserializer.deserializeUser(request);
+        if (!user) {
+            return false;
+        }
 
         const data: [AccessAction, typeof Model][] = needsAccessActions.map<[AccessAction, typeof Model]>((x, i) => [
             x,
