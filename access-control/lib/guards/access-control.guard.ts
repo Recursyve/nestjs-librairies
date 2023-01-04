@@ -41,6 +41,9 @@ export class AccessControlGuard implements CanActivate, OnModuleInit {
 
         const request = context.switchToHttp().getRequest();
         const user = await this.userDeserializer.deserializeUser(request);
+        if (!user) {
+            return false;
+        }
 
         const controllerResource = this.reflector.get<AccessControlResourceConfig>(ACCESS_CONTROL_RESOURCE, context.getClass());
         const methodResource = this.reflector.get<AccessControlResourceConfig>(ACCESS_CONTROL_RESOURCE, context.getHandler());
