@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-common",
-    "version": "9.0.1",
+    "version": "9.0.2",
     "description": "Recursyve's NestJs common library",
     "main": "index.js",
     "scripts": {

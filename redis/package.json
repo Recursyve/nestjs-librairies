@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-redis",
-    "version": "9.0.0",
+    "version": "9.0.2",
     "description": "Recursyve's NestJs Redis client",
     "main": "index.js",
     "scripts": {
