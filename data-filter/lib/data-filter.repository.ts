@@ -37,8 +37,8 @@ export class DataFilterRepository<Data> {
 
     public async findByPk(identifier: Identifier, options?: FindOptions, conditions?: object): Promise<Data> {
         const result = await this.model.findByPk(identifier, {
-            ...this.generateFindOptions(conditions),
-            ...(options ?? {})
+            ...(options ?? {}),
+            ...this.generateFindOptions(conditions)
         });
         if (!result) {
             return result as unknown as Data;
@@ -69,8 +69,8 @@ export class DataFilterRepository<Data> {
 
     public async findOne(options?: FindOptions, conditions?: object): Promise<Data> {
         const result = await this.model.findOne({
-            ...this.generateFindOptions(conditions),
-            ...(options ?? {})
+            ...(options ?? {}),
+            ...this.generateFindOptions(conditions)
         });
         if (!result) {
             return result as unknown as Data;
@@ -90,8 +90,8 @@ export class DataFilterRepository<Data> {
 
     public async findAll(options?: FindOptions, conditions?: object): Promise<Data[]> {
         const result = await this.model.findAll({
-            ...this.generateFindOptions(conditions),
-            ...(options ?? {})
+            ...(options ?? {}),
+            ...this.generateFindOptions(conditions)
         });
         if (!result?.length) {
             return result as unknown as Data[];
