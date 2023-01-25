@@ -390,8 +390,8 @@ export class FilterService<Data> {
             }
 
             options.include = SequelizeUtils.mergeIncludes(
-                options.include as IncludeOptions[],
-                includes as IncludeOptions[]
+                options.include as IncludeOptions | IncludeOptions[],
+                includes
             );
         }
 

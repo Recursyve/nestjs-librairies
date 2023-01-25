@@ -30,7 +30,15 @@ export class SequelizeUtils {
         return include;
     }
 
-    public static mergeIncludes(a: IncludeOptions[] = [], b: IncludeOptions[] = [], ignoreAttributes = false) {
+    public static mergeIncludes(a: IncludeOptions | IncludeOptions[] = [], b: IncludeOptions | IncludeOptions[] = [], ignoreAttributes = false) {
+        if (!Array.isArray(a)) {
+            a = [a];
+        }
+
+        if (!Array.isArray(b)) {
+            b = [b];
+        }
+
         for (const bChild of b) {
             const aChild = a.find(value => value.model === bChild.model && value.as === bChild.as);
             if (aChild) {
@@ -148,7 +156,7 @@ export class SequelizeUtils {
         if (attribute.exclude) {
             return {
                 exclude: attribute.exclude.filter((x) => x !== "id")
-            }
+            };
         }
 
         return attribute;
@@ -201,16 +209,16 @@ export class SequelizeUtils {
                 return { [Op.notIn]: rule.value as any[] };
 
             case "less":
-                return { [Op.lt]: rule.value as any};
+                return { [Op.lt]: rule.value as any };
 
             case "less_or_equal":
-                return { [Op.lte]: rule.value as any};
+                return { [Op.lte]: rule.value as any };
 
             case "greater":
-                return { [Op.gt]: rule.value as any};
+                return { [Op.gt]: rule.value as any };
 
             case "greater_or_equal":
-                return { [Op.gte]: rule.value as any};
+                return { [Op.gte]: rule.value as any };
 
             case "between":
                 return { [Op.between]: rule.value as any };
@@ -287,15 +295,14 @@ export class SequelizeUtils {
                 }
 
                 return !["DATE", "DATEONLY", "VIRTUAL"].some(t => t === (attr.type as AbstractDataTypeConstructor).key);
-            }).
-            map(x => {
+            }).map(x => {
                 const attr = attributes[x];
                 if (!attr) {
                     return x;
                 }
 
                 return attr.field ? attr.field : x;
-            })
+            });
     }
 
     public static reduceModelFromPath(model: M, path: string) {
