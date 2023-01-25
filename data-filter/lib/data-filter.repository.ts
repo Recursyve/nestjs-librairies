@@ -345,7 +345,7 @@ export class DataFilterRepository<Data> {
 
         const repoOption = this.generateFindOptions({});
         options.include = SequelizeUtils.mergeIncludes(
-            options.include as IncludeOptions[],
+            options.include as IncludeOptions | IncludeOptions[],
             repoOption.include as IncludeOptions[]
         );
 
