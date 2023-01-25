@@ -36,10 +36,7 @@ export class DataFilterRepository<Data> {
     }
 
     public async findByPk(identifier: Identifier, options?: FindOptions, conditions?: object): Promise<Data> {
-        const result = await this.model.findByPk(identifier, {
-            ...(options ?? {}),
-            ...this.generateFindOptions(conditions)
-        });
+        const result = await this.model.findByPk(identifier, this.generateFindOptions(options, conditions));
         if (!result) {
             return result as unknown as Data;
         }
@@ -68,10 +65,7 @@ export class DataFilterRepository<Data> {
     }
 
     public async findOne(options?: FindOptions, conditions?: object): Promise<Data> {
-        const result = await this.model.findOne({
-            ...(options ?? {}),
-            ...this.generateFindOptions(conditions)
-        });
+        const result = await this.model.findOne(this.generateFindOptions(options, conditions));
         if (!result) {
             return result as unknown as Data;
         }
@@ -89,10 +83,7 @@ export class DataFilterRepository<Data> {
     }
 
     public async findAll(options?: FindOptions, conditions?: object): Promise<Data[]> {
-        const result = await this.model.findAll({
-            ...(options ?? {}),
-            ...this.generateFindOptions(conditions)
-        });
+        const result = await this.model.findAll(this.generateFindOptions(options, conditions));
         if (!result?.length) {
             return result as unknown as Data[];
         }
@@ -111,16 +102,12 @@ export class DataFilterRepository<Data> {
     }
 
     public async count(where?: WhereOptions, conditions?: object): Promise<number> {
-        const options = {
-            ...this.generateFindOptions(conditions),
-            where
-        };
+        const options = this.generateFindOptions({ where }, conditions);
         return this.model.count(options);
     }
 
     public async search(search: string, options?: FindOptions, conditions?: object): Promise<Data[]> {
-        const findOptions = this.generateFindOptions(conditions);
-        Object.assign(findOptions, options);
+        const findOptions = this.generateFindOptions(options, conditions);
         this.addSearchCondition(search, findOptions);
 
         const result = await this.model.findAll(findOptions);
@@ -131,8 +118,7 @@ export class DataFilterRepository<Data> {
     }
 
     public async searchFromUser(user: DataFilterUserModel, search: string, options?: FindOptions, conditions?: object): Promise<Data[]> {
-        const findOptions = this.generateFindOptions(conditions);
-        Object.assign(findOptions, options);
+        const findOptions = this.generateFindOptions(options, conditions);
         this.addSearchCondition(search, findOptions);
 
         findOptions.where = await this.mergeAccessControlCondition(findOptions.where, user);
@@ -143,8 +129,11 @@ export class DataFilterRepository<Data> {
         return result.map(x => this.reduceObject(x));
     }
 
-    public generateFindOptions(conditions?: object): FindOptions {
-        const includes: IncludeOptions[][] = [
+    public generateFindOptions(options?: FindOptions, conditions?: object): FindOptions {
+        options ??= {};
+        conditions ??= {};
+
+        const nestedIncludes: Array<IncludeOptions | IncludeOptions[]> = [
             ...this._definitions.map(x => {
                 if (!x.path) {
                     return [];
@@ -160,19 +149,22 @@ export class DataFilterRepository<Data> {
                 subQuery: x.subQuery
             }, [], x.attributes))
         ];
-
-        const attributes = this._config.transformAttributesConfig(conditions);
-
-        if (attributes) {
-            return {
-                attributes: attributes,
-                include: SequelizeUtils.reduceIncludes(includes)
-            };
+        if (options.include) {
+            nestedIncludes.push(options.include as IncludeOptions | IncludeOptions[]);
         }
 
-        return {
-            include: SequelizeUtils.reduceIncludes(includes)
-        };
+        options.include = SequelizeUtils.reduceIncludes(nestedIncludes);
+
+        const generatedAttributes = this._config.transformAttributesConfig(conditions);
+        if (generatedAttributes) {
+            if (options.attributes) {
+                options.attributes = SequelizeUtils.mergeAttributes(options.attributes, generatedAttributes);
+            } else {
+                options.attributes = generatedAttributes;
+            }
+        }
+
+        return options;
     }
 
     public generateOrderInclude(order: OrderModel): IncludeOptions[] {
@@ -343,7 +335,7 @@ export class DataFilterRepository<Data> {
             return;
         }
 
-        const repoOption = this.generateFindOptions({});
+        const repoOption = this.generateFindOptions();
         options.include = SequelizeUtils.mergeIncludes(
             options.include as IncludeOptions | IncludeOptions[],
             repoOption.include as IncludeOptions[]

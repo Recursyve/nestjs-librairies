@@ -21,7 +21,7 @@ export interface GeoPoint {
 export class M extends Model {}
 
 export class SequelizeUtils {
-    public static reduceIncludes(includes: IncludeOptions[][], ignoreAttributes = false): Includeable[] {
+    public static reduceIncludes(includes: Array<IncludeOptions | IncludeOptions[]>, ignoreAttributes = false): Includeable[] {
         let include: IncludeOptions[] = [];
         for (const i of includes) {
             include = this.mergeIncludes(include, i, ignoreAttributes);
