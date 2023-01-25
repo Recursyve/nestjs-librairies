@@ -131,7 +131,6 @@ export class DataFilterRepository<Data> {
 
     public generateFindOptions(options?: FindOptions, conditions?: object): FindOptions {
         options ??= {};
-        conditions ??= {};
 
         const nestedIncludes: Array<IncludeOptions | IncludeOptions[]> = [
             ...this._definitions.map(x => {
@@ -335,7 +334,7 @@ export class DataFilterRepository<Data> {
             return;
         }
 
-        const repoOption = this.generateFindOptions();
+        const repoOption = this.generateFindOptions({}, {});
         options.include = SequelizeUtils.mergeIncludes(
             options.include as IncludeOptions | IncludeOptions[],
             repoOption.include as IncludeOptions[]
