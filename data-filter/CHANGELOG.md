@@ -181,3 +181,10 @@ SelectFilter({
 ### Bugfix
 
 - Fix for strict typings
+
+
+## [8.7.0] - 2023-01-25
+
+### Improvements
+
+- Fix include generations
