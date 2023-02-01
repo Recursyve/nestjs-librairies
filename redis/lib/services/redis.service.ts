@@ -26,7 +26,11 @@ export class RedisService {
     }
 
     public set(key: string, value: string, options?: RedidSetOptions): Promise<any> {
-        return this.client.set(key, value, options?.unit, options?.duration);
+        if (options.unit) {
+            return this.client.set(key, value, options.unit as any, options.duration);
+        }
+
+        return this.client.set(key, value);
     }
 
     public get(key: string): Promise<string> {
