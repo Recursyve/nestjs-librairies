@@ -379,6 +379,14 @@ export class FilterService<Data> {
             return;
         }
 
+        if (this.model.defaultOrderRule) {
+            const defaultOrders = Array.isArray(this.model.defaultOrderRule.order)
+                ? this.model.defaultOrderRule.order
+                : [this.model.defaultOrderRule.order];
+
+            orders = [...defaultOrders, ...orders];
+        }
+
         for (const order of orders) {
             const rule = this.definitions[order.column] as OrderRuleDefinition;
             const includes = rule && OrderRule.validate(rule) ?
@@ -573,7 +581,11 @@ export class FilterService<Data> {
         }
 
         if (this.model.defaultOrderRule) {
-            orders = [this.model.defaultOrderRule.order, ...orders];
+            const defaultOrders = Array.isArray(this.model.defaultOrderRule.order)
+                ? this.model.defaultOrderRule.order
+                : [this.model.defaultOrderRule.order];
+
+            orders = [...defaultOrders, ...orders];
         }
 
         const generatedOrder: Order = [];

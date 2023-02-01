@@ -4,6 +4,7 @@ export * from "./distance.decorator";
 export * from "./export.decorator";
 export * from "./ignore-in-search.decorator";
 export * from "./include.decorator";
+export * from "./limit.decorator";
 export * from "./order.decorator";
 export * from "./paranoid.decorator";
 export * from "./path.decorator";

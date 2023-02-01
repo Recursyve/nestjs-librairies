@@ -64,6 +64,9 @@ export class SequelizeUtils {
                 if (aChild.separate || bChild.separate) {
                     aChild.separate = true;
                 }
+                if (bChild.limit) {
+                    aChild.limit ??= bChild.limit;
+                }
                 aChild.paranoid = !(aChild.paranoid === false || bChild.paranoid === false);
                 if (TypeUtils.isNotNullOrUndefined(aChild.subQuery) || TypeUtils.isNotNullOrUndefined(bChild.subQuery)) {
                     aChild.subQuery = aChild.subQuery ?? bChild.subQuery;

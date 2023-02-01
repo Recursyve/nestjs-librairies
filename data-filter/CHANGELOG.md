@@ -188,3 +188,18 @@ SelectFilter({
 ### Improvements
 
 - Fix include generations
+
+
+## [8.8.0] - 2023-02-01
+
+### Added
+
+- Added `IsNullOrderRule` to order by `IS NULL`
+- Added limit in `@Path` and `@Include`
+- Added `@Limit` decorator
+
+## [8.8.1] - 2023-02-01
+
+### Bugfix
+
+- Fix issue where include for `defaultOrder` would not be generated
