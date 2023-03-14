@@ -1,4 +1,4 @@
 export interface DataFilterUserModel {
     id?: string;
-    language: string;
+    language?: string;
 }
