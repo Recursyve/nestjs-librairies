@@ -203,3 +203,9 @@ SelectFilter({
 ### Bugfix
 
 - Fix issue where include for `defaultOrder` would not be generated
+
+## [8.8.4] - 2023-03-15
+
+### Bugfix
+
+- Fix issue where include for `RadioFilter` conditions in options would generate properly.

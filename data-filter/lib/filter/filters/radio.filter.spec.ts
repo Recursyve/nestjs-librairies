@@ -235,4 +235,52 @@ describe("RadioFilter", () => {
             });
         });
     });
+
+    describe("getIncludePaths", () => {
+        it("with conditions containing path should returns the paths", async () => {
+            const filter = new RadioFilter({
+                attribute: "test",
+                options: [
+                    {
+                        key: "no",
+                        value: null,
+                        operator: FilterOperatorTypes.IsNotNull,
+                        condition: {
+                            condition: "or",
+                            rules: [
+                                {
+                                    condition: "or",
+                                    rules: [
+                                        {
+                                            key: "test_2",
+                                            operation: FilterOperatorTypes.IsNotNull,
+                                            path: "test_2",
+                                            value: null
+                                        },
+                                        {
+                                            key: "test_2",
+                                            operation: FilterOperatorTypes.IsNotEmpty,
+                                            path: "test_2",
+                                            value: null
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            });
+            const paths = await filter.getIncludePaths({
+                id: "test",
+                value: "no",
+                operation: FilterOperatorTypes.Equal
+            });
+            expect(paths).toBeDefined();
+            expect(paths).toStrictEqual([
+                {
+                    path: "test_2"
+                }
+            ]);
+        });
+    });
 });

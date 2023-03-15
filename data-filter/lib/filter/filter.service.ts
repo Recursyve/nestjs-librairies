@@ -256,16 +256,16 @@ export class FilterService<Data> {
             const filter = this.definitions[r.id];
             if ((filter as GroupFilterDefinition).rootFilter) {
                 const f = filter as GroupFilterDefinition;
-                includes.push(...this.getFilterInclude(model, f.rootFilter, data));
+                includes.push(...this.getFilterInclude(model, f.rootFilter, r, data));
 
                 if (!f.lazyLoading) {
-                    includes.push(...this.getFilterInclude(model, f.valueFilter, data));
+                    includes.push(...this.getFilterInclude(model, f.valueFilter, r, data));
                 } else {
                     const valueFiler = await f.getValueFilter(r.value[0]);
-                    includes.push(...this.getFilterInclude(model, valueFiler as FilterDefinition, data));
+                    includes.push(...this.getFilterInclude(model, valueFiler as FilterDefinition, r, data));
                 }
             } else {
-                includes.push(...this.getFilterInclude(model, filter as FilterDefinition, data));
+                includes.push(...this.getFilterInclude(model, filter as FilterDefinition, r, data));
             }
         }
         return SequelizeUtils.reduceIncludes(includes, true);
@@ -540,36 +540,31 @@ export class FilterService<Data> {
         return where;
     }
 
-    private generateWhereConditions(model: IncludeWhereModel, data?: object): WhereOptions {
-        if (!model) {
-            return;
+    private getFilterInclude(
+        model: typeof M,
+        filter: FilterDefinition,
+        rule: QueryRuleModel,
+        data?: object
+    ): IncludeOptions[][] {
+        const includes: IncludeOptions[][] = [];
+        const paths = filter.getIncludePaths(rule, data);
+        for (const path of paths) {
+            includes.push(
+                this.sequelizeModelScanner.getIncludes(model, path, [], [], true)
+            );
         }
 
-        const where = {};
-        for (const key in model) {
-            if (!model.hasOwnProperty(key)) {
-                continue;
-            }
-
-            const value = model[key](data);
-            if (typeof value !== "undefined") {
-                where[key] = value;
-            }
-        }
-
-        return where;
-    }
-
-    private getFilterInclude(model: typeof M, filter: FilterDefinition, data?: object): IncludeOptions[][] {
         if (!filter.path) {
-            return [this.getConditionInclude(model, filter.condition)];
+            includes.push(this.getConditionInclude(model, filter.condition));
+            return includes;
         }
 
         return [
+            ...includes,
             this.sequelizeModelScanner.getIncludes(model, {
                 path: filter.path,
                 paranoid: filter.paranoid,
-                where: this.generateWhereConditions(filter.where, data)
+                where: FilterUtils.generateWhereConditions(filter.where, data)
             }, [], [], true),
             this.getConditionInclude(model, filter.condition)
         ];

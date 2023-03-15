@@ -1,4 +1,6 @@
 import { Type } from "@nestjs/common";
+import { WhereOptions } from "sequelize";
+import { IncludeWhereModel } from "../models/include.model";
 import { BaseFilter } from "./base-filter";
 
 export class FilterUtils {
@@ -24,5 +26,25 @@ export class FilterUtils {
 
     public static getRadioOptionTranslationKey(key: string, option: string): string {
         return `filter.${key}.options.${option}`;
+    }
+
+    public static generateWhereConditions(model: IncludeWhereModel, data?: object): WhereOptions {
+        if (!model) {
+            return;
+        }
+
+        const where = {};
+        for (const key in model) {
+            if (!model.hasOwnProperty(key)) {
+                continue;
+            }
+
+            const value = model[key](data);
+            if (typeof value !== "undefined") {
+                where[key] = value;
+            }
+        }
+
+        return where;
     }
 }
