@@ -20,14 +20,13 @@ export class SequelizeRepository<T extends SequelizeEntities, CreateDto = T, Upd
     }
 
     public async updateByPk<Options>(identifier: Identifier, dto: UpdateDto | Partial<T>, options?: Options & UpdateOptions<Attributes<T>>): Promise<T> {
-        const [_, entities] = await this.repository.update(dto, {
-            returning: true,
+         await this.repository.update(dto, {
             where: {
                 [this.repository.primaryKeyAttribute]: identifier
             },
             ...options as unknown as any
         });
-        return entities[0] as unknown as T;
+        return this.findByPk(identifier);
     }
 
     public async update<Options>(dto: UpdateDto | Partial<T>, options?: Options & UpdateOptions<Attributes<T>>): Promise<void> {
