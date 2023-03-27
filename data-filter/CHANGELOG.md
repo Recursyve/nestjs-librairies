@@ -242,3 +242,20 @@ SelectFilter({
 ### Bugfix
 
 - Fix for strict mode
+
+## [9.1.0]
+
+### Added
+
+- Added `IsNullOrderRule` to order by `IS NULL`
+- Added limit in `@Path` and `@Include`
+- Added `@Limit` decorator
+
+### Improvements
+
+- Fix include generations
+
+### Bugfix
+
+- Fix issue where include for `defaultOrder` would not be generated
+- Fix issue where include for `RadioFilter` conditions in options would generate properly.
