@@ -259,3 +259,9 @@ SelectFilter({
 
 - Fix issue where include for `defaultOrder` would not be generated
 - Fix issue where include for `RadioFilter` conditions in options would generate properly.
+
+## [9.1.1] - 2023-04-14
+
+### Bugfix
+
+- Fix issue with `IsNull` and `IsNotNull` operators for DateFilter.
