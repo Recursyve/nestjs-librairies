@@ -28,6 +28,7 @@ describe("ConfigModule", () => {
         const moduleRef = await Test.createTestingModule({
             imports: [ConfigModule.forRoot(VariableEnvTest)]
         }).compile();
+        await moduleRef.init();
 
         config = moduleRef.get<VariableEnvTest>(ConfigUtils.getProviderToken(VariableEnvTest));
     });

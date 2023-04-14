@@ -1,4 +1,4 @@
-import { VariableConfig, VariableModel } from "../models/variable.model";
+import { VariableConfig, VariableMetadata } from "../models/variable-metadata.model";
 import { ConfigHandler } from "../handlers/config.handler";
 import { Type } from "@nestjs/common";
 
@@ -21,11 +21,11 @@ export function Variable(...args: any[]): PropertyDecorator {
             config = requiredOrVariableNameOrConfig;
         } else if (typeof requiredOrVariableNameOrConfig === "boolean") {
             config = {
-                required: requiredOrVariableNameOrConfig
+                required: requiredOrVariableNameOrConfig,
             };
         } else {
             config = {
-                variableName: requiredOrVariableNameOrConfig
+                variableName: requiredOrVariableNameOrConfig,
             };
         }
 
@@ -37,12 +37,12 @@ function annotate(target: Type, propertyKey: string, config: VariableConfig = {}
     let variable = ConfigHandler.getVariable(target, propertyKey);
     if (!variable) {
         variable = {
-            propertyKey
-        } as VariableModel;
+            propertyKey,
+        } as VariableMetadata;
     }
     variable = {
         ...variable,
-        ...config
+        ...config,
     };
 
     if (!variable.variableName) {

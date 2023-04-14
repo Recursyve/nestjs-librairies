@@ -1,20 +1,20 @@
-import { Injectable, Type } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ModulesContainer } from "@nestjs/core";
-import { IConfigProvider } from "../providers/i-config-provider";
-import { CONFIG_PROVIDER } from "../constant";
+import { IConfigProvider } from "../providers/config.provider";
+import { ConfigProviderHandler } from "../handlers/config-provider.handler";
 
 @Injectable()
 export class ConfigExplorerService {
-    constructor(private readonly modulesContainer: ModulesContainer) {
-    }
-
     private get providers(): any[] {
-        return [...this.modulesContainer.values()].flatMap(module => [...module.providers.values()]).map(provider => provider?.instance).filter(provider => !!provider);
+        return [...this.modulesContainer.values()]
+            .flatMap((module) => [...module.providers.values()])
+            .map((provider) => provider?.instance)
+            .filter((provider) => !!provider);
     }
 
-    public exploreConfigProviders(): Type<IConfigProvider>[] {
-        const modules = [...this.modulesContainer.values()];
+    constructor(private readonly modulesContainer: ModulesContainer) {}
 
-        return this.providers.map(provider => provider.constructor).filter(providerType => Reflect.getMetadata(CONFIG_PROVIDER, providerType));
+    public exploreConfigProviders(): IConfigProvider[] {
+        return this.providers.filter((providerType) => ConfigProviderHandler.getConfig(providerType.constructor)?.type);
     }
 }

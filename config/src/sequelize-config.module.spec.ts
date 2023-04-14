@@ -1,9 +1,12 @@
-import { Variable } from "./decorators";
+import { Variable } from "./decorators/variable.decorator";
 import { Test, TestingModule } from "@nestjs/testing";
 import { SequelizeModule } from "@nestjs/sequelize";
 import { ConfigModule } from "./config.module";
 import { ConfigUtils } from "./config.utils";
+import { SequelizeConfigModule } from "./sequelize-config.module";
+import { SequelizeConfig } from "./decorators";
 
+@SequelizeConfig()
 class SequelizeConfigTest {
     @Variable
     name: string;
@@ -17,10 +20,12 @@ describe("SequelizeConfigModule", () => {
             imports: [
                 SequelizeModule.forRoot({
                     dialect: "sqlite",
-                    storage: "memory"
+                    storage: "memory",
                 }),
-                ConfigModule.forRoot(SequelizeConfigTest)
-            ]
+                ConfigModule.forRoot(SequelizeConfigTest),
+                SequelizeConfigModule,
+            ],
+            exports: [SequelizeModule]
         }).compile();
     });
 

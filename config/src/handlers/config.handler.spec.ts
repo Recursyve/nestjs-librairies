@@ -1,17 +1,19 @@
-import { Config, Variable } from "../decorators";
-import { VariableModel } from "../models/variable.model";
+import { EnvironmentConfig, SequelizeConfig } from "../decorators/config.decorator";
+import { Variable } from "../decorators/variable.decorator";
 import { ConfigHandler } from "./config.handler";
 import { EnvironmentConfigProvider } from "../providers/environment.config-provider";
-import { ConfigModel } from "../models/config.model";
+import { ConfigMetadata } from "../models/config-metadata.model";
+import { VariableMetadata } from "../models/variable-metadata.model";
+import { SequelizeConfigProvider } from "../providers/sequelize.config-provider";
 
-@Config({ provider: EnvironmentConfigProvider })
-class EnvVariableTest {
+@EnvironmentConfig()
+class EnvironmentConfigModel {
     @Variable(false)
     DB_HOST: string;
 
     @Variable({
         variableName: "DB_NAME",
-        required: false
+        required: false,
     })
     dbName: string;
 
@@ -19,34 +21,78 @@ class EnvVariableTest {
     DB_PORT: string;
 }
 
-describe("VariableScanner", () => {
-    it("getVariables should return the valid VariableConfig array", () => {
-        const config = ConfigHandler.getConfig(EnvVariableTest);
-        expect(config).toBeDefined();
+@SequelizeConfig()
+class SequelizeConfigModel {
+    @Variable("REDIS_HOST")
+    redisHost: string;
 
-        const expected = {
-            provider: EnvironmentConfigProvider,
-            variables: [
-                {
-                    propertyKey: "DB_HOST",
-                    variableName: "DB_HOST",
-                    required: false
-                } as VariableModel,
+    @Variable({
+        required: false,
+    })
+    REDIS_PORT: string;
 
-                {
-                    propertyKey: "dbName",
-                    variableName: "DB_NAME",
-                    required: false
-                } as VariableModel,
+    @Variable
+    redisPassword: string;
+}
 
-                {
-                    propertyKey: "DB_PORT",
-                    variableName: "DB_PORT",
-                    required: true
-                } as VariableModel
-            ]
-        } as ConfigModel;
+describe("ConfigHandler", () => {
+    describe("environment config", () => {
+        it("Should return a config with the provider set as environment", () => {
+            const config = ConfigHandler.getConfig(EnvironmentConfigModel);
+            expect(config).toBeDefined();
 
-        expect(config).toEqual(expected);
+            const expected = {
+                provider: EnvironmentConfigProvider.type,
+                variables: [
+                    {
+                        propertyKey: "DB_HOST",
+                        variableName: "DB_HOST",
+                        required: false,
+                    } as VariableMetadata,
+                    {
+                        propertyKey: "dbName",
+                        variableName: "DB_NAME",
+                        required: false,
+                    } as VariableMetadata,
+                    {
+                        propertyKey: "DB_PORT",
+                        variableName: "DB_PORT",
+                        required: true,
+                    } as VariableMetadata,
+                ],
+            } as ConfigMetadata;
+
+            expect(config).toEqual(expected);
+        });
+    });
+
+    describe("sequelize config", () => {
+        it("Should return a config with the provider set as environment", () => {
+            const config = ConfigHandler.getConfig(SequelizeConfigModel);
+            expect(config).toBeDefined();
+
+            const expected = {
+                provider: SequelizeConfigProvider.type,
+                variables: [
+                    {
+                        propertyKey: "redisHost",
+                        variableName: "REDIS_HOST",
+                        required: true,
+                    } as VariableMetadata,
+                    {
+                        propertyKey: "REDIS_PORT",
+                        variableName: "REDIS_PORT",
+                        required: false,
+                    } as VariableMetadata,
+                    {
+                        propertyKey: "redisPassword",
+                        variableName: "redisPassword",
+                        required: true,
+                    } as VariableMetadata,
+                ],
+            } as ConfigMetadata;
+
+            expect(config).toEqual(expected);
+        });
     });
 });

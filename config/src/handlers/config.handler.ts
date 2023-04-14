@@ -1,19 +1,11 @@
-import { ConfigModel } from "../models/config.model";
+import { ConfigMetadata } from "../models/config-metadata.model";
 import "reflect-metadata";
 import { CONFIG } from "../constant";
-import { VariableModel } from "../models/variable.model";
+import { VariableMetadata } from "../models/variable-metadata.model";
 import { Type } from "@nestjs/common";
 
 export class ConfigHandler {
-    public static getConfig(target: Type): ConfigModel {
-        return Reflect.getMetadata(CONFIG, target) ?? { variables: [] };
-    }
-
-    public static saveConfig(target: Type, config: ConfigModel): void {
-        Reflect.defineMetadata(CONFIG, config, target);
-    }
-
-    public static getVariable(target: Type, propertyKey: string): VariableModel {
+    public static getVariable(target: Type, propertyKey: string): VariableMetadata {
         const config = ConfigHandler.getConfig(target);
         if (!config?.variables) {
             return null;
@@ -22,7 +14,7 @@ export class ConfigHandler {
         return config.variables.find(variable => variable.propertyKey === propertyKey);
     }
 
-    public static saveVariable(target: Type, variableConfig: VariableModel): void {
+    public static saveVariable(target: Type, variableConfig: VariableMetadata): void {
         const config = ConfigHandler.getConfig(target);
 
         const variableIndex = config.variables.findIndex(variable => variable.propertyKey === variableConfig.propertyKey);
@@ -33,5 +25,17 @@ export class ConfigHandler {
         }
 
         ConfigHandler.saveConfig(target, config);
+    }
+
+    public static getConfig(target: Type): ConfigMetadata {
+        const config: ConfigMetadata = Reflect.getMetadata(CONFIG, target) ?? { variables: [] };
+        return {
+            ...config,
+            variables: config.variables ? [...config.variables] : config.variables
+        };
+    }
+
+    public static saveConfig(target: Type, config: ConfigMetadata): void {
+        Reflect.defineMetadata(CONFIG, config, target);
     }
 }

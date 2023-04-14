@@ -1,34 +1,22 @@
-import { DynamicModule, Global, Module, OnModuleInit, Provider, Type } from "@nestjs/common";
+import { DynamicModule, Global, Module, Provider, Type } from "@nestjs/common";
 import { ConfigTransformerService } from "./services/config-transformer.service";
-import { VariableScanner } from "./scanners/variable.scanner";
 import { ConfigUtils } from "./config.utils";
-import { ConfigHandler } from "./handlers/config.handler";
-import { configFactory } from "./config.factory";
 import { EnvironmentConfigProvider } from "./providers/environment.config-provider";
 import { ConfigExplorerService } from "./services/config-explorer.service";
 import { ConfigProvidersRegistry } from "./services/config-providers.registry";
+import { ModuleRef } from "@nestjs/core";
 
 @Global()
 @Module({
-    providers: [
-        VariableScanner,
-        ConfigTransformerService,
-        ConfigExplorerService,
-        ConfigProvidersRegistry
-    ]
+    providers: [EnvironmentConfigProvider, ConfigTransformerService, ConfigExplorerService, ConfigProvidersRegistry],
 })
-export class ConfigModule implements OnModuleInit {
-    constructor(private explorer: ConfigExplorerService, private configProvidersRegistry: ConfigProvidersRegistry) {}
-
+export class ConfigModule {
     public static forRoot(...configs: Type[]): DynamicModule {
         return {
             module: ConfigModule,
             global: true,
-            providers: [
-                EnvironmentConfigProvider,
-                ...configs.map((config) => createConfigProvider(config))
-            ],
-            exports: configs.map((config) => ConfigUtils.getProviderToken(config))
+            providers: configs.map((config) => createConfigProvider(config)),
+            exports: configs.map((config) => ConfigUtils.getProviderToken(config)),
         };
     }
 
@@ -36,24 +24,15 @@ export class ConfigModule implements OnModuleInit {
         return {
             module: ConfigModule,
             providers: configs.map((config) => createConfigProvider(config)),
-            exports: configs.map((config) => ConfigUtils.getProviderToken(config))
+            exports: configs.map((config) => ConfigUtils.getProviderToken(config)),
         };
-    }
-
-    public onModuleInit(): void {
-        const configProviders = this.explorer.exploreConfigProviders();
-        this.configProvidersRegistry.registerConfigProviders(configProviders);
     }
 }
 
 export const createConfigProvider = (target: Type): Provider => {
-    const config = ConfigHandler.getConfig(target);
-
-    console.log(config);
-
     return {
         provide: ConfigUtils.getProviderToken(target),
-        useFactory: configFactory(target),
-        inject: [ConfigTransformerService, ConfigProvidersRegistry]
+        useFactory: (configTransformerService: ConfigTransformerService) => configTransformerService.transform(target),
+        inject: [ConfigTransformerService, ModuleRef],
     };
 };
