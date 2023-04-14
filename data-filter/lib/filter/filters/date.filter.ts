@@ -1,10 +1,10 @@
+import { addMilliseconds, endOfDay, parseJSON, startOfDay } from "date-fns";
+import { getTimezoneOffset } from "date-fns-tz";
 import { Op, WhereOptions } from "sequelize";
 import { QueryRuleModel } from "../models";
 import { DateOperators, FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
 import { BaseFilterDefinition, Filter } from "./filter";
-import { addMilliseconds, endOfDay, parseJSON, startOfDay } from "date-fns";
-import { getTimezoneOffset } from "date-fns-tz";
 
 export interface DateFilterDefinition {
     skipTimezone?: boolean;
@@ -34,6 +34,10 @@ export class DateFilter extends Filter implements DateFilterDefinition {
     }
 
     public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions> {
+        if (rule.operation === FilterOperatorTypes.IsNull || rule.operation === FilterOperatorTypes.IsNotNull) {
+            return super.getWhereOptions(rule);
+        }
+
         // TODO: Check if the client sends us a timezone
         const offsetMilliseconds = getTimezoneOffset(this.defaultTimezone);
 
