@@ -56,8 +56,8 @@ export class DateFilter extends Filter implements DateFilterDefinition {
         }
 
         const parsedValue = parseJSON(rule.value as any);
-        const start = this.skipTimezone ? rule.value as string : addMilliseconds(startOfDay(parsedValue), offsetMilliseconds).toISOString();
-        const end = this.skipTimezone ? rule.value as string : addMilliseconds(endOfDay(parsedValue), offsetMilliseconds).toISOString();
+        const start = this.skipTimezone ? startOfDay(parsedValue).toISOString() : addMilliseconds(startOfDay(parsedValue), offsetMilliseconds).toISOString();
+        const end = this.skipTimezone ? endOfDay(parsedValue).toISOString() : addMilliseconds(endOfDay(parsedValue), offsetMilliseconds).toISOString();
 
         switch (rule.operation) {
             case FilterOperatorTypes.Equal:

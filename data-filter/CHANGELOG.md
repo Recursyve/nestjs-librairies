@@ -265,3 +265,10 @@ SelectFilter({
 ### Bugfix
 
 - Fix issue with `IsNull` and `IsNotNull` operators for DateFilter.
+
+
+## [9.1.2] - 2023-04-14
+
+### Bugfix
+
+- Fix issue with multiple operators for DateFilter.
