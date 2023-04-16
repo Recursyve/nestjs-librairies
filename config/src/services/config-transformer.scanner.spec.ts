@@ -8,6 +8,7 @@ import { SequelizeModule } from "@nestjs/sequelize";
 import { ConfigSequelizeModule } from "../config-sequelize.module";
 import { ConfigProviderNotRegisteredError } from "../errors/config-provider-not-registered.error";
 import { ConfigVariablesNotDefinedError } from "../errors/config-variables-not-defined.error";
+import { Transform } from "class-transformer";
 
 @EnvironmentConfig()
 class EnvironmentConfigModel {
@@ -59,6 +60,12 @@ class RequiredVariableEnvTest {
 
     @Variable
     secondVar: string;
+}
+
+class TransformedConfigModel {
+    @Variable
+    @Transform(({ value }) => +value)
+    myNumber: number;
 }
 
 describe("ConfigTransformerService", () => {
@@ -161,6 +168,16 @@ describe("ConfigTransformerService", () => {
                 DB_HOST: "127.0.0.1",
                 DB_PORT: "1234"
             });
+        });
+
+        it("should pass the config to class-transformer", async () => {
+            process.env["myNumber"] = "42";
+           const config =  await configService.transform(TransformedConfigModel);
+
+           expect(config).toBeDefined();
+           expect(config).toBeInstanceOf(TransformedConfigModel);
+           expect(typeof config.myNumber).toBe("number");
+           expect(config.myNumber).toBe(42);
         });
     });
 
