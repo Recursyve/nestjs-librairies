@@ -6,6 +6,7 @@
         "build": "gulp build",
         "build:lib": "gulp build-lib",
         "lint": "gulp lint",
+        "test": "jest",
         "publish-package": "npm run build:lib && npm publish ./dist --access public",
         "publish-package:beta": "npm run publish-package -- --tag beta --access public",
         "publish-package:dry-run": "npm run publish-package -- --dry-run"
@@ -17,7 +18,8 @@
         "reflect-metadata": "^0.1.13",
         "rxjs": "^7.3.0",
         "sequelize": "^6.25.8",
-        "sequelize-typescript": "^2.1.5"
+        "sequelize-typescript": "^2.1.5",
+        "class-transformer": "^0.5.1"
     },
     "devDependencies": {
         "@nestjs/common": "^8.2.6",
@@ -32,7 +34,7 @@
         "jest": "^29.5.0",
         "reflect-metadata": "^0.1.13",
         "rxjs": "^7.5.2",
-        "sequelize": "^6.25.8",
+        "sequelize": "^6.31.0",
         "sequelize-typescript": "^2.1.5",
         "sqlite3": "^5.1.2",
         "ts-jest": "^29.1.0",

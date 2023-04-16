@@ -1,4 +1,4 @@
-import { Test } from "@nestjs/testing";
+import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigModule } from "./config.module";
 import { ConfigUtils } from "./config.utils";
 import { Variable } from "./decorators";
@@ -18,28 +18,25 @@ class VariableEnvTest {
 }
 
 describe("ConfigModule", () => {
-    let config: VariableEnvTest;
+    let moduleRef: TestingModule;
 
     beforeAll(async () => {
         process.env["DB_HOST"] = "127.0.0.1";
         process.env["DB_NAME"] = "test";
         process.env["DB_PORT"] = "4200";
 
-        const moduleRef = await Test.createTestingModule({
+        moduleRef = await Test.createTestingModule({
             imports: [ConfigModule.forRoot(VariableEnvTest)]
         }).compile();
         await moduleRef.init();
-
-        config = moduleRef.get<VariableEnvTest>(ConfigUtils.getProviderToken(VariableEnvTest));
     });
 
     it("config should contains valid environment variables", async () => {
-        const expected = {
+        const config = moduleRef.get<VariableEnvTest>(ConfigUtils.getProviderToken(VariableEnvTest));
+        expect(config).toEqual({
             DB_HOST: "127.0.0.1",
             dbName: "test",
             DB_PORT: "4200"
-        };
-
-        expect(config).toEqual(expect.objectContaining(expected));
+        });
     });
 });
