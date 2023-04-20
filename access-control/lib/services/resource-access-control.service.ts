@@ -2,21 +2,20 @@ import { Inject, Injectable, Optional } from "@nestjs/common";
 import { CommandBus } from "@nestjs/cqrs";
 import { RedisService } from "@recursyve/nestjs-redis";
 import { IDatabaseAdapter } from "../adapters";
-import { GetResourcesCommand } from "../commands";
 import {
     AccessActionType,
-    AccessControlResources,
     AccessRules,
-    PolicyResources,
     PolicyResourcesCondition,
     PolicyResourceTypes,
     ResourceId,
     Resources,
-    Users
+    Users,
 } from "../models";
 import { PolicyConfig } from "../models/policy-config.model";
 import { RedisKeyUtils } from "../utils";
 import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
+import { AccessControlResourceLoaderService } from "./access-control-resource-loader.service";
+import { lastValueFrom } from "rxjs";
 
 @Injectable()
 export class ResourceAccessControlService {
@@ -27,8 +26,12 @@ export class ResourceAccessControlService {
     @Inject()
     public databaseAdaptersRegistry: DatabaseAdaptersRegistry;
 
+    constructor(
+        @Optional() private config: PolicyConfig,
+        private accessControlResourceLoaderService: AccessControlResourceLoaderService
+    ) {}
+
     private _databaseAdapter: IDatabaseAdapter;
-    private _resourceName: string
 
     private get databaseAdapter(): IDatabaseAdapter {
         if (!this._databaseAdapter) {
@@ -38,6 +41,8 @@ export class ResourceAccessControlService {
         return this._databaseAdapter;
     }
 
+    private _resourceName: string;
+
     private get resourceName(): string {
         if (!this._resourceName) {
             this._resourceName = this.databaseAdapter.getResourceName(this.config.model);
@@ -46,12 +51,10 @@ export class ResourceAccessControlService {
         return this._resourceName;
     }
 
-    constructor(@Optional() private config: PolicyConfig) {}
-
     public async getResources(user: Users): Promise<Resources> {
         const exist = await this.accessControlsExists(user);
         if (!exist) {
-            return await this.fetchResources(user);
+            return await lastValueFrom(this.accessControlResourceLoaderService.loadResources(user, this.resourceName));
         }
 
         return await this.getResourcesForAction(user, AccessActionType.Read);
@@ -62,13 +65,17 @@ export class ResourceAccessControlService {
     }
 
     public async accessControlsType(user: Users): Promise<PolicyResourceTypes> {
-        return await this.redisService.get(RedisKeyUtils.userAccessControlType(user, this.resourceName)) as PolicyResourceTypes;
+        return (await this.redisService.get(
+            RedisKeyUtils.userAccessControlType(user, this.resourceName)
+        )) as PolicyResourceTypes;
     }
 
     public async getAccessRules(user: Users, resourceId: ResourceId): Promise<AccessRules> {
         const parsedResourceId = this.databaseAdapter.parseIds(this.config.model, resourceId.toString()) as ResourceId;
 
-        const res = await this.redisService.get(RedisKeyUtils.userResourceIdKey(this.resourceName, parsedResourceId, user));
+        const res = await this.redisService.get(
+            RedisKeyUtils.userResourceIdKey(this.resourceName, parsedResourceId, user)
+        );
         if (res) {
             return AccessRules.fromString(res);
         }
@@ -76,33 +83,10 @@ export class ResourceAccessControlService {
         return await this.fetchAccessRules(user, parsedResourceId);
     }
 
-    private async fetchResources(user: Users): Promise<Resources> {
-        try {
-            const res: PolicyResources = await this.commandBus.execute(
-                new GetResourcesCommand(this.resourceName, user)
-            );
-
-            await this.redisService.set(RedisKeyUtils.userAccessControlType(user, this.resourceName), res.type);
-            await this.redisService.set(RedisKeyUtils.userAccessControl(user, this.resourceName), "1");
-            await this.setAccessRules(user, res);
-            if (res.type === PolicyResourceTypes.Resources) {
-                return Resources.fromIds(res.resources.filter(x => x.rules.r).map(x => x.resourceId));
-            }
-            if (res.type === PolicyResourceTypes.Wildcard) {
-                return Resources.all();
-            }
-            if (res.type === PolicyResourceTypes.Condition) {
-                return Resources.fromCondition(res.condition.where);
-            }
-        } catch (e) {
-            return Resources.fromIds([]);
-        }
-    }
-
     private async fetchAccessRules(user: Users, resourceId: ResourceId): Promise<AccessRules> {
         const exist = await this.accessControlsExists(user);
         if (!exist) {
-            await this.fetchResources(user);
+            await lastValueFrom(this.accessControlResourceLoaderService.loadResources(user, this.resourceName));
         }
 
         const rules = await this.generateAccessRule(user, resourceId);
@@ -119,7 +103,7 @@ export class ResourceAccessControlService {
         if (!type || type === PolicyResourceTypes.Resources) {
             const ids = await this.redisService
                 .lrange(RedisKeyUtils.userResourceActionKey(user, this.resourceName, action), 0, -1)
-                .then(result => this.databaseAdapter.parseIds(this.config.model, result) as ResourceId[]);
+                .then((result) => this.databaseAdapter.parseIds(this.config.model, result) as ResourceId[]);
             return Resources.fromIds(ids);
         }
         if (type === PolicyResourceTypes.Wildcard) {
@@ -140,32 +124,6 @@ export class ResourceAccessControlService {
         }
     }
 
-    private async setAccessRules(user: Users, resources: PolicyResources) {
-        if (resources.type === PolicyResourceTypes.Resources) {
-            await Promise.all([
-                AccessActionType.Read,
-                AccessActionType.Update,
-                AccessActionType.Delete
-            ].map((a) => this.setAccessAction(user, resources.resources, a)));
-        } else if (resources.type === PolicyResourceTypes.Wildcard) {
-            await this.redisService.set(RedisKeyUtils.userResourceActionWildcardKey(user, this.resourceName), JSON.stringify(resources.wildcard));
-        } else if (resources.type === PolicyResourceTypes.Condition) {
-            await this.redisService.set(RedisKeyUtils.userResourceActionConditionKey(user, this.resourceName), JSON.stringify(resources.condition));
-        }
-    }
-
-    private async setAccessAction(
-        user: Users,
-        resources: AccessControlResources[],
-        action: AccessActionType
-    ): Promise<void> {
-        const values = resources
-            .filter(resource => resource.rules[action])
-            .map(resource => resource.resourceId.toString());
-        await this.redisService.del(RedisKeyUtils.userResourceActionKey(user, this.resourceName, action));
-        await this.redisService.lpush(RedisKeyUtils.userResourceActionKey(user, this.resourceName, action), ...values);
-    }
-
     private async generateAccessRule(user: Users, resourceId: ResourceId): Promise<AccessRules> {
         const type = await this.accessControlsType(user);
         if (type === PolicyResourceTypes.Resources) {
@@ -174,7 +132,9 @@ export class ResourceAccessControlService {
             const d = await this.resourceHasAction(user, resourceId, AccessActionType.Delete);
             return AccessRules.rud(r, u, d);
         } else if (type === PolicyResourceTypes.Wildcard) {
-            const rule = await this.redisService.get(RedisKeyUtils.userResourceActionWildcardKey(user, this.resourceName));
+            const rule = await this.redisService.get(
+                RedisKeyUtils.userResourceActionWildcardKey(user, this.resourceName)
+            );
             return AccessRules.fromString(rule);
         } else if (type === PolicyResourceTypes.Condition) {
             return this.fetchResourceRule(user, resourceId);
@@ -189,7 +149,7 @@ export class ResourceAccessControlService {
             0,
             -1
         );
-        return res.findIndex(value => resourceId === this.databaseAdapter.parseIds(this.config.model, value)) >= 0;
+        return res.findIndex((value) => resourceId === this.databaseAdapter.parseIds(this.config.model, value)) >= 0;
     }
 
     private async getResourceCondition(user: Users): Promise<PolicyResourcesCondition<any>> {
