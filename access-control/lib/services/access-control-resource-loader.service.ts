@@ -17,25 +17,25 @@ import { RedisService } from "@recursyve/nestjs-redis";
 export class AccessControlResourceLoaderService {
     private logger = new Logger(AccessControlResourceLoaderService.name);
 
-    private fetchingResource = new Map<string, Observable<Resources>>();
+    private fetchingResources = new Map<string, Observable<Resources>>();
 
     constructor(private commandBus: CommandBus, private redisService: RedisService) {}
 
     public loadResources(user: Users, resourceName: string): Observable<Resources> {
         const fetchKey = this.generateFetchKey(user, resourceName);
-        if (this.fetchingResource.has(fetchKey)) {
-            return this.fetchingResource.get(fetchKey);
+        if (this.fetchingResources.has(fetchKey)) {
+            return this.fetchingResources.get(fetchKey);
         }
 
         const resources$ = from(this.fetchResources(user, resourceName));
-        this.fetchingResource.set(fetchKey, resources$);
+        this.fetchingResources.set(fetchKey, resources$);
 
         return resources$.pipe(
             catchError((error) => {
                 this.logger.error(`Error while loading resources for ${resourceName}`, error);
                 return of(Resources.fromIds([]));
             }),
-            finalize(() => this.fetchingResource.delete(fetchKey))
+            finalize(() => this.fetchingResources.delete(fetchKey))
         );
     }
 
