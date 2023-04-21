@@ -16,6 +16,7 @@ import {
     ResourceCreatedPoliciesService,
     ResourceUpdatedPoliciesService
 } from "./services";
+import { AccessControlResourceLoaderService } from "./services/access-control-resource-loader.service";
 
 @Global()
 @Module({
@@ -31,7 +32,8 @@ import {
         AccessControlGetResourcesHandler,
         AccessControlResourceCreatedHandler,
         AccessControlResourceUpdatedHandler,
-        AccessControlResourceDeletedHandler
+        AccessControlResourceDeletedHandler,
+        AccessControlResourceLoaderService
     ],
     exports: [CqrsModule, RedisModule, AccessControlService, AccessPoliciesService, ResourceEventAccessControlService]
 })

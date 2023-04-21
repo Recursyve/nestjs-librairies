@@ -1,17 +1,25 @@
 import { Injectable } from "@nestjs/common";
-import { RedisService } from "@recursyve/nestjs-redis";
 import { CommandBus } from "@nestjs/cqrs";
+import { RedisService } from "@recursyve/nestjs-redis";
 import { Model } from "sequelize-typescript";
-import { ResourceAccessControlService } from "./resource-access-control.service";
 import { AccessActionType, Users } from "../models";
 import { RedisKeyUtils } from "../utils";
+import { AccessControlResourceLoaderService } from "./access-control-resource-loader.service";
+import { ResourceAccessControlService } from "./resource-access-control.service";
 
 @Injectable()
 export class AccessControlService {
-    constructor(private readonly redisService: RedisService, private readonly commandBus: CommandBus) {}
+    constructor(
+        private readonly redisService: RedisService,
+        private readonly commandBus: CommandBus,
+        private readonly accessControlResourceLoaderService: AccessControlResourceLoaderService
+    ) {}
 
     public forModel(model: typeof Model): ResourceAccessControlService {
-        const service = new ResourceAccessControlService(model.tableName);
+        const service = new ResourceAccessControlService(
+            model.tableName,
+            this.accessControlResourceLoaderService
+        );
         service.redisService = this.redisService;
         service.commandBus = this.commandBus;
         return service;

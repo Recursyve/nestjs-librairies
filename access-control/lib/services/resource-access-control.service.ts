@@ -1,9 +1,9 @@
 import { Inject, Injectable, Optional } from "@nestjs/common";
 import { CommandBus } from "@nestjs/cqrs";
 import { RedisService } from "@recursyve/nestjs-redis";
-import { GetResourcesCommand } from "../commands";
-import { AccessActionType, AccessControlResources, AccessRules, Users } from "../models";
+import { AccessActionType, AccessRules, Users } from "../models";
 import { RedisKeyUtils } from "../utils";
+import { AccessControlResourceLoaderService } from "./access-control-resource-loader.service";
 
 @Injectable()
 export class ResourceAccessControlService {
@@ -12,12 +12,15 @@ export class ResourceAccessControlService {
     @Inject()
     public commandBus: CommandBus;
 
-    constructor(@Optional() private table: string) {}
+    constructor(
+        @Optional() private table: string,
+        private accessControlResourceLoaderService: AccessControlResourceLoaderService
+    ) {}
 
     public async getResourceIds(user: Users): Promise<number[]> {
         const exist = await this.accessControlsExists(user);
         if (!exist) {
-            return await this.fetchResources(user);
+            return await this.accessControlResourceLoaderService.loadResources(user, this.table).toPromise();
         }
 
         return await this.getResourcesForAction(user, AccessActionType.Read);
@@ -36,24 +39,10 @@ export class ResourceAccessControlService {
         return await this.fetchAccessRules(user, resourceId);
     }
 
-    private async fetchResources(user: Users): Promise<number[]> {
-        try {
-            const resources: AccessControlResources[] = await this.commandBus.execute(
-                new GetResourcesCommand(this.table, user)
-            );
-            await this.setAccessRules(user, resources);
-
-            await this.redisService.set(RedisKeyUtils.userAccessControl(user, this.table), "1");
-            return resources.filter(x => x.rules.r).map(x => x.resourceId);
-        } catch (e) {
-            return [];
-        }
-    }
-
     private async fetchAccessRules(user: Users, resourceId: number): Promise<AccessRules> {
         const exist = await this.accessControlsExists(user);
         if (!exist) {
-            await this.fetchResources(user);
+            await this.accessControlResourceLoaderService.loadResources(user, this.table).toPromise();
         }
 
         const r = await this.resourceHasAction(user, resourceId, AccessActionType.Read);
@@ -72,24 +61,6 @@ export class ResourceAccessControlService {
         return await this.redisService
             .lrange(RedisKeyUtils.userResourceActionKey(user, this.table, action), 0, -1)
             .then(result => result.map(x => +x));
-    }
-
-    private async setAccessRules(user: Users, resources: AccessControlResources[]) {
-        [AccessActionType.Read, AccessActionType.Update, AccessActionType.Delete].forEach(async a => {
-            await this.setAccessAction(user, resources, a);
-        });
-    }
-
-    private async setAccessAction(
-        user: Users,
-        resources: AccessControlResources[],
-        action: AccessActionType
-    ): Promise<void> {
-        const values = resources
-            .filter(resource => resource.rules[action])
-            .map(resource => resource.resourceId.toString());
-        await this.redisService.del(RedisKeyUtils.userResourceActionKey(user, this.table, action));
-        await this.redisService.lpush(RedisKeyUtils.userResourceActionKey(user, this.table, action), ...values);
     }
 
     private async resourceHasAction(user: Users, resourceId: number, action: AccessActionType): Promise<boolean> {
