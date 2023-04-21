@@ -9,7 +9,7 @@ import {
     PolicyResourceTypes,
     ResourceId,
     Resources,
-    Users,
+    Users
 } from "../models";
 import { PolicyConfig } from "../models/policy-config.model";
 import { RedisKeyUtils } from "../utils";
