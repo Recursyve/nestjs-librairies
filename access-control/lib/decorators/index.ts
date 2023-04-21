@@ -1,4 +1,5 @@
 export * from "./access-control-model-routes.decorator";
+export * from "./access-control-resource.decorator";
 export * from "./created-policy.decorator";
 export * from "./database-adapter.decorator";
 export * from "./deleted-policy.decorator";
