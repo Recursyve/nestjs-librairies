@@ -3,19 +3,22 @@ import { CqrsModule } from "@nestjs/cqrs";
 import { RedisModule } from "@recursyve/nestjs-redis";
 import {
     AccessControlGetResourcesHandler,
-    AccessControlResourceUpdatedHandler,
     AccessControlResourceCreatedHandler,
-    AccessControlResourceDeletedHandler
+    AccessControlResourceDeletedHandler,
+    AccessControlResourceUpdatedHandler,
 } from "./handlers";
 import {
+    AccessControlExplorerService,
     AccessControlService,
     AccessPoliciesService,
-    AccessControlExplorerService,
+    DatabaseAdaptersRegistry,
+    ResourceCreatedPoliciesService,
+    ResourceDeletedPoliciesService,
     ResourceEventAccessControlService,
     ResourceEventService,
-    ResourceCreatedPoliciesService,
-    ResourceUpdatedPoliciesService, ResourceDeletedPoliciesService, DatabaseAdaptersRegistry
+    ResourceUpdatedPoliciesService,
 } from "./services";
+import { AccessControlResourceLoaderService } from "./services/access-control-resource-loader.service";
 
 @Global()
 @Module({
@@ -32,9 +35,10 @@ import {
         AccessControlGetResourcesHandler,
         AccessControlResourceCreatedHandler,
         AccessControlResourceUpdatedHandler,
-        AccessControlResourceDeletedHandler
+        AccessControlResourceDeletedHandler,
+        AccessControlResourceLoaderService,
     ],
-    exports: [CqrsModule, RedisModule, AccessControlService, AccessPoliciesService, ResourceEventAccessControlService]
+    exports: [CqrsModule, RedisModule, AccessControlService, AccessPoliciesService, ResourceEventAccessControlService],
 })
 export class AccessControlCoreModule implements OnModuleInit {
     constructor(
@@ -47,7 +51,8 @@ export class AccessControlCoreModule implements OnModuleInit {
     ) {}
 
     public onModuleInit(): void {
-        const { policies, createdPolicies, updatedPolicies, deletedPolicies, databaseAdapters } = this.explorer.explore();
+        const { policies, createdPolicies, updatedPolicies, deletedPolicies, databaseAdapters } =
+            this.explorer.explore();
         this.databaseAdaptersRegistry.registerAdapters(...databaseAdapters);
         this.accessPoliciesService.registerPolicies(...policies);
         this.resourceCreatedPoliciesService.registerPolicies(...createdPolicies);
