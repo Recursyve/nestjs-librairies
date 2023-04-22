@@ -11,11 +11,10 @@ export class ResourceAccessControlService {
     public redisService: RedisService;
     @Inject()
     public commandBus: CommandBus;
+    @Inject()
+    public accessControlResourceLoaderService: AccessControlResourceLoaderService
 
-    constructor(
-        @Optional() private table: string,
-        private accessControlResourceLoaderService: AccessControlResourceLoaderService
-    ) {}
+    constructor(@Optional() private table: string) {}
 
     public async getResourceIds(user: Users): Promise<number[]> {
         const exist = await this.accessControlsExists(user);

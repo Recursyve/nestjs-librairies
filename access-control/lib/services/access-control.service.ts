@@ -16,12 +16,10 @@ export class AccessControlService {
     ) {}
 
     public forModel(model: typeof Model): ResourceAccessControlService {
-        const service = new ResourceAccessControlService(
-            model.tableName,
-            this.accessControlResourceLoaderService
-        );
+        const service = new ResourceAccessControlService(model.tableName);
         service.redisService = this.redisService;
         service.commandBus = this.commandBus;
+        service.accessControlResourceLoaderService = this.accessControlResourceLoaderService;
         return service;
     }
 
