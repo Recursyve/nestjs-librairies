@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigModule } from "./config.module";
 import { ConfigUtils } from "./config.utils";
-import { Variable } from "./decorators";
+import { Variable } from "./decorators/variable.decorator";
 
 class VariableEnvTest {
     @Variable(false)

@@ -2,10 +2,7 @@ import { Variable } from "../decorators/variable.decorator";
 import { ConfigTransformerService } from "./config-transformer.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigModule } from "../config.module";
-import { Config, EnvironmentConfig, SequelizeConfig } from "../decorators";
-import { ConfigSequelizeModel, ConfigSequelizeModelInjectionToken } from "../models/config-sequelize.model";
-import { SequelizeModule } from "@nestjs/sequelize";
-import { ConfigSequelizeModule } from "../config-sequelize.module";
+import { Config, EnvironmentConfig } from "../decorators/config.decorator";
 import { ConfigProviderNotRegisteredError } from "../errors/config-provider-not-registered.error";
 import { ConfigVariablesNotDefinedError } from "../errors/config-variables-not-defined.error";
 import { Transform } from "class-transformer";
@@ -34,18 +31,6 @@ class DefaultConfigModel {
 
     @Variable
     THIRD_VAR: string;
-}
-
-@SequelizeConfig()
-class SequelizeConfigModel {
-    @Variable("SEQUELIZE_FIRST_VAR")
-    firstVar: string;
-
-    @Variable
-    SEQUELIZE_SECOND_VAR: string;
-
-    @Variable(true)
-    sequelizeThirdVar: string;
 }
 
 @Config({ provider: "unknown" })
@@ -77,15 +62,7 @@ describe("ConfigTransformerService", () => {
 
         beforeAll(async () => {
             moduleRef = await Test.createTestingModule({
-                imports: [
-                    SequelizeModule.forRoot({
-                        dialect: "sqlite",
-                        storage: ":memory:",
-                        autoLoadModels: true
-                    }),
-                    ConfigModule.forRoot(),
-                    ConfigSequelizeModule.forRoot()
-                ]
+                imports: [ConfigModule.forRoot()]
             }).compile();
             await moduleRef.init();
 
@@ -128,25 +105,6 @@ describe("ConfigTransformerService", () => {
             });
         });
 
-        it("transform should return the config from sequelize if the provider is sequelize", async () => {
-            const repository = moduleRef.get<typeof ConfigSequelizeModel>(ConfigSequelizeModelInjectionToken);
-            await repository.bulkCreate([
-                { key: "SEQUELIZE_FIRST_VAR", value: "sequelize_first_value" },
-                { key: "SEQUELIZE_SECOND_VAR", value: "sequelize_second_value" },
-                { key: "sequelizeThirdVar", value: "sequelize_third_value" }
-            ]);
-
-            const config = await configService.transform(SequelizeConfigModel);
-
-            expect(config).toBeDefined();
-            expect(config).toBeInstanceOf(SequelizeConfigModel);
-            expect(config).toEqual({
-                firstVar: "sequelize_first_value",
-                SEQUELIZE_SECOND_VAR: "sequelize_second_value",
-                sequelizeThirdVar: "sequelize_third_value"
-            });
-        });
-
         it("should throw an exception if the provider is not found", async () => {
             await expect(configService.transform(UnknownProviderConfigModel)).rejects.toThrow(
                 ConfigProviderNotRegisteredError
@@ -172,12 +130,12 @@ describe("ConfigTransformerService", () => {
 
         it("should pass the config to class-transformer", async () => {
             process.env["myNumber"] = "42";
-           const config =  await configService.transform(TransformedConfigModel);
+            const config = await configService.transform(TransformedConfigModel);
 
-           expect(config).toBeDefined();
-           expect(config).toBeInstanceOf(TransformedConfigModel);
-           expect(typeof config.myNumber).toBe("number");
-           expect(config.myNumber).toBe(42);
+            expect(config).toBeDefined();
+            expect(config).toBeInstanceOf(TransformedConfigModel);
+            expect(typeof config.myNumber).toBe("number");
+            expect(config.myNumber).toBe(42);
         });
     });
 

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { IConfigProvider } from "./config.provider";
-import { ConfigSequelizeModel, InjectConfigSequelizeModel } from "../models/config-sequelize.model";
-import { ConfigProvider } from "../decorators/config-provider.decorator";
+import { ConfigSequelizeModel, InjectConfigSequelizeModel } from "../models";
+import { IConfigProvider } from "@recursyve/nestjs-config/providers";
+import { ConfigProvider } from "@recursyve/nestjs-config";
 
 @Injectable()
 @ConfigProvider(SequelizeConfigProvider.type)

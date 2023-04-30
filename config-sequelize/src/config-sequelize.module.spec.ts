@@ -1,11 +1,9 @@
-import { Variable } from "./decorators/variable.decorator";
 import { Test, TestingModule } from "@nestjs/testing";
 import { SequelizeModule } from "@nestjs/sequelize";
-import { ConfigModule } from "./config.module";
-import { ConfigUtils } from "./config.utils";
 import { ConfigSequelizeModule } from "./config-sequelize.module";
 import { SequelizeConfig } from "./decorators";
-import { ConfigSequelizeModel, ConfigSequelizeModelInjectionToken } from "./models/config-sequelize.model";
+import { ConfigSequelizeModel, ConfigSequelizeModelInjectionToken } from "./models";
+import { ConfigModule, ConfigUtils, Variable } from "@recursyve/nestjs-config";
 
 @SequelizeConfig()
 class SequelizeConfigTest {

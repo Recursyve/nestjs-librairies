@@ -1,10 +1,8 @@
-import { EnvironmentConfig, SequelizeConfig } from "../decorators/config.decorator";
+import { EnvironmentConfig } from "../decorators/config.decorator";
 import { Variable } from "../decorators/variable.decorator";
 import { ConfigHandler } from "./config.handler";
 import { EnvironmentConfigProvider } from "../providers/environment.config-provider";
-import { ConfigMetadata } from "../models/config-metadata.model";
-import { VariableMetadata } from "../models/variable-metadata.model";
-import { SequelizeConfigProvider } from "../providers/sequelize.config-provider";
+import { ConfigMetadata, VariableMetadata } from "../models";
 
 @EnvironmentConfig()
 class EnvironmentConfigModel {
@@ -13,26 +11,12 @@ class EnvironmentConfigModel {
 
     @Variable({
         variableName: "DB_NAME",
-        required: false,
+        required: false
     })
     dbName: string;
 
     @Variable
     DB_PORT: string;
-}
-
-@SequelizeConfig()
-class SequelizeConfigModel {
-    @Variable("REDIS_HOST")
-    redisHost: string;
-
-    @Variable({
-        required: false,
-    })
-    REDIS_PORT: string;
-
-    @Variable
-    redisPassword: string;
 }
 
 describe("ConfigHandler", () => {
@@ -47,49 +31,19 @@ describe("ConfigHandler", () => {
                     {
                         propertyKey: "DB_HOST",
                         variableName: "DB_HOST",
-                        required: false,
+                        required: false
                     } as VariableMetadata,
                     {
                         propertyKey: "dbName",
                         variableName: "DB_NAME",
-                        required: false,
+                        required: false
                     } as VariableMetadata,
                     {
                         propertyKey: "DB_PORT",
                         variableName: "DB_PORT",
-                        required: true,
-                    } as VariableMetadata,
-                ],
-            } as ConfigMetadata;
-
-            expect(config).toEqual(expected);
-        });
-    });
-
-    describe("sequelize config", () => {
-        it("Should return a config with the provider set as environment", () => {
-            const config = ConfigHandler.getConfig(SequelizeConfigModel);
-            expect(config).toBeDefined();
-
-            const expected = {
-                provider: SequelizeConfigProvider.type,
-                variables: [
-                    {
-                        propertyKey: "redisHost",
-                        variableName: "REDIS_HOST",
-                        required: true,
-                    } as VariableMetadata,
-                    {
-                        propertyKey: "REDIS_PORT",
-                        variableName: "REDIS_PORT",
-                        required: false,
-                    } as VariableMetadata,
-                    {
-                        propertyKey: "redisPassword",
-                        variableName: "redisPassword",
-                        required: true,
-                    } as VariableMetadata,
-                ],
+                        required: true
+                    } as VariableMetadata
+                ]
             } as ConfigMetadata;
 
             expect(config).toEqual(expected);
