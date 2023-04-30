@@ -9,6 +9,7 @@ export interface PathConfig {
     paranoid?: boolean;
     subQuery?: boolean;
     order?: Order;
+    limit?: number;
 }
 
 
@@ -20,4 +21,5 @@ export interface PathModel {
     paranoid?: boolean;
     subQuery?: boolean;
     order?: Order;
+    limit?: number;
 }

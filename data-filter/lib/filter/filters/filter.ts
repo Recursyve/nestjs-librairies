@@ -1,11 +1,12 @@
 import { fn, LogicType, Op, Sequelize, where, WhereOperators, WhereOptions } from "sequelize";
-import { DataFilterUserModel } from "../../models/user.model";
 import { TranslateAdapter } from "../../adapters/translate.adapter";
 import { IncludeWhereModel } from "../../models/include.model";
+import { PathModel } from "../../models/path.model";
+import { DataFilterUserModel } from "../../models/user.model";
 import { SequelizeUtils } from "../../sequelize.utils";
 import { FilterUtils } from "../filter.utils";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
-import { QueryModel, QueryRuleModel, Condition } from "../models/query.model";
+import { Condition, QueryModel, QueryRuleModel } from "../models/query.model";
 import { RuleModel } from "../models/rule.model";
 import { CustomOperator, FilterOperators, FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
@@ -15,7 +16,8 @@ export interface FilterConditionRule {
     key: string;
     path?: string;
     operation: FilterOperators;
-    value: (unknown | unknown[]) | ((value: unknown | unknown[]) => unknown | unknown[])
+    value?: (unknown | unknown[]) | ((value: unknown | unknown[]) => unknown | unknown[]);
+    where?: IncludeWhereModel;
 }
 
 export interface FilterCondition {
@@ -60,6 +62,7 @@ export interface FilterDefinition extends BaseFilterDefinition {
     operators: (FilterOperatorTypes | CustomOperator)[];
 
     getConfig<Request>(key: string, req: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel>;
+    getIncludePaths(rule: QueryRuleModel, data?: object): PathModel[];
     getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions>;
     getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions>;
     usePathCondition(query: QueryModel): boolean;
@@ -151,6 +154,10 @@ export abstract class Filter implements FilterDefinition {
             }
         }
         return config;
+    }
+
+    public getIncludePaths(rule: QueryRuleModel, data?: object): PathModel[] {
+        return [];
     }
 
     public async getWhereOptions(rule: QueryRuleModel, name?: string): Promise<WhereOptions> {

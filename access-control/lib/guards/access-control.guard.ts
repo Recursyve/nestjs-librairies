@@ -41,6 +41,9 @@ export class AccessControlGuard implements CanActivate, OnModuleInit {
 
         const request = context.switchToHttp().getRequest();
         const user = await this.userDeserializer.deserializeUser(request);
+        if (!user) {
+            return false;
+        }
 
         const controllerResource = this.reflector.get<AccessControlResourceConfig>(ACCESS_CONTROL_RESOURCE, context.getClass());
         const methodResource = this.reflector.get<AccessControlResourceConfig>(ACCESS_CONTROL_RESOURCE, context.getHandler());
@@ -48,17 +51,18 @@ export class AccessControlGuard implements CanActivate, OnModuleInit {
             request.resources = this.getModels(request.route.path, needsAccessActions);
         }
 
-        const getResource = (action: AccessAction, index: number) => {
+        // Returns the [resource, resourceType]
+        const getResource = (action: AccessAction, index: number): [any, string?] => {
             if (!controllerResource && !methodResource) {
-                return request.resources[index];
+                return [request.resources[index]];
             }
 
             if (controllerResource?.paramId === action.resourceIdParameterName) {
-                return controllerResource.model;
+                return [controllerResource.model, controllerResource.type];
             }
 
             if (methodResource?.paramId === action.resourceIdParameterName) {
-                return methodResource.model;
+                return [methodResource.model, methodResource.type];
             }
 
             return null;
@@ -69,12 +73,12 @@ export class AccessControlGuard implements CanActivate, OnModuleInit {
             getResource(x, i)
         ]);
 
-        for (const [accessAction, resource] of data) {
+        for (const [accessAction, [resource, resourceType]] of data) {
             if (!resource) {
                 return false;
             }
 
-            const resourceAccessControlService = this.accessControlService.forModel(resource);
+            const resourceAccessControlService = this.accessControlService.forModel(resource, resourceType);
             const accessRulesForUser = await resourceAccessControlService.getAccessRules(
                 user,
                 request.params[accessAction.resourceIdParameterName]

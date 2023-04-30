@@ -5,3 +5,4 @@ export * from "./policy-config.model";
 export * from "./resources.model";
 export * from "./user-resources.model";
 export * from "./users.model";
+export * from "./access-control-resource.model";

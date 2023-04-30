@@ -7,3 +7,4 @@ export * from "./needs-access-actions.decorator";
 export * from "./policy.decorator";
 export * from "./updated-policy.decorator";
 export * from "./fallback-access-control-guards.decorator";
+export * from "./constant";

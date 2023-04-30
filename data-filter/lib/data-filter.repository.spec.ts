@@ -1,5 +1,5 @@
 import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdapter } from "./adapters";
-import { SearchableAttributes } from "./decorators/seachable-attributes.decorator";
+import { SearchableAttributes, Distance } from "./decorators";
 import { databaseFactory } from "./test/database.factory";
 import { DataFilterRepository } from "./data-filter.repository";
 import { Attributes, Data, Include, Where } from "./decorators";
@@ -8,7 +8,6 @@ import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { Persons } from "./test/models/persons/persons.model";
 import { Coords } from "./test/models/coords/coords.model";
 import { Locations } from "./test/models/locations/locations.model";
-import { Distance } from "./decorators/distance.decorator";
 import { fn, literal, Op } from "sequelize";
 
 @Data(Persons)
@@ -93,7 +92,7 @@ describe("DataFilterRepository", () => {
         });
 
         it("generateFindOptions with conditions should return a valid Sequelize FindOptions object", () => {
-            const options = repository.generateFindOptions({ value: "Montreal" });
+            const options = repository.generateFindOptions({}, { value: "Montreal" });
             expect(options).toBeDefined();
             expect(options).toStrictEqual({
                 attributes: ["id", "first_name", "last_name"],
@@ -241,7 +240,7 @@ describe("DataFilterRepository", () => {
         });
 
         it("generateFindOptions with conditions should return a valid Sequelize FindOptions object", () => {
-            const options = repository.generateFindOptions({ coordinates: [45.8797953, -73.2815516] });
+            const options = repository.generateFindOptions({}, { coordinates: [45.8797953, -73.2815516] });
             expect(options).toBeDefined();
             expect(options).toStrictEqual({
                 attributes: [
@@ -281,7 +280,7 @@ describe("DataFilterRepository", () => {
         });
 
         it("generateFindOptions with conditions should return a valid Sequelize FindOptions object", () => {
-            const options = repository.generateFindOptions({ value: "Montreal", coordinates: [45.8797953, -73.2815516] });
+            const options = repository.generateFindOptions({}, { value: "Montreal", coordinates: [45.8797953, -73.2815516] });
             expect(options).toBeDefined();
             expect(options).toStrictEqual({
                 attributes: [

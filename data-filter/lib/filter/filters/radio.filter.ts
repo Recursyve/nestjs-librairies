@@ -1,15 +1,16 @@
 import { Op, WhereOptions } from "sequelize";
+import { PathModel } from "../../models/path.model";
 import { DataFilterUserModel } from "../../models/user.model";
 import { FilterUtils } from "../filter.utils";
 import { QueryRuleModel } from "../models";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
-import { BaseFilterDefinition, Filter, FilterCondition } from "./filter";
+import { BaseFilterDefinition, Filter, FilterCondition, FilterConditionRule } from "./filter";
 
 export interface RadioFilterOption {
     key: string;
-    value: unknown;
+    value?: unknown;
     operator?: FilterOperatorTypes;
     condition?: FilterCondition;
 }
@@ -55,6 +56,16 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
         };
     }
 
+    public getIncludePaths(rule: QueryRuleModel, data?: object): PathModel[] {
+        const option = this.options.find(x => x.key === rule.value);
+        const condition = option?.condition;
+        if (!condition) {
+            return super.getIncludePaths(rule);
+        }
+
+        return this.getRulePaths(condition.rules, data);
+    }
+
     public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions> {
         const option = this.options.find(x => x.key === rule.value);
         if (!option) {
@@ -93,5 +104,24 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
             value: option.value,
             operation: option.operator ?? rule.operation
         });
+    }
+
+    private getRulePaths(rules: (FilterConditionRule | FilterCondition)[], data?: object): PathModel[] {
+        const paths: PathModel[] = [];
+
+        for (const rule of rules) {
+            if ((rule as FilterCondition).rules) {
+                paths.push(...this.getRulePaths((rule as FilterCondition).rules, data));
+            } else if ((rule as FilterConditionRule).path) {
+                if (paths.every((path) => path.path !== (rule as FilterConditionRule).path)) {
+                    paths.push({
+                        path: (rule as FilterConditionRule).path,
+                        where: FilterUtils.generateWhereConditions((rule as FilterConditionRule).where, data)
+                    });
+                }
+            }
+        }
+
+        return paths;
     }
 }

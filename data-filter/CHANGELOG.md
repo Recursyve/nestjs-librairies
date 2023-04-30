@@ -174,3 +174,38 @@ SelectFilter({
 ### Bugfix
 
 - Fix issues with RadioFilter conditions in options
+
+
+## [8.5.6] - 2023-01-04
+
+### Bugfix
+
+- Fix for strict typings
+
+
+## [8.7.0] - 2023-01-25
+
+### Improvements
+
+- Fix include generations
+
+
+## [8.8.0] - 2023-02-01
+
+### Added
+
+- Added `IsNullOrderRule` to order by `IS NULL`
+- Added limit in `@Path` and `@Include`
+- Added `@Limit` decorator
+
+## [8.8.1] - 2023-02-01
+
+### Bugfix
+
+- Fix issue where include for `defaultOrder` would not be generated
+
+## [8.8.4] - 2023-03-15
+
+### Bugfix
+
+- Fix issue where include for `RadioFilter` conditions in options would generate properly.

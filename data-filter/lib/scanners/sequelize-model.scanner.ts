@@ -51,6 +51,9 @@ export class SequelizeModelScanner {
         if (path.required) {
             includes[0].required = true;
         }
+        if (path.limit) {
+            includes[0].limit = path.limit;
+        }
 
         includes[0].paranoid = !!path.paranoid;
         includes[0].separate = !!path.separate;
@@ -72,7 +75,8 @@ export class SequelizeModelScanner {
                         required: include.required,
                         separate: include.separate,
                         paranoid: include.paranoid,
-                        subQuery: include.subQuery
+                        subQuery: include.subQuery,
+                        limit: include.limit
                     },
                     [],
                     include.attributes,

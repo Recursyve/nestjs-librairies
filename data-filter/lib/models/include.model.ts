@@ -15,6 +15,7 @@ export interface IncludeConfig {
     separate?: boolean;
     paranoid?: boolean;
     subQuery?: boolean;
+    limit?: number;
 }
 
 export interface IncludeModel {
@@ -28,4 +29,5 @@ export interface IncludeModel {
     separate?: boolean;
     paranoid?: boolean;
     subQuery?: boolean;
+    limit?: number;
 }
