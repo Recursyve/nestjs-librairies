@@ -15,7 +15,6 @@
         "@nestjs/common": ">=8.0.0",
         "@nestjs/core": ">=8.0.0",
         "@nestjs/sequelize": "^9.0.0",
-        "reflect-metadata": "^0.1.13",
         "sequelize": "^6.25.8",
         "sequelize-typescript": "^2.1.5",
         "@recursyve/nestjs-config": "^8.0.0"
@@ -31,7 +30,6 @@
         "gulp-sourcemaps": "^3.0.0",
         "gulp-typescript": "^6.0.0-alpha.1",
         "jest": "^29.5.0",
-        "reflect-metadata": "^0.1.13",
         "rxjs": "^7.5.2",
         "sequelize": "^6.31.0",
         "sequelize-typescript": "^2.1.5",
