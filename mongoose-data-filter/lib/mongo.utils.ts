@@ -1,6 +1,7 @@
 import { QuerySelector } from "mongodb";
 import { RuleModel } from "./filter/models";
 import { AddFieldModel } from "./models/add-field.model";
+import { FilterOperatorTypes } from "./filter";
 
 export class MongoUtils {
     public static generateWhereValue(rule: RuleModel): QuerySelector<any> {
@@ -12,22 +13,22 @@ export class MongoUtils {
                 return { $ne: rule.value };
 
             case "in":
-                return { $in : rule.value as any[] };
+                return { $in: rule.value as any[] };
 
             case "not_in":
                 return { $nin: rule.value as any[] };
 
             case "less":
-                return { $lt: rule.value as any};
+                return { $lt: rule.value as any };
 
             case "less_or_equal":
-                return { $lte: rule.value as any};
+                return { $lte: rule.value as any };
 
             case "greater":
-                return { $gt: rule.value as any};
+                return { $gt: rule.value as any };
 
             case "greater_or_equal":
-                return { $gte: rule.value as any};
+                return { $gte: rule.value as any };
 
             case "between":
                 return {
@@ -70,6 +71,9 @@ export class MongoUtils {
 
             case "is_not_empty":
                 return { $ne: "" };
+
+            case FilterOperatorTypes.Exists:
+                return { $exists: rule.value as any }
         }
     }
 
@@ -84,14 +88,14 @@ export class MongoUtils {
     public static mergeLookups(a: any[], b: any[]): any[] {
         for (const bChild of b) {
             if (bChild.$lookup) {
-                const aChild = a.find(x => x.$lookup?.from === bChild.$lookup.from && x.$lookup?.as === bChild.$lookup.as);
+                const aChild = a.find((x) => x.$lookup?.from === bChild.$lookup.from && x.$lookup?.as === bChild.$lookup.as);
                 if (aChild) {
                     aChild.$lookup.pipeline = this.mergeLookups(aChild.$lookup.pipeline ?? [], bChild.$lookup.pipeline ?? []);
                 } else {
                     a.push(bChild);
                 }
             } else if (bChild.$unwind) {
-                const aChild = a.find(x => x.$unwind?.path === bChild.$unwind.path);
+                const aChild = a.find((x) => x.$unwind?.path === bChild.$unwind.path);
                 if (!aChild) {
                     a.push(bChild);
                 }
@@ -107,16 +111,21 @@ export class MongoUtils {
         }
 
         return {
-            $or: fields.map(x => ({
+            $or: fields.map((x) => ({
                 [x]: new RegExp(`.*${search}.*`, "i")
             }))
         };
     }
 
     public static reduceFieldsToAdd(fieldsToAdd: AddFieldModel[]): any {
-        return fieldsToAdd.map(x => x.transform()).reduce((previous, current) => ({
-            ...previous,
-            ...current
-        }), {});
+        return fieldsToAdd
+            .map((x) => x.transform())
+            .reduce(
+                (previous, current) => ({
+                    ...previous,
+                    ...current
+                }),
+                {}
+            );
     }
 }
