@@ -18,7 +18,8 @@ export enum FilterOperatorTypes {
     Contains = "contains",
     NotContains = "not_contains",
     IsEmpty = "is_empty",
-    IsNotEmpty = "is_not_empty"
+    IsNotEmpty = "is_not_empty",
+    Exists = "exists"
 }
 
 export type FilterOperators = FilterOperatorTypes | string;
