@@ -6,6 +6,7 @@ import { FilterBaseConfigurationModel } from "../models/filter-configuration.mod
 import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
 import { BaseFilterDefinition, Filter } from "./filter";
+import { RequestInfo } from "../types/request-info.type";
 
 export interface RadioFilterOption {
     key: string;
@@ -35,13 +36,13 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
         super(definition);
     }
 
-    public async getConfig(key: string, user?: DataFilterUserModel): Promise<RadioFilterConfigurationModel> {
+    public async getConfig(key: string, requestInfo: RequestInfo): Promise<RadioFilterConfigurationModel> {
         return {
-            ...(await super.getConfig(key, user)),
+            ...(await super.getConfig(key, requestInfo)),
             options: await Promise.all(this.options.map(async x => ({
                 key: x.key,
                 name: await this._translateService.getTranslation(
-                    user?.language,
+                    requestInfo.user?.language,
                     FilterUtils.getRadioOptionTranslationKey(key, x.key)
                 )
             })))

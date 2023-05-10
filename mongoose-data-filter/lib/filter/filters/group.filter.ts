@@ -7,6 +7,7 @@ import { QueryRuleModel } from "../models/query.model";
 import { RuleModel } from "../models/rule.model";
 import { FilterType } from "../type";
 import { BaseFilterDefinition, Filter, FilterDefinition } from "./filter";
+import { RequestInfo } from "../types/request-info.type";
 
 export interface BaseGroupFilterDefinition {
     rootFilter: Filter;
@@ -17,7 +18,7 @@ export interface BaseGroupFilterDefinition {
 }
 
 export interface GroupFilterDefinition extends BaseGroupFilterDefinition {
-    getConfig(key: string, user?: DataFilterUserModel): Promise<GroupFilterBaseConfigurationModel>;
+    getConfig(key: string, requestInfo: RequestInfo): Promise<GroupFilterBaseConfigurationModel>;
     getMatchOptions(rule: QueryRuleModel, name?: string): Promise<mongoose.FilterQuery<any>>;
 }
 
@@ -49,21 +50,21 @@ export class GroupFilter implements GroupFilterDefinition {
         return definition["_type"] === "group_filter";
     }
 
-    public async getConfig(key: string, user?: DataFilterUserModel): Promise<GroupFilterBaseConfigurationModel> {
+    public async getConfig(key: string, requestInfo?: RequestInfo): Promise<GroupFilterBaseConfigurationModel> {
         const config = {
             type: this.type,
-            rootFilter: await this.rootFilter.getConfig(key, user),
+            rootFilter: await this.rootFilter.getConfig(key, requestInfo),
             lazyLoading: this.lazyLoading ?? false
         } as GroupFilterBaseConfigurationModel;
 
         if (this.valueFilter) {
-            config.valueFilter = await this.valueFilter.getConfig(key, user);
+            config.valueFilter = await this.valueFilter.getConfig(key, requestInfo);
         }
         if (this.group) {
             config.group = {
                 key: this.group,
                 name: await this._translateService.getTranslation(
-                    user?.language,
+                    requestInfo.user?.language,
                     FilterUtils.getGroupTranslationKey(this.group)
                 )
             };
