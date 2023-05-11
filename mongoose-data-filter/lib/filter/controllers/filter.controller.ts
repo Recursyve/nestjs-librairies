@@ -4,7 +4,8 @@ import {
     HttpCode,
     HttpStatus,
     Inject,
-    Optional, Param,
+    Optional,
+    Param,
     Post,
     Query,
     Req,
@@ -26,7 +27,8 @@ export class FilterController<Data> {
     @Optional()
     private readonly userUserDeserializer: UserDeserializer<DataFilterUserModel>;
 
-    constructor(protected readonly filterService: FilterService<Data>) {}
+    constructor(protected readonly filterService: FilterService<Data>) {
+    }
 
     @Post("filter")
     @HttpCode(HttpStatus.OK)
@@ -56,24 +58,33 @@ export class FilterController<Data> {
     }
 
     @Get("filter/config")
-    public async getFilterConfig(@Req() req: any): Promise<FilterConfigurationModel[]> {
-        return await this.filterService.getConfig(await this.getUser(req) ?? {} as DataFilterUserModel);
+    public async getFilterConfig(@Req() request: any): Promise<FilterConfigurationModel[]> {
+        return await this.filterService.getConfig({
+            user: await this.getUser(request) ?? {} as DataFilterUserModel,
+            request
+        });
     }
 
     @Get("filter/config/id")
     public async searchFilterResourceValue(
         @Query() search: FilterResourceValueModel,
-        @Req() req: any
+        @Req() request: any
     ): Promise<SelectFilterValue> {
-        return await this.filterService.findResourceValueById(search, await this.getUser(req) ?? {} as DataFilterUserModel);
+        return await this.filterService.findResourceValueById(search, {
+            user: await this.getUser(request) ?? {} as DataFilterUserModel,
+            request
+        });
     }
 
     @Get("filter/config/value")
     public async searchFilterConfigValues(
         @Query() search: FilterConfigurationSearchModel,
-        @Req() req: any
+        @Req() request: any
     ): Promise<SelectFilterValue[]> {
-        return await this.filterService.searchConfigValues(search, await this.getUser(req) ?? {} as DataFilterUserModel);
+        return await this.filterService.searchConfigValues(search,  {
+            user: await this.getUser(request) ?? {} as DataFilterUserModel,
+            request
+        });
     }
 
     protected async getUser(req: any): Promise<DataFilterUserModel> {

@@ -1,11 +1,11 @@
 import * as mongoose from "mongoose";
 import { TranslateAdapter } from "../../adapters";
-import { DataFilterUserModel } from "../../models/user.model";
 import { MongoUtils } from "../../mongo.utils";
 import { FilterUtils } from "../filter.utils";
 import { FilterBaseConfigurationModel, QueryRuleModel } from "../models";
 import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
+import { RequestInfo } from "../types/request-info.type";
 
 export type Condition = "and" | "or";
 
@@ -17,13 +17,19 @@ export interface BaseFilterDefinition {
 
 export interface FilterDefinition extends BaseFilterDefinition {
     type: FilterType;
-    operators: (FilterOperatorTypes)[];
+    operators: FilterOperatorTypes[];
 
-    getConfig(key: string, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel>;
+    getConfig(key: string, requestInfo: RequestInfo): Promise<FilterBaseConfigurationModel>;
+
     getMatchOptions(rule: QueryRuleModel): Promise<mongoose.FilterQuery<any>>;
 }
 
 export abstract class Filter implements FilterDefinition {
+    public type: FilterType;
+    public operators: FilterOperatorTypes[];
+    public group: string;
+    public attribute: string;
+    public path?: string;
     private _type = "filter";
 
     protected _translateService: TranslateAdapter;
@@ -32,51 +38,50 @@ export abstract class Filter implements FilterDefinition {
         this._translateService = translateService;
     }
 
-    public type: FilterType;
-    public operators: (FilterOperatorTypes)[];
-    public group: string;
-    public attribute: string;
-    public path?: string;
-
-    public static validate(definition: FilterDefinition) {
-        return definition["_type"] === "filter";
-    }
-
     protected constructor(definition?: BaseFilterDefinition) {
         if (definition) {
             Object.assign(this, definition);
         }
     }
 
-    public addOperators(...operator: (FilterOperatorTypes)[]): Filter {
+    public static validate(definition: FilterDefinition) {
+        return definition["_type"] === "filter";
+    }
+
+    public addOperators(...operator: FilterOperatorTypes[]): Filter {
         this.operators.push(...operator);
         return this;
     }
 
-    public setOperators(...operator: (FilterOperatorTypes)[]): Filter {
+    public setOperators(...operator: FilterOperatorTypes[]): Filter {
         this.operators = [...operator];
         return this;
     }
 
-    public async getConfig(key: string, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
+    public async getConfig(key: string, requestInfo: RequestInfo): Promise<FilterBaseConfigurationModel> {
         const config = {
             type: this.type,
-            operators: await Promise.all(this.operators.map(async x => {
-                return {
-                    id: x,
-                    name: await this._translateService.getTranslation(
-                        user?.language,
-                        FilterUtils.getOperatorTranslationKey(x)
-                    )
-                };
-            }))
+            operators: await Promise.all(
+                this.operators.map(async (x) => {
+                    return {
+                        id: x,
+                        name: await this._translateService.getTranslation(
+                            requestInfo.user?.language,
+                            FilterUtils.getOperatorTranslationKey(x)
+                        )
+                    };
+                })
+            )
         } as FilterBaseConfigurationModel;
 
         if (this.group) {
             config.group = {
                 key: this.group,
-                name: await this._translateService.getTranslation(user?.language, FilterUtils.getGroupTranslationKey(this.group))
-            }
+                name: await this._translateService.getTranslation(
+                    requestInfo.user?.language,
+                    FilterUtils.getGroupTranslationKey(this.group)
+                )
+            };
         }
         return config;
     }
@@ -93,6 +98,6 @@ export abstract class Filter implements FilterDefinition {
 
         return {
             [name]: value
-        }
+        };
     }
 }

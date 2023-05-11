@@ -3,23 +3,36 @@ import { FilterType } from "../type";
 import { SelectOperators } from "../operators";
 import { BaseFilterDefinition, Filter } from "./filter";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
+import { RequestInfo } from "../types/request-info.type";
 
 export interface SelectFilterValue {
     id: number | string;
     name: string;
 }
 
+export interface SelectFilterGetValuesOptions<T = any, User = any, Request = any> {
+    value: T;
+    user?: User;
+    request?: Request;
+}
+
+export interface SelectFilterGetResourceOptions<User = any, Request = any> {
+    id: number | string;
+    user?: User;
+    request?: Request;
+}
+
 export interface SelectFilterDefinition<T> {
-    values: (value: unknown, user?: any) => Promise<SelectFilterValue[]>;
+    values: ({ value, user, request }: SelectFilterGetValuesOptions) => Promise<SelectFilterValue[]>;
     lazyLoading?: boolean;
-    getResourceById?: (id: number, user?: any) => Promise<SelectFilterValue>;
+    getResourceById?: ({ id, user, request }: SelectFilterGetResourceOptions) => Promise<SelectFilterValue>;
 }
 
 export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T> {
     public type = FilterType.Select;
     public operators = [...SelectOperators];
-    public values: (value: unknown, user?: any) => Promise<SelectFilterValue[]>;
-    public getResourceById: (id: number, user?: any) => Promise<SelectFilterValue>;
+    public values: ({ value, user, request }: SelectFilterGetValuesOptions) => Promise<SelectFilterValue[]>;
+    public getResourceById: ({ id, user, request }: SelectFilterGetResourceOptions) => Promise<SelectFilterValue>;
     public lazyLoading;
 
     constructor(definition: BaseFilterDefinition & SelectFilterDefinition<T>) {
@@ -30,11 +43,11 @@ export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T>
         }
     }
 
-    public async getConfig(key: string, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel> {
-        const config = await super.getConfig(key, user);
+    public async getConfig<Request>(key: string, requestInfo: RequestInfo): Promise<FilterBaseConfigurationModel> {
+        const config = await super.getConfig(key, requestInfo);
         return {
             ...config,
-            values: this.lazyLoading ? [] : await this.values(null, user),
+            values: this.lazyLoading ? [] : await this.values({ value: null, ...requestInfo }),
             lazyLoading: this.lazyLoading
         };
     }
