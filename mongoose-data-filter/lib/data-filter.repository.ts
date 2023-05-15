@@ -3,10 +3,8 @@ import {
     Aggregate,
     Connection,
     FilterQuery,
-    Model,
-    MongooseFilterQuery,
-    QueryFindBaseOptions,
-    QueryFindOptions
+    QueryOptions,
+    Model
 } from "mongoose";
 import { AccessControlAdapter, ExportAdapter, TranslateAdapter } from "./adapters";
 import { AddFieldModel } from "./models/add-field.model";
@@ -46,7 +44,7 @@ export class DataFilterRepository<Data> {
     public async findOne(
         conditions?: FilterQuery<Data>,
         projection?: any | null,
-        options?: QueryFindBaseOptions,
+        options?: QueryOptions,
         config?: object,
         addFields?: AddFieldModel[]
     ): Promise<Data> {
@@ -62,7 +60,7 @@ export class DataFilterRepository<Data> {
     public async find(
         conditions?: FilterQuery<Data>,
         projection?: any | null,
-        options?: QueryFindOptions,
+        options?: QueryOptions,
         config?: object,
         addFields?: AddFieldModel[]
     ): Promise<Data[]> {
@@ -119,8 +117,8 @@ export class DataFilterRepository<Data> {
     }
 
     public getFilterAggregation(
-        conditions?: MongooseFilterQuery<any>,
-        options?: QueryFindOptions,
+        conditions?: FilterQuery<any>,
+        options?: QueryOptions,
         config?: object,
         addFields?: AddFieldModel[]
     ): Aggregate<any> {
