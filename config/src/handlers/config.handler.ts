@@ -5,7 +5,7 @@ import { VariableMetadata } from "../models/variable-metadata.model";
 import { Type } from "@nestjs/common";
 
 export class ConfigHandler {
-    public static getVariable(target: Type, propertyKey: string): VariableMetadata {
+    public static getVariable(target: Type, propertyKey: string): VariableMetadata | null {
         const config = ConfigHandler.getConfig(target);
         if (!config?.variables) {
             return null;
