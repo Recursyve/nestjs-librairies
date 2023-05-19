@@ -9,13 +9,6 @@
         "emitDecoratorMetadata": true,
         "outDir": "dist"
     },
-    "include": [
-        "src/**/*",
-        "index.ts"
-    ],
-    "exclude": [
-        "node_modules",
-        "src/test/**/*",
-        "src/**/*.spec.ts"
-    ]
+    "include": ["src/**/*", "index.ts"],
+    "exclude": ["node_modules", "src/test/**/*", "src/**/*.spec.ts"]
 }

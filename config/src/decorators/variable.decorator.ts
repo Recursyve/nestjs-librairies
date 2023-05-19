@@ -1,5 +1,6 @@
-import { VariableHandler } from "../handlers/variable.handler";
-import { VariableConfig, VariableModel } from "../models/variable.model";
+import { VariableConfig, VariableMetadata } from "../models/variable-metadata.model";
+import { ConfigHandler } from "../handlers/config.handler";
+import { Type } from "@nestjs/common";
 
 export function Variable(requiredOrVariableNameOrConfig: boolean | string | VariableConfig): PropertyDecorator;
 export function Variable(target: Object, propertyKey: string): void;
@@ -7,7 +8,7 @@ export function Variable(...args: any[]): PropertyDecorator {
     if (args.length >= 2) {
         const [target, propertyName] = args;
 
-        annotate(target, propertyName);
+        annotate(target.constructor, propertyName);
         return;
     }
 
@@ -20,28 +21,28 @@ export function Variable(...args: any[]): PropertyDecorator {
             config = requiredOrVariableNameOrConfig;
         } else if (typeof requiredOrVariableNameOrConfig === "boolean") {
             config = {
-                required: requiredOrVariableNameOrConfig
+                required: requiredOrVariableNameOrConfig,
             };
         } else {
             config = {
-                variableName: requiredOrVariableNameOrConfig
+                variableName: requiredOrVariableNameOrConfig,
             };
         }
 
-        annotate(target, propertyKey, config);
+        annotate(target.constructor as any, propertyKey, config);
     };
 }
 
-function annotate(target: Object, propertyKey: string, config: VariableConfig = {}) {
-    let variable = VariableHandler.getVariable(target, propertyKey);
+function annotate(target: Type, propertyKey: string, config: VariableConfig = {}) {
+    let variable = ConfigHandler.getVariable(target, propertyKey);
     if (!variable) {
         variable = {
-            propertyKey
-        } as VariableModel;
+            propertyKey,
+        } as VariableMetadata;
     }
     variable = {
         ...variable,
-        ...config
+        ...config,
     };
 
     if (!variable.variableName) {
@@ -52,5 +53,5 @@ function annotate(target: Object, propertyKey: string, config: VariableConfig = 
         variable.required = true;
     }
 
-    VariableHandler.saveVariable(target, variable);
+    ConfigHandler.saveVariable(target, variable);
 }
