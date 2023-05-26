@@ -1,6 +1,7 @@
 import { Inject, Injectable, Optional } from "@nestjs/common";
 import { CommandBus } from "@nestjs/cqrs";
 import { RedisService } from "@recursyve/nestjs-redis";
+import { lastValueFrom } from "rxjs";
 import { IDatabaseAdapter } from "../adapters";
 import {
     AccessActionType,
@@ -13,9 +14,8 @@ import {
 } from "../models";
 import { PolicyConfig } from "../models/policy-config.model";
 import { RedisKeyUtils } from "../utils";
-import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
 import { AccessControlResourceLoaderService } from "./access-control-resource-loader.service";
-import { lastValueFrom } from "rxjs";
+import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
 
 @Injectable()
 export class ResourceAccessControlService {
@@ -25,11 +25,10 @@ export class ResourceAccessControlService {
     public commandBus: CommandBus;
     @Inject()
     public databaseAdaptersRegistry: DatabaseAdaptersRegistry;
+    @Inject()
+    public accessControlResourceLoaderService: AccessControlResourceLoaderService
 
-    constructor(
-        @Optional() private config: PolicyConfig,
-        private accessControlResourceLoaderService: AccessControlResourceLoaderService
-    ) {}
+    constructor(@Optional() private config: PolicyConfig,) {}
 
     private _databaseAdapter: IDatabaseAdapter;
 
