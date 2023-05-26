@@ -36,9 +36,16 @@ import { AccessControlResourceLoaderService } from "./services/access-control-re
         AccessControlResourceCreatedHandler,
         AccessControlResourceUpdatedHandler,
         AccessControlResourceDeletedHandler,
-        AccessControlResourceLoaderService,
+        AccessControlResourceLoaderService
     ],
-    exports: [CqrsModule, RedisModule, AccessControlService, AccessPoliciesService, ResourceEventAccessControlService],
+    exports: [
+        CqrsModule,
+        RedisModule,
+        AccessControlService,
+        AccessPoliciesService,
+        ResourceEventAccessControlService,
+        AccessControlResourceLoaderService
+    ]
 })
 export class AccessControlCoreModule implements OnModuleInit {
     constructor(

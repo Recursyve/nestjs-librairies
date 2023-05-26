@@ -4,9 +4,9 @@ import { RedisService } from "@recursyve/nestjs-redis";
 import { ACCESS_CONTROL_DEFAULT_DATABASE } from "../constant";
 import { AccessActionType, Users } from "../models";
 import { RedisKeyUtils } from "../utils";
+import { AccessControlResourceLoaderService } from "./access-control-resource-loader.service";
 import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
 import { ResourceAccessControlService } from "./resource-access-control.service";
-import { AccessControlResourceLoaderService } from "./access-control-resource-loader.service";
 
 @Injectable()
 export class AccessControlService {
@@ -23,12 +23,12 @@ export class AccessControlService {
             {
                 model,
                 type: type ?? this.type,
-            },
-            this.accessControlResourceLoaderService
+            }
         );
         service.redisService = this.redisService;
         service.commandBus = this.commandBus;
         service.databaseAdaptersRegistry = this.databaseAdaptersRegistry;
+        service.accessControlResourceLoaderService = this.accessControlResourceLoaderService;
         return service;
     }
 
