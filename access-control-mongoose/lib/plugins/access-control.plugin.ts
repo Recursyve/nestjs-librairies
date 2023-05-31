@@ -10,8 +10,8 @@ export function accessControlPlugin(schema: Schema, { service }: { service: Reso
     schema.post(["save"], async (doc: Document, next) => {
         if ((doc as any).$wasCreated) {
             const session = doc.$session();
-            if (session && session.afterCommit) {
-                session.afterCommit.subscribe(() => service.onResourceCreated(`${doc.collection.name}-mongoose`, doc));
+            if (session && (session as any).afterCommit) {
+                (session as any).afterCommit.subscribe(() => service.onResourceCreated(`${doc.collection.name}-mongoose`, doc));
             } else {
                 await service.onResourceCreated(`${doc.collection.name}-mongoose`, doc);
             }
