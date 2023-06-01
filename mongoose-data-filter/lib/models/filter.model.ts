@@ -18,7 +18,7 @@ export interface FilterQueryModel {
     page?: FilterPageMode;
     search?: FilterSearchModel;
     query?: QueryModel;
-    order?: OrderModel;
+    order?: OrderModel | OrderModel[];
     data?: object;
 }
 

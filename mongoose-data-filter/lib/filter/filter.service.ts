@@ -340,7 +340,7 @@ export class FilterService<Data> {
             await this.setAccessControlMatchCondition(pipeline, userOrOFilter as Users);
         }
 
-        const [sort, fieldsToAdd] = this.getSortOption(filter.order);
+        const { sort, fieldsToAdd } = this.getSortOption(filter.order);
         let aggregation = this.repository.model.aggregate(pipeline);
         if (sort) {
             if (fieldsToAdd?.length) {
@@ -399,44 +399,69 @@ export class FilterService<Data> {
         return [this.mongoSchemaScanner.getLookups(model.schema, { path: filter.path }, [])];
     }
 
-    private getSortLookups(model: Model<any>, orderObj: OrderModel, data?: object): any[] {
-        if (!orderObj?.column || orderObj?.direction === "") {
-            return [];
+    private getSortLookups(model: Model<any>, order: OrderModel | OrderModel[], data?: object): any[] {
+        if (!Array.isArray(order)) {
+            order = [order];
         }
 
-        const rule = this.definitions[orderObj.column] as SortRuleDefinition;
-        if (rule && rule.path && SortRule.validate(rule)) {
-            return this.mongoSchemaScanner.getLookups(model.schema, { path: rule.path, where: rule.where }, []);
+        const orders = [];
+        for (const ord of order) {
+            if (!ord?.column || ord?.direction === "") {
+                continue;
+            }
+
+            const rule = this.definitions[ord.column] as SortRuleDefinition;
+            if (rule && rule.path && SortRule.validate(rule)) {
+                orders.push(
+                    this.mongoSchemaScanner.getLookups(model.schema, {
+                        path: rule.path,
+                        where: rule.where
+                    }, [])
+                );
+            } else {
+                orders.push(this.repository.generateOrderLookup(ord, data));
+            }
         }
 
-        return this.repository.generateOrderLookup(orderObj, data);
+        return orders;
     }
 
-    private getSortOption(orderObj: OrderModel): [{ [field: string]: number }, AddFieldModel[]] {
-        if (!orderObj) {
-            orderObj = this.model.defaultOrder;
+    private getSortOption(orderObj: OrderModel | OrderModel[]): {
+        sort: string,
+        fieldsToAdd: AddFieldModel[]
+    } {
+        if (!Array.isArray(orderObj)) {
+            orderObj = [orderObj];
         }
 
-        if (!orderObj || !orderObj.column || orderObj.direction === "") {
-            return [null, null];
+        if (!orderObj?.length) {
+            orderObj = [this.model.defaultOrder];
         }
 
-        const rule = this.definitions[orderObj.column] as SortRuleDefinition;
-        if (!rule || !SortRule.validate(rule)) {
-            return [
-                {
-                    [orderObj.column]: orderObj.direction === "asc" ? 1 : -1
-                },
-                []
-            ];
+        const sorts: string[] = [];
+        const fieldsToAdd: AddFieldModel[] = [];
+
+        for (const ord of orderObj) {
+            if (!ord?.column || !ord.direction) {
+                continue;
+            }
+
+            // https://mongoosejs.com/docs/5.x/docs/api/aggregate.html#aggregate_Aggregate-sort
+            const directionPrefix = ord.direction === "asc" ? "" : "-";
+            const rule = this.definitions[ord.column] as SortRuleDefinition;
+
+            if (!rule || !SortRule.validate(rule)) {
+                sorts.push(`${directionPrefix}${ord.column}`);
+            } else {
+                sorts.push(`${directionPrefix}${rule.getSortOption()}`);
+                fieldsToAdd.push(...rule.getFieldsToAdd(ord));
+            }
         }
 
-        return [
-            {
-                [rule.getSortOption()]: orderObj.direction === "asc" ? 1 : -1
-            },
-            rule.getFieldsToAdd(orderObj)
-        ];
+        return {
+            sort: sorts.join(" "),
+            fieldsToAdd
+        };
     }
 
     private addDefaultFilter(query: QueryModel): QueryModel {
