@@ -32,7 +32,8 @@ export class FilterService<Data> {
         private translateAdapter: TranslateAdapter,
         private model: BaseFilter<Data>,
         private mongoSchemaScanner: MongoSchemaScanner,
-        private dataFilter: DataFilterService
+        private dataFilter: DataFilterService,
+        private options?: { disableAccessControl?: boolean }
     ) {
         this.init();
     }
@@ -62,6 +63,9 @@ export class FilterService<Data> {
                 continue;
             }
             const config = await (filter as FilterDefinition).getConfig(key, requestInfo);
+            if (!config) {
+                continue;
+            }
 
             result.push({
                 ...config,
@@ -370,6 +374,10 @@ export class FilterService<Data> {
     }
 
     private async setAccessControlMatchCondition(pipeline: any[], user: DataFilterUserModel): Promise<void> {
+        if (this.options?.disableAccessControl) {
+            return;
+        }
+
         if (!user) {
             throw new Error("No user found");
         } else if (!this.accessControlAdapter) {

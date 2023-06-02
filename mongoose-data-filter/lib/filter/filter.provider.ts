@@ -6,10 +6,10 @@ import { BaseFilter } from "./base-filter";
 import { FilterServiceFactory } from "./filter.factory";
 import { FilterUtils } from "./filter.utils";
 
-export function createFilterProvider(filter: Type<BaseFilter<any>>): Provider {
+export function createFilterProvider(filter: Type<BaseFilter<any>>, disableAccessControl?: boolean): Provider {
     return {
         provide: FilterUtils.getProviderToken(filter),
-        useFactory: FilterServiceFactory,
+        useFactory: FilterServiceFactory({ disableAccessControl }),
         inject: [AccessControlAdapter, TranslateAdapter, filter, MongoSchemaScanner, DataFilterService]
     };
 }
