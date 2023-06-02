@@ -37,8 +37,13 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
     }
 
     public async getConfig(key: string, requestInfo: RequestInfo): Promise<RadioFilterConfigurationModel> {
+        const config = await super.getConfig(key, requestInfo);
+        if (!config) {
+            return null;
+        }
+
         return {
-            ...(await super.getConfig(key, requestInfo)),
+            ...config,
             options: await Promise.all(this.options.map(async x => ({
                 key: x.key,
                 name: await this._translateService.getTranslation(

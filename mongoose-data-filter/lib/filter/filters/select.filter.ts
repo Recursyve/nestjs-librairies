@@ -45,6 +45,11 @@ export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T>
 
     public async getConfig<Request>(key: string, requestInfo: RequestInfo): Promise<FilterBaseConfigurationModel> {
         const config = await super.getConfig(key, requestInfo);
+
+        if (!config) {
+            return null;
+        }
+
         return {
             ...config,
             values: this.lazyLoading ? [] : await this.values({ value: null, ...requestInfo }),

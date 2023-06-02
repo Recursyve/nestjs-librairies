@@ -13,6 +13,9 @@ export interface BaseFilterDefinition {
     attribute: string;
     path?: string;
     group?: string;
+
+    // Private filters will not be returned to the clients
+    private?: boolean;
 }
 
 export interface FilterDefinition extends BaseFilterDefinition {
@@ -30,6 +33,8 @@ export abstract class Filter implements FilterDefinition {
     public group: string;
     public attribute: string;
     public path?: string;
+    public private?: boolean;
+
     private _type = "filter";
 
     protected _translateService: TranslateAdapter;
@@ -59,6 +64,10 @@ export abstract class Filter implements FilterDefinition {
     }
 
     public async getConfig(key: string, requestInfo: RequestInfo): Promise<FilterBaseConfigurationModel> {
+        if (this.private) {
+            return null;
+        }
+
         const config = {
             type: this.type,
             operators: await Promise.all(

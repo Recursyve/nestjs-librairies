@@ -1,8 +1,10 @@
 import { DynamicModule, ForwardReference, Global, Module, Provider, Type } from "@nestjs/common";
 import {
     AccessControlAdapter,
-    DefaultAccessControlAdapter, DefaultExportAdapter,
-    DefaultTranslateAdapter, ExportAdapter,
+    DefaultAccessControlAdapter,
+    DefaultExportAdapter,
+    DefaultTranslateAdapter,
+    ExportAdapter,
     TranslateAdapter
 } from "./adapters";
 import { FILTER_OPTION } from "./constant";
@@ -25,7 +27,11 @@ export interface DataFilterConfig {
 }
 
 export interface DataFilterFeatureConfig extends DataFilterConfig {
-    filters: { filter: Type<BaseFilter<any>>; inject?: any[] }[];
+    filters: {
+        filter: Type<BaseFilter<any>>,
+        inject?: any[],
+        disableAccessControl?: boolean
+    }[];
 }
 
 @Global()
@@ -99,7 +105,7 @@ export class DataFilterModule {
                         useFactory: FilterFactory(x.filter),
                         inject: x.inject ?? []
                     },
-                    createFilterProvider(x.filter)
+                    createFilterProvider(x.filter, x.disableAccessControl)
                 ]))
             ],
             exports: [

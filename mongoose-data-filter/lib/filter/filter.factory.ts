@@ -6,14 +6,16 @@ import { MongoSchemaScanner } from "../scanners/mongo-schema.scanner";
 import { BaseFilter } from "./base-filter";
 import { FilterService } from "./filter.service";
 
-export function FilterServiceFactory<T>(
-    accessControlAdapter: AccessControlAdapter,
-    translateAdapter: TranslateAdapter,
-    filter: BaseFilter<T>,
-    mongoSchemaScanner: MongoSchemaScanner,
-    dataFilterService: DataFilterService
-) {
-    return new FilterService(accessControlAdapter, translateAdapter, filter, mongoSchemaScanner, dataFilterService);
+export function FilterServiceFactory<T>(options?: { disableAccessControl?: boolean }) {
+    return (
+        accessControlAdapter: AccessControlAdapter,
+        translateAdapter: TranslateAdapter,
+        filter: BaseFilter<T>,
+        mongoSchemaScanner: MongoSchemaScanner,
+        dataFilterService: DataFilterService
+    ) => {
+        return new FilterService(accessControlAdapter, translateAdapter, filter, mongoSchemaScanner, dataFilterService, options);
+    };
 }
 
 export function FilterFactory<T>(filter: Type<T>) {
@@ -22,7 +24,7 @@ export function FilterFactory<T>(filter: Type<T>) {
          * Check if all dependencies are injected
          */
         if (filter.prototype.constructor.length !== args.length) {
-            throw new Error(`Not enough dependencies were provided for ${filter.name}: expected ${filter.prototype.constructor.length}, received ${args.length}`)
+            throw new Error(`Not enough dependencies were provided for ${filter.name}: expected ${filter.prototype.constructor.length}, received ${args.length}`);
         }
 
         return new filter(...args);
