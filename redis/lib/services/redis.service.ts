@@ -9,6 +9,8 @@ export interface RedidSetOptions {
     duration: number;
 }
 
+export type RedisValue = string | Buffer | number;
+
 @Injectable()
 export class RedisService {
     private readonly client: Redis.Redis;
@@ -25,7 +27,7 @@ export class RedisService {
         return (await this.client.exists(key)) > 0;
     }
 
-    public set(key: string, value: string, options?: RedidSetOptions): Promise<any> {
+    public set(key: string, value: RedisValue, options?: RedidSetOptions): Promise<any> {
         if (options?.unit) {
             return this.client.set(key, value, options.unit as any, options.duration);
         }
@@ -37,11 +39,15 @@ export class RedisService {
         return this.client.get(key);
     }
 
+    public getBuffer(key: string): Promise<Buffer> {
+        return this.client.getBuffer(key);
+    }
+
     public async del(key: string): Promise<void> {
         await this.client.del(key);
     }
 
-    public async lpush(key: string, ...value: string[]): Promise<number> {
+    public async lpush(key: string, ...value: RedisValue[]): Promise<number> {
         if (!value.length) {
             return;
         }
@@ -59,12 +65,16 @@ export class RedisService {
         return lastTotalLengthForKey;
     }
 
-    public lrem(key: string, value: string, count: number = 0): Promise<number> {
+    public lrem(key: string, value: RedisValue, count: number = 0): Promise<number> {
         return this.client.lrem(key, count, value);
     }
 
     public lrange(key: string, start: number, end: number): Promise<string[]> {
         return this.client.lrange(key, start, end);
+    }
+
+    public lrangeBuffer(key: string, start: number, end: number): Promise<Buffer[]> {
+        return this.client.lrangeBuffer(key, start, end);
     }
 
     public async scanDel(pattern: string): Promise<void> {
@@ -74,11 +84,11 @@ export class RedisService {
         }
     }
 
-    public sadd(key: string, ...value: (string | Buffer | number)[]): Promise<number> {
+    public sadd(key: string, ...value: RedisValue[]): Promise<number> {
         return this.client.sadd(key, value);
     }
 
-    public srem(key: string, ...value: (string | Buffer | number)[]): Promise<number> {
+    public srem(key: string, ...value: RedisValue[]): Promise<number> {
         return this.client.srem(key, value);
     }
 
@@ -86,23 +96,27 @@ export class RedisService {
         return this.client.smembers(key);
     }
 
-    public sismember(key: string, value: string | Buffer | number): Promise<number> {
+    public smembersBuffer(key: string): Promise<Buffer[]> {
+        return this.client.smembersBuffer(key);
+    }
+
+    public sismember(key: string, value: RedisValue): Promise<number> {
         return this.client.sismember(key, value);
     }
 
-    public smove(source: string, destination: string, value: string | Buffer | number): Promise<number> {
+    public smove(source: string, destination: string, value: RedisValue): Promise<number> {
         return this.client.smove(source, destination, value);
     }
 
-    public zadd(key: string, value: string, score: number): Promise<string | number> {
+    public zadd(key: string, value: RedisValue, score: number): Promise<string | number> {
         return this.client.zadd(key, score.toString(), value);
     }
 
-    public async zrevrange(key: string, start: number, end: number): Promise<string[]> {
-        return await this.client.zrevrange(key, start, end);
+    public zrevrange(key: string, start: number, end: number): Promise<string[]> {
+        return this.client.zrevrange(key, start, end);
     }
 
-    public async zscore(key: string, value: string): Promise<number> {
+    public async zscore(key: string, value: RedisValue): Promise<number> {
         return +(await this.client.zscore(key, value));
     }
 
