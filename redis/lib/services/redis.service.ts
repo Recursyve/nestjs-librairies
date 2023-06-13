@@ -74,6 +74,26 @@ export class RedisService {
         }
     }
 
+    public sadd(key: string, ...value: (string | Buffer | number)[]): Promise<number> {
+        return this.client.sadd(key, value);
+    }
+
+    public srem(key: string, ...value: (string | Buffer | number)[]): Promise<number> {
+        return this.client.srem(key, value);
+    }
+
+    public smembers(key: string): Promise<string[]> {
+        return this.client.smembers(key);
+    }
+
+    public sismember(key: string, value: string | Buffer | number): Promise<number> {
+        return this.client.sismember(key, value);
+    }
+
+    public smove(source: string, destination: string, value: string | Buffer | number): Promise<number> {
+        return this.client.smove(source, destination, value);
+    }
+
     public zadd(key: string, value: string, score: number): Promise<string | number> {
         return this.client.zadd(key, score.toString(), value);
     }
