@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { FindOptions, Identifier, IncludeOptions, Model, Op, Utils, WhereOptions } from "sequelize";
+import { GroupOption } from "sequelize/types/model";
+import { Col, Fn } from "sequelize/types/utils";
 import { AccessControlAdapter, ExportAdapter, TranslateAdapter } from "./adapters";
 import { AttributesConfig } from "./models/attributes.model";
 import { CustomAttributesConfig } from "./models/custom-attributes.model";
@@ -245,6 +247,21 @@ export class DataFilterRepository<Data> {
 
     public getCustomAttribute(name: string): CustomAttributesConfig {
         return this._config.customAttributes.find((x) => x.config.name === name);
+    }
+
+    public getCustomAttributeGroupBy(): (string | Fn | Col)[] {
+        const group: GroupOption = [];
+
+        for (const attribute of this._config.customAttributes) {
+            const groupBy = attribute.groupBy();
+            if (Array.isArray(groupBy)) {
+                group.push(...groupBy);
+            } else if (groupBy) {
+                group.push(groupBy);
+            }
+        }
+
+        return group;
     }
 
     public async downloadData(data: Data[], type: ExportTypes, lang: string, options?: any): Promise<Buffer | string>;

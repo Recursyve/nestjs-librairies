@@ -1,4 +1,5 @@
 export * from "./attributes.decorator";
+export * from "./count.decorator";
 export * from "./data.decorator";
 export * from "./distance.decorator";
 export * from "./export.decorator";
@@ -11,4 +12,5 @@ export * from "./path.decorator";
 export * from "./required.decorator";
 export * from "./seachable-attributes.decorator";
 export * from "./separate.decorator";
+export * from "./sum.decorator";
 export * from "./where.decorator";

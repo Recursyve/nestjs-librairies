@@ -10,7 +10,7 @@ import {
     OrderItem,
     WhereOptions
 } from "sequelize";
-import { ProjectionAlias } from "sequelize/types/model";
+import { GroupOption, ProjectionAlias } from "sequelize/types/model";
 import { ExportTypes, FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
@@ -502,7 +502,7 @@ export class FilterService<Data> {
             order
         });
 
-        const group = filter.groupBy ? [SequelizeUtils.getGroupLiteral(repository.model, filter.groupBy)] : undefined;
+        const group = this.generateRepositoryGroupBy(filter);
         return await repository.findAll({
             where: {
                 id: values.map(x => x.id)
@@ -626,6 +626,43 @@ export class FilterService<Data> {
             }
         }
         return attributes;
+    }
+
+    private generateRepositoryGroupBy(filter: FilterQueryModel): GroupOption | null {
+        const group: GroupOption = [];
+        if (filter.groupBy) {
+            group.push(SequelizeUtils.getGroupLiteral(this.repository.model, filter.groupBy));
+        }
+
+        const groupBy = this.repository.getCustomAttributeGroupBy();
+        if (!groupBy.length) {
+            return group;
+        }
+
+        group.push(...groupBy);
+        if (!filter.order || (filter.order instanceof Array && !filter.order.length)) {
+            return group;
+        }
+
+        const orders = this.normalizeOrder(filter.order);
+        for (const order of orders) {
+            if (!order?.column || !order.direction) {
+                continue;
+            }
+
+            if (this.repository.hasCustomAttribute(order.column)) {
+                continue;
+            }
+
+            const rule = this.definitions[order.column] as OrderRuleDefinition;
+            if (!rule || !OrderRule.validate(rule)) {
+                group.push(`${this.repository.model.name}.${SequelizeUtils.findColumnFieldName(this.repository.model, order.column)}`);
+            } else {
+                group.push(...this.sequelizeModelScanner.getGroup(this.repository.model, order));
+            }
+        }
+
+        return group;
     }
 
     private addDefaultFilter(query: QueryModel): QueryModel {

@@ -1,4 +1,5 @@
 import { fn, literal, ProjectionAlias } from "sequelize";
+import { GroupOption } from "sequelize/types/model";
 import { SequelizeUtils } from "../sequelize.utils";
 import { CustomAttributesConfig } from "./custom-attributes.model";
 
@@ -45,6 +46,10 @@ export class DistanceAttributesConfig implements CustomAttributesConfig<Distance
 
         const location = fn("ST_GeometryFromText", literal(`'POINT(${latitude} ${longitude})'`), this.config.srid ?? 0);
         return [fn("ST_Distance_Sphere", this.getPointAttribute(path), location), this.config.name ?? this.key];
+    }
+
+    public groupBy(): GroupOption {
+        return [];
     }
 
     private getPointAttribute(path: string) {

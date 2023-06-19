@@ -209,3 +209,10 @@ SelectFilter({
 ### Bugfix
 
 - Fix issue where include for `RadioFilter` conditions in options would generate properly.
+
+
+## [8.9.0] - 2023-06-19
+
+### Added
+
+- Added `@Count` and `@Sum` decorators
