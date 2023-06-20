@@ -21,10 +21,10 @@ export class AttributesConfig implements AttributesConfigModel {
     public ignoreInSearch = false;
 
     constructor(public key: string) {
-        this.path = {
+        this.path = new PathConfig({
             path: key,
             paranoid: true
-        };
+        });
     }
 
     public setAttributes(attributes?: FindAttributeOptions) {
@@ -61,22 +61,6 @@ export class AttributesConfig implements AttributesConfigModel {
 
     public addCustomAttribute(attribute: CustomAttributesConfig) {
         this.customAttributes.push(attribute);
-    }
-
-    public transformPathConfig(options?: object): PathModel {
-        if (!options) {
-            const { where, ...path } = this.path;
-            return path as PathModel;
-        }
-
-        if (this.path.where) {
-            return {
-                ...this.path,
-                where: this.generateWhereConditions(this.path.where, options)
-            };
-        }
-
-        return this.path as PathModel;
     }
 
     public transformAttributesConfig(options?: object): FindAttributeOptions {
@@ -133,7 +117,7 @@ export class AttributesConfig implements AttributesConfigModel {
 
                 return {
                     ...x,
-                    where: this.generateWhereConditions(x.where, options)
+                    where: SequelizeUtils.generateWhereConditions(x.where, options)
                 };
             });
     }
@@ -150,25 +134,5 @@ export class AttributesConfig implements AttributesConfigModel {
                 } : null
             } as CustomAttributesModel))
             .filter(x => x.attribute);
-    }
-
-    private generateWhereConditions(model: IncludeWhereModel, options?: object): WhereOptions {
-        const where = {};
-        const keys = [
-            ...Object.keys(model),
-            ...Object.getOwnPropertySymbols(model)
-        ];
-        for (const key of keys) {
-            if (!model.hasOwnProperty(key)) {
-                continue;
-            }
-
-            const value = model[key as any](options);
-            if (typeof value !== "undefined") {
-                where[key] = value;
-            }
-        }
-
-        return where;
     }
 }

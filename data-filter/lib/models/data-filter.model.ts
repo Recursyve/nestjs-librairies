@@ -82,6 +82,7 @@ export class DataFilterConfig implements DataFilterConfigModel {
             .map(x => ({
                 attributes: { include: [] },
                 path: x.config.path,
+                where: x.config.where,
                 paranoid: true
             }));
     }

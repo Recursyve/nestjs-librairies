@@ -1,12 +1,12 @@
+import { tr } from "date-fns/locale";
 import { fn, literal, ProjectionAlias } from "sequelize";
 import { GroupOption } from "sequelize/types/model";
 import { SequelizeUtils } from "../sequelize.utils";
-import { CustomAttributesConfig } from "./custom-attributes.model";
+import { CustomAttributesConfig, CustomAttributesOptionConfig } from "./custom-attributes.model";
 
-export interface CountConfig {
+export interface CountConfig extends CustomAttributesOptionConfig {
     attribute: string;
     distinct?: boolean;
-    path?: string;
 }
 
 export class CountAttributesConfig implements CustomAttributesConfig<CountConfig> {
@@ -28,11 +28,7 @@ export class CountAttributesConfig implements CustomAttributesConfig<CountConfig
         return [fn("COUNT", attribute), this.key];
     }
 
-    public groupBy(): GroupOption {
-        const attribute = this.config.path
-            ? literal(SequelizeUtils.getLiteralFullName(this.config.attribute, this.config.path))
-            : this.config.attribute;
-
-        return [attribute as string];
+    public shouldGroupBy(): boolean {
+        return true;
     }
 }

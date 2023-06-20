@@ -143,7 +143,7 @@ export class FilterService<Data> {
 
         const countOptions = await this.getFindOptions(this.repository.model, options.query, options.data);
         this.addSearchCondition(options.search, countOptions);
-        this.addOrderCondition(options.order, countOptions);
+        this.addOrderCondition(options.order, countOptions, options.data);
         this.addGroupOption(options.order, countOptions);
 
         const total = await (user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions));
@@ -166,7 +166,7 @@ export class FilterService<Data> {
         options.order = this.normalizeOrder(options.order);
 
         this.addSearchCondition(options.search, findOptions);
-        this.addOrderCondition(options.order, findOptions);
+        this.addOrderCondition(options.order, findOptions, options.data);
         delete options.page;
         const values = await (user ? this.findValues(user, options, findOptions, this.exportRepository) : this.findValues(options, findOptions, this.exportRepository));
         const headers = await this.model.getExportedFieldsKeys(type);
@@ -374,7 +374,7 @@ export class FilterService<Data> {
         this.repository.addSearchCondition(search.value, options);
     }
 
-    private addOrderCondition(orders: OrderModel[], options: CountOptions): void {
+    private addOrderCondition(orders: OrderModel[], options: CountOptions, data?: object): void {
         if (orders.every(order => !order.direction)) {
             return;
         }
@@ -391,7 +391,7 @@ export class FilterService<Data> {
             const rule = this.definitions[order.column] as OrderRuleDefinition;
             const includes = rule && OrderRule.validate(rule) ?
                 this.sequelizeModelScanner.getIncludes(this.repository.model, { path: rule.path }, []) :
-                this.repository.generateOrderInclude(order);
+                this.repository.generateOrderInclude(order, data);
 
             if (!includes.length) {
                 continue;

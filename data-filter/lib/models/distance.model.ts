@@ -1,12 +1,10 @@
 import { fn, literal, ProjectionAlias } from "sequelize";
 import { GroupOption } from "sequelize/types/model";
 import { SequelizeUtils } from "../sequelize.utils";
-import { CustomAttributesConfig } from "./custom-attributes.model";
+import { CustomAttributesConfig, CustomAttributesOptionConfig } from "./custom-attributes.model";
 
-export interface BaseDistanceConfig {
+export interface BaseDistanceConfig extends CustomAttributesOptionConfig {
     coordinates: (option?) => [number, number];
-    name: string;
-    path?: string;
     srid?: number;
 }
 
@@ -48,8 +46,8 @@ export class DistanceAttributesConfig implements CustomAttributesConfig<Distance
         return [fn("ST_Distance_Sphere", this.getPointAttribute(path), location), this.config.name ?? this.key];
     }
 
-    public groupBy(): GroupOption {
-        return [];
+    public shouldGroupBy(): boolean {
+        return false;
     }
 
     private getPointAttribute(path: string) {

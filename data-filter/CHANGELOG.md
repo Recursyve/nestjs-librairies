@@ -215,4 +215,10 @@ SelectFilter({
 
 ### Added
 
-- Added `@Count` and `@Sum` decorators
+- Added `@Count` and `@Sum` decorators.
+
+## [8.9.1] - 2023-06-20
+
+### Added
+
+- Added more optins for `@Count` and `@Sum` decorators.

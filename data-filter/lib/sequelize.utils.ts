@@ -12,6 +12,7 @@ import {
 import { Model } from "sequelize-typescript";
 import { ProjectionAlias, WhereAttributeHashValue } from "sequelize/types/model";
 import { RuleModel } from "./filter";
+import { IncludeWhereModel } from "./models/include.model";
 
 export interface GeoPoint {
     type: "point",
@@ -363,5 +364,25 @@ export class SequelizeUtils {
         }
 
         return `\`${model.name}\`.\`${group}\``;
+    }
+
+    public static generateWhereConditions(model: IncludeWhereModel, options?: object): WhereOptions {
+        const where = {};
+        const keys = [
+            ...Object.keys(model),
+            ...Object.getOwnPropertySymbols(model)
+        ];
+        for (const key of keys) {
+            if (!model.hasOwnProperty(key)) {
+                continue;
+            }
+
+            const value = model[key as any](options);
+            if (typeof value !== "undefined") {
+                where[key] = value;
+            }
+        }
+
+        return where;
     }
 }

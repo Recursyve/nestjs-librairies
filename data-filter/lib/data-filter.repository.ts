@@ -139,7 +139,7 @@ export class DataFilterRepository<Data> {
                 if (!x.path) {
                     return [];
                 }
-                const path = x.transformPathConfig(conditions);
+                const path = x.path.transformPathConfig(conditions);
                 const attributes = x.transformAttributesConfig(conditions);
                 const additionalIncludes = x.transformIncludesConfig(conditions);
                 return this.sequelizeModelScanner.getIncludes(this.model, path, additionalIncludes, attributes);
@@ -147,7 +147,8 @@ export class DataFilterRepository<Data> {
             ...this._config.getCustomAttributesIncludes().map(x => this.sequelizeModelScanner.getIncludes(this.model, {
                 path: x.path,
                 paranoid: x.paranoid,
-                subQuery: x.subQuery
+                subQuery: x.subQuery,
+                where: x.where ? SequelizeUtils.generateWhereConditions(x.where, conditions) : undefined
             }, [], x.attributes))
         ];
         if (options.include) {
@@ -168,7 +169,7 @@ export class DataFilterRepository<Data> {
         return options;
     }
 
-    public generateOrderInclude(order: OrderModel): IncludeOptions[] {
+    public generateOrderInclude(order: OrderModel, conditions?: object): IncludeOptions[] {
         if (!order || !order.column || order.direction === "") {
             return [];
         }
@@ -179,7 +180,10 @@ export class DataFilterRepository<Data> {
                 return [];
             }
 
-            return this.sequelizeModelScanner.getIncludes(this.model, { path: customAttr.config.path }, []);
+            return this.sequelizeModelScanner.getIncludes(this.model, {
+                path: customAttr.config.path,
+                where: customAttr.config.where ? SequelizeUtils.generateWhereConditions(customAttr.config.where, conditions) : undefined
+            }, []);
         }
 
         return this.sequelizeModelScanner.getOrderIncludes(this.model, order);
@@ -252,13 +256,9 @@ export class DataFilterRepository<Data> {
     public getCustomAttributeGroupBy(): (string | Fn | Col)[] {
         const group: GroupOption = [];
 
-        for (const attribute of this._config.customAttributes) {
-            const groupBy = attribute.groupBy();
-            if (Array.isArray(groupBy)) {
-                group.push(...groupBy);
-            } else if (groupBy) {
-                group.push(groupBy);
-            }
+        const shouldGroupBy = this._config.customAttributes.some((attribute) => attribute.shouldGroupBy());
+        if (shouldGroupBy) {
+            group.push("id");
         }
 
         return group;

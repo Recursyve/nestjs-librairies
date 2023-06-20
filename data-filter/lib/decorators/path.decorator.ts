@@ -5,10 +5,10 @@ import { PathConfig } from "../models/path.model";
 export function Path(path: string, where?: IncludeWhereModel, required?: boolean): PropertyDecorator {
     return (target: Object, propertyKey: string) => {
         const attribute = AttributesHandler.getAttribute(target, propertyKey);
-        const config = {
+        const config = new PathConfig({
             path,
             paranoid: true
-        } as PathConfig;
+        });
         if (where) {
             config.where = where;
         }
