@@ -144,7 +144,7 @@ export class FilterService<Data> {
         const countOptions = await this.getFindOptions(this.repository.model, options.query, options.data);
         this.addSearchCondition(options.search, countOptions);
         this.addOrderCondition(options.order, countOptions, options.data);
-        this.addGroupOption(options.order, countOptions);
+        this.addGroupOption(options, countOptions);
 
         const total = await (user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions));
         const values = await (user ? this.findValues(user, options, countOptions) : this.findValues(options, countOptions));
@@ -406,10 +406,18 @@ export class FilterService<Data> {
 
     }
 
-    private addGroupOption(orders: OrderModel[], options: CountOptions): void {
+    private addGroupOption(filter: FilterQueryModel, options: CountOptions): void {
         const model = this.repository.model;
         options.group = [`${model.name}.id`];
+        if (filter.groupBy) {
+            options.group.push(SequelizeUtils.getGroupLiteral(this.repository.model, filter.groupBy));
+        }
 
+        if (!filter.order || (filter.order instanceof Array && !filter.order.length)) {
+            return;
+        }
+
+        const orders = this.normalizeOrder(filter.order);
         for (const order of orders) {
             const rule = this.definitions[order.column] as OrderRuleDefinition;
             if (rule && OrderRule.validate(rule)) {
@@ -499,6 +507,7 @@ export class FilterService<Data> {
             limit: filter.page ? filter.page.size : null,
             offset: filter.page ? filter.page.number * filter.page.size + (filter.page.offset ?? 0) : null,
             subQuery: false,
+            group: filter.groupBy,
             order
         });
 

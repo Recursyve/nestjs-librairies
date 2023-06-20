@@ -221,4 +221,11 @@ SelectFilter({
 
 ### Added
 
-- Added more optins for `@Count` and `@Sum` decorators.
+- Added more options for `@Count` and `@Sum` decorators.
+
+
+## [8.9.2] - 2023-06-20
+
+### Bugfix
+
+- Fix issue with the groupBy options of the FilterQueryModel.
