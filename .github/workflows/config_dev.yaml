@@ -22,6 +22,10 @@ jobs:
       - name: Install dependencies
         working-directory: config
         run: npm ci
+      - name: Build
+        run: |
+          export NODE_OPTIONS=--no-experimental-fetch
+          npm run build:lib
       - name: Run tests
         working-directory: config
         run: npm run test
@@ -41,6 +45,7 @@ jobs:
         run: |
           cd config
           npm i
+          export NODE_OPTIONS=--no-experimental-fetch
           npm run pack:lib
           cp dist/recursyve-nestjs-config-*.tgz
           cd ../sequelize-config
