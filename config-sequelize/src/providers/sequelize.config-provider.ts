@@ -2,8 +2,8 @@ import { Injectable, Type } from "@nestjs/common";
 import {
     ConfigSequelizeModel,
     InjectConfigSequelizeModel,
+    ManageableSequelizeConfig,
     ReloadSequelizeConfigOptions,
-    SequelizeConfigManager,
     SequelizeConfigUpdate,
     UpdateSequelizeConfigOptions
 } from "../models";
@@ -39,7 +39,7 @@ export class SequelizeConfigProvider implements IConfigProvider {
         config: T,
         configTransformerService: ConfigTransformerService
     ): Promise<void> {
-        if (!(config instanceof SequelizeConfigManager)) {
+        if (!(config instanceof ManageableSequelizeConfig)) {
             return;
         }
 
@@ -52,7 +52,7 @@ export class SequelizeConfigProvider implements IConfigProvider {
             this.update(config, update, options);
     }
 
-    private async update<T extends SequelizeConfigManager<T>>(
+    private async update<T extends ManageableSequelizeConfig<T>>(
         config: T,
         update: SequelizeConfigUpdate<T>,
         options?: ReloadSequelizeConfigOptions

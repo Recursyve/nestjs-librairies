@@ -3,7 +3,7 @@ import { ConfigTransformerService } from "@recursyve/nestjs-config/services/conf
 import { ConfigSequelizeModule } from "../config-sequelize.module";
 import { ConfigMetadata, ConfigModule, Variable } from "@recursyve/nestjs-config";
 import { SequelizeModule } from "@nestjs/sequelize";
-import { ConfigSequelizeModel, ConfigSequelizeModelInjectionToken, SequelizeConfigManager } from "../models";
+import { ConfigSequelizeModel, ConfigSequelizeModelInjectionToken, ManageableSequelizeConfig } from "../models";
 import { SequelizeConfig } from "../decorators";
 import { ConfigHandler } from "@recursyve/nestjs-config/handlers/config.handler";
 import { SequelizeConfigProvider } from "./sequelize.config-provider";
@@ -25,7 +25,7 @@ class SequelizeConfigModel1 {
 }
 
 @SequelizeConfig()
-class ManageableSequelizeConfig extends SequelizeConfigManager<ManageableSequelizeConfig> {
+class ManageableSequelizeConfig1 extends ManageableSequelizeConfig<ManageableSequelizeConfig1> {
     @Variable
     first: string;
 
@@ -126,10 +126,10 @@ describe("SequelizeConfigProvider", () => {
             { key: "second", value: "42" }
         ]);
 
-        const config = await configService.transform(ManageableSequelizeConfig);
+        const config = await configService.transform(ManageableSequelizeConfig1);
 
         expect(config).toBeDefined();
-        expect(config).toBeInstanceOf(ManageableSequelizeConfig);
+        expect(config).toBeInstanceOf(ManageableSequelizeConfig1);
         expect(config).toMatchObject({
             first: "first_value",
             second: 42
@@ -140,7 +140,7 @@ describe("SequelizeConfigProvider", () => {
         await config.reload();
 
         expect(config).toBeDefined();
-        expect(config).toBeInstanceOf(ManageableSequelizeConfig);
+        expect(config).toBeInstanceOf(ManageableSequelizeConfig1);
         expect(config).toMatchObject({
             first: "updated_first_value",
             second: 42
@@ -152,7 +152,7 @@ describe("SequelizeConfigProvider", () => {
         await config.reload();
 
         expect(config).toBeDefined();
-        expect(config).toBeInstanceOf(ManageableSequelizeConfig);
+        expect(config).toBeInstanceOf(ManageableSequelizeConfig1);
         expect(config).toMatchObject({
             first: "re_updated_first_value",
             second: 1024
@@ -166,10 +166,10 @@ describe("SequelizeConfigProvider", () => {
             { key: "second", value: "42" }
         ]);
 
-        const config = await configService.transform(ManageableSequelizeConfig);
+        const config = await configService.transform(ManageableSequelizeConfig1);
 
         expect(config).toBeDefined();
-        expect(config).toBeInstanceOf(ManageableSequelizeConfig);
+        expect(config).toBeInstanceOf(ManageableSequelizeConfig1);
         expect(config).toMatchObject({
             first: "first_value",
             second: 42
@@ -180,7 +180,7 @@ describe("SequelizeConfigProvider", () => {
         });
 
         expect(config).toBeDefined();
-        expect(config).toBeInstanceOf(ManageableSequelizeConfig);
+        expect(config).toBeInstanceOf(ManageableSequelizeConfig1);
         expect(config).toMatchObject({
             first: "updated_first_value",
             second: 42
@@ -192,7 +192,7 @@ describe("SequelizeConfigProvider", () => {
         });
 
         expect(config).toBeDefined();
-        expect(config).toBeInstanceOf(ManageableSequelizeConfig);
+        expect(config).toBeInstanceOf(ManageableSequelizeConfig1);
         expect(config).toMatchObject({
             first: "re_updated_first_value",
             second: 2048
