@@ -11,37 +11,60 @@ import { OPTIONS } from "../constant";
 import { ConfigModuleOptions } from "../config.module";
 import { ConfigVariablesNotDefinedError } from "../errors/config-variables-not-defined.error";
 import { plainToInstance } from "class-transformer";
+import { ConfigMetadata } from "../models";
 
 @Injectable()
 export class ConfigTransformerService {
     constructor(@Inject(OPTIONS) private options: ConfigModuleOptions, private moduleRef: ModuleRef) {}
 
     public async transform<T>(configType: Type<T>): Promise<T | never> {
-        const config = ConfigHandler.getConfig(configType);
-        if (!config) {
-            throw new ConfigModelNotFoundError(configType);
-        }
+        const configMetadata = this.getConfigMetadata(configType);
+        const configProvider = await this.getConfigProvider(configMetadata.provider);
 
-        const configProviderType = await ConfigProviderHandler.getConfigProvider(
-            config.provider ?? EnvironmentConfigProvider.type
-        );
-        if (!configProviderType) {
-            throw new ConfigProviderNotRegisteredError(config.provider ?? EnvironmentConfigProvider.type);
-        }
+        const plainConfig = await this.loadPlainConfig<T>(configType, configProvider);
 
-        const configProvider = await this.moduleRef.resolve<IConfigProvider>(configProviderType, undefined, {
-            strict: false
+        const instance = plainToInstance(configType, plainConfig);
+        await configProvider.hydrate?.(instance, this);
+        return instance;
+    }
+
+    public async reloadConfig<T extends Object, GetValueOptions>(
+        config: T,
+        options?: {
+            getValue?: GetValueOptions;
+        }
+    ): Promise<void> {
+        const configType = Object.getPrototypeOf(config);
+
+        const configMetadata = this.getConfigMetadata(configType);
+        const configProvider = await this.getConfigProvider(configMetadata.provider);
+
+        const plainConfig = await this.loadPlainConfig<T, GetValueOptions>(configType, configProvider, {
+            getValue: options?.getValue
         });
-        if (!configProvider) {
-            throw new ConfigProviderNotFoundInModuleError(configProviderType);
-        }
 
+        for (const key in plainConfig) {
+            if (!configType.hasOwnProperty(key)) {
+                continue;
+            }
+
+            config[key] = plainConfig[key];
+        }
+    }
+
+    private async loadPlainConfig<T, GetValueOptions = any>(
+        configType: Type<T>,
+        configProvider: IConfigProvider,
+        options?: {
+            getValue?: GetValueOptions;
+        }
+    ): Promise<T> {
         const variables = ConfigHandler.getConfig(configType).variables;
-        const plainConfig = {};
+        const plainConfig = {} as T;
 
         const undefinedVariableNames = [];
         for (const variable of variables) {
-            const value = await configProvider.getValue(variable.variableName);
+            const value = await configProvider.getValue<GetValueOptions>(variable.variableName, options?.getValue);
             if (variable.required && (value === null || value === undefined || value === "")) {
                 undefinedVariableNames.push(variable.variableName);
                 continue;
@@ -62,6 +85,33 @@ export class ConfigTransformerService {
             }
         }
 
-        return plainToInstance(configType, plainConfig);
+        return plainConfig;
+    }
+
+    private getConfigMetadata(configType: Type): ConfigMetadata {
+        const configMetadata = ConfigHandler.getConfig(configType);
+        if (!configMetadata) {
+            throw new ConfigModelNotFoundError(configType);
+        }
+
+        return configMetadata;
+    }
+
+    private async getConfigProvider(provider: string): Promise<IConfigProvider | never> {
+        const configProviderType = await ConfigProviderHandler.getConfigProvider(
+            provider ?? EnvironmentConfigProvider.type
+        );
+        if (!configProviderType) {
+            throw new ConfigProviderNotRegisteredError(provider ?? EnvironmentConfigProvider.type);
+        }
+
+        const configProvider = await this.moduleRef.resolve<IConfigProvider>(configProviderType, undefined, {
+            strict: false
+        });
+        if (!configProvider) {
+            throw new ConfigProviderNotFoundInModuleError(configProviderType);
+        }
+
+        return configProvider;
     }
 }
