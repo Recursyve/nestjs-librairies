@@ -22,6 +22,7 @@ jobs:
       - name: Build config
         run: |
           cd config
+          npm ci
           npm run pack:lib
           cp dist/recursyve-nestjs-config-*.tgz
           cd ../sequelize-config
