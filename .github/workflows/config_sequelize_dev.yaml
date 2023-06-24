@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-node@v3
       - name: Install dependencies
         working-directory: config-sequelize
-        run: npm ci
+        run: npm i
       - name: Build config
         run: >
           cd config
