@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  config:
+  config-sequelize:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -19,9 +19,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
-      - name: Install dependencies
-        working-directory: config-sequelize
-        run: npm i
       - name: Build config
         run: >
           cd config
@@ -29,6 +26,9 @@ jobs:
           cp dist/recursyve-nestjs-config-*.tgz
           cd ../sequelize-config
           npm i ./recursyve-nestjs-config-*.tgz
+      - name: Install dependencies
+        working-directory: config-sequelize
+        run: npm i
       - name: Run tests
         working-directory: config-sequelize
         run: npm run test
