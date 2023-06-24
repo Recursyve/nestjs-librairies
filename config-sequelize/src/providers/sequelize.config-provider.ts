@@ -23,7 +23,10 @@ export class SequelizeConfigProvider implements IConfigProvider {
 
     private initialized = false;
 
-    constructor(@InjectConfigSequelizeModel() private repository: typeof ConfigSequelizeModel) {}
+    constructor(
+        @InjectConfigSequelizeModel() private repository: typeof ConfigSequelizeModel,
+        private configTransformerService: ConfigTransformerService
+    ) {}
 
     public async getValue(key: string, options?: GetSequelizeConfigValueOptions): Promise<string | null> {
         await this.initialize();
@@ -35,16 +38,13 @@ export class SequelizeConfigProvider implements IConfigProvider {
         return config?.getDataValue("value");
     }
 
-    public async hydrate<T extends Object>(
-        config: T,
-        configTransformerService: ConfigTransformerService
-    ): Promise<void> {
+    public async hydrate<T extends Object>(config: T): Promise<void> {
         if (!(config instanceof ManageableSequelizeConfig)) {
             return;
         }
 
         config.reload = async (options?: ReloadSequelizeConfigOptions) =>
-            configTransformerService.reloadConfig<T, GetSequelizeConfigValueOptions>(config, {
+            this.configTransformerService.reloadConfig<T, GetSequelizeConfigValueOptions>(config, {
                 getValue: { transaction: options?.transaction }
             });
 

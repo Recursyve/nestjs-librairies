@@ -14,7 +14,8 @@ export interface ConfigModuleOptions {
 
 @Global()
 @Module({
-    providers: [EnvironmentConfigProvider, ConfigTransformerService]
+    providers: [EnvironmentConfigProvider, ConfigTransformerService],
+    exports: [ConfigTransformerService]
 })
 export class ConfigModule {
     public static forRoot(...configs: Type[]): DynamicModule;

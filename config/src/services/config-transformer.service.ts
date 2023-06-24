@@ -23,7 +23,7 @@ export class ConfigTransformerService {
 
         const config = await this.loadConfig<T>(configType, configProvider);
 
-        await configProvider.hydrate?.(config, this);
+        await configProvider.hydrate?.(config);
         return config;
     }
 
