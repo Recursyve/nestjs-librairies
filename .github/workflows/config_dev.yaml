@@ -48,8 +48,8 @@ jobs:
           npm i
           export NODE_OPTIONS=--no-experimental-fetch
           npm run pack:lib
-          cp dist/recursyve-nestjs-config-*.tgz ../sequelize-config
-          cd ../sequelize-config
+          cp dist/recursyve-nestjs-config-*.tgz ../config-sequelize
+          cd ../config-sequelize
           npm i ./recursyve-nestjs-config-*.tgz
       - name: Install dependencies
         working-directory: config-sequelize
