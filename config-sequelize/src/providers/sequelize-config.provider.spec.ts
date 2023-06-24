@@ -3,11 +3,12 @@ import { ConfigTransformerService } from "@recursyve/nestjs-config/services/conf
 import { ConfigSequelizeModule } from "../config-sequelize.module";
 import { ConfigMetadata, ConfigModule, Variable } from "@recursyve/nestjs-config";
 import { SequelizeModule } from "@nestjs/sequelize";
-import { ConfigSequelizeModel, ConfigSequelizeModelInjectionToken } from "../models";
+import { ConfigSequelizeModel, ConfigSequelizeModelInjectionToken, SequelizeConfigManager } from "../models";
 import { SequelizeConfig } from "../decorators";
 import { ConfigHandler } from "@recursyve/nestjs-config/handlers/config.handler";
 import { SequelizeConfigProvider } from "./sequelize.config-provider";
 import { VariableMetadata } from "@recursyve/nestjs-config/models/variable-metadata.model";
+import { Type } from "class-transformer";
 
 @SequelizeConfig()
 class SequelizeConfigModel1 {
@@ -21,6 +22,16 @@ class SequelizeConfigModel1 {
 
     @Variable
     redisPassword: string;
+}
+
+@SequelizeConfig()
+class ManageableSequelizeConfig extends SequelizeConfigManager<ManageableSequelizeConfig> {
+    @Variable
+    first: string;
+
+    @Variable
+    @Type(() => Number)
+    second: number;
 }
 
 @SequelizeConfig()
@@ -54,6 +65,11 @@ describe("SequelizeConfigProvider", () => {
         await moduleRef.init();
 
         configService = moduleRef.get(ConfigTransformerService);
+    });
+
+    beforeEach(async () => {
+        const repository = moduleRef.get<typeof ConfigSequelizeModel>(ConfigSequelizeModelInjectionToken);
+        await repository.destroy({ where: {} });
     });
 
     it("Should return a config with the provider set as environment", () => {
@@ -100,6 +116,86 @@ describe("SequelizeConfigProvider", () => {
             firstVar: "sequelize_first_value",
             SEQUELIZE_SECOND_VAR: "sequelize_second_value",
             sequelizeThirdVar: "sequelize_third_value"
+        });
+    });
+
+    it("should reload the config", async () => {
+        const repository = moduleRef.get<typeof ConfigSequelizeModel>(ConfigSequelizeModelInjectionToken);
+        await repository.bulkCreate([
+            { key: "first", value: "first_value" },
+            { key: "second", value: "42" }
+        ]);
+
+        const config = await configService.transform(ManageableSequelizeConfig);
+
+        expect(config).toBeDefined();
+        expect(config).toBeInstanceOf(ManageableSequelizeConfig);
+        expect(config).toMatchObject({
+            first: "first_value",
+            second: 42
+        });
+
+        await repository.update({ value: "updated_first_value" }, { where: { key: "first" } });
+
+        await config.reload();
+
+        expect(config).toBeDefined();
+        expect(config).toBeInstanceOf(ManageableSequelizeConfig);
+        expect(config).toMatchObject({
+            first: "updated_first_value",
+            second: 42
+        });
+
+        await repository.update({ value: "re_updated_first_value" }, { where: { key: "first" } });
+        await repository.update({ value: 1024 }, { where: { key: "second" } });
+
+        await config.reload();
+
+        expect(config).toBeDefined();
+        expect(config).toBeInstanceOf(ManageableSequelizeConfig);
+        expect(config).toMatchObject({
+            first: "re_updated_first_value",
+            second: 1024
+        });
+    });
+
+    it("should update the config", async () => {
+        const repository = moduleRef.get<typeof ConfigSequelizeModel>(ConfigSequelizeModelInjectionToken);
+        await repository.bulkCreate([
+            { key: "first", value: "first_value" },
+            { key: "second", value: "42" }
+        ]);
+
+        const config = await configService.transform(ManageableSequelizeConfig);
+
+        expect(config).toBeDefined();
+        expect(config).toBeInstanceOf(ManageableSequelizeConfig);
+        expect(config).toMatchObject({
+            first: "first_value",
+            second: 42
+        });
+
+        await config.update({
+            first: "updated_first_value"
+        });
+
+        expect(config).toBeDefined();
+        expect(config).toBeInstanceOf(ManageableSequelizeConfig);
+        expect(config).toMatchObject({
+            first: "updated_first_value",
+            second: 42
+        });
+
+        await config.update({
+            first: "re_updated_first_value",
+            second: 2048
+        });
+
+        expect(config).toBeDefined();
+        expect(config).toBeInstanceOf(ManageableSequelizeConfig);
+        expect(config).toMatchObject({
+            first: "re_updated_first_value",
+            second: 2048
         });
     });
 });

@@ -21,11 +21,10 @@ export class ConfigTransformerService {
         const configMetadata = this.getConfigMetadata(configType);
         const configProvider = await this.getConfigProvider(configMetadata.provider);
 
-        const plainConfig = await this.loadPlainConfig<T>(configType, configProvider);
+        const config = await this.loadConfig<T>(configType, configProvider);
 
-        const instance = plainToInstance(configType, plainConfig);
-        await configProvider.hydrate?.(instance, this);
-        return instance;
+        await configProvider.hydrate?.(config, this);
+        return config;
     }
 
     public async reloadConfig<T extends Object, GetValueOptions>(
@@ -34,25 +33,28 @@ export class ConfigTransformerService {
             getValue?: GetValueOptions;
         }
     ): Promise<void> {
-        const configType = Object.getPrototypeOf(config);
+        const configType = config.constructor as Type<T>;
 
         const configMetadata = this.getConfigMetadata(configType);
         const configProvider = await this.getConfigProvider(configMetadata.provider);
 
-        const plainConfig = await this.loadPlainConfig<T, GetValueOptions>(configType, configProvider, {
+        const reloadedConfig = await this.loadConfig<T, GetValueOptions>(configType, configProvider, {
             getValue: options?.getValue
         });
 
-        for (const key in plainConfig) {
-            if (!configType.hasOwnProperty(key)) {
+        for (const key in reloadedConfig) {
+            if (
+                !config.hasOwnProperty(key) ||
+                !configMetadata.variables.some((variable) => variable.propertyKey === key)
+            ) {
                 continue;
             }
 
-            config[key] = plainConfig[key];
+            config[key] = reloadedConfig[key];
         }
     }
 
-    private async loadPlainConfig<T, GetValueOptions = any>(
+    private async loadConfig<T, GetValueOptions = any>(
         configType: Type<T>,
         configProvider: IConfigProvider,
         options?: {
@@ -85,7 +87,7 @@ export class ConfigTransformerService {
             }
         }
 
-        return plainConfig;
+        return plainToInstance(configType, plainConfig);
     }
 
     private getConfigMetadata(configType: Type): ConfigMetadata {

@@ -1,6 +1,6 @@
 import { Transaction } from "sequelize";
 
-export type SequelizeConfigUpdate<T extends SequelizeConfigManager<T>> = Omit<T, "reload" | "update">;
+export type SequelizeConfigUpdate<T extends SequelizeConfigManager<T>> = Partial<Omit<T, "reload" | "update">>;
 
 export type ReloadSequelizeConfigOptions = {
     transaction?: Transaction;
