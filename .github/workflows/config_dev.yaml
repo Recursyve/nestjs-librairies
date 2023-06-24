@@ -23,6 +23,7 @@ jobs:
         working-directory: config
         run: npm ci
       - name: Build
+        working-directory: config
         run: |
           export NODE_OPTIONS=--no-experimental-fetch
           npm run build:lib
