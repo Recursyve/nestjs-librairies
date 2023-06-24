@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-config",
-    "version": "8.1.0",
+    "version": "8.2.0",
     "scripts": {
         "watch": "gulp",
         "build": "gulp build",

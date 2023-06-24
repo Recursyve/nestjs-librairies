@@ -7,8 +7,8 @@ import {
     SequelizeConfigUpdate,
     UpdateSequelizeConfigOptions
 } from "../models";
-import { ConfigProvider, IConfigProvider } from "@recursyve/nestjs-config/src";
-import { ConfigTransformerService } from "@recursyve/nestjs-config/src/services/config-transformer.service";
+import { ConfigProvider, IConfigProvider } from "@recursyve/nestjs-config";
+import { ConfigTransformerService } from "@recursyve/nestjs-config/services/config-transformer.service";
 import { Transaction } from "sequelize";
 
 export interface GetSequelizeConfigValueOptions {
