@@ -14,17 +14,19 @@
     "peerDependencies": {
         "@nestjs/common": ">=8.0.0",
         "@nestjs/core": ">=8.0.0",
-        "@nestjs/sequelize": "^9.0.0",
+        "@nestjs/sequelize": "^8.0.0",
+        "@recursyve/nestjs-config": "file:recursyve-nestjs-config-8.1.0.tgz",
         "sequelize": "^6.25.8",
-        "sequelize-typescript": "^2.1.5",
-        "@recursyve/nestjs-config": "^8.1.0"
+        "sequelize-typescript": "^2.1.5"
     },
     "devDependencies": {
         "@nestjs/common": "^8.2.6",
         "@nestjs/core": "^8.2.6",
         "@nestjs/sequelize": "^9.0.0",
         "@nestjs/testing": "^8.2.6",
+        "@recursyve/nestjs-config": "file:recursyve-nestjs-config-8.1.0.tgz",
         "@types/jest": "^29.5.0",
+        "class-transformer": "^0.5.1",
         "gulp": "^4.0.2",
         "gulp-copy": "^4.0.1",
         "gulp-sourcemaps": "^3.0.0",
