@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "config/**"
+      - "config-sequelize/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
