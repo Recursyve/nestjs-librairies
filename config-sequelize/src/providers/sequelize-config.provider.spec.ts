@@ -32,6 +32,9 @@ class ManageableSequelizeConfig1 extends ManageableSequelizeConfig<ManageableSeq
     @Variable
     @Type(() => Number)
     second: number;
+
+    @Variable("not_three")
+    three: string;
 }
 
 @SequelizeConfig()
@@ -123,7 +126,8 @@ describe("SequelizeConfigProvider", () => {
         const repository = moduleRef.get<typeof ConfigSequelizeModel>(ConfigSequelizeModelInjectionToken);
         await repository.bulkCreate([
             { key: "first", value: "first_value" },
-            { key: "second", value: "42" }
+            { key: "second", value: "42" },
+            { key: "not_three", value: "3" }
         ]);
 
         const config = await configService.transform(ManageableSequelizeConfig1);
@@ -132,7 +136,8 @@ describe("SequelizeConfigProvider", () => {
         expect(config).toBeInstanceOf(ManageableSequelizeConfig1);
         expect(config).toMatchObject({
             first: "first_value",
-            second: 42
+            second: 42,
+            three: "3"
         });
 
         await repository.update({ value: "updated_first_value" }, { where: { key: "first" } });
@@ -143,11 +148,13 @@ describe("SequelizeConfigProvider", () => {
         expect(config).toBeInstanceOf(ManageableSequelizeConfig1);
         expect(config).toMatchObject({
             first: "updated_first_value",
-            second: 42
+            second: 42,
+            three: "3"
         });
 
         await repository.update({ value: "re_updated_first_value" }, { where: { key: "first" } });
         await repository.update({ value: 1024 }, { where: { key: "second" } });
+        await repository.update({ value: "42" }, { where: { key: "not_three" } });
 
         await config.reload();
 
@@ -155,7 +162,8 @@ describe("SequelizeConfigProvider", () => {
         expect(config).toBeInstanceOf(ManageableSequelizeConfig1);
         expect(config).toMatchObject({
             first: "re_updated_first_value",
-            second: 1024
+            second: 1024,
+            three: "42"
         });
     });
 
@@ -163,7 +171,8 @@ describe("SequelizeConfigProvider", () => {
         const repository = moduleRef.get<typeof ConfigSequelizeModel>(ConfigSequelizeModelInjectionToken);
         await repository.bulkCreate([
             { key: "first", value: "first_value" },
-            { key: "second", value: "42" }
+            { key: "second", value: "42" },
+            { key: "not_three", value: "4" }
         ]);
 
         const config = await configService.transform(ManageableSequelizeConfig1);
@@ -172,7 +181,8 @@ describe("SequelizeConfigProvider", () => {
         expect(config).toBeInstanceOf(ManageableSequelizeConfig1);
         expect(config).toMatchObject({
             first: "first_value",
-            second: 42
+            second: 42,
+            three: "4"
         });
 
         await config.update({
@@ -183,8 +193,18 @@ describe("SequelizeConfigProvider", () => {
         expect(config).toBeInstanceOf(ManageableSequelizeConfig1);
         expect(config).toMatchObject({
             first: "updated_first_value",
-            second: 42
+            second: 42,
+            three: "4"
         });
+
+        const [first, second, three] = await Promise.all([
+            repository.findOne({ where: { key: "first" } }),
+            repository.findOne({ where: { key: "second" } }),
+            repository.findOne({ where: { key: "not_three" } })
+        ]);
+        expect(first?.value).toEqual("updated_first_value");
+        expect(second?.value).toEqual("42");
+        expect(three?.value).toEqual("4");
 
         await config.update({
             first: "re_updated_first_value",
@@ -195,7 +215,40 @@ describe("SequelizeConfigProvider", () => {
         expect(config).toBeInstanceOf(ManageableSequelizeConfig1);
         expect(config).toMatchObject({
             first: "re_updated_first_value",
-            second: 2048
+            second: 2048,
+            three: "4"
         });
+
+        const [first1, second1, three1] = await Promise.all([
+            repository.findOne({ where: { key: "first" } }),
+            repository.findOne({ where: { key: "second" } }),
+            repository.findOne({ where: { key: "not_three" } })
+        ]);
+        expect(first1?.value).toEqual("re_updated_first_value");
+        expect(second1?.value).toEqual("2048");
+        expect(three1?.value).toEqual("4");
+
+        await config.update({
+            first: "re_updated_first_value",
+            second: 2048,
+            three: "42"
+        });
+
+        expect(config).toBeDefined();
+        expect(config).toBeInstanceOf(ManageableSequelizeConfig1);
+        expect(config).toMatchObject({
+            first: "re_updated_first_value",
+            second: 2048,
+            three: "42"
+        });
+
+        const [first2, second2, three2] = await Promise.all([
+            repository.findOne({ where: { key: "first" } }),
+            repository.findOne({ where: { key: "second" } }),
+            repository.findOne({ where: { key: "not_three" } })
+        ]);
+        expect(first2?.value).toEqual("re_updated_first_value");
+        expect(second2?.value).toEqual("2048");
+        expect(three2?.value).toEqual("42");
     });
 });
