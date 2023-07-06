@@ -77,16 +77,15 @@ export class SequelizeConfigProvider implements IConfigProvider {
             await Promise.all(
                 Object.entries(update)
                     .filter(([key, _]) => config.hasOwnProperty(key))
-                    .map(([key, value]) => ({
-                        key,
-                        value,
-                        variable: configMetadata.variables.find((variable) => variable.propertyKey === key)
-                    }))
-                    .filter(({ variable }) => variable)
-                    .map(({ value, variable }) => ({
-                        key: variable.variableName || variable.propertyKey,
-                        value: value.toString()
-                    }))
+                    .map(([key, value]) => {
+                        const variable = configMetadata.variables.find((variable) => variable.propertyKey === key);
+
+                        return {
+                            key: variable?.variableName || variable?.propertyKey,
+                            value: value.toString()
+                        };
+                    })
+                    .filter(({ key }) => key)
                     .map(({ key, value }) =>
                         this.repository.update(
                             { value: value },
