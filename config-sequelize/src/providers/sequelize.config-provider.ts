@@ -88,7 +88,7 @@ export class SequelizeConfigProvider implements IConfigProvider {
                     .filter(({ key }) => key)
                     .map(({ key, value }) =>
                         this.repository.update(
-                            { value: value },
+                            { value },
                             {
                                 where: { key },
                                 transaction
