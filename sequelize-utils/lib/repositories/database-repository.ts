@@ -7,19 +7,19 @@ export class SequelizeRepository<T extends SequelizeEntities, CreateDto = T, Upd
         super(repository);
     }
 
-    public create<Options>(dto: CreateDto | Partial<T>, options?: Options & CreateOptions<Attributes<T>>){
+    public create<Options>(dto: CreateDto | Partial<T>, options?: Options & CreateOptions<Attributes<T>>): Promise<T> {
         return this.repository.create(dto as any, options) as unknown as Promise<T>;
     }
 
-    public bulkCreate<Options>(dto: (CreateDto | Partial<T>)[], options?: Options & BulkCreateOptions<Attributes<T>>) {
-        return this.repository.bulkCreate(dto as any, options) as unknown as Promise<T[]>;
+    public bulkCreate<Options>(dto: (CreateDto | Partial<T>)[], options?: Options & BulkCreateOptions<Attributes<T>>): Promise<T[]> {
+        return this.repository.bulkCreate(dto as any, options as any) as unknown as Promise<T[]>;
     }
 
     public findOrCreate<Options>(options: FindOrCreateOptions, args?: Options): Promise<[T, boolean]> {
         return (this.repository.findOrCreate(options)) as Promise<[T, boolean]>;
     }
 
-    public async updateByPk<Options>(identifier: Identifier, dto: UpdateDto | Partial<T>, options?: Options & UpdateOptions<Attributes<T>>): Promise<T> {
+    public async updateByPk<Options>(identifier: Identifier, dto: UpdateDto | Partial<T>, options?: Options & UpdateOptions<Attributes<T>>): Promise<T | null> {
          await this.repository.update(dto, {
             where: {
                 [this.repository.primaryKeyAttribute]: identifier
@@ -30,7 +30,7 @@ export class SequelizeRepository<T extends SequelizeEntities, CreateDto = T, Upd
     }
 
     public async update<Options>(dto: UpdateDto | Partial<T>, options?: Options & UpdateOptions<Attributes<T>>): Promise<void> {
-        await this.repository.update(dto, options);
+        await this.repository.update(dto, options as any);
     }
 
     public async destroyByPk(identifier: Identifier, options?: Omit<DestroyOptions, "where">): Promise<void> {

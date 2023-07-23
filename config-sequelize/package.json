@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-config-sequelize",
-    "version": "9.1.0",
+    "version": "9.2.2",
     "scripts": {
         "watch": "gulp",
         "build": "gulp build",
@@ -15,7 +15,7 @@
         "@nestjs/common": ">=9.0.0",
         "@nestjs/core": ">=9.0.0",
         "@nestjs/sequelize": "^9.0.0",
-        "@recursyve/nestjs-config": "^9.1.0",
+        "@recursyve/nestjs-config": "^9.2.0",
         "sequelize": "^6.25.8",
         "sequelize-typescript": "^2.1.5"
     },
