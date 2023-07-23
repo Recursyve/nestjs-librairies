@@ -272,3 +272,17 @@ SelectFilter({
 ### Bugfix
 
 - Fix issue with multiple operators for DateFilter.
+
+## [9.2.0]
+
+## Breaking changes
+- 
+- Update typings of findByPk and findOne to match Sequelize Typings.
+
+### Added
+
+- Added `@Count` and `@Sum` decorators.
+
+### Bugfix
+
+- Fix issue with the groupBy options of the FilterQueryModel.

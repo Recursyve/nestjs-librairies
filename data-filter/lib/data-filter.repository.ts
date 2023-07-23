@@ -37,15 +37,15 @@ export class DataFilterRepository<Data> {
         this.init();
     }
 
-    public async findByPk(identifier: Identifier, options?: FindOptions, conditions?: object): Promise<Data> {
+    public async findByPk(identifier: Identifier, options?: FindOptions, conditions?: object): Promise<Data | null> {
         const result = await this.model.findByPk(identifier, this.generateFindOptions(options, conditions));
         if (!result) {
-            return result as unknown as Data;
+            return null;
         }
         return this.reduceObject(result);
     }
 
-    public async findByPkFromUser(user: DataFilterUserModel, identifier: Identifier, conditions?: object): Promise<Data> {
+    public async findByPkFromUser(user: DataFilterUserModel, identifier: Identifier, conditions?: object): Promise<Data | null> {
         const resources = await this.accessControlAdapter.getResources(this._config.model as any, user);
         if (resources.ids?.includes(identifier as number) || resources.all) {
             return await this.findByPk(identifier, {}, conditions);
@@ -66,15 +66,15 @@ export class DataFilterRepository<Data> {
         }, conditions);
     }
 
-    public async findOne(options?: FindOptions, conditions?: object): Promise<Data> {
+    public async findOne(options?: FindOptions, conditions?: object): Promise<Data | null> {
         const result = await this.model.findOne(this.generateFindOptions(options, conditions));
         if (!result) {
-            return result as unknown as Data;
+            return null;
         }
         return this.reduceObject(result);
     }
 
-    public async findOneFromUser(user: DataFilterUserModel, options: FindOptions = {}, conditions?: object): Promise<Data> {
+    public async findOneFromUser(user: DataFilterUserModel, options: FindOptions = {}, conditions?: object): Promise<Data | null> {
         return this.findOne(
             {
                 ...options,

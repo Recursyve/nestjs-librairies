@@ -4,19 +4,19 @@ export class SequelizeEntities extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
-    id: number;
+    id!: number;
 
     @CreatedAt
     @Column({ field: "created_at" })
-    createdAt: Date;
+    createdAt?: Date;
 
     @UpdatedAt
     @Column({ field: "updated_at" })
-    updatedAt: Date;
+    updatedAt?: Date;
 
     @DeletedAt
     @Column({ field: "deleted_at" })
-    deletedAt: Date;
+    deletedAt?: Date;
 }
 
 /**
