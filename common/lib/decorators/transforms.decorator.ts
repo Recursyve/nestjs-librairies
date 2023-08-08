@@ -23,7 +23,7 @@ const transformBoolean = (value: any) => {
     }
 
     if (value === "true" || value === "false") {
-        return value === true;
+        return value === "true";
     }
 
     return value;
