@@ -4,7 +4,7 @@ export interface TransformsDecoratorOptions {
     each?: boolean;
 }
 
-const transformNullOrUndefined = (value) => {
+const transformNullOrUndefined = (value: any) => {
     return value === "undefined" ?
         undefined : value === "null" ?
             null : value;
@@ -12,7 +12,7 @@ const transformNullOrUndefined = (value) => {
 
 export const TransformNullOrUndefined = () => Transform(({ value }) => transformNullOrUndefined(value));
 
-const transformBoolean = (value) => {
+const transformBoolean = (value: any) => {
     if (typeof value === "boolean") {
         return value;
     }
@@ -22,7 +22,11 @@ const transformBoolean = (value) => {
         return nullOrUndefined;
     }
 
-    return value === "true";
+    if (value === "true" || value === "false") {
+        return value === true;
+    }
+
+    return value;
 }
 
 /**
@@ -39,7 +43,7 @@ export const TransformBoolean = (opts?: TransformsDecoratorOptions) => Transform
     return transformBoolean(value);
 });
 
-const transformNumber = (value) => {
+const transformNumber = (value: any) => {
     if (typeof value === "number") {
         return value;
     }
@@ -66,7 +70,7 @@ export const TransformNumber = (opts?: TransformsDecoratorOptions) => Transform(
     return transformNumber(value);
 });
 
-const transformJson = (value) => {
+const transformJson = (value: any) => {
     const nullOrUndefined = transformNullOrUndefined(value);
     if (!nullOrUndefined) {
         return nullOrUndefined;
