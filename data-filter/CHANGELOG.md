@@ -286,3 +286,9 @@ SelectFilter({
 ### Bugfix
 
 - Fix issue with the groupBy options of the FilterQueryModel.
+
+## [9.2.1]
+
+### Bugfix
+
+- Fix performance issues with the filter count feature.
