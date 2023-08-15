@@ -292,3 +292,10 @@ SelectFilter({
 ### Bugfix
 
 - Fix performance issues with the filter count feature.
+
+
+## [9.2.2]
+
+### Bugfix
+
+- Fix nullLast option for DESC ordering

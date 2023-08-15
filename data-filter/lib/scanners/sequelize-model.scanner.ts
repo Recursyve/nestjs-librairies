@@ -158,10 +158,12 @@ export class SequelizeModelScanner {
         let literalOrder = values.length ?
             SequelizeUtils.getLiteralFullName(col, values) :
             `\`${model.name}\`.\`${col}\``;
-        if (orderObj.nullLast && orderObj.direction === "asc") {
+
+        if (orderObj.nullLast) {
             literalOrder = `-${literalOrder}`;
-            orderObj.direction = "desc";
+            orderObj.direction = orderObj.direction === "asc" ? "desc" : "asc";
         }
+
         if (orderObj.direction === "desc") {
             literalOrder += ` DESC`;
         }
