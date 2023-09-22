@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { FindOptions, Identifier, IncludeOptions, Model, Op, Utils, WhereOptions } from "sequelize";
+import { FindOptions, Identifier, Includeable, IncludeOptions, Model, Op, Utils, WhereOptions } from "sequelize";
 import { GroupOption } from "sequelize/types/model";
 import { Col, Fn } from "sequelize/types/utils";
 import { AccessControlAdapter, ExportAdapter, TranslateAdapter } from "./adapters";
@@ -189,6 +189,34 @@ export class DataFilterRepository<Data> {
         return this.sequelizeModelScanner.getOrderIncludes(this.model, order);
     }
 
+    public generateSearchInclude(conditions?: object): Includeable[] {
+        const nestedIncludes: Array<IncludeOptions | IncludeOptions[]> = [
+            ...this._definitions.map(x => {
+                if (!x.path || x.path.separate || x.ignoreInSearch) {
+                    return [];
+                }
+                const path = x.path.transformPathConfig(conditions);
+                const attributes = x.transformAttributesConfig(conditions);
+                const additionalIncludes = x.transformIncludesConfig(conditions);
+                return this.sequelizeModelScanner.getIncludes(this.model, path, additionalIncludes, attributes);
+            }),
+            ...this._config.getCustomAttributesIncludes().map(x => {
+                if (!x.path || x.separate || x.ignoreInSearch) {
+                    return [];
+                }
+
+                return this.sequelizeModelScanner.getIncludes(this.model, {
+                    path: x.path,
+                    paranoid: x.paranoid,
+                    subQuery: x.subQuery,
+                    where: x.where ? SequelizeUtils.generateWhereConditions(x.where, conditions) : undefined
+                }, [], x.attributes);
+            })
+        ];
+
+        return SequelizeUtils.reduceIncludes(nestedIncludes);
+    }
+
     public reduceObject(result: any): Data {
         const r = result instanceof Model ? result.toJSON() : result;
         const data = new this.dataDef.prototype.constructor({}, { isNewRecord: false });
@@ -351,10 +379,10 @@ export class DataFilterRepository<Data> {
             return;
         }
 
-        const repoOption = this.generateFindOptions({}, {});
+        const searchInclude = this.generateSearchInclude({});
         options.include = SequelizeUtils.mergeIncludes(
             options.include as IncludeOptions | IncludeOptions[],
-            repoOption.include as IncludeOptions[]
+            searchInclude as IncludeOptions[]
         );
 
         if (!options.where) {

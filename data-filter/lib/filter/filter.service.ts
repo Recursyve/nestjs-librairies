@@ -2,6 +2,7 @@ import { Injectable, Type } from "@nestjs/common";
 import {
     CountOptions,
     FindOptions,
+    GroupedCountResultItem,
     Includeable,
     IncludeOptions,
     literal,
@@ -16,7 +17,6 @@ import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
 import { DataFilterRepository } from "../data-filter.repository";
 import { DataFilterService } from "../data-filter.service";
-import { IncludeWhereModel } from "../models/include.model";
 import { DataFilterUserModel } from "../models/user.model";
 import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";
 import { M, SequelizeUtils } from "../sequelize.utils";
@@ -458,9 +458,10 @@ export class FilterService<Data> {
             });
             return data.length;
         } else {
+            const { group, ...countOptions } = options;
             const value = await this.repository.model.count({
-                ...options
-            }) as any;
+                ...countOptions
+            }) as number | GroupedCountResultItem[];
             if (typeof value === "number") {
                 return value;
             } else {
