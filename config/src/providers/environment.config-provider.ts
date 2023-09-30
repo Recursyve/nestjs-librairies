@@ -8,6 +8,6 @@ export class EnvironmentConfigProvider implements IConfigProvider {
     static type = "environment" as const;
 
     public getValue(key: string): Promise<string> {
-        return Promise.resolve(process.env[key]);
+        return Promise.resolve(process.env[key] as string);
     }
 }

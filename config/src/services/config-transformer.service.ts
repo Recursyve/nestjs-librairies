@@ -17,13 +17,17 @@ import { ConfigMetadata } from "../models";
 export class ConfigTransformerService {
     constructor(@Inject(OPTIONS) private options: ConfigModuleOptions, private moduleRef: ModuleRef) {}
 
-    public async transform<T>(configType: Type<T>): Promise<T | never> {
+    public async transform<T>(configType: Type<T>): Promise<T | null> {
         const configMetadata = this.getConfigMetadata(configType);
+        if (!configMetadata.provider) {
+            return null;
+        }
         const configProvider = await this.getConfigProvider(configMetadata.provider);
 
         const config = await this.loadConfig<T>(configType, configProvider);
-
-        await configProvider.hydrate?.(config);
+        if (configProvider.hydrate) {
+            await configProvider.hydrate(config as Object);
+        }
         return config;
     }
 
@@ -36,6 +40,9 @@ export class ConfigTransformerService {
         const configType = config.constructor as Type<T>;
 
         const configMetadata = this.getConfigMetadata(configType);
+        if (!configMetadata.provider) {
+            return;
+        }
         const configProvider = await this.getConfigProvider(configMetadata.provider);
 
         const reloadedConfig = await this.loadConfig<T, GetValueOptions>(configType, configProvider, {
@@ -62,10 +69,14 @@ export class ConfigTransformerService {
         }
     ): Promise<T> {
         const variables = ConfigHandler.getConfig(configType).variables;
-        const plainConfig = {} as T;
+        const plainConfig: { [key: string]: any } = {};
 
         const undefinedVariableNames = [];
         for (const variable of variables) {
+            if (!variable.variableName) {
+                continue;
+            }
+
             const value = await configProvider.getValue<GetValueOptions>(variable.variableName, options?.getValue);
             if (variable.required && (value === null || value === undefined || value === "")) {
                 undefinedVariableNames.push(variable.variableName);
@@ -100,7 +111,7 @@ export class ConfigTransformerService {
     }
 
     private async getConfigProvider(provider: string): Promise<IConfigProvider | never> {
-        const configProviderType = await ConfigProviderHandler.getConfigProvider(
+        const configProviderType = ConfigProviderHandler.getConfigProvider(
             provider ?? EnvironmentConfigProvider.type
         );
         if (!configProviderType) {
