@@ -1,3 +1,4 @@
+import { PathConfig } from "../models/path.model";
 import { DataFilterScanner } from "./data-filter.scanner";
 import { Attributes, Data, Include, Path } from "../decorators";
 import { Persons } from "../test/models/persons/persons.model";
@@ -47,20 +48,20 @@ describe("DataFilterScanner", () => {
         Object.assign<AttributesConfig, AttributesConfigModel>(expected[0], {
             key: "coord",
             attributes: ["cellphone"],
-            path: {
+            path: new PathConfig({
                 path: "coord",
                 paranoid: true
-            },
+            }),
             customAttributes: [],
             includes: []
         });
         Object.assign<AttributesConfig, AttributesConfigModel>(expected[1], {
             key: "places",
             attributes: [],
-            path: {
+            path: new PathConfig({
                 path: "owner.places",
                 paranoid: true
-            },
+            }),
             customAttributes: [],
             includes: [
                 {

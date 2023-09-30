@@ -16,7 +16,7 @@ export abstract class SequelizeRepository<T extends SequelizeEntities, CreateDto
     }
 
     public async updateByPk<Options>(identifier: Identifier, dto: UpdateDto | Partial<T>, options?: Options & UpdateOptions<Attributes<T>>): Promise<T | null> {
-         await this.repository.update(dto, {
+         await this.repository.update(dto as any, {
             where: {
                 [this.repository.primaryKeyAttribute]: identifier
             },
@@ -26,7 +26,7 @@ export abstract class SequelizeRepository<T extends SequelizeEntities, CreateDto
     }
 
     public async update<Options>(dto: UpdateDto | Partial<T>, options?: Options & UpdateOptions<Attributes<T>>): Promise<void> {
-        await this.repository.update(dto, options as any);
+        await this.repository.update(dto as any, options as any);
     }
 
     public async destroyByPk(identifier: Identifier, options?: Omit<DestroyOptions<Attributes<T>>, "where">): Promise<void> {
