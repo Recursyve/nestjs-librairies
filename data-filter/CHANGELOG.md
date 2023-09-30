@@ -299,3 +299,9 @@ SelectFilter({
 ### Bugfix
 
 - Fix nullLast option for DESC ordering
+
+## [9.3.0]
+
+### Improvements
+
+- Update typings for @Data

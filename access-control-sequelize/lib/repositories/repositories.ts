@@ -1,14 +1,14 @@
 import { Inject } from "@nestjs/common";
 import { AccessControlService, ResourceAccessControlService, Resources, Users } from "@recursyve/nestjs-access-control";
 import { SequelizeEntities, SequelizeReadRepository, SequelizeRepository } from "@recursyve/nestjs-sequelize-utils";
-import { FindOptions, Identifier, Op, WhereOptions } from "sequelize";
+import { Attributes, FindOptions, Identifier, Op, WhereOptions } from "sequelize";
 
 export class AccessControlRepository<T extends SequelizeEntities> extends ResourceAccessControlService {
-    constructor(protected repository: typeof SequelizeEntities) {
+    constructor(protected repository: typeof SequelizeEntities<any, any>) {
         super({ model: repository, type: "sequelize" });
     }
 
-    public async findByPkFromUser(identifier: Identifier, resources: Resources, options?: FindOptions): Promise<T> {
+    public async findByPkFromUser(identifier: Identifier, resources: Resources, options?: FindOptions<Attributes<T>>): Promise<T> {
         if (resources.ids) {
             if (!resources.ids.some((resourceId) => resourceId === identifier)) {
                 return null;
@@ -34,7 +34,7 @@ export class AccessControlRepository<T extends SequelizeEntities> extends Resour
         return this.repository.findByPk(identifier, options) as unknown as T;
     }
 
-    public async findOneForUser(resources: Resources, options?: FindOptions): Promise<T> {
+    public async findOneForUser(resources: Resources, options?: FindOptions<Attributes<T>>): Promise<T> {
         const where = await this.mergeAccessControlCondition(options?.where ?? {}, resources);
 
         return this.repository.findOne({
@@ -43,7 +43,7 @@ export class AccessControlRepository<T extends SequelizeEntities> extends Resour
         }) as unknown as T;
     }
 
-    public async findAllFromUser(resources: Resources, options?: FindOptions): Promise<T[]> {
+    public async findAllFromUser(resources: Resources, options?: FindOptions<Attributes<T>>): Promise<T[]> {
         if (!options) {
             options = {};
         }
@@ -53,7 +53,7 @@ export class AccessControlRepository<T extends SequelizeEntities> extends Resour
         }) as unknown as Promise<T[]>;
     }
 
-    public async countForUser(resources: Resources, options?: FindOptions): Promise<number> {
+    public async countForUser(resources: Resources, options?: FindOptions<Attributes<T>>): Promise<number> {
         const where = await this.mergeAccessControlCondition(options?.where ?? {}, resources);
 
         return this.repository.count({
@@ -77,7 +77,7 @@ export class AccessControlRepository<T extends SequelizeEntities> extends Resour
     }
 }
 
-export class SequelizeAccessControlRepository<
+export abstract class SequelizeAccessControlRepository<
     T extends SequelizeEntities,
     CreateDto = Partial<T>,
     UpdateDto = Partial<T>
@@ -87,8 +87,8 @@ export class SequelizeAccessControlRepository<
 
     private readonly accessControlRepository: AccessControlRepository<T>;
 
-    constructor(protected repository: typeof SequelizeEntities) {
-        super(repository);
+    protected constructor(repository: typeof SequelizeEntities<any, any>) {
+        super();
 
         this.accessControlRepository = new AccessControlRepository(repository);
     }
@@ -114,14 +114,14 @@ export class SequelizeAccessControlRepository<
     }
 }
 
-export class SequelizeAccessControlReadRepository<T extends SequelizeEntities> extends SequelizeReadRepository<T> {
+export abstract class SequelizeAccessControlReadRepository<T extends SequelizeEntities> extends SequelizeReadRepository<T> {
     @Inject()
     protected accessControlService: AccessControlService;
 
     private readonly accessControlRepository: AccessControlRepository<T>;
 
-    constructor(protected repository: typeof SequelizeEntities) {
-        super(repository);
+    protected constructor(repository: typeof SequelizeEntities<any, any>) {
+        super();
 
         this.accessControlRepository = new AccessControlRepository(repository);
     }
