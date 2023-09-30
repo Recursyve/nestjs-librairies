@@ -8,7 +8,7 @@ export class SequelizeRepository<T extends SequelizeEntities, CreateDto = T, Upd
     }
 
     public create<Options>(dto: CreateDto | Partial<T>, options?: Options & CreateOptions<Attributes<T>>): Promise<T> {
-        return this.repository.create(dto as any, options) as unknown as Promise<T>;
+        return this.repository.create(dto as any, options as any) as unknown as Promise<T>;
     }
 
     public bulkCreate<Options>(dto: (CreateDto | Partial<T>)[], options?: Options & BulkCreateOptions<Attributes<T>>): Promise<T[]> {
