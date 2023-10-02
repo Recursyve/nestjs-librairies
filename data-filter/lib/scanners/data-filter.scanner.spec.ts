@@ -11,12 +11,12 @@ import { AttributesConfig, AttributesConfigModel } from "../models/attributes.mo
 @Attributes(["first_name", "last_name"])
 class PersonsTest {
     @Attributes(["cellphone"])
-    coord: Coords;
+    coord?: Coords;
 
     @Attributes([])
     @Path("owner.places")
     @Include({ path: "system", attributes: ["file_number"], where: { file_number: option => option.file_number } })
-    places: Places[];
+    places?: Places[];
 }
 
 describe("DataFilterScanner", () => {
