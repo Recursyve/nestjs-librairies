@@ -8,7 +8,7 @@ import { ConfigModule, ConfigUtils, Variable } from "@recursyve/nestjs-config";
 @SequelizeConfig()
 class SequelizeConfigTest {
     @Variable(false)
-    name: string;
+    name?: string;
 }
 
 describe("ConfigSequelizeModule", () => {

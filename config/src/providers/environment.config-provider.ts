@@ -7,7 +7,7 @@ import { ConfigProvider } from "../decorators";
 export class EnvironmentConfigProvider implements IConfigProvider {
     static type = "environment" as const;
 
-    public getValue(key: string): Promise<string> {
+    public getValue(key: string): Promise<string | null> {
         return Promise.resolve(process.env[key] as string);
     }
 }
