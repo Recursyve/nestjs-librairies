@@ -77,7 +77,7 @@ export class ConfigTransformerService {
                 continue;
             }
 
-            const value = await configProvider.getValue<GetValueOptions>(variable.variableName, options?.getValue);
+            const value = await configProvider.getValue(variable.variableName, options?.getValue);
             if (variable.required && (value === null || value === undefined || value === "")) {
                 undefinedVariableNames.push(variable.variableName);
                 continue;

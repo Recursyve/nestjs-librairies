@@ -26,12 +26,12 @@
         "mongoose": ">=7.0.0"
     },
     "devDependencies": {
-        "@nestjs/common": "^9.0.8",
-        "@nestjs/core": "^9.0.8",
-        "@nestjs/cqrs": "^9.0.1",
+        "@nestjs/common": "^9.4.3",
+        "@nestjs/core": "^9.4.3",
+        "@nestjs/cqrs": "^9.0.4",
         "@nestjs/mongoose": "^9.2.2",
-        "@nestjs/terminus": "^9.1.4",
-        "@nestjs/testing": "^9.2.1",
+        "@nestjs/terminus": "^9.2.2",
+        "@nestjs/testing": "^9.4.3",
         "@recursyve/eslint-config-node": "^1.0.1",
         "@recursyve/nestjs-access-control": "^9.0.0-beta.5",
         "@recursyve/nestjs-redis": "^9.0.0",

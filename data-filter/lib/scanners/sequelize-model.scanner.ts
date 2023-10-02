@@ -85,7 +85,7 @@ export class SequelizeModelScanner {
             );
         }
 
-        includes[0].include.push(...SequelizeUtils.reduceIncludes(addIncludes, ignoreAttributes));
+        includes[0].include?.push(...SequelizeUtils.reduceIncludes(addIncludes, ignoreAttributes));
 
         return result;
     }
@@ -143,13 +143,13 @@ export class SequelizeModelScanner {
         return result;
     }
 
-    public getOrder(model: typeof Model, orderObj: OrderModel): Order {
+    public getOrder(model: typeof Model, orderObj: OrderModel): Order | undefined {
         if (!orderObj?.column || !orderObj.direction) {
             return;
         }
 
         const values = orderObj.column.split(".");
-        const column = values.pop();
+        const column = values.pop() as string;
         for (const value of values) {
             const association = this.findAssociation(model, value);
             model = association.getAssociatedClass() as unknown as typeof Model;
@@ -172,12 +172,12 @@ export class SequelizeModelScanner {
 
     public getGroup(model: typeof Model, orderObj: OrderModel): string[] {
         if (!orderObj || !orderObj.column || orderObj.direction === "") {
-            return;
+            return [];
         }
 
         const group: string[] = [];
         const values = orderObj.column.split(".");
-        const column = values.pop();
+        const column = values.pop() as string;
         for (const value of values) {
             const association = this.findAssociation(model, value);
             model = association.getAssociatedClass() as unknown as typeof Model;
@@ -199,7 +199,7 @@ export class SequelizeModelScanner {
             return [];
         }
 
-        const column = values.pop();
+        const column = values.pop() as string;
         const result: IncludeOptions[] = [];
         let includes: IncludeOptions[] = result;
         let i = 0;
@@ -227,7 +227,7 @@ export class SequelizeModelScanner {
     }
 
     private findAssociation(model: typeof Model, obj: string): BaseAssociation<any, any> {
-        const associations = getAssociations(model.prototype);
+        const associations = getAssociations(model.prototype) ?? [];
 
         const association = associations.find(a => a.getAs() === obj);
         if (!association) {

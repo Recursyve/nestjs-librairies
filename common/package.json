@@ -29,8 +29,8 @@
         "date-fns": "^2.29.3"
     },
     "devDependencies": {
-        "@nestjs/common": "^9.2.1",
-        "@nestjs/core": "^9.2.1",
+        "@nestjs/common": "^9.4.3",
+        "@nestjs/core": "^9.4.3",
         "@types/express": "^4.17.14",
         "@types/multer": "^1.4.7",
         "@types/node": "^17.0.15",
