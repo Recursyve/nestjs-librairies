@@ -1,5 +1,4 @@
 import { ProjectionAlias } from "sequelize";
-import { GroupOption } from "sequelize/types/model";
 import { IncludeWhereModel } from "./include.model";
 import { PathModel } from "./path.model";
 

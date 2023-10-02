@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-config",
-    "version": "9.2.0",
+    "version": "9.3.2",
     "scripts": {
         "watch": "gulp",
         "build": "gulp build",
@@ -13,16 +13,17 @@
         "publish-package:dry-run": "npm run publish-package -- --dry-run"
     },
     "peerDependencies": {
-        "@nestjs/common": ">=9.0.0",
-        "@nestjs/core": ">=9.0.0",
-        "reflect-metadata": "^0.1.13",
-        "class-transformer": "^0.5.1"
+        "@nestjs/common": ">=9.3.0",
+        "@nestjs/core": ">=9.3.0",
+        "class-transformer": "^0.5.1",
+        "reflect-metadata": "^0.1.13"
     },
     "devDependencies": {
-        "@nestjs/common": "^9.2.1",
-        "@nestjs/core": "^9.2.1",
-        "@nestjs/testing": "^9.2.1",
+        "@nestjs/common": "^9.4.3",
+        "@nestjs/core": "^9.4.3",
+        "@nestjs/testing": "^9.4.3",
         "@types/jest": "^29.5.0",
+        "@types/node": "^20.8.0",
         "gulp": "^4.0.2",
         "gulp-copy": "^4.0.1",
         "gulp-sourcemaps": "^3.0.0",
