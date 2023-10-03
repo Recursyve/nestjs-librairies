@@ -1,5 +1,6 @@
 import { AllowNull, Column, HasMany, } from "sequelize-typescript";
 import { SequelizeEntities } from "../../lib";
+import { SequelizeAttributes } from "../../lib/models/sequelize-attributes.model";
 
 export interface CreateAccountsAttributes {
     firstName: string;
@@ -8,7 +9,7 @@ export interface CreateAccountsAttributes {
     phone: string | null;
 }
 
-export interface AccountsAttributes extends Partial<CreateAccountsAttributes>, SequelizeEntities {}
+export interface AccountsAttributes extends SequelizeAttributes<CreateAccountsAttributes> {}
 
 export class Accounts extends SequelizeEntities<AccountsAttributes, CreateAccountsAttributes> {
     @AllowNull(false)

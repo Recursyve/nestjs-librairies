@@ -1,6 +1,6 @@
 import { AutoIncrement, Column, CreatedAt, DeletedAt, Model, PrimaryKey, UpdatedAt } from "sequelize-typescript";
 
-export interface SequelizeEntities {
+export interface SequelizeEntitiesAttributes {
     id: number;
     createdAt?: Date;
     updatedAt?: Date;

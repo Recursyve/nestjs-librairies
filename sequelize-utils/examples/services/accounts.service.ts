@@ -16,7 +16,7 @@ export class AccountsService extends SequelizeReadRepository<Accounts> {
 
     public async test(id: number): Promise<Accounts> {
         await this.repository.update({
-            phone: null
+            phone: null,
         }, {
             where: {
                 id: id
