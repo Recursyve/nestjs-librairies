@@ -6,14 +6,14 @@ import { NiceTransaction } from "./transaction";
 @Injectable()
 export class SequelizeTransactionService {
     @Inject()
-    private sequelize: Sequelize;
+    private sequelize!: Sequelize;
 
     public transaction<T>(options: TransactionOptions, autoCallback: (t: NiceTransaction) => PromiseLike<T>): Promise<T>;
     public transaction<T>(autoCallback: (t: NiceTransaction) => PromiseLike<T>): Promise<T>;
     public transaction(options?: TransactionOptions): Promise<NiceTransaction>;
-    public async transaction<T>(optionsOrAutoCallback: TransactionOptions | ((t: NiceTransaction) => PromiseLike<T>), _autoCallback?:(t: NiceTransaction) => PromiseLike<T>): Promise<T | NiceTransaction> {
+    public async transaction<T>(optionsOrAutoCallback?: TransactionOptions | ((t: NiceTransaction) => PromiseLike<T>), _autoCallback?:(t: NiceTransaction) => PromiseLike<T>): Promise<T | NiceTransaction> {
         let options: TransactionOptions = {};
-        let autoCallback: (t: NiceTransaction) => PromiseLike<T>;
+        let autoCallback: ((t: NiceTransaction) => PromiseLike<T>) | null = null;
 
         if (_autoCallback) {
             autoCallback = _autoCallback;
