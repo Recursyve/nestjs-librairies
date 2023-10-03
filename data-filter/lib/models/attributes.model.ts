@@ -13,6 +13,7 @@ export interface AttributesConfigModel {
 }
 
 export class AttributesConfig implements AttributesConfigModel {
+    public readonly key: string;
     public attributes?: FindAttributeOptions;
     public searchableAttributes?: string[];
     public path: PathConfig;
@@ -20,9 +21,10 @@ export class AttributesConfig implements AttributesConfigModel {
     public customAttributes: CustomAttributesConfig[] = [];
     public ignoreInSearch = false;
 
-    constructor(public key: string) {
+    constructor(key: string | symbol) {
+        this.key = typeof key === "string" ? key : key.toString();
         this.path = new PathConfig({
-            path: key,
+            path: typeof key === "string" ? key : undefined,
             paranoid: true
         });
     }
