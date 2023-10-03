@@ -157,7 +157,7 @@ export class ResourceAccessControlService {
             .map(([user, _], index) => [user, accessControlStrings[index]] as [Users, string])
             .filter(
                 ([_, accessControlStr]) =>
-                    options.action && accessControlStr && AccessRules.fromString(accessControlStr).has(options.action)
+                    options.action && accessControlStr && options.action && AccessRules.fromString(accessControlStr).has(options.action)
             )
             .map(([user, _]) => user);
         return arrayUnique([...users, ...usersFromWildcard], (user) => `${user.id}:${user.role}`);
