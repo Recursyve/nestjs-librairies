@@ -270,7 +270,7 @@ describe("RadioFilter", () => {
                     }
                 ]
             });
-            const paths = await filter.getIncludePaths({
+            const paths = filter.getIncludePaths({
                 id: "test",
                 value: "no",
                 operation: FilterOperatorTypes.Equal

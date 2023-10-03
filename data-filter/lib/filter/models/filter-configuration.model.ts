@@ -28,8 +28,8 @@ export interface FilterConfigurationModel extends FilterBaseConfigurationModel {
 
 export interface GroupFilterBaseConfigurationModel {
     type: FilterType;
-    rootFilter: FilterBaseConfigurationModel;
-    valueFilter?: FilterBaseConfigurationModel;
+    rootFilter: FilterBaseConfigurationModel | null;
+    valueFilter?: FilterBaseConfigurationModel | null;
     lazyLoading?: boolean;
     group?: FilterGroupConfiguration;
 }

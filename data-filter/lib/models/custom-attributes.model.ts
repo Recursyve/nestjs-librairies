@@ -13,7 +13,7 @@ export interface CustomAttributesConfig<T extends CustomAttributesOptionConfig =
     type: string;
     config?: T;
 
-    transform(options?: object, path?: string): string | ProjectionAlias;
+    transform(options?: object, path?: string): string | ProjectionAlias | null;
     shouldGroupBy(): boolean;
 }
 
