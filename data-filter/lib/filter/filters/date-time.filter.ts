@@ -15,8 +15,12 @@ export class DateTimeFilter extends Filter {
         super(definition);
     }
 
-    public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions> {
+    public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined> {
         if (rule.operation === FilterOperatorTypes.Between || rule.operation === FilterOperatorTypes.NotBetween) {
+            if (!Array.isArray(rule.value)) {
+                return undefined;
+            }
+
             return super.getWhereOptions({
                 ...rule,
                 value: [
@@ -32,7 +36,7 @@ export class DateTimeFilter extends Filter {
 
         return super.getWhereOptions({
             operation: rule.operation,
-            value: moment(rule.value)
+            value: moment(rule.value as any)
                 .utcOffset(-5, true)
                 .format(),
             id: rule.id

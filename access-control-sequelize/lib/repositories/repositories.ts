@@ -8,7 +8,7 @@ export class AccessControlRepository<T extends SequelizeEntities> extends Resour
         super({ model: repository, type: "sequelize" });
     }
 
-    public async findByPkFromUser(identifier: Identifier, resources: Resources, options?: FindOptions<Attributes<T>>): Promise<T> {
+    public async findByPkFromUser(identifier: Identifier, resources: Resources, options?: FindOptions<Attributes<T>>): Promise<T | null> {
         if (resources.ids) {
             if (!resources.ids.some((resourceId) => resourceId === identifier)) {
                 return null;
@@ -49,7 +49,7 @@ export class AccessControlRepository<T extends SequelizeEntities> extends Resour
         }
         return this.repository.findAll({
             ...options,
-            where: await this.mergeAccessControlCondition(options.where, resources)
+            where: await this.mergeAccessControlCondition(options.where ?? {}, resources)
         }) as unknown as Promise<T[]>;
     }
 
@@ -83,7 +83,7 @@ export abstract class SequelizeAccessControlRepository<
     UpdateDto = Partial<T>
 > extends SequelizeRepository<T, CreateDto, UpdateDto> {
     @Inject()
-    protected accessControlService: AccessControlService;
+    protected accessControlService!: AccessControlService;
 
     private readonly accessControlRepository: AccessControlRepository<T>;
 
@@ -93,12 +93,12 @@ export abstract class SequelizeAccessControlRepository<
         this.accessControlRepository = new AccessControlRepository(repository);
     }
 
-    public async findByPkFromUser(identifier: Identifier, user: Users, options?: FindOptions): Promise<T> {
+    public async findByPkFromUser(identifier: Identifier, user: Users, options?: FindOptions): Promise<T | null> {
         const resources = await this.accessControlService.forModel(this.repository).getResources(user);
         return this.accessControlRepository.findByPkFromUser(identifier, resources, options);
     }
 
-    public async findOneForUser(user: Users, options?: FindOptions): Promise<T> {
+    public async findOneForUser(user: Users, options?: FindOptions): Promise<T | null> {
         const resources = await this.accessControlService.forModel(this.repository).getResources(user);
         return this.accessControlRepository.findOneForUser(resources, options);
     }
@@ -116,7 +116,7 @@ export abstract class SequelizeAccessControlRepository<
 
 export abstract class SequelizeAccessControlReadRepository<T extends SequelizeEntities> extends SequelizeReadRepository<T> {
     @Inject()
-    protected accessControlService: AccessControlService;
+    protected accessControlService!: AccessControlService;
 
     private readonly accessControlRepository: AccessControlRepository<T>;
 
@@ -126,12 +126,12 @@ export abstract class SequelizeAccessControlReadRepository<T extends SequelizeEn
         this.accessControlRepository = new AccessControlRepository(repository);
     }
 
-    public async findByPkFromUser(identifier: Identifier, user: Users, options?: FindOptions): Promise<T> {
+    public async findByPkFromUser(identifier: Identifier, user: Users, options?: FindOptions): Promise<T | null> {
         const resources = await this.accessControlService.forModel(this.repository).getResources(user);
         return this.accessControlRepository.findByPkFromUser(identifier, resources, options);
     }
 
-    public async findOneForUser(user: Users, options?: FindOptions): Promise<T> {
+    public async findOneForUser(user: Users, options?: FindOptions): Promise<T | null> {
         const resources = await this.accessControlService.forModel(this.repository).getResources(user);
         return this.accessControlRepository.findOneForUser(resources, options);
     }

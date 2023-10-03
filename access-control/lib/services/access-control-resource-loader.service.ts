@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { catchError, finalize, from, Observable, of } from "rxjs";
+import { catchError, finalize, from, map, Observable, of } from "rxjs";
 import {
     AccessActionType,
     AccessControlResources,
@@ -17,14 +17,14 @@ import { RedisService } from "@recursyve/nestjs-redis";
 export class AccessControlResourceLoaderService {
     private logger = new Logger(AccessControlResourceLoaderService.name);
 
-    private fetchingResources = new Map<string, Observable<Resources>>();
+    private fetchingResources = new Map<string, Observable<Resources | null>>();
 
     constructor(private commandBus: CommandBus, private redisService: RedisService) {}
 
     public loadResources(user: Users, resourceName: string): Observable<Resources> {
         const fetchKey = this.generateFetchKey(user, resourceName);
         if (this.fetchingResources.has(fetchKey)) {
-            return this.fetchingResources.get(fetchKey);
+            return this.fetchingResources.get(fetchKey) as Observable<Resources>;
         }
 
         const resources$ = from(this.fetchResources(user, resourceName));
@@ -35,18 +35,19 @@ export class AccessControlResourceLoaderService {
                 this.logger.error(`Error while loading resources for ${resourceName}`, error);
                 return of(Resources.fromIds([]));
             }),
+            map((res) => res === null ? Resources.fromIds([]) : res),
             finalize(() => this.fetchingResources.delete(fetchKey))
         );
     }
 
-    private async fetchResources(user: Users, resourceName: string): Promise<Resources> {
+    private async fetchResources(user: Users, resourceName: string): Promise<Resources | null> {
         const policyResources = await this.commandBus.execute(new GetResourcesCommand(resourceName, user));
 
         await this.redisService.set(RedisKeyUtils.userAccessControlType(user, resourceName), policyResources.type);
         await this.redisService.set(RedisKeyUtils.userAccessControl(user, resourceName), "1");
         await this.setAccessRules(user, resourceName, policyResources);
         if (policyResources.type === PolicyResourceTypes.Resources) {
-            return Resources.fromIds(policyResources.resources.filter((x) => x.rules.r).map((x) => x.resourceId));
+            return Resources.fromIds(policyResources.resources.filter((x: any) => x.rules.r).map((x: any) => x.resourceId));
         }
         if (policyResources.type === PolicyResourceTypes.Wildcard) {
             return Resources.all();
@@ -54,6 +55,8 @@ export class AccessControlResourceLoaderService {
         if (policyResources.type === PolicyResourceTypes.Condition) {
             return Resources.fromCondition(policyResources.condition.where);
         }
+
+        return null;
     }
 
     private generateFetchKey(user: Users, resourceName: string): string {
@@ -62,9 +65,14 @@ export class AccessControlResourceLoaderService {
 
     private async setAccessRules(user: Users, resourceName: string, resources: PolicyResources) {
         if (resources.type === PolicyResourceTypes.Resources) {
+            if (!resources.resources) {
+                return;
+            }
+
+            const resourcesToSet = resources.resources;
             await Promise.all(
                 [AccessActionType.Read, AccessActionType.Update, AccessActionType.Delete].map((a) =>
-                    this.setAccessAction(user, resourceName, resources.resources, a)
+                    this.setAccessAction(user, resourceName, resourcesToSet, a)
                 )
             );
         } else if (resources.type === PolicyResourceTypes.Wildcard) {

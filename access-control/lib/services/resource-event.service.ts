@@ -21,14 +21,18 @@ export class ResourceEventService {
 
     public async updatedUserResources(resources: UserResources[]): Promise<void> {
         await Promise.all(
-            resources.map(resource =>
-                this.redisService.del(
+            resources.map(resource => {
+                if (!resource.resourceName || !resource.resourceId) {
+                    return;
+                }
+
+                return this.redisService.del(
                     RedisKeyUtils.userResourceIdKey(resource.resourceName, resource.resourceId, {
                         id: resource.userId,
                         role: resource.userRole
                     } as Users)
                 )
-            )
+            })
         );
 
         await Promise.all(
@@ -41,43 +45,55 @@ export class ResourceEventService {
     private async addAccessAction(resources: UserResources[], action: AccessActionType): Promise<void> {
         const users = resources.filter(resource => resource.rules[action]);
         await Promise.all(
-            users.map(user =>
-                this.redisService.lpush(
+            users.map(user => {
+                if (!user.resourceName || !user.resourceId) {
+                    return;
+                }
+
+                return this.redisService.lpush(
                     RedisKeyUtils.userResourceActionKey({
                         id: user.userId,
                         role: user.userRole
                     } as Users, user.resourceName, action),
                     user.resourceId.toString()
-                )
-            )
+                );
+            })
         );
     }
 
     private async updateAccessAction(resources: UserResources[], action: AccessActionType): Promise<void> {
         const newResources = resources.filter(resource => resource.rules[action]);
         await Promise.all(
-            newResources.map(user =>
-                this.redisService.lpush(
+            newResources.map(user => {
+                if (!user.resourceName || !user.resourceId) {
+                    return;
+                }
+
+                return this.redisService.lpush(
                     RedisKeyUtils.userResourceActionKey({
                         id: user.userId,
                         role: user.userRole
                     } as Users, user.resourceName, action),
                     user.resourceId.toString()
                 )
-            )
+            })
         );
 
         const oldResources = resources.filter(resource => !resource.rules[action]);
         await Promise.all(
-            oldResources.map(user =>
-                this.redisService.lrem(
+            oldResources.map(user => {
+                if (!user.resourceName || !user.resourceId) {
+                    return;
+                }
+
+                return this.redisService.lrem(
                     RedisKeyUtils.userResourceActionKey({
                         id: user.userId,
                         role: user.userRole
                     } as Users, user.resourceName, action),
                     user.resourceId.toString()
                 )
-            )
+            })
         );
     }
 }
