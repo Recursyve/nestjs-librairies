@@ -4,12 +4,12 @@ import { Type } from "@nestjs/common";
 
 export function Variable(requiredOrVariableNameOrConfig: boolean | string | VariableConfig): PropertyDecorator;
 export function Variable(target: Object, propertyKey: string): void;
-export function Variable(...args: any[]): PropertyDecorator {
+export function Variable(...args: any[]): PropertyDecorator | void {
     if (args.length >= 2) {
         const [target, propertyName] = args;
 
         annotate(target.constructor, propertyName);
-        return (target: Object, propertyKey: string | symbol) => {};
+        return;
     }
 
     return (target: Object, propertyKey: string | symbol) => {
