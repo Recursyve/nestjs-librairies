@@ -19,10 +19,7 @@ export class ConfigTransformerService {
 
     public async transform<T>(configType: Type<T>): Promise<T | null> {
         const configMetadata = this.getConfigMetadata(configType);
-        if (!configMetadata.provider) {
-            return null;
-        }
-        const configProvider = await this.getConfigProvider(configMetadata.provider);
+        const configProvider = await this.getConfigProvider(configMetadata.provider ?? EnvironmentConfigProvider.type);
 
         const config = await this.loadConfig<T>(configType, configProvider);
         if (configProvider.hydrate) {
