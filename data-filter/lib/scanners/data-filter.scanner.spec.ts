@@ -50,7 +50,7 @@ describe("DataFilterScanner", () => {
             path: {
                 path: "coord",
                 paranoid: true
-            },
+            } as any,
             customAttributes: [],
             includes: []
         });
@@ -60,7 +60,7 @@ describe("DataFilterScanner", () => {
             path: {
                 path: "owner.places",
                 paranoid: true
-            },
+            } as any,
             customAttributes: [],
             includes: [
                 {
