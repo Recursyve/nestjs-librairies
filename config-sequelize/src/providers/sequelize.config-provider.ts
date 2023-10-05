@@ -18,7 +18,7 @@ export interface GetSequelizeConfigValueOptions {
 
 @Injectable()
 @ConfigProvider(SequelizeConfigProvider.type)
-export class SequelizeConfigProvider implements IConfigProvider<GetSequelizeConfigValueOptions> {
+export class SequelizeConfigProvider implements IConfigProvider {
     static type = "sequelize" as const;
 
     private initialized = false;
@@ -77,7 +77,7 @@ export class SequelizeConfigProvider implements IConfigProvider<GetSequelizeConf
             await Promise.all(
                 Object.entries(update)
                     .filter(([key, _]) => config.hasOwnProperty(key))
-                    .map(([key, value]) => {
+                    .map(([key, value]: [string, any]) => {
                         const variable = configMetadata.variables.find((variable) => variable.propertyKey === key);
 
                         return {
