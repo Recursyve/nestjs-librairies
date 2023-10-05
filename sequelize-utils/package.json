@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-sequelize-utils",
-    "version": "9.3.2",
+    "version": "9.3.3",
     "description": "Sequelize utilities for NestJs",
     "main": "index.js",
     "scripts": {
