@@ -11,6 +11,9 @@ import {
 import { SequelizeEntities } from "../models/sequelize-entities.model";
 import { SequelizeReadRepository } from "./database-read-repository";
 
+/**
+ * @deprecated You should create your own functions instead
+ */
 export abstract class SequelizeRepository<T extends SequelizeEntities, CreateDto = CreationAttributes<T>, UpdateDto = Partial<Attributes<T>>> extends SequelizeReadRepository<T> {
     public create<Options>(dto: CreateDto, options?: Options & CreateOptions<Attributes<T>>): Promise<T> {
         return this.repository.create(dto as any, options as any) as unknown as Promise<T>;
