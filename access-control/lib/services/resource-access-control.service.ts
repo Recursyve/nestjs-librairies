@@ -227,7 +227,7 @@ export class ResourceAccessControlService {
         }
         if (type === PolicyResourceTypes.Condition) {
             const condition = await this.getResourceCondition(user);
-            if (!condition.where || !condition.rules || !condition.rules?.[action]) {
+            if (!condition?.where || !condition.rules || !condition.rules?.[action]) {
                 return Resources.fromIds([]);
             }
 
@@ -248,6 +248,9 @@ export class ResourceAccessControlService {
             const rule = await this.redisService.get(
                 RedisKeyUtils.userResourceActionWildcardKey(user, this.resourceName)
             );
+            if (!rule) {
+                return AccessRules.none();
+            }
             return AccessRules.fromString(rule);
         } else if (type === PolicyResourceTypes.Condition && resourceId) {
             return this.fetchResourceRule(user, resourceId);
@@ -265,14 +268,14 @@ export class ResourceAccessControlService {
         return res.findIndex((value) => resourceId === this.databaseAdapter.parseIds(this.config.model, value)) >= 0;
     }
 
-    private async getResourceCondition(user: Users): Promise<PolicyResourcesCondition<any>> {
+    private async getResourceCondition(user: Users): Promise<PolicyResourcesCondition<any> | null> {
         const res = await this.redisService.get(RedisKeyUtils.userResourceActionConditionKey(user, this.resourceName));
-        return JSON.parse(res) as PolicyResourcesCondition<any>;
+        return res !== null ? JSON.parse(res) as PolicyResourcesCondition<any> : null;
     }
 
     private async fetchResourceRule(user: Users, resourceId: ResourceId): Promise<AccessRules> {
         const condition = await this.getResourceCondition(user);
-        if (!condition.where || !condition.rules) {
+        if (!condition?.where || !condition.rules) {
             return AccessRules.none();
         }
 
