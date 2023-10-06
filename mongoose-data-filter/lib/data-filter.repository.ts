@@ -139,7 +139,7 @@ export class DataFilterRepository<Data> {
             aggregation = aggregation.sort(options.sort);
         }
         if (options.projection) {
-            aggregation = aggregation.project(options.projection);
+            aggregation = aggregation.project(options.projection as any);
         }
         if (options.skip) {
             aggregation = aggregation.skip(options.skip);

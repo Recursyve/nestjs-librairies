@@ -111,7 +111,7 @@ export class MongoSchemaScanner {
     }
 
     private findSchemaRef(schema: Schema<any>, object: string): [any, Schema<any>] {
-        const obj = schema.obj[object];
+        const obj: any = schema.obj[object];
         if (!obj?.ref) {
             throw new Error(`No reference found for ${object}`);
         }
