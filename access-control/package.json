@@ -29,7 +29,7 @@
         "@nestjs/core": "^10.2.7",
         "@nestjs/cqrs": "^10.2.6",
         "@nestjs/testing": "^10.2.7",
-        "@recursyve/nestjs-redis": "^9.0.0",
+        "@recursyve/nestjs-redis": "^10.0.0",
         "@types/jest": "^29.5.5",
         "gulp": "^4.0.2",
         "gulp-copy": "^4.0.1",
