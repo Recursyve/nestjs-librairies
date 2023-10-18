@@ -318,35 +318,40 @@ export abstract class Filter implements FilterDefinition {
         }
 
         if (this.json.type === "array") {
-            return this.transformForJsonArray(rule, name);
+            return this.transformForJsonArray(rule);
         }
 
-        return this.transformForJsonObject(rule, name);
+        return this.transformForJsonObject(rule);
     }
 
-    private transformForJsonArray(rule: QueryRuleModel, name: string): WhereOptions {
-        const colName = this.path ? Sequelize.col(name) : Sequelize.literal(name);
+    private transformForJsonArray(rule: QueryRuleModel): WhereOptions {
+        const colName = this.path ? Sequelize.literal(SequelizeUtils.getLiteralFullName(this.attribute, this.path)) : Sequelize.col(this.attribute);
         if (rule.operation === FilterOperatorTypes.Contains || rule.operation === FilterOperatorTypes.NotContains) {
-            /**
-             * We override the rule to use an equal or not equal with a JSON_CONTAINS function
-             */
-            const newRule = {
-                operation: rule.operation === FilterOperatorTypes.Contains ? FilterOperatorTypes.Equal : FilterOperatorTypes.NotEqual,
-                value: true
-            }
-
-            const value = typeof rule.value === "string" ? `"${rule.value}"` : rule.value;
-            if (this.json.path) {
-                return where(fn("JSON_CONTAINS", colName, value, this.json.path), SequelizeUtils.generateWhereValue(newRule as RuleModel) as LogicType)
-            }
-            return where(fn("JSON_CONTAINS", colName, value), SequelizeUtils.generateWhereValue(newRule as RuleModel) as LogicType)
+            rule.operation = rule.operation === FilterOperatorTypes.Contains ? FilterOperatorTypes.Equal : FilterOperatorTypes.NotEqual;
         }
 
-        return null;
+        if (rule.operation !== FilterOperatorTypes.Equal && rule.operation !== FilterOperatorTypes.NotEqual) {
+            return null;
+        }
+
+        /**
+         * We override the rule to use an equal or not equal with a JSON_CONTAINS function
+         */
+        const newRule = {
+            operation: rule.operation,
+            value: true
+        }
+
+        const value = typeof rule.value === "string" ? `"${rule.value}"` : rule.value.toString();
+        if (this.json.path) {
+            const col = Sequelize.fn("JSON_EXTRACT", colName, Sequelize.literal(`'$[*].${this.json.path}'`));
+            return where(fn("JSON_CONTAINS", col, value), SequelizeUtils.generateWhereValue(newRule as RuleModel) as LogicType)
+        }
+        return where(fn("JSON_CONTAINS", colName, value), SequelizeUtils.generateWhereValue(newRule as RuleModel) as LogicType)
     }
 
-    private transformForJsonObject(rule: QueryRuleModel, name: string): WhereOptions {
-        const colName = this.path ? Sequelize.col(name) : Sequelize.literal(name);
+    private transformForJsonObject(rule: QueryRuleModel): WhereOptions {
+        const colName = this.path ? Sequelize.literal(SequelizeUtils.getLiteralFullName(this.attribute, this.path)) : Sequelize.col(this.attribute);
         const value = SequelizeUtils.generateWhereValue(rule);
         if (this.json.path) {
             return Sequelize.where(Sequelize.fn("JSON_EXTRACT", colName, this.json.path), value as LogicType);
