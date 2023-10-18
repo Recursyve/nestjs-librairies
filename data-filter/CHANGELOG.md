@@ -305,3 +305,9 @@ SelectFilter({
 ### Improvements
 
 - Update typings for @Data
+
+## [9.3.1]
+
+### Bugfix
+
+- Fix issues with filters from json columns
