@@ -317,3 +317,15 @@ SelectFilter({
 ### Bugfix
 
 -  Fix issues with filter group and count with joins
+
+## [10.0.0] - 2023-10-18
+
+### Added
+
+- Upgrade @nestjs dependencies to 10.x.x
+
+## [10.0.1] - 2023-10-18
+
+### Bugfix
+
+- Fix issues with filters from json columns
