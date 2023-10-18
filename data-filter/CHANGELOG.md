@@ -335,3 +335,15 @@ SelectFilter({
 ### Bugfix
 
 -  Fix issues with json columns in Filters
+
+## [10.0.0] - 2023-10-18
+
+### Added
+
+- Upgrade @nestjs dependencies to 10.x.x
+
+## [10.0.1] - 2023-10-18
+
+### Bugfix
+
+- Fix issues with filters from json columns
