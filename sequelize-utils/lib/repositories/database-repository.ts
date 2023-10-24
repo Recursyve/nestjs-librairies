@@ -1,13 +1,22 @@
-import { Attributes, BulkCreateOptions, CreateOptions, DestroyOptions, FindOrCreateOptions, Identifier, UpdateOptions } from "sequelize";
+import {
+    Attributes,
+    BulkCreateOptions,
+    CreateOptions,
+    CreationAttributes,
+    DestroyOptions,
+    FindOrCreateOptions,
+    Identifier,
+    UpdateOptions
+} from "sequelize";
 import { SequelizeEntities } from "../models/sequelize-entities.model";
 import { SequelizeReadRepository } from "./database-read-repository";
 
-export abstract class SequelizeRepository<T extends SequelizeEntities, CreateDto = T, UpdateDto = T> extends SequelizeReadRepository<T> {
-    public create<Options>(dto: CreateDto | Partial<T>, options?: Options & CreateOptions<Attributes<T>>): Promise<T> {
+export abstract class SequelizeRepository<T extends SequelizeEntities, CreateDto = CreationAttributes<T>, UpdateDto = Partial<Attributes<T>>> extends SequelizeReadRepository<T> {
+    public create<Options>(dto: CreateDto, options?: Options & CreateOptions<Attributes<T>>): Promise<T> {
         return this.repository.create(dto as any, options as any) as unknown as Promise<T>;
     }
 
-    public bulkCreate<Options>(dto: (CreateDto | Partial<T>)[], options?: Options & BulkCreateOptions<Attributes<T>>): Promise<T[]> {
+    public bulkCreate<Options>(dto: (CreateDto)[], options?: Options & BulkCreateOptions<Attributes<T>>): Promise<T[]> {
         return this.repository.bulkCreate(dto as any, options as any) as unknown as Promise<T[]>;
     }
 
@@ -15,7 +24,7 @@ export abstract class SequelizeRepository<T extends SequelizeEntities, CreateDto
         return (this.repository.findOrCreate(options)) as Promise<[T, boolean]>;
     }
 
-    public async updateByPk<Options>(identifier: Identifier, dto: UpdateDto | Partial<T>, options?: Options & UpdateOptions<Attributes<T>>): Promise<T | null> {
+    public async updateByPk<Options>(identifier: Identifier, dto: UpdateDto, options?: Options & UpdateOptions<Attributes<T>>): Promise<T | null> {
          await this.repository.update(dto, {
             where: {
                 [this.repository.primaryKeyAttribute]: identifier
@@ -25,7 +34,7 @@ export abstract class SequelizeRepository<T extends SequelizeEntities, CreateDto
         return this.findByPk(identifier);
     }
 
-    public async update<Options>(dto: UpdateDto | Partial<T>, options?: Options & UpdateOptions<Attributes<T>>): Promise<void> {
+    public async update<Options>(dto: UpdateDto, options?: Options & UpdateOptions<Attributes<T>>): Promise<void> {
         await this.repository.update(dto, options as any);
     }
 
