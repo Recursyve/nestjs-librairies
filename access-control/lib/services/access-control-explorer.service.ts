@@ -4,17 +4,21 @@ import { Module } from "@nestjs/core/injector/module";
 import { ModulesContainer } from "@nestjs/core/injector/modules-container";
 import { IDatabaseAdapter } from "../adapters";
 import {
-    CREATED_POLICY_METADATA, DATABASE_ADAPTER_METADATA,
+    CREATED_POLICY_METADATA,
+    DATABASE_ADAPTER_METADATA,
     DELETED_POLICY_METADATA,
     POLICY_METADATA,
+    RESOURCE_ACCESS_UPDATED_METADATA,
     UPDATED_POLICY_METADATA
 } from "../decorators/constant";
 import { AccessControlObjects } from "../models";
 import { AccessPolicy, ResourceCreatedPolicy, ResourceDeletedPolicy, ResourceUpdatedPolicy } from "../policies";
+import { ResourceAccessUpdatedPolicy } from "../policies/resource-access-updated-policy.service";
 
 @Injectable()
 export class AccessControlExplorerService {
-    constructor(private readonly modulesContainer: ModulesContainer) {}
+    constructor(private readonly modulesContainer: ModulesContainer) {
+    }
 
     public explore(): AccessControlObjects {
         const modules = [...this.modulesContainer.values()];
@@ -31,6 +35,9 @@ export class AccessControlExplorerService {
         const deletedPolicies = this.flatMap<ResourceDeletedPolicy<any>>(modules, instance =>
             this.filterProvider(instance, DELETED_POLICY_METADATA)
         );
+        const accessUpdatedPolicies = this.flatMap<ResourceAccessUpdatedPolicy<any>>(modules, instance =>
+            this.filterProvider(instance, RESOURCE_ACCESS_UPDATED_METADATA)
+        );
         const databaseAdapters = this.flatMap<IDatabaseAdapter>(modules, instance =>
             this.filterProvider(instance, DATABASE_ADAPTER_METADATA)
         );
@@ -40,7 +47,8 @@ export class AccessControlExplorerService {
             createdPolicies,
             updatedPolicies,
             deletedPolicies,
-            databaseAdapters,
+            accessUpdatedPolicies,
+            databaseAdapters
         };
     }
 

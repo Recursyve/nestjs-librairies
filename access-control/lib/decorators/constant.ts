@@ -8,3 +8,4 @@ export const FROM_POLICY_METADATA = "__fromPolicy__";
 export const NEEDS_ACCESS_ACTIONS = "__needsAccessActions__";
 export const FALLBACK_ACCESS_CONTROL_GUARDS = "__fallbackAccessControlGuards__";
 export const DATABASE_ADAPTER_METADATA = "__databaseAdapter__";
+export const RESOURCE_ACCESS_UPDATED_METADATA = "__resourceAccessUpdated__"

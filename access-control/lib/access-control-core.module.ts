@@ -15,10 +15,12 @@ import {
     ResourceCreatedPoliciesService,
     ResourceDeletedPoliciesService,
     ResourceEventAccessControlService,
-    ResourceEventService,
+    ResourceAccessService,
     ResourceUpdatedPoliciesService,
 } from "./services";
 import { AccessControlResourceLoaderService } from "./services/access-control-resource-loader.service";
+import { ResourceAccessUpdatedPoliciesService } from "./services/resource-access-updated-policies.service";
+import { AccessControlResourceAccessUpdatedHandler } from "./handlers/resource-access-updated.handler";
 
 @Global()
 @Module({
@@ -27,16 +29,18 @@ import { AccessControlResourceLoaderService } from "./services/access-control-re
         AccessControlService,
         AccessPoliciesService,
         AccessControlExplorerService,
-        ResourceEventService,
+        ResourceAccessService,
         ResourceCreatedPoliciesService,
         ResourceDeletedPoliciesService,
         ResourceUpdatedPoliciesService,
+        ResourceAccessUpdatedPoliciesService,
         ResourceEventAccessControlService,
         AccessControlGetResourcesHandler,
         AccessControlResourceCreatedHandler,
         AccessControlResourceUpdatedHandler,
         AccessControlResourceDeletedHandler,
-        AccessControlResourceLoaderService
+        AccessControlResourceAccessUpdatedHandler,
+        AccessControlResourceLoaderService,
     ],
     exports: [
         CqrsModule,
@@ -44,8 +48,8 @@ import { AccessControlResourceLoaderService } from "./services/access-control-re
         AccessControlService,
         AccessPoliciesService,
         ResourceEventAccessControlService,
-        AccessControlResourceLoaderService
-    ]
+        AccessControlResourceLoaderService,
+    ],
 })
 export class AccessControlCoreModule implements OnModuleInit {
     constructor(
@@ -54,16 +58,18 @@ export class AccessControlCoreModule implements OnModuleInit {
         private resourceCreatedPoliciesService: ResourceCreatedPoliciesService,
         private resourceDeletedPoliciesService: ResourceDeletedPoliciesService,
         private resourceUpdatedPoliciesService: ResourceUpdatedPoliciesService,
-        private explorer: AccessControlExplorerService
+        private resourceAccessUpdatedPoliciesService: ResourceAccessUpdatedPoliciesService,
+        private explorer: AccessControlExplorerService,
     ) {}
 
     public onModuleInit(): void {
-        const { policies, createdPolicies, updatedPolicies, deletedPolicies, databaseAdapters } =
+        const { policies, createdPolicies, updatedPolicies, deletedPolicies, accessUpdatedPolicies, databaseAdapters } =
             this.explorer.explore();
         this.databaseAdaptersRegistry.registerAdapters(...databaseAdapters);
         this.accessPoliciesService.registerPolicies(...policies);
         this.resourceCreatedPoliciesService.registerPolicies(...createdPolicies);
         this.resourceDeletedPoliciesService.registerPolicies(...deletedPolicies);
         this.resourceUpdatedPoliciesService.registerPolicies(...updatedPolicies);
+        this.resourceAccessUpdatedPoliciesService.registerPolicies(accessUpdatedPolicies);
     }
 }
