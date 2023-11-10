@@ -54,7 +54,7 @@ export class AccessControlResourceAccessUpdatedHandler implements ICommandHandle
         }
 
         await this.resourceAccessService.updateUserResources(flattenedUserResources, {
-            couldBeInitialUserResources: true,
+            couldBeInitialUserResources: true
         });
     }
 }

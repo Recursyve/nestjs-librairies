@@ -1,7 +1,7 @@
 export enum AccessActionType {
     Read = "r",
     Update = "u",
-    Delete = "d",
+    Delete = "d"
 }
 
 export type AccessAction = {
@@ -35,7 +35,7 @@ export class AccessRules {
         return new AccessRules({
             [AccessActionType.Read]: true,
             [AccessActionType.Update]: true,
-            [AccessActionType.Delete]: true,
+            [AccessActionType.Delete]: true
         });
     }
 
@@ -43,7 +43,7 @@ export class AccessRules {
         return new AccessRules({
             [AccessActionType.Read]: true,
             [AccessActionType.Update]: false,
-            [AccessActionType.Delete]: false,
+            [AccessActionType.Delete]: false
         });
     }
 
@@ -51,7 +51,7 @@ export class AccessRules {
         return new AccessRules({
             [AccessActionType.Read]: false,
             [AccessActionType.Update]: false,
-            [AccessActionType.Delete]: false,
+            [AccessActionType.Delete]: false
         });
     }
 
@@ -59,7 +59,7 @@ export class AccessRules {
         return new AccessRules({
             [AccessActionType.Read]: r,
             [AccessActionType.Update]: u,
-            [AccessActionType.Delete]: d,
+            [AccessActionType.Delete]: d
         });
     }
 
@@ -83,7 +83,7 @@ export class AccessRules {
         return new AccessRules({
             [AccessActionType.Read]: permissions.some((x) => x === opt.r + suffix),
             [AccessActionType.Update]: permissions.some((x) => x === opt.u + suffix),
-            [AccessActionType.Delete]: permissions.some((x) => x === opt.d + suffix),
+            [AccessActionType.Delete]: permissions.some((x) => x === opt.d + suffix)
         });
     }
 

@@ -5,7 +5,7 @@ import {
     AccessControlGetResourcesHandler,
     AccessControlResourceCreatedHandler,
     AccessControlResourceDeletedHandler,
-    AccessControlResourceUpdatedHandler,
+    AccessControlResourceUpdatedHandler
 } from "./handlers";
 import {
     AccessControlExplorerService,
@@ -16,7 +16,7 @@ import {
     ResourceDeletedPoliciesService,
     ResourceEventAccessControlService,
     ResourceAccessService,
-    ResourceUpdatedPoliciesService,
+    ResourceUpdatedPoliciesService
 } from "./services";
 import { AccessControlResourceLoaderService } from "./services/access-control-resource-loader.service";
 import { ResourceAccessUpdatedPoliciesService } from "./services/resource-access-updated-policies.service";
@@ -40,7 +40,7 @@ import { AccessControlResourceAccessUpdatedHandler } from "./handlers/resource-a
         AccessControlResourceUpdatedHandler,
         AccessControlResourceDeletedHandler,
         AccessControlResourceAccessUpdatedHandler,
-        AccessControlResourceLoaderService,
+        AccessControlResourceLoaderService
     ],
     exports: [
         CqrsModule,
@@ -48,8 +48,8 @@ import { AccessControlResourceAccessUpdatedHandler } from "./handlers/resource-a
         AccessControlService,
         AccessPoliciesService,
         ResourceEventAccessControlService,
-        AccessControlResourceLoaderService,
-    ],
+        AccessControlResourceLoaderService
+    ]
 })
 export class AccessControlCoreModule implements OnModuleInit {
     constructor(
@@ -59,7 +59,7 @@ export class AccessControlCoreModule implements OnModuleInit {
         private resourceDeletedPoliciesService: ResourceDeletedPoliciesService,
         private resourceUpdatedPoliciesService: ResourceUpdatedPoliciesService,
         private resourceAccessUpdatedPoliciesService: ResourceAccessUpdatedPoliciesService,
-        private explorer: AccessControlExplorerService,
+        private explorer: AccessControlExplorerService
     ) {}
 
     public onModuleInit(): void {
