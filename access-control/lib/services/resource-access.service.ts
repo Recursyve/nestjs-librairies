@@ -26,8 +26,7 @@ export class ResourceAccessService {
         resourceName: string,
         policyResources: PolicyResources
     ): Promise<void> {
-        await this.redisService.set(RedisKeyUtils.userAccessControlType(user, resourceName), policyResources.type);
-        await this.redisService.set(RedisKeyUtils.userAccessControl(user, resourceName), "1");
+        await this.setUserAccessControlType(user, resourceName, policyResources.type);
 
         switch (policyResources.type) {
             case PolicyResourceTypes.Resources:
@@ -66,7 +65,14 @@ export class ResourceAccessService {
         await this.redisService.scanDel(RedisKeyUtils.userResourceIdPattern(resourceName, resourceId));
     }
 
-    public async updateUserResources(resources: UserResources[]): Promise<void> {
+    public async updateUserResources(
+        resources: UserResources[],
+        options?: { couldBeInitialUserResources?: boolean }
+    ): Promise<void> {
+        if (options?.couldBeInitialUserResources) {
+            await this.setUsersAccessControlTypeFromUserResources(resources, PolicyResourceTypes.Resources);
+        }
+
         await Promise.all(
             resources.map((resource) =>
                 this.redisService.del(
@@ -81,6 +87,42 @@ export class ResourceAccessService {
         await Promise.all(accessActionTypeValues.map((a) => this.updateUserResourceAccessAction(resources, a)));
 
         await this.commandBus.execute(new ResourceAccessUpdatedCommand(resources));
+    }
+
+    private async setUserAccessControlType(
+        user: Users,
+        resourceName: string,
+        type: PolicyResourceTypes
+    ): Promise<void> {
+        await Promise.all([
+            this.redisService.set(RedisKeyUtils.userAccessControlType(user, resourceName), type),
+            this.redisService.set(RedisKeyUtils.userAccessControl(user, resourceName), "1"),
+        ]);
+    }
+
+    private async setUsersAccessControlTypeFromUserResources(
+        userResources: UserResources[],
+        type: PolicyResourceTypes
+    ): Promise<void> {
+        const uniqueUsers: Record<string, { user: Users; resourceNames: string[] }> = {};
+        for (const userResource of userResources) {
+            const key = `${userResource.userId}:${userResource.userRole}`;
+            const uniqueUser = uniqueUsers[key];
+            if (!uniqueUser) {
+                uniqueUsers[key] = {
+                    user: { id: userResource.userId, role: userResource.userRole },
+                    resourceNames: [userResource.resourceName],
+                };
+            } else if (!uniqueUser.resourceNames.includes(userResource.resourceName)) {
+                uniqueUser.resourceNames.push(userResource.resourceName);
+            }
+        }
+
+        await Promise.all(
+            Object.values(uniqueUsers).flatMap(({ user, resourceNames }) =>
+                resourceNames.map((resourceName) => this.setUserAccessControlType(user, resourceName, type))
+            )
+        );
     }
 
     private async addUserResourceAccessesAction(resources: UserResources[], action: AccessActionType): Promise<void> {
@@ -124,6 +166,7 @@ export class ResourceAccessService {
             resourceName,
         }));
         await this.addUserResourceAccessesAction(userResources, action);
+        await this.commandBus.execute(new ResourceAccessUpdatedCommand(userResources));
     }
 
     private async updateUserResourceAccessAction(

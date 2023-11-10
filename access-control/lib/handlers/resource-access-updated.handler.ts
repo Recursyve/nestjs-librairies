@@ -8,10 +8,14 @@ import { UserResources } from "../models";
 export class AccessControlResourceAccessUpdatedHandler implements ICommandHandler<ResourceAccessUpdatedCommand> {
     constructor(
         private resourceAccessUpdatedPolicyService: ResourceAccessUpdatedPoliciesService,
-        private resourceAccessService: ResourceAccessService,
+        private resourceAccessService: ResourceAccessService
     ) {}
 
     public async execute(command: ResourceAccessUpdatedCommand): Promise<void> {
+        if (!command.userResources.length) {
+            return;
+        }
+
         const userResourcesByResourceMap = new Map<string, UserResources[]>();
         for (const userResource of command.userResources) {
             const key = `${userResource.resourceName}:${userResource.resourceId}`;
@@ -28,9 +32,9 @@ export class AccessControlResourceAccessUpdatedHandler implements ICommandHandle
                 this.resourceAccessUpdatedPolicyService.execute(
                     userResources[0].resourceName,
                     userResources[0].resourceId,
-                    userResources,
-                ),
-            ),
+                    userResources
+                )
+            )
         );
         const flattenedUserResources: UserResources[] = [];
         for (const [index, userResources] of nestedUserResources.entries()) {
@@ -45,8 +49,12 @@ export class AccessControlResourceAccessUpdatedHandler implements ICommandHandle
             }
         }
 
-        if (flattenedUserResources?.length) {
-            await this.resourceAccessService.updateUserResources(flattenedUserResources);
+        if (!flattenedUserResources?.length) {
+            return;
         }
+
+        await this.resourceAccessService.updateUserResources(flattenedUserResources, {
+            couldBeInitialUserResources: true,
+        });
     }
 }

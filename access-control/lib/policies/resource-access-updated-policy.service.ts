@@ -4,7 +4,8 @@ import { UserResources } from "../models";
 @Injectable()
 export abstract class ResourceAccessUpdatedPolicy<T> {
     public type: string;
-    public resourceName: string;
+    public sourceResourceName: string;
+    public targetResourceName: string;
 
     public get name(): string {
         return (this as any).constructor.name;
@@ -12,9 +13,9 @@ export abstract class ResourceAccessUpdatedPolicy<T> {
 
     public async handle(resourceId: T, accesses: UserResources[]): Promise<UserResources[]> {
         const policies = await this.getPolicies(resourceId, accesses);
-        const filteredPolicies = policies.filter(policy => policy);
+        const filteredPolicies = policies.filter((policy) => policy);
         for (const policy of filteredPolicies) {
-            policy.resourceName = this.resourceName;
+            policy.resourceName = this.targetResourceName;
         }
 
         return filteredPolicies;

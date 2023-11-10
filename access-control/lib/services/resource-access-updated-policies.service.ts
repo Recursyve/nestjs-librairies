@@ -5,6 +5,8 @@ import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
 import { ResourceAccessUpdatedPolicy } from "../policies/resource-access-updated-policy.service";
 import { PolicyConfig, UserResources } from "../models";
 import { RESOURCE_ACCESS_UPDATED_METADATA } from "../decorators";
+import { ResourceAccessUpdatedPolicyConfig } from "../models/resource-access-updated-policy-config.model";
+import { createInvalidObservableTypeError } from "rxjs/internal/util/throwUnobservableError";
 
 @Injectable()
 export class ResourceAccessUpdatedPoliciesService {
@@ -22,13 +24,23 @@ export class ResourceAccessUpdatedPoliciesService {
         return this._policies;
     }
 
-    public async execute(resourceName: string, resourceId: any, resourceAccesses: UserResources[]): Promise<UserResources[]> {
-        const policies = this._policies.filter(policy => policy.resourceName === resourceName);
-        const nestedUserResources = await Promise.all(policies.map(async policy => this.executePolicy(policy, resourceId, resourceAccesses)));
+    public async execute(
+        resourceName: string,
+        resourceId: any,
+        resourceAccesses: UserResources[]
+    ): Promise<UserResources[]> {
+        const policies = this._policies.filter((policy) => policy.sourceResourceName === resourceName);
+        const nestedUserResources = await Promise.all(
+            policies.map(async (policy) => this.executePolicy(policy, resourceId, resourceAccesses))
+        );
         return nestedUserResources.flat();
     }
 
-    private async executePolicy(policy: ResourceAccessUpdatedPolicy<any>, resourceId: any, accesses: UserResources[]): Promise<UserResources[]> {
+    private async executePolicy(
+        policy: ResourceAccessUpdatedPolicy<any>,
+        resourceId: any,
+        accesses: UserResources[]
+    ): Promise<UserResources[]> {
         try {
             this.logger.verbose(`Executing policy for resource '${resourceId}'`, policy.name);
             const userResources = await policy.handle(resourceId, accesses);
@@ -53,15 +65,17 @@ export class ResourceAccessUpdatedPoliciesService {
         }
 
         const config = this.reflectModel(policy);
-        instance.type = config.type ?? this.type;
 
-        const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.type);
-        instance.resourceName = databaseAdapter.getResourceName(config.model);
+        const sourceDatabaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.source.type ?? this.type);
+        instance.sourceResourceName = sourceDatabaseAdapter.getResourceName(config.source?.model ?? config.source);
+
+        const targetDatabaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.target.type ?? this.type);
+        instance.targetResourceName = targetDatabaseAdapter.getResourceName(config.target?.model ?? config.target);
 
         this._policies.push(instance);
     }
 
-    private reflectModel(policy: Type<ResourceAccessUpdatedPolicy<any>>): PolicyConfig {
+    private reflectModel(policy: Type<ResourceAccessUpdatedPolicy<any>>): ResourceAccessUpdatedPolicyConfig {
         return Reflect.getMetadata(RESOURCE_ACCESS_UPDATED_METADATA, policy) ?? {};
     }
 }

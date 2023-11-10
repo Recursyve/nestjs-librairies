@@ -10,7 +10,7 @@ import {
     PolicyResourceTypes,
     ResourceId,
     Resources,
-    Users
+    Users,
 } from "../models";
 import { PolicyConfig } from "../models/policy-config.model";
 import { RedisKeyUtils } from "../utils";
@@ -26,9 +26,9 @@ export class ResourceAccessControlService {
     @Inject()
     public databaseAdaptersRegistry: DatabaseAdaptersRegistry;
     @Inject()
-    public accessControlResourceLoaderService: AccessControlResourceLoaderService
+    public accessControlResourceLoaderService: AccessControlResourceLoaderService;
 
-    constructor(@Optional() private config: PolicyConfig,) {}
+    constructor(@Optional() private config: PolicyConfig) {}
 
     private _databaseAdapter: IDatabaseAdapter;
 
@@ -80,6 +80,60 @@ export class ResourceAccessControlService {
         }
 
         return await this.fetchAccessRules(user, parsedResourceId);
+    }
+
+    public async getUsersResourceIdAccess(
+        resourceId: ResourceId,
+        role?: string,
+        action?: AccessActionType
+    ): Promise<Users[]> {
+        const parsedResourceId = this.databaseAdapter.parseIds(this.config.model, resourceId.toString()) as ResourceId;
+        const keyPattern = RedisKeyUtils.userResourceIdPattern(this.resourceName, parsedResourceId, role);
+        const matchedKeys = await this.redisService.scan(keyPattern);
+        if (!matchedKeys.length) {
+            return [];
+        }
+
+        if (!action) {
+            return matchedKeys
+                .map((matchedKey) =>
+                    RedisKeyUtils.extractUserFromUserResourceIdPatternMatch(
+                        matchedKey,
+                        this.resourceName,
+                        parsedResourceId
+                    )
+                )
+                .filter((user) => user);
+        }
+
+        const usersWithMatchedKey = matchedKeys
+            .map(
+                (matchedKey) =>
+                    [
+                        RedisKeyUtils.extractUserFromUserResourceIdPatternMatch(
+                            matchedKey,
+                            this.resourceName,
+                            resourceId
+                        ),
+                        matchedKey,
+                    ] as [Users | undefined, string]
+            )
+            .filter(([user, _]) => user);
+
+        // Improvements(@Jtplouffe): We could implement `MGET` in the redis client in order to fetch multiple keys at
+        // the same time.
+        const users = await Promise.all(
+            usersWithMatchedKey.map(async ([user, matchedKey]) => {
+                const accessRulesStr = await this.redisService.get(matchedKey);
+                const accessRule = AccessRules.fromString(accessRulesStr);
+                if (!accessRule.has(action)) {
+                    return null;
+                }
+
+                return user;
+            })
+        );
+        return users.filter((user) => user);
     }
 
     private async fetchAccessRules(user: Users, resourceId: ResourceId): Promise<AccessRules> {

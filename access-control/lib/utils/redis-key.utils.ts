@@ -42,8 +42,28 @@ export class RedisKeyUtils {
         return `${this.prefix}:${resourceName}:${resourceId}:${user.id}-${user.role}`;
     }
 
-    public static userResourceIdPattern(resourceName: string, resourceId: ResourceId): string {
-        return `${this.prefix}:${resourceName}:${resourceId}:*`;
+    public static userResourceIdPattern(resourceName: string, resourceId: ResourceId, role?: string): string {
+        const pattern = `${this.prefix}:${resourceName}:${resourceId}:*`;
+        if (!role) {
+            return pattern;
+        }
+
+        return `${pattern}-${role}`;
+    }
+
+    public static extractUserFromUserResourceIdPatternMatch(
+        matchedKey: string,
+        resourceName: string,
+        resourceId: ResourceId
+    ): Users | null {
+        const userIdAndMaybeRole = matchedKey.replace(`${this.prefix}:${resourceName}:${resourceId}:`, "");
+        if (userIdAndMaybeRole === matchedKey) {
+            // The matched key was not in the expected format
+            return null;
+        }
+
+        const [id, role] = userIdAndMaybeRole.split("-");
+        return { id, role };
     }
 
     public static userAccessControl(user: Users, resourceName: string): string {
