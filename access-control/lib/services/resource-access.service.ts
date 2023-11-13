@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { RedisService } from "@recursyve/nestjs-redis";
 import {
     AccessActionType,
@@ -8,7 +8,7 @@ import {
     PolicyResourceTypes,
     ResourceId,
     UserResources,
-    Users,
+    Users
 } from "../models";
 import { RedisKeyUtils } from "../utils";
 import { CommandBus } from "@nestjs/cqrs";
@@ -16,6 +16,8 @@ import { ResourceAccessUpdatedCommand } from "../commands";
 
 @Injectable()
 export class ResourceAccessService {
+    private logger = new Logger(ResourceAccessService.name);
+
     constructor(
         private redisService: RedisService,
         private commandBus: CommandBus
@@ -51,42 +53,41 @@ export class ResourceAccessService {
         }
     }
 
-    public async addUserResources(resources: UserResources[]): Promise<void> {
+    public async addUserResources(userResources: UserResources[]): Promise<void> {
+        const filteredUserResources = await this.filterOutUninitializedUserResources(userResources);
+
         await Promise.all(
             accessActionTypeValues.map((action) => {
-                return this.addUserResourceAccessesAction(resources, action);
+                return this.addUserResourceAccessesAction(filteredUserResources, action);
             })
         );
 
-        await this.commandBus.execute(new ResourceAccessUpdatedCommand(resources));
+        await this.commandBus.execute(new ResourceAccessUpdatedCommand(filteredUserResources));
     }
 
-    public async deleteResourceAccesses(resourceName: string, resourceId: ResourceId): Promise<void> {
-        await this.redisService.scanDel(RedisKeyUtils.userResourceIdPattern(resourceName, resourceId));
-    }
-
-    public async updateUserResources(
-        resources: UserResources[],
-        options?: { couldBeInitialUserResources?: boolean }
-    ): Promise<void> {
-        if (options?.couldBeInitialUserResources) {
-            await this.setUsersAccessControlTypeFromUserResources(resources, PolicyResourceTypes.Resources);
-        }
+    public async updateUserResources(userResources: UserResources[]): Promise<void> {
+        const filteredUserResources = await this.filterOutUninitializedUserResources(userResources);
 
         await Promise.all(
-            resources.map((resource) =>
+            filteredUserResources.map((userResource) =>
                 this.redisService.del(
-                    RedisKeyUtils.userResourceIdKey(resource.resourceName, resource.resourceId, {
-                        id: resource.userId,
-                        role: resource.userRole,
+                    RedisKeyUtils.userResourceIdKey(userResource.resourceName, userResource.resourceId, {
+                        id: userResource.userId,
+                        role: userResource.userRole
                     } as Users)
                 )
             )
         );
 
-        await Promise.all(accessActionTypeValues.map((a) => this.updateUserResourceAccessAction(resources, a)));
+        await Promise.all(
+            accessActionTypeValues.map((a) => this.updateUserResourceAccessAction(filteredUserResources, a))
+        );
 
-        await this.commandBus.execute(new ResourceAccessUpdatedCommand(resources));
+        await this.commandBus.execute(new ResourceAccessUpdatedCommand(filteredUserResources));
+    }
+
+    public async deleteResourceAccesses(resourceName: string, resourceId: ResourceId): Promise<void> {
+        await this.redisService.scanDel(RedisKeyUtils.userResourceIdPattern(resourceName, resourceId));
     }
 
     private async setUserAccessControlType(
@@ -95,34 +96,44 @@ export class ResourceAccessService {
         type: PolicyResourceTypes
     ): Promise<void> {
         await Promise.all([
-            this.redisService.set(RedisKeyUtils.userAccessControlType(user, resourceName), type),
             this.redisService.set(RedisKeyUtils.userAccessControl(user, resourceName), "1"),
+            this.redisService.set(RedisKeyUtils.userAccessControlType(user, resourceName), type)
         ]);
     }
 
-    private async setUsersAccessControlTypeFromUserResources(
-        userResources: UserResources[],
-        type: PolicyResourceTypes
-    ): Promise<void> {
-        const uniqueUsers: Record<string, { user: Users; resourceNames: string[] }> = {};
+    private async filterOutUninitializedUserResources(userResources: UserResources[]): Promise<UserResources[]> {
+        const groupedUserResources: Record<string, UserResources[]> = {};
         for (const userResource of userResources) {
-            const key = `${userResource.userId}:${userResource.userRole}`;
-            const uniqueUser = uniqueUsers[key];
-            if (!uniqueUser) {
-                uniqueUsers[key] = {
-                    user: { id: userResource.userId, role: userResource.userRole },
-                    resourceNames: [userResource.resourceName],
-                };
-            } else if (!uniqueUser.resourceNames.includes(userResource.resourceName)) {
-                uniqueUser.resourceNames.push(userResource.resourceName);
+            const key = RedisKeyUtils.userAccessControl(
+                { id: userResource.userId, role: userResource.userRole },
+                userResource.resourceName
+            );
+            if (!groupedUserResources[key]) {
+                groupedUserResources[key] = [userResource];
+            } else {
+                groupedUserResources[key].push(userResource);
             }
         }
 
-        await Promise.all(
-            Object.values(uniqueUsers).flatMap(({ user, resourceNames }) =>
-                resourceNames.map((resourceName) => this.setUserAccessControlType(user, resourceName, type))
-            )
+        const groupedUserResourcesEntries = Object.entries(groupedUserResources);
+        const hasAccessControls = await Promise.all(
+            groupedUserResourcesEntries.map(([key, _]) => this.redisService.get(key))
         );
+
+        const filteredUserResources: UserResources[] = [];
+
+        for (const [index, [_, userResources]] of groupedUserResourcesEntries.entries()) {
+            if (hasAccessControls[index] !== "1") {
+                this.logger.verbose(
+                    `User '${userResources[0].userId}' was filtered out from '${userResources[0].resourceName}' access changes, since his access control was not yet initialized.`
+                );
+                continue;
+            }
+
+            filteredUserResources.push(...userResources);
+        }
+
+        return filteredUserResources;
     }
 
     private async addUserResourceAccessesAction(resources: UserResources[], action: AccessActionType): Promise<void> {
@@ -163,10 +174,9 @@ export class ResourceAccessService {
             ...resource,
             userId: user.id,
             userRole: user.role,
-            resourceName,
+            resourceName
         }));
         await this.addUserResourceAccessesAction(userResources, action);
-        await this.commandBus.execute(new ResourceAccessUpdatedCommand(userResources));
     }
 
     private async updateUserResourceAccessAction(
@@ -181,7 +191,7 @@ export class ResourceAccessService {
                 this.deleteUserResourceAccessAction(
                     {
                         id: userResource.userId,
-                        role: userResource.userRole,
+                        role: userResource.userRole
                     },
                     { id: userResource.resourceName, name: userResource.resourceName },
                     action
@@ -207,5 +217,20 @@ export class ResourceAccessService {
         action: AccessActionType
     ): Promise<void> {
         await this.redisService.del(RedisKeyUtils.userResourceActionKey(user, resourceName, action));
+    }
+
+    private extractUniqueUserResources(userResources: UserResources[]): [Users, string][] {
+        const uniqueUserResources: Record<string, [Users, string]> = {};
+        for (const userResource of userResources) {
+            const key = `${userResource.userId}:${userResource.userRole}:${userResource.resourceName}`;
+            if (!uniqueUserResources[key]) {
+                uniqueUserResources[key] = [
+                    { id: userResource.userId, role: userResource.userRole },
+                    userResource.resourceName
+                ];
+            }
+        }
+
+        return Object.values(uniqueUserResources);
     }
 }
