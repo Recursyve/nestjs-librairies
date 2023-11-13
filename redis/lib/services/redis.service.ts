@@ -39,12 +39,16 @@ export class RedisService {
         return this.client.get(key);
     }
 
+    public mget(keys: string): Promise<(string | null)[]> {
+        return this.client.mget(keys);
+    }
+
     public getBuffer(key: string): Promise<Buffer> {
         return this.client.getBuffer(key);
     }
 
-    public async del(key: string): Promise<void> {
-        await this.client.del(key);
+    public async del(...keys: string[]): Promise<void> {
+        await this.client.del(keys);
     }
 
     public async lpush(key: string, ...value: RedisValue[]): Promise<number> {
