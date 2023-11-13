@@ -39,7 +39,7 @@ export class RedisService {
         return this.client.get(key);
     }
 
-    public mget(keys: string): Promise<(string | null)[]> {
+    public mget(...keys: string[]): Promise<(string | null)[]> {
         return this.client.mget(keys);
     }
 
