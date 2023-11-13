@@ -40,7 +40,7 @@ export class RedisService {
     }
 
     public mget(...keys: string[]): Promise<(string | null)[]> {
-        return this.client.mget(keys);
+        return this.client.mget(...keys);
     }
 
     public getBuffer(key: string): Promise<Buffer> {
@@ -48,7 +48,7 @@ export class RedisService {
     }
 
     public async del(...keys: string[]): Promise<void> {
-        await this.client.del(keys);
+        await this.client.del(...keys);
     }
 
     public async lpush(key: string, ...value: RedisValue[]): Promise<number> {
