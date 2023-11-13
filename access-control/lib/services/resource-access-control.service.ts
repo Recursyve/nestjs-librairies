@@ -10,7 +10,7 @@ import {
     PolicyResourceTypes,
     ResourceId,
     Resources,
-    Users,
+    Users
 } from "../models";
 import { PolicyConfig } from "../models/policy-config.model";
 import { RedisKeyUtils } from "../utils";
@@ -115,25 +115,19 @@ export class ResourceAccessControlService {
                             this.resourceName,
                             resourceId
                         ),
-                        matchedKey,
+                        matchedKey
                     ] as [Users | undefined, string]
             )
             .filter(([user, _]) => user);
 
-        // Improvements(@Jtplouffe): We could implement `MGET` in the redis client in order to fetch multiple keys at
-        // the same time.
-        const users = await Promise.all(
-            usersWithMatchedKey.map(async ([user, matchedKey]) => {
-                const accessRulesStr = await this.redisService.get(matchedKey);
-                const accessRule = AccessRules.fromString(accessRulesStr);
-                if (!accessRule.has(action)) {
-                    return null;
-                }
-
-                return user;
-            })
+        const accessControlStrings = await this.redisService.mget(
+            ...usersWithMatchedKey.map(([_, matchedKey]) => matchedKey)
         );
-        return users.filter((user) => user);
+
+        return usersWithMatchedKey
+            .map(([user, _], index) => [user, accessControlStrings[index]] as [Users, string])
+            .filter(([_, accessControlStr]) => accessControlStr && AccessRules.fromString(accessControlStr).has(action))
+            .map(([user, _]) => user);
     }
 
     private async fetchAccessRules(user: Users, resourceId: ResourceId): Promise<AccessRules> {

@@ -68,16 +68,16 @@ export class ResourceAccessService {
     public async updateUserResources(userResources: UserResources[]): Promise<void> {
         const filteredUserResources = await this.filterOutUninitializedUserResources(userResources);
 
-        await Promise.all(
-            filteredUserResources.map((userResource) =>
-                this.redisService.del(
-                    RedisKeyUtils.userResourceIdKey(userResource.resourceName, userResource.resourceId, {
-                        id: userResource.userId,
-                        role: userResource.userRole
-                    } as Users)
-                )
-            )
+        const delKeys = new Map(
+            filteredUserResources.map((userResource) => [
+                RedisKeyUtils.userResourceIdKey(userResource.resourceName, userResource.resourceId, {
+                    id: userResource.userId,
+                    role: userResource.userRole
+                }),
+                true
+            ])
         );
+        await this.redisService.del(...delKeys.keys());
 
         await Promise.all(
             accessActionTypeValues.map((a) => this.updateUserResourceAccessAction(filteredUserResources, a))
@@ -116,9 +116,7 @@ export class ResourceAccessService {
         }
 
         const groupedUserResourcesEntries = Object.entries(groupedUserResources);
-        const hasAccessControls = await Promise.all(
-            groupedUserResourcesEntries.map(([key, _]) => this.redisService.get(key))
-        );
+        const hasAccessControls = await this.redisService.mget(...groupedUserResourcesEntries.map(([key, _]) => key));
 
         const filteredUserResources: UserResources[] = [];
 
@@ -217,20 +215,5 @@ export class ResourceAccessService {
         action: AccessActionType
     ): Promise<void> {
         await this.redisService.del(RedisKeyUtils.userResourceActionKey(user, resourceName, action));
-    }
-
-    private extractUniqueUserResources(userResources: UserResources[]): [Users, string][] {
-        const uniqueUserResources: Record<string, [Users, string]> = {};
-        for (const userResource of userResources) {
-            const key = `${userResource.userId}:${userResource.userRole}:${userResource.resourceName}`;
-            if (!uniqueUserResources[key]) {
-                uniqueUserResources[key] = [
-                    { id: userResource.userId, role: userResource.userRole },
-                    userResource.resourceName
-                ];
-            }
-        }
-
-        return Object.values(uniqueUserResources);
     }
 }
