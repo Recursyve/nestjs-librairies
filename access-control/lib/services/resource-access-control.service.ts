@@ -83,40 +83,59 @@ export class ResourceAccessControlService {
     }
 
     public async getUsersResourceIdAccess(
-        resourceId: ResourceId,
+        resourcesId: ResourceId | ResourceId[],
         role?: string,
         action?: AccessActionType
     ): Promise<Users[]> {
-        const parsedResourceId = this.databaseAdapter.parseIds(this.config.model, resourceId.toString()) as ResourceId;
-        const keyPattern = RedisKeyUtils.userResourceIdPattern(this.resourceName, parsedResourceId, role);
-        const matchedKeys = await this.redisService.scan(keyPattern);
-        if (!matchedKeys.length) {
+        if (!Array.isArray(resourcesId)) {
+            resourcesId = [resourcesId];
+        }
+
+        const parsedResourceIds = resourcesId.map((resourceId) =>
+            this.databaseAdapter.parseIds(this.config.model, resourceId.toString())
+        ) as ResourceId[];
+
+        const keyPatterns = parsedResourceIds.map((resourceId) =>
+            RedisKeyUtils.userResourceIdPattern(this.resourceName, resourceId, role)
+        );
+
+        const nestedMatchedKeys = await Promise.all(
+            keyPatterns.map((keyPattern) => this.redisService.scan(keyPattern))
+        );
+        const matchedKeysWithResourceId = nestedMatchedKeys.map(
+            (matchedKeys, index) => [matchedKeys, parsedResourceIds[index]] as [string[], ResourceId]
+        );
+        if (!nestedMatchedKeys.some((matchedKeys) => matchedKeys.length)) {
             return [];
         }
 
         if (!action) {
-            return matchedKeys
-                .map((matchedKey) =>
-                    RedisKeyUtils.extractUserFromUserResourceIdPatternMatch(
-                        matchedKey,
-                        this.resourceName,
-                        parsedResourceId
+            return matchedKeysWithResourceId
+                .flatMap(([matchedKeys, resourceId]) =>
+                    matchedKeys.map((matchedKey) =>
+                        RedisKeyUtils.extractUserFromUserResourceIdPatternMatch(
+                            matchedKey,
+                            this.resourceName,
+                            resourceId
+                        )
                     )
                 )
                 .filter((user) => user);
         }
 
-        const usersWithMatchedKey = matchedKeys
-            .map(
-                (matchedKey) =>
-                    [
-                        RedisKeyUtils.extractUserFromUserResourceIdPatternMatch(
-                            matchedKey,
-                            this.resourceName,
-                            resourceId
-                        ),
-                        matchedKey
-                    ] as [Users | undefined, string]
+        const usersWithMatchedKey = matchedKeysWithResourceId
+            .flatMap(([matchedKeys, resourceId]) =>
+                matchedKeys.map(
+                    (matchedKey) =>
+                        [
+                            RedisKeyUtils.extractUserFromUserResourceIdPatternMatch(
+                                matchedKey,
+                                this.resourceName,
+                                resourceId
+                            ),
+                            matchedKey
+                        ] as [Users | null, string]
+                )
             )
             .filter(([user, _]) => user);
 
