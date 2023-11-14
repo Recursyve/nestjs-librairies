@@ -48,7 +48,6 @@ export * from "./adapters";
 export * from "./commands";
 export * from "./decorators";
 export * from "./deserializers";
-export * from "./events";
 export * from "./guards";
 export * from "./interfaces";
 export * from "./models";

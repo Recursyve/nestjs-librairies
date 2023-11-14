@@ -16,6 +16,7 @@ import { PolicyConfig } from "../models/policy-config.model";
 import { RedisKeyUtils } from "../utils";
 import { AccessControlResourceLoaderService } from "./access-control-resource-loader.service";
 import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
+import { arrayUnique } from "../utils/array.utils";
 
 @Injectable()
 export class ResourceAccessControlService {
@@ -26,9 +27,9 @@ export class ResourceAccessControlService {
     @Inject()
     public databaseAdaptersRegistry: DatabaseAdaptersRegistry;
     @Inject()
-    public accessControlResourceLoaderService: AccessControlResourceLoaderService
+    public accessControlResourceLoaderService: AccessControlResourceLoaderService;
 
-    constructor(@Optional() private config: PolicyConfig,) {}
+    constructor(@Optional() private config: PolicyConfig) {}
 
     private _databaseAdapter: IDatabaseAdapter;
 
@@ -80,6 +81,78 @@ export class ResourceAccessControlService {
         }
 
         return await this.fetchAccessRules(user, parsedResourceId);
+    }
+
+    public async getUsersResourceIdAccess(
+        resourcesId: ResourceId | ResourceId[],
+        role?: string,
+        action?: AccessActionType
+    ): Promise<Users[]> {
+        if (!Array.isArray(resourcesId)) {
+            resourcesId = [resourcesId];
+        }
+
+        const parsedResourceIds = arrayUnique(resourcesId).map((resourceId) =>
+            this.databaseAdapter.parseIds(this.config.model, resourceId.toString())
+        ) as ResourceId[];
+
+        const keyPatterns = parsedResourceIds.map((resourceId) =>
+            RedisKeyUtils.userResourceIdPattern(this.resourceName, resourceId, role)
+        );
+
+        const nestedMatchedKeys = await Promise.all(
+            keyPatterns.map((keyPattern) => this.redisService.scan(keyPattern))
+        );
+        const matchedKeysWithResourceId = nestedMatchedKeys.map(
+            (matchedKeys, index) => [matchedKeys, parsedResourceIds[index]] as [string[], ResourceId]
+        );
+        if (!nestedMatchedKeys.some((matchedKeys) => matchedKeys.length)) {
+            return [];
+        }
+
+        if (!action) {
+            const users = matchedKeysWithResourceId
+                .flatMap(([matchedKeys, resourceId]) =>
+                    matchedKeys.map((matchedKey) =>
+                        RedisKeyUtils.extractUserFromUserResourceIdPatternMatch(
+                            matchedKey,
+                            this.resourceName,
+                            resourceId
+                        )
+                    )
+                )
+                .filter((user) => user);
+            return arrayUnique(users, (user) => `${user.id}:${user.role}`);
+        }
+
+        const usersWithMatchedKey = matchedKeysWithResourceId
+            .flatMap(([matchedKeys, resourceId]) =>
+                matchedKeys.map(
+                    (matchedKey) =>
+                        [
+                            RedisKeyUtils.extractUserFromUserResourceIdPatternMatch(
+                                matchedKey,
+                                this.resourceName,
+                                resourceId
+                            ),
+                            matchedKey
+                        ] as [Users | null, string]
+                )
+            )
+            .filter(([user, _]) => user);
+        if (!usersWithMatchedKey.length) {
+            return [];
+        }
+
+        const accessControlStrings = await this.redisService.mget(
+            ...usersWithMatchedKey.map(([_, matchedKey]) => matchedKey)
+        );
+
+        const users = usersWithMatchedKey
+            .map(([user, _], index) => [user, accessControlStrings[index]] as [Users, string])
+            .filter(([_, accessControlStr]) => accessControlStr && AccessRules.fromString(accessControlStr).has(action))
+            .map(([user, _]) => user);
+        return arrayUnique(users, (user) => `${user.id}:${user.role}`);
     }
 
     private async fetchAccessRules(user: Users, resourceId: ResourceId): Promise<AccessRules> {

@@ -5,7 +5,7 @@ import {
     AccessControlGetResourcesHandler,
     AccessControlResourceCreatedHandler,
     AccessControlResourceDeletedHandler,
-    AccessControlResourceUpdatedHandler,
+    AccessControlResourceUpdatedHandler
 } from "./handlers";
 import {
     AccessControlExplorerService,
@@ -15,10 +15,12 @@ import {
     ResourceCreatedPoliciesService,
     ResourceDeletedPoliciesService,
     ResourceEventAccessControlService,
-    ResourceEventService,
-    ResourceUpdatedPoliciesService,
+    ResourceAccessService,
+    ResourceUpdatedPoliciesService
 } from "./services";
 import { AccessControlResourceLoaderService } from "./services/access-control-resource-loader.service";
+import { ResourceAccessUpdatedPoliciesService } from "./services/resource-access-updated-policies.service";
+import { AccessControlResourceAccessUpdatedHandler } from "./handlers/resource-access-updated.handler";
 
 @Global()
 @Module({
@@ -27,15 +29,17 @@ import { AccessControlResourceLoaderService } from "./services/access-control-re
         AccessControlService,
         AccessPoliciesService,
         AccessControlExplorerService,
-        ResourceEventService,
+        ResourceAccessService,
         ResourceCreatedPoliciesService,
         ResourceDeletedPoliciesService,
         ResourceUpdatedPoliciesService,
+        ResourceAccessUpdatedPoliciesService,
         ResourceEventAccessControlService,
         AccessControlGetResourcesHandler,
         AccessControlResourceCreatedHandler,
         AccessControlResourceUpdatedHandler,
         AccessControlResourceDeletedHandler,
+        AccessControlResourceAccessUpdatedHandler,
         AccessControlResourceLoaderService
     ],
     exports: [
@@ -54,16 +58,18 @@ export class AccessControlCoreModule implements OnModuleInit {
         private resourceCreatedPoliciesService: ResourceCreatedPoliciesService,
         private resourceDeletedPoliciesService: ResourceDeletedPoliciesService,
         private resourceUpdatedPoliciesService: ResourceUpdatedPoliciesService,
+        private resourceAccessUpdatedPoliciesService: ResourceAccessUpdatedPoliciesService,
         private explorer: AccessControlExplorerService
     ) {}
 
     public onModuleInit(): void {
-        const { policies, createdPolicies, updatedPolicies, deletedPolicies, databaseAdapters } =
+        const { policies, createdPolicies, updatedPolicies, deletedPolicies, accessUpdatedPolicies, databaseAdapters } =
             this.explorer.explore();
         this.databaseAdaptersRegistry.registerAdapters(...databaseAdapters);
         this.accessPoliciesService.registerPolicies(...policies);
         this.resourceCreatedPoliciesService.registerPolicies(...createdPolicies);
         this.resourceDeletedPoliciesService.registerPolicies(...deletedPolicies);
         this.resourceUpdatedPoliciesService.registerPolicies(...updatedPolicies);
+        this.resourceAccessUpdatedPoliciesService.registerPolicies(accessUpdatedPolicies);
     }
 }

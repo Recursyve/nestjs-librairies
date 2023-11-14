@@ -69,13 +69,25 @@ export class AccessRules {
 
     public static fromPermissions(permissions: string[], options?: PermissionsOption): AccessRules;
     public static fromPermissions(permissions: string[], suffix?: string, options?: PermissionsOption): AccessRules;
-    public static fromPermissions(permissions: string[], suffixOrOptions?: string | PermissionsOption, options?: PermissionsOption): AccessRules {
-        const opt = options ? options : typeof suffixOrOptions === "string" ? defaultPermissionsOption : suffixOrOptions ?? defaultPermissionsOption;
+    public static fromPermissions(
+        permissions: string[],
+        suffixOrOptions?: string | PermissionsOption,
+        options?: PermissionsOption
+    ): AccessRules {
+        const opt = options
+            ? options
+            : typeof suffixOrOptions === "string"
+            ? defaultPermissionsOption
+            : suffixOrOptions ?? defaultPermissionsOption;
         const suffix = typeof suffixOrOptions === "string" ? `-${suffixOrOptions}` : "";
         return new AccessRules({
             [AccessActionType.Read]: permissions.some((x) => x === opt.r + suffix),
             [AccessActionType.Update]: permissions.some((x) => x === opt.u + suffix),
-            [AccessActionType.Delete]: permissions.some((x) => x === opt.d + suffix),
+            [AccessActionType.Delete]: permissions.some((x) => x === opt.d + suffix)
         });
+    }
+
+    public has(accessActionType: AccessActionType): boolean {
+        return this[accessActionType];
     }
 }

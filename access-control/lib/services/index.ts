@@ -5,6 +5,6 @@ export * from "./database-adapters.registry";
 export * from "./resource-access-control.service";
 export * from "./resource-created-policies.service";
 export * from "./resource-deleted-policies.service";
-export * from "./resource-event.service";
+export * from "./resource-access.service";
 export * from "./resource-event-access-control.service";
 export * from "./resource-updated-policies.service";
