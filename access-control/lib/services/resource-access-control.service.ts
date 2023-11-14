@@ -16,6 +16,7 @@ import { PolicyConfig } from "../models/policy-config.model";
 import { RedisKeyUtils } from "../utils";
 import { AccessControlResourceLoaderService } from "./access-control-resource-loader.service";
 import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
+import { arrayUnique } from "../utils/array.utils";
 
 @Injectable()
 export class ResourceAccessControlService {
@@ -91,7 +92,7 @@ export class ResourceAccessControlService {
             resourcesId = [resourcesId];
         }
 
-        const parsedResourceIds = resourcesId.map((resourceId) =>
+        const parsedResourceIds = arrayUnique(resourcesId).map((resourceId) =>
             this.databaseAdapter.parseIds(this.config.model, resourceId.toString())
         ) as ResourceId[];
 
@@ -110,7 +111,7 @@ export class ResourceAccessControlService {
         }
 
         if (!action) {
-            return matchedKeysWithResourceId
+            const users = matchedKeysWithResourceId
                 .flatMap(([matchedKeys, resourceId]) =>
                     matchedKeys.map((matchedKey) =>
                         RedisKeyUtils.extractUserFromUserResourceIdPatternMatch(
@@ -121,6 +122,7 @@ export class ResourceAccessControlService {
                     )
                 )
                 .filter((user) => user);
+            return arrayUnique(users, (user) => `${user.id}:${user.role}`);
         }
 
         const usersWithMatchedKey = matchedKeysWithResourceId
@@ -143,10 +145,11 @@ export class ResourceAccessControlService {
             ...usersWithMatchedKey.map(([_, matchedKey]) => matchedKey)
         );
 
-        return usersWithMatchedKey
+        const users = usersWithMatchedKey
             .map(([user, _], index) => [user, accessControlStrings[index]] as [Users, string])
             .filter(([_, accessControlStr]) => accessControlStr && AccessRules.fromString(accessControlStr).has(action))
             .map(([user, _]) => user);
+        return arrayUnique(users, (user) => `${user.id}:${user.role}`);
     }
 
     private async fetchAccessRules(user: Users, resourceId: ResourceId): Promise<AccessRules> {
