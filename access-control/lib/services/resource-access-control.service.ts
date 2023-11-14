@@ -140,6 +140,9 @@ export class ResourceAccessControlService {
                 )
             )
             .filter(([user, _]) => user);
+        if (!usersWithMatchedKey.length) {
+            return [];
+        }
 
         const accessControlStrings = await this.redisService.mget(
             ...usersWithMatchedKey.map(([_, matchedKey]) => matchedKey)

@@ -77,7 +77,9 @@ export class ResourceAccessService {
                 true
             ])
         );
-        await this.redisService.del(...delKeys.keys());
+        if (delKeys.size) {
+            await this.redisService.del(...delKeys.keys());
+        }
 
         await Promise.all(
             accessActionTypeValues.map((a) => this.updateUserResourceAccessAction(filteredUserResources, a))
@@ -116,6 +118,10 @@ export class ResourceAccessService {
         }
 
         const groupedUserResourcesEntries = Object.entries(groupedUserResources);
+        if (!groupedUserResourcesEntries.length) {
+            return [];
+        }
+
         const hasAccessControls = await this.redisService.mget(...groupedUserResourcesEntries.map(([key, _]) => key));
 
         const filteredUserResources: UserResources[] = [];
@@ -191,7 +197,7 @@ export class ResourceAccessService {
                         id: userResource.userId,
                         role: userResource.userRole
                     },
-                    { id: userResource.resourceName, name: userResource.resourceName },
+                    { id: userResource.resourceId, name: userResource.resourceName },
                     action
                 )
             )
