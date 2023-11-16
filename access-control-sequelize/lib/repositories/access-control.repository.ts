@@ -1,6 +1,7 @@
 import { ResourceAccessControlService, Resources } from "@recursyve/nestjs-access-control";
 import { SequelizeEntities } from "@recursyve/nestjs-sequelize-utils";
 import { Attributes, FindOptions, Identifier, Op, WhereOptions } from "sequelize";
+import { Sequelize } from "sequelize-typescript";
 
 export class AccessControlRepository<T extends SequelizeEntities> extends ResourceAccessControlService {
     constructor(protected repository: typeof SequelizeEntities<any, any>) {
@@ -47,10 +48,7 @@ export class AccessControlRepository<T extends SequelizeEntities> extends Resour
         });
     }
 
-    public generateAccessControlWhereOptions(
-        resources: Resources,
-        where?: WhereOptions<T>
-    ): WhereOptions {
+    public generateAccessControlWhereOptions(resources: Resources, where?: WhereOptions<T>): WhereOptions {
         if (resources.ids) {
             if (!where) {
                 return { id: resources.ids };
@@ -64,10 +62,13 @@ export class AccessControlRepository<T extends SequelizeEntities> extends Resour
 
             return [resources.where, where];
         } else if (resources.all) {
+            if (!where) {
+                return Sequelize.literal("TRUE");
+            }
+
             return where;
         }
 
-        // TODO: we would return some kind of condition that is always `false`.
-        return {};
+        return Sequelize.literal("FALSE");
     }
 }
