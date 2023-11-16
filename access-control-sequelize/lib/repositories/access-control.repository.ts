@@ -7,7 +7,7 @@ export class AccessControlRepository<T extends SequelizeEntities> extends Resour
         super({ model: repository, type: "sequelize" });
     }
 
-    public async findByPkFromUser(
+    public findByPkFromUser(
         identifier: Identifier,
         resources: Resources,
         options?: FindOptions<Attributes<T>>
@@ -22,24 +22,24 @@ export class AccessControlRepository<T extends SequelizeEntities> extends Resour
         });
     }
 
-    public async findOneForUser(resources: Resources, options?: FindOptions<Attributes<T>>): Promise<T> {
-        const where = await this.generateAccessControlWhereOptions(resources, options?.where);
+    public findOneForUser(resources: Resources, options?: FindOptions<Attributes<T>>): Promise<T> {
+        const where = this.generateAccessControlWhereOptions(resources, options?.where);
 
         return this.repository.findOne({
             ...options,
             where
-        }) as unknown as T;
+        }) as Promise<T>;
     }
 
-    public async findAllFromUser(resources: Resources, options?: FindOptions<Attributes<T>>): Promise<T[]> {
+    public findAllFromUser(resources: Resources, options?: FindOptions<Attributes<T>>): Promise<T[]> {
         return this.repository.findAll({
             ...options,
-            where: await this.generateAccessControlWhereOptions(resources, options?.where)
+            where: this.generateAccessControlWhereOptions(resources, options?.where)
         }) as unknown as Promise<T[]>;
     }
 
-    public async countForUser(resources: Resources, options?: FindOptions<Attributes<T>>): Promise<number> {
-        const where = await this.generateAccessControlWhereOptions(resources, options?.where);
+    public countForUser(resources: Resources, options?: FindOptions<Attributes<T>>): Promise<number> {
+        const where = this.generateAccessControlWhereOptions(resources, options?.where);
 
         return this.repository.count({
             ...options,
@@ -47,10 +47,10 @@ export class AccessControlRepository<T extends SequelizeEntities> extends Resour
         });
     }
 
-    public async generateAccessControlWhereOptions(
+    public generateAccessControlWhereOptions(
         resources: Resources,
         where?: WhereOptions<T>
-    ): Promise<WhereOptions> {
+    ): WhereOptions {
         if (resources.ids) {
             if (!where) {
                 return { id: resources.ids };
