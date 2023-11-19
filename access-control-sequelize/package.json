@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-access-control-sequelize",
-    "version": "9.0.0-beta.6",
+    "version": "9.0.0-beta.7",
     "description": "Sequelize utilities for Recursyve's NestJs AccessControl library",
     "main": "index.js",
     "scripts": {
