@@ -10,11 +10,11 @@ export class AccessControlSequelizeModule {
         return {
             module: AccessControlSequelizeModule,
             providers: [SequelizeDatabaseAdapter]
-        }
+        };
     };
 }
 
 export * from "./adapters/database.adapter";
 export * from "./decorators";
 export * from "./hooks/sequelize-hooks.module";
-export * from "./repositories/repositories";
+export * from "./repositories";
