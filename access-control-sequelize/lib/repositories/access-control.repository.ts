@@ -15,11 +15,11 @@ export class AccessControlRepository<T extends SequelizeEntities> extends Resour
     ): Promise<T> {
         const where = {
             [this.repository.primaryKeyAttribute]: identifier
-        };
+        } as WhereOptions;
 
         return this.findOneForUser(resources, {
             ...options,
-            where: options?.where ? { [Op.and]: [where, options.where] } : options?.where
+            where: options?.where ? { [Op.and]: [where, options.where] } : where
         });
     }
 
