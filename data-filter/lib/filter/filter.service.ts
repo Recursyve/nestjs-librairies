@@ -460,7 +460,8 @@ export class FilterService<Data> {
         } else {
             const { group, ...countOptions } = options;
             const value = await this.repository.model.count({
-                ...countOptions
+                ...countOptions,
+                distinct: true
             }) as number | GroupedCountResultItem[];
             if (typeof value === "number") {
                 return value;
@@ -508,7 +509,7 @@ export class FilterService<Data> {
             limit: filter.page ? filter.page.size : null,
             offset: filter.page ? filter.page.number * filter.page.size + (filter.page.offset ?? 0) : null,
             subQuery: false,
-            group: filter.groupBy,
+            group: filter.groupBy ?? options.group,
             order
         });
 
