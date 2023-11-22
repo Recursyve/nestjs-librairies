@@ -311,3 +311,9 @@ SelectFilter({
 ### Bugfix
 
 - Fix issues with filters from json columns
+
+## [9.3.2] - 2023-11-22
+
+### Bugfix
+
+-  Fix issues with filter group and count with joins
