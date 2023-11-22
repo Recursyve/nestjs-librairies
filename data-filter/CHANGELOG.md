@@ -229,3 +229,11 @@ SelectFilter({
 ### Bugfix
 
 - Fix issue with the groupBy options of the FilterQueryModel.
+
+
+## [8.9.4] - 2023-11-22
+
+### Bugfix
+
+- Fix issues with filters from json columns
+- Fix issues with filter group and count with joins
