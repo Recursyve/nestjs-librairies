@@ -1,4 +1,5 @@
 import { AccessActionType, ResourceId, Users } from "../models";
+import * as querystring from "querystring";
 
 export class RedisKeyUtils {
     public static prefix = "access-control";
@@ -15,6 +16,32 @@ export class RedisKeyUtils {
             return `${this.prefix}:${user.id}:${resourceName}:wildcard`;
         }
         return `${this.prefix}:${user.id}-${user.role}:${resourceName}:wildcard`;
+    }
+
+    public static usersResourceActionWildcardPattern(resourceName: string, role?: string): string {
+        if (!role) {
+            return `${this.prefix}:*:${resourceName}:wildcard`;
+        }
+
+        return `${this.prefix}:*-${role}:${resourceName}:wildcard`;
+    }
+
+    public static extractUserFromUsersResourceActionWildcardPatternMatch(
+        matchedKey: string,
+        resourceName: string
+    ): Users | null {
+        const keyWithoutPrefix = matchedKey.replace(`${this.prefix}:`, "");
+        if (keyWithoutPrefix === matchedKey) {
+            return null;
+        }
+
+        const userIdAndMaybeRole = keyWithoutPrefix.replace(`:${resourceName}:wildcard`, "");
+        if (userIdAndMaybeRole === keyWithoutPrefix) {
+            return null;
+        }
+
+        const [id, role] = userIdAndMaybeRole.split("-");
+        return { id, role };
     }
 
     public static userResourceActionConditionKey(user: Users, resourceName: string): string {
