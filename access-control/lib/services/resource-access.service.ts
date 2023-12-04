@@ -37,7 +37,7 @@ export class ResourceAccessService {
                         this.setUserAccessActions(user, resourceName, policyResources.resources, action)
                     )
                 );
-                await this.generateUserResourceIdsRules(user, resourceName, policyResources.resources);
+                await this.setUserResourceIdsRules(user, resourceName, policyResources.resources);
                 break;
             case PolicyResourceTypes.Condition:
                 await this.redisService.set(
@@ -65,7 +65,7 @@ export class ResourceAccessService {
 
         await Promise.all(
             filteredUserResources.map((userResource) =>
-                this.generateUserResourceIdsRules(
+                this.setUserResourceIdsRules(
                     { id: userResource.userId, role: userResource.userRole },
                     userResource.resourceName,
                     [{ resourceId: userResource.resourceId, rules: userResource.rules }]
@@ -98,7 +98,7 @@ export class ResourceAccessService {
 
         await Promise.all(
             filteredUserResources.map((userResource) =>
-                this.generateUserResourceIdsRules(
+                this.setUserResourceIdsRules(
                     { id: userResource.userId, role: userResource.userRole },
                     userResource.resourceName,
                     [{ resourceId: userResource.resourceId, rules: userResource.rules }]
@@ -244,7 +244,7 @@ export class ResourceAccessService {
         await this.redisService.del(RedisKeyUtils.userResourceActionKey(user, resourceName, action));
     }
 
-    private async generateUserResourceIdsRules(
+    private async setUserResourceIdsRules(
         user: Users,
         resourceName: string,
         resources: AccessControlResources[]
