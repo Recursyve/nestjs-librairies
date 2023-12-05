@@ -85,8 +85,10 @@ export class ResourceAccessControlService {
 
     public async getUsersResourceIdAccess(
         resourcesId: ResourceId | ResourceId[],
-        role?: string,
-        action?: AccessActionType
+        options?: {
+            role?: string;
+            action?: AccessActionType;
+        }
     ): Promise<Users[]> {
         if (!Array.isArray(resourcesId)) {
             resourcesId = [resourcesId];
@@ -97,7 +99,7 @@ export class ResourceAccessControlService {
         ) as ResourceId[];
 
         const keyPatterns = parsedResourceIds.map((resourceId) =>
-            RedisKeyUtils.userResourceIdPattern(this.resourceName, resourceId, role)
+            RedisKeyUtils.userResourceIdPattern(this.resourceName, resourceId, options?.role)
         );
 
         const nestedMatchedKeys = await Promise.all(
@@ -106,11 +108,14 @@ export class ResourceAccessControlService {
         const matchedKeysWithResourceId = nestedMatchedKeys.map(
             (matchedKeys, index) => [matchedKeys, parsedResourceIds[index]] as [string[], ResourceId]
         );
+
+        const usersFromWildcard = await this.getWildcardUsersAccess(options);
+
         if (!nestedMatchedKeys.some((matchedKeys) => matchedKeys.length)) {
-            return [];
+            return usersFromWildcard;
         }
 
-        if (!action) {
+        if (!options?.action) {
             const users = matchedKeysWithResourceId
                 .flatMap(([matchedKeys, resourceId]) =>
                     matchedKeys.map((matchedKey) =>
@@ -122,7 +127,7 @@ export class ResourceAccessControlService {
                     )
                 )
                 .filter((user) => user);
-            return arrayUnique(users, (user) => `${user.id}:${user.role}`);
+            return arrayUnique([...users, ...usersFromWildcard], (user) => `${user.id}:${user.role}`);
         }
 
         const usersWithMatchedKey = matchedKeysWithResourceId
@@ -150,9 +155,43 @@ export class ResourceAccessControlService {
 
         const users = usersWithMatchedKey
             .map(([user, _], index) => [user, accessControlStrings[index]] as [Users, string])
-            .filter(([_, accessControlStr]) => accessControlStr && AccessRules.fromString(accessControlStr).has(action))
+            .filter(
+                ([_, accessControlStr]) =>
+                    accessControlStr && AccessRules.fromString(accessControlStr).has(options.action)
+            )
             .map(([user, _]) => user);
-        return arrayUnique(users, (user) => `${user.id}:${user.role}`);
+        return arrayUnique([...users, ...usersFromWildcard], (user) => `${user.id}:${user.role}`);
+    }
+
+    private async getWildcardUsersAccess(options?: { role?: string; action?: AccessActionType }): Promise<Users[]> {
+        const matchedKeys = await this.redisService.scan(
+            RedisKeyUtils.usersResourceActionWildcardPattern(this.resourceName, options?.role)
+        );
+
+        if (!options?.action) {
+            return matchedKeys
+                .map((matchedKey) =>
+                    RedisKeyUtils.extractUserFromUsersResourceActionWildcardPatternMatch(matchedKey, this.resourceName)
+                )
+                .filter((user) => user);
+        }
+
+        if (!matchedKeys.length) {
+            return [];
+        }
+
+        const accessControlStrings = await this.redisService.mget(...matchedKeys);
+        return accessControlStrings
+            .filter((accessControlString) => accessControlString)
+            .map((accessControlString, index): [string, number] => [accessControlString, index])
+            .filter(([accessControlString]) => AccessRules.fromString(accessControlString).has(options.action))
+            .map(([_, index]) =>
+                RedisKeyUtils.extractUserFromUsersResourceActionWildcardPatternMatch(
+                    matchedKeys[index],
+                    this.resourceName
+                )
+            )
+            .filter((user) => user);
     }
 
     private async fetchAccessRules(user: Users, resourceId: ResourceId): Promise<AccessRules> {

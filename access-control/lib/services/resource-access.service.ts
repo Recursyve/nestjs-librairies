@@ -37,6 +37,7 @@ export class ResourceAccessService {
                         this.setUserAccessActions(user, resourceName, policyResources.resources, action)
                     )
                 );
+                await this.setUserResourceIdsRules(user, resourceName, policyResources.resources);
                 break;
             case PolicyResourceTypes.Condition:
                 await this.redisService.set(
@@ -62,6 +63,16 @@ export class ResourceAccessService {
             })
         );
 
+        await Promise.all(
+            filteredUserResources.map((userResource) =>
+                this.setUserResourceIdsRules(
+                    { id: userResource.userId, role: userResource.userRole },
+                    userResource.resourceName,
+                    [{ resourceId: userResource.resourceId, rules: userResource.rules }]
+                )
+            )
+        );
+
         await this.commandBus.execute(new ResourceAccessUpdatedCommand(filteredUserResources));
     }
 
@@ -83,6 +94,16 @@ export class ResourceAccessService {
 
         await Promise.all(
             accessActionTypeValues.map((a) => this.updateUserResourceAccessAction(filteredUserResources, a))
+        );
+
+        await Promise.all(
+            filteredUserResources.map((userResource) =>
+                this.setUserResourceIdsRules(
+                    { id: userResource.userId, role: userResource.userRole },
+                    userResource.resourceName,
+                    [{ resourceId: userResource.resourceId, rules: userResource.rules }]
+                )
+            )
         );
 
         await this.commandBus.execute(new ResourceAccessUpdatedCommand(filteredUserResources));
@@ -221,5 +242,20 @@ export class ResourceAccessService {
         action: AccessActionType
     ): Promise<void> {
         await this.redisService.del(RedisKeyUtils.userResourceActionKey(user, resourceName, action));
+    }
+
+    private async setUserResourceIdsRules(
+        user: Users,
+        resourceName: string,
+        resources: AccessControlResources[]
+    ): Promise<void> {
+        await Promise.all(
+            resources.map(async (resource) => {
+                await this.redisService.set(
+                    RedisKeyUtils.userResourceIdKey(resourceName, resource.resourceId, user),
+                    JSON.stringify(resource.rules)
+                );
+            })
+        );
     }
 }
