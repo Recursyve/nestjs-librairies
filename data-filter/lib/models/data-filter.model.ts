@@ -1,5 +1,6 @@
 import { FindAttributeOptions } from "sequelize";
 import { Model } from "sequelize-typescript";
+import { DialectFormatterService } from "../services/dialect-formatter.service";
 import { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
 import { IncludeConfig } from "./include.model";
 import { M, SequelizeUtils } from "../sequelize.utils";
@@ -18,6 +19,10 @@ export class DataFilterConfig implements DataFilterConfigModel {
     public exportColumns?: string[];
     public customAttributes: CustomAttributesConfig[] = [];
     public ignoreInSearch = false;
+
+    public withContext(dialectFormatterService: DialectFormatterService): DataFilterContext {
+        return new DataFilterContext(this, dialectFormatterService);
+    }
 
     public setModel(model: typeof Model) {
         this.model = model;
@@ -41,39 +46,6 @@ export class DataFilterConfig implements DataFilterConfigModel {
 
     public addCustomAttribute(attribute: CustomAttributesConfig) {
         this.customAttributes.push(attribute);
-    }
-
-    public transformAttributesConfig(options?: object): FindAttributeOptions {
-        const customAttributes = this.getCustomAttributes(options);
-        if (this.attributes) {
-            if (this.customAttributes.length) {
-                return SequelizeUtils.ensureAttributesValidity(
-                    SequelizeUtils.mergeAttributes(this.attributes, {
-                        include: customAttributes.map(x => x.attribute)
-                    })
-                );
-            }
-
-            return SequelizeUtils.ensureAttributesValidity(this.attributes);
-        }
-        if (!this.attributes && customAttributes.length) {
-            return {
-                include: customAttributes.map(x => x.attribute)
-            };
-        }
-    }
-
-    public getCustomAttributes(options?: object): CustomAttributesModel[] {
-        return this.customAttributes
-            .map(x => ({
-                key: x.key,
-                attribute: x.transform(options),
-                path: (x.config as any).path ? {
-                    path: (x.config as any).path,
-                    paranoid: true
-                } : null
-            } as CustomAttributesModel))
-            .filter(x => x.attribute);
     }
 
     public getCustomAttributesIncludes(): IncludeConfig[] {
@@ -101,5 +73,42 @@ export class DataFilterConfig implements DataFilterConfigModel {
         return attributes.length ?
             (attributes as string[])?.filter(x => searchableAttributes.some(attr => attr === x)) :
             searchableAttributes;
+    }
+}
+
+export class DataFilterContext {
+    constructor(private config: DataFilterConfig, private dialectFormatterService: DialectFormatterService) {}
+
+    public transformAttributesConfig(options?: object): FindAttributeOptions {
+        const customAttributes = this.getCustomAttributes(options);
+        if (this.config.attributes) {
+            if (this.config.customAttributes.length) {
+                return SequelizeUtils.ensureAttributesValidity(
+                    SequelizeUtils.mergeAttributes(this.config.attributes, {
+                        include: customAttributes.map(x => x.attribute)
+                    })
+                );
+            }
+
+            return SequelizeUtils.ensureAttributesValidity(this.config.attributes);
+        }
+        if (!this.config.attributes && customAttributes.length) {
+            return {
+                include: customAttributes.map(x => x.attribute)
+            };
+        }
+    }
+
+    public getCustomAttributes(options?: object): CustomAttributesModel[] {
+        return this.config.customAttributes
+            .map(x => ({
+                key: x.key,
+                attribute: x.withContext(this.dialectFormatterService).transform(options),
+                path: (x.config as any).path ? {
+                    path: (x.config as any).path,
+                    paranoid: true
+                } : null
+            } as CustomAttributesModel))
+            .filter(x => x.attribute);
     }
 }

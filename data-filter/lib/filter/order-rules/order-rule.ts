@@ -1,5 +1,6 @@
 import { Col, Fn, Literal } from "sequelize/types/utils";
 import { M } from "../../sequelize.utils";
+import { DialectFormatterService } from "../../services/dialect-formatter.service";
 
 export type OrderItemColumn = string | Col | Fn | Literal;
 
@@ -15,8 +16,14 @@ export interface OrderRuleDefinition extends BaseOrderRuleDefinition {
 export abstract class OrderRule implements OrderRuleDefinition {
     private _type = "order_rule";
 
+    protected _dialectFormatterService: DialectFormatterService;
+
     public attribute: string;
     public path?: string;
+
+    public set dialectFormatterService(dialectFormatterService: DialectFormatterService) {
+        this._dialectFormatterService = dialectFormatterService;
+    }
 
     protected constructor(definition?: BaseOrderRuleDefinition) {
         if (definition) {
@@ -25,7 +32,7 @@ export abstract class OrderRule implements OrderRuleDefinition {
     }
 
     public static validate(definition: BaseOrderRuleDefinition) {
-        return definition["_type"] === "order_rule";
+        return definition?.["_type"] === "order_rule";
     }
 
     public abstract getOrderOption(model: typeof M): OrderItemColumn;

@@ -1,5 +1,6 @@
 import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdapter } from "./adapters";
 import { SearchableAttributes, Distance } from "./decorators";
+import { DialectFormatterService } from "./services/dialect-formatter.service";
 import { databaseFactory } from "./test/database.factory";
 import { DataFilterRepository } from "./data-filter.repository";
 import { Attributes, Data, Include, Where } from "./decorators";
@@ -50,13 +51,18 @@ describe("DataFilterRepository", () => {
         let repository: DataFilterRepository<PersonsTest>;
 
         beforeAll(() => {
+            const fn = jest.fn().mockImplementation(() => ({
+                getDialect: (): string => "mysql"
+            }));
+            const formatter = new DialectFormatterService(fn as any);
             repository = new DataFilterRepository(
                 PersonsTest,
                 new DataFilterScanner(),
-                new SequelizeModelScanner(),
+                new SequelizeModelScanner(formatter),
                 new DefaultAccessControlAdapter(),
                 new DefaultTranslateAdapter(),
-                new DefaultExportAdapter()
+                new DefaultExportAdapter(),
+                formatter
             );
         });
 
@@ -229,13 +235,18 @@ describe("DataFilterRepository", () => {
         let repository: DataFilterRepository<CustomAttributesTest>;
 
         beforeAll(() => {
+            const fn = jest.fn().mockImplementation(() => ({
+                getDialect: (): string => "mysql"
+            }));
+            const formatter = new DialectFormatterService(fn as any);
             repository = new DataFilterRepository(
                 CustomAttributesTest,
                 new DataFilterScanner(),
-                new SequelizeModelScanner(),
+                new SequelizeModelScanner(formatter),
                 new DefaultAccessControlAdapter(),
                 new DefaultTranslateAdapter(),
-                new DefaultExportAdapter()
+                new DefaultExportAdapter(),
+                formatter
             );
         });
 
@@ -269,13 +280,18 @@ describe("DataFilterRepository", () => {
         let repository: DataFilterRepository<CustomCoordAttributesTest>;
 
         beforeAll(() => {
+            const fn = jest.fn().mockImplementation(() => ({
+                getDialect: (): string => "mysql"
+            }));
+            const formatter = new DialectFormatterService(fn as any);
             repository = new DataFilterRepository(
                 CustomCoordAttributesTest,
                 new DataFilterScanner(),
-                new SequelizeModelScanner(),
+                new SequelizeModelScanner(formatter),
                 new DefaultAccessControlAdapter(),
                 new DefaultTranslateAdapter(),
-                new DefaultExportAdapter()
+                new DefaultExportAdapter(),
+                formatter
             );
         });
 

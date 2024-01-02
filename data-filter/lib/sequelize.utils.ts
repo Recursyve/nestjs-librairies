@@ -266,17 +266,6 @@ export class SequelizeUtils {
         return `$${path}.${attribute}$`;
     }
 
-    public static getLiteralFullName(attribute: string, path: string | string[]) {
-        if (typeof path === "string") {
-            path = path.split(".");
-        }
-        return `\`${path.join("->")}\`.\`${attribute}\``;
-    }
-
-    public static getOrderFullName(attribute: string, path: string[]) {
-        return `${path.join("->")}.${attribute}`;
-    }
-
     public static getModelSearchableAttributes(model: typeof M): string[] {
         return Object.keys(model.rawAttributes).filter(
             a => !["DATE", "DATEONLY", "VIRTUAL"].some(t => t === (model.rawAttributes[a].type as AbstractDataTypeConstructor).key)
@@ -354,16 +343,6 @@ export class SequelizeUtils {
     public static isColumnJson(model: typeof M, name: string): boolean {
         const attr = model.rawAttributes[name] ?? Object.values(model.rawAttributes).find((x) => x.field === name);
         return (attr?.type as AbstractDataTypeConstructor)?.key === "JSON";
-    }
-
-    public static getGroupLiteral(model: typeof M, group: string): string {
-        const items = group.split(".");
-        if (items.length > 1) {
-            const column = items[items.length - 1];
-            return SequelizeUtils.getLiteralFullName(column, items.slice(0, items.length - 1));
-        }
-
-        return `\`${model.name}\`.\`${group}\``;
     }
 
     public static generateWhereConditions(model: IncludeWhereModel, options?: object): WhereOptions {

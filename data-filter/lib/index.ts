@@ -16,6 +16,7 @@ import { createFilterProvider } from "./filter/filter.provider";
 import { defaultFilterOptionConfig, FilterOptionConfig } from "./filter/filter.config";
 import { FILTER_OPTION, VALIDATE_DATA } from "./constant";
 import { DataFilterValidationService } from "./services/data-filter-validation.service";
+import { DialectFormatterService } from "./services/dialect-formatter.service";
 
 export interface DataFilterConfig {
     imports?: Array<Type | DynamicModule | Promise<DynamicModule> | ForwardReference>;
@@ -33,8 +34,8 @@ export interface DataFilterFeatureConfig extends DataFilterConfig {
 
 @Global()
 @Module({
-    providers: [DataFilterScanner, SequelizeModelScanner, DataFilterService],
-    exports: [DataFilterScanner, SequelizeModelScanner, DataFilterService]
+    providers: [DataFilterScanner, SequelizeModelScanner, DataFilterService, DialectFormatterService],
+    exports: [DataFilterScanner, SequelizeModelScanner, DataFilterService, DialectFormatterService]
 })
 export class DataFilterModule {
     public static forRoot(option?: DataFilterConfig): DynamicModule {

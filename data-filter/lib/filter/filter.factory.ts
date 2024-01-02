@@ -3,6 +3,7 @@ import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
 import { DataFilterService } from "../data-filter.service";
 import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";
+import { DialectFormatterService } from "../services/dialect-formatter.service";
 import { BaseFilter } from "./base-filter";
 import { FilterService } from "./filter.service";
 
@@ -12,9 +13,10 @@ export function FilterServiceFactory<T>(options?: { disableAccessControl?: boole
         translateAdapter: TranslateAdapter,
         filter: BaseFilter<T>,
         sequelizeModelScanner: SequelizeModelScanner,
-        dataFilterService: DataFilterService
+        dataFilterService: DataFilterService,
+        dialectFormatterService: DialectFormatterService,
     ) => {
-        return new FilterService(accessControlAdapter, translateAdapter, filter, sequelizeModelScanner, dataFilterService, options);
+        return new FilterService(accessControlAdapter, translateAdapter, filter, sequelizeModelScanner, dataFilterService, dialectFormatterService, options);
     }
 }
 

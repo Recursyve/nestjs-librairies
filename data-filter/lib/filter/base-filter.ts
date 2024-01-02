@@ -1,13 +1,16 @@
 import { Type } from "@nestjs/common";
 import { TranslateAdapter } from "../adapters/translate.adapter";
+import { DialectFormatterService } from "../services/dialect-formatter.service";
 import { Filter, FilterDefinition, GroupFilter, GroupFilterDefinition } from "./filters";
 import { DefaultFilterDefinition } from "./filters/default.filter";
 import { FilterConfig, FilterModel } from "./models";
 import { ExportTypes } from "../models/export-types.model";
 import { DefaultOrderRule } from "./order-rules/default.order-rule";
+import { OrderRule, OrderRuleDefinition } from "./order-rules/order-rule";
 
 export abstract class BaseFilter<T> implements FilterModel<T> {
     private _translateService: TranslateAdapter;
+    private _dialectFormatterService: DialectFormatterService;
 
     [name: string]: FilterConfig | unknown;
     public abstract dataDefinition: Type<T>;
@@ -28,6 +31,26 @@ export abstract class BaseFilter<T> implements FilterModel<T> {
             }
             if (GroupFilter.validate(this[key] as GroupFilterDefinition)) {
                 (this[key] as GroupFilter).translateService = translateService;
+            }
+        }
+    }
+
+    public set dialectFormatterService(dialectFormatterService: DialectFormatterService) {
+        this._dialectFormatterService = dialectFormatterService;
+
+        for (const key in this) {
+            if (!this.hasOwnProperty(key) || key === "dataDefinition") {
+                continue;
+            }
+
+            if (Filter.validate(this[key] as FilterDefinition)) {
+                (this[key] as Filter).dialectFormatterService = dialectFormatterService;
+            }
+            if (GroupFilter.validate(this[key] as GroupFilterDefinition)) {
+                (this[key] as GroupFilter).dialectFormatterService = dialectFormatterService;
+            }
+            if (OrderRule.validate(this[key] as OrderRuleDefinition)) {
+                (this[key] as OrderRule).dialectFormatterService = dialectFormatterService;
             }
         }
     }

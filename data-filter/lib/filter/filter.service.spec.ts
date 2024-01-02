@@ -1,10 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { col, FindOptions, fn, Op, where } from "sequelize";
+import { Sequelize } from "sequelize-typescript";
 import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdapter } from "../adapters";
 import { DataFilterService } from "../data-filter.service";
 import { Attributes, Data, Include, Path } from "../decorators";
 import { DataFilterScanner } from "../scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";
+import { DialectFormatterService } from "../services/dialect-formatter.service";
 import { ContractSystems } from "../test/models/contracts/contract-systems.model";
 import { Contracts } from "../test/models/contracts/contracts.model";
 import { Invoices } from "../test/models/invoices/invoices.model";
@@ -87,18 +89,24 @@ describe("FilterService", () => {
     let filterService: FilterService<ContractSystemsTest>;
 
     beforeAll(() => {
+        const fn = jest.fn().mockImplementation(() => ({
+            getDialect: (): string => "mysql"
+        }));
+        const formatter = new DialectFormatterService(fn as any);
         filterService = new FilterService<ContractSystemsTest>(
             new DefaultAccessControlAdapter(),
             new DefaultTranslateAdapter(),
             new TestFilter(),
-            new SequelizeModelScanner(),
+            new SequelizeModelScanner(formatter),
             new DataFilterService(
                 new DataFilterScanner(),
-                new SequelizeModelScanner(),
+                new SequelizeModelScanner(formatter),
                 new DefaultAccessControlAdapter(),
                 new DefaultTranslateAdapter(),
-                new DefaultExportAdapter()
-            )
+                new DefaultExportAdapter(),
+                formatter
+            ),
+            formatter
         );
     });
 

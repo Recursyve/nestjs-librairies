@@ -1,6 +1,7 @@
 import { Op, WhereOptions } from "sequelize";
 import { DataFilterUserModel } from "../..";
 import { TranslateAdapter } from "../../adapters/translate.adapter";
+import { DialectFormatterService } from "../../services/dialect-formatter.service";
 import { FilterUtils } from "../filter.utils";
 import { GroupFilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { QueryRuleModel } from "../models/query.model";
@@ -25,6 +26,7 @@ export interface GroupFilterDefinition extends BaseGroupFilterDefinition {
 export class GroupFilter implements GroupFilterDefinition {
     private _type = "group_filter";
     protected _translateService: TranslateAdapter;
+    protected _dialectFormatterService: DialectFormatterService;
 
     public set translateService(translateService: TranslateAdapter) {
         this._translateService = translateService;
@@ -32,6 +34,15 @@ export class GroupFilter implements GroupFilterDefinition {
         this.rootFilter.translateService = translateService;
         if (this.valueFilter) {
             this.valueFilter.translateService = translateService;
+        }
+    }
+
+    public set dialectFormatterService(dialectFormatterService: DialectFormatterService) {
+        this._dialectFormatterService = dialectFormatterService;
+
+        this.rootFilter.dialectFormatterService = dialectFormatterService;
+        if (this.valueFilter) {
+            this.valueFilter.dialectFormatterService = dialectFormatterService;
         }
     }
 
@@ -47,7 +58,7 @@ export class GroupFilter implements GroupFilterDefinition {
     }
 
     public static validate(definition: BaseGroupFilterDefinition) {
-        return definition["_type"] === "group_filter";
+        return definition?.["_type"] === "group_filter";
     }
 
     public async getConfig(key: string, user?: DataFilterUserModel): Promise<GroupFilterBaseConfigurationModel> {

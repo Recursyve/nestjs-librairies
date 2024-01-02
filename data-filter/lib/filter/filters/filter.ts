@@ -4,6 +4,7 @@ import { IncludeWhereModel } from "../../models/include.model";
 import { PathModel } from "../../models/path.model";
 import { DataFilterUserModel } from "../../models/user.model";
 import { SequelizeUtils } from "../../sequelize.utils";
+import { DialectFormatterService } from "../../services/dialect-formatter.service";
 import { FilterUtils } from "../filter.utils";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { Condition, QueryModel, QueryRuleModel } from "../models/query.model";
@@ -72,9 +73,14 @@ export abstract class Filter implements FilterDefinition {
     private _type = "filter";
 
     protected _translateService: TranslateAdapter;
+    protected _dialectFormatterService: DialectFormatterService;
 
     public set translateService(translateService: TranslateAdapter) {
         this._translateService = translateService;
+    }
+
+    public set dialectFormatterService(dialectFormatterService: DialectFormatterService) {
+        this._dialectFormatterService = dialectFormatterService;
     }
 
     public type: FilterType;
@@ -91,7 +97,7 @@ export abstract class Filter implements FilterDefinition {
     public paranoid = true;
 
     public static validate(definition: FilterDefinition) {
-        return definition["_type"] === "filter";
+        return definition?.["_type"] === "filter";
     }
 
     protected constructor(definition?: BaseFilterDefinition) {
@@ -329,7 +335,7 @@ export abstract class Filter implements FilterDefinition {
     }
 
     private transformForJsonArray(rule: QueryRuleModel): WhereOptions {
-        const colName = this.path ? Sequelize.literal(SequelizeUtils.getLiteralFullName(this.attribute, this.path)) : Sequelize.col(this.attribute);
+        const colName = this.path ? Sequelize.literal(this._dialectFormatterService.getLiteralFullName(this.attribute, this.path)) : Sequelize.col(this.attribute);
         if (rule.operation === FilterOperatorTypes.Contains || rule.operation === FilterOperatorTypes.NotContains) {
             rule.operation = rule.operation === FilterOperatorTypes.Contains ? FilterOperatorTypes.Equal : FilterOperatorTypes.NotEqual;
         }
@@ -355,7 +361,7 @@ export abstract class Filter implements FilterDefinition {
     }
 
     private transformForJsonObject(rule: QueryRuleModel): WhereOptions {
-        const colName = this.path ? Sequelize.literal(SequelizeUtils.getLiteralFullName(this.attribute, this.path)) : Sequelize.col(this.attribute);
+        const colName = this.path ? Sequelize.literal(this._dialectFormatterService.getLiteralFullName(this.attribute, this.path)) : Sequelize.col(this.attribute);
         const value = SequelizeUtils.generateWhereValue(rule);
         if (this.json.path) {
             return Sequelize.where(Sequelize.fn("JSON_EXTRACT", colName, this.json.path), value as LogicType);

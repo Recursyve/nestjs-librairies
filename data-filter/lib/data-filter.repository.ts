@@ -14,6 +14,7 @@ import { DataFilterUserModel } from "./models/user.model";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { M, SequelizeUtils } from "./sequelize.utils";
+import { DialectFormatterService } from "./services/dialect-formatter.service";
 import { CsvUtils } from "./utils/csv.utils";
 import { XlsxUtils } from "./utils/xlsx.utils";
 
@@ -32,7 +33,8 @@ export class DataFilterRepository<Data> {
         private sequelizeModelScanner: SequelizeModelScanner,
         private accessControlAdapter: AccessControlAdapter,
         private translateService: TranslateAdapter,
-        private exportAdapter: ExportAdapter
+        private exportAdapter: ExportAdapter,
+        private dialectFormatterService: DialectFormatterService
     ) {
         this.init();
     }
@@ -140,8 +142,8 @@ export class DataFilterRepository<Data> {
                     return [];
                 }
                 const path = x.path.transformPathConfig(conditions);
-                const attributes = x.transformAttributesConfig(conditions);
-                const additionalIncludes = x.transformIncludesConfig(conditions);
+                const attributes = x.withContext(this.dialectFormatterService).transformAttributesConfig(conditions);
+                const additionalIncludes = x.withContext(this.dialectFormatterService).transformIncludesConfig(conditions);
                 return this.sequelizeModelScanner.getIncludes(this.model, path, additionalIncludes, attributes);
             }),
             ...this._config.getCustomAttributesIncludes().map(x => this.sequelizeModelScanner.getIncludes(this.model, {
@@ -157,7 +159,7 @@ export class DataFilterRepository<Data> {
 
         options.include = SequelizeUtils.reduceIncludes(nestedIncludes);
 
-        const generatedAttributes = this._config.transformAttributesConfig(conditions);
+        const generatedAttributes = this._config.withContext(this.dialectFormatterService).transformAttributesConfig(conditions);
         if (generatedAttributes) {
             if (options.attributes) {
                 options.attributes = SequelizeUtils.mergeAttributes(options.attributes, generatedAttributes);
@@ -196,8 +198,8 @@ export class DataFilterRepository<Data> {
                     return [];
                 }
                 const path = x.path.transformPathConfig(conditions);
-                const attributes = x.transformAttributesConfig(conditions);
-                const additionalIncludes = x.transformIncludesConfig(conditions);
+                const attributes = x.withContext(this.dialectFormatterService).transformAttributesConfig(conditions);
+                const additionalIncludes = x.withContext(this.dialectFormatterService).transformIncludesConfig(conditions);
                 return this.sequelizeModelScanner.getIncludes(this.model, path, additionalIncludes, attributes);
             }),
             ...this._config.getCustomAttributesIncludes().map(x => {
@@ -259,7 +261,7 @@ export class DataFilterRepository<Data> {
             }
 
             const attr = definition.ignoreInSearch ? [] : definition.searchableAttributes ?? definition.attributes;
-            const additionalIncludes = definition.transformIncludesConfig({});
+            const additionalIncludes = definition.withContext(this.dialectFormatterService).transformIncludesConfig({});
             attributes.push(
                 ...this.sequelizeModelScanner.getAttributes(
                     this.model,

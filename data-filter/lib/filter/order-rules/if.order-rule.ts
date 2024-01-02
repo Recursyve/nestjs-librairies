@@ -18,7 +18,7 @@ export class IfOrderRule extends OrderRule implements IfOrderRuleDefinition {
     }
 
     public getOrderOption(model: typeof M): OrderItemColumn {
-        const order = `IF(${this.path ? SequelizeUtils.getLiteralFullName(this.attribute, this.path) : `\`${model.name}\`.\`${this.attribute}\``}='${this.valueEquals}',${this.priority ?? 1},${this.fallbackPriority ?? 0})`;
+        const order = `IF(${this.path ? this._dialectFormatterService.getLiteralFullName(this.attribute, this.path) : this._dialectFormatterService.formatCol(model.name, this.attribute)}='${this.valueEquals}',${this.priority ?? 1},${this.fallbackPriority ?? 0})`;
         return literal(order);
     }
 }

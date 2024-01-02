@@ -1,8 +1,9 @@
-import { FindAttributeOptions, Order, WhereOptions } from "sequelize";
+import { FindAttributeOptions, Order } from "sequelize";
 import { SequelizeUtils } from "../sequelize.utils";
-import { IncludeConfig, IncludeModel, IncludeWhereModel } from "./include.model";
-import { PathConfig, PathModel } from "./path.model";
+import { DialectFormatterService } from "../services/dialect-formatter.service";
 import { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
+import { IncludeConfig, IncludeModel } from "./include.model";
+import { PathConfig } from "./path.model";
 
 export interface AttributesConfigModel {
     key: string;
@@ -25,6 +26,10 @@ export class AttributesConfig implements AttributesConfigModel {
             path: key,
             paranoid: true
         });
+    }
+
+    public withContext(dialectFormatterService: DialectFormatterService): AttributesContext {
+        return new AttributesContext(this, dialectFormatterService);
     }
 
     public setAttributes(attributes?: FindAttributeOptions) {
@@ -62,21 +67,25 @@ export class AttributesConfig implements AttributesConfigModel {
     public addCustomAttribute(attribute: CustomAttributesConfig) {
         this.customAttributes.push(attribute);
     }
+}
+
+export class AttributesContext {
+    constructor(private config: AttributesConfig, private dialectFormatterService: DialectFormatterService) {}
 
     public transformAttributesConfig(options?: object): FindAttributeOptions {
         const customAttributes = this.getCustomAttributes(options);
-        if (this.attributes) {
-            if (this.customAttributes.length) {
+        if (this.config.attributes) {
+            if (this.config.customAttributes.length) {
                 return SequelizeUtils.ensureAttributesValidity(
-                    SequelizeUtils.mergeAttributes(this.attributes, {
+                    SequelizeUtils.mergeAttributes(this.config.attributes, {
                         include: customAttributes.map(x => x.attribute)
                     })
                 );
             }
 
-            return SequelizeUtils.ensureAttributesValidity(this.attributes);
+            return SequelizeUtils.ensureAttributesValidity(this.config.attributes);
         }
-        if (!this.attributes && customAttributes.length) {
+        if (!this.config.attributes && customAttributes.length) {
             return {
                 include: customAttributes.map(x => x.attribute)
             };
@@ -84,7 +93,7 @@ export class AttributesConfig implements AttributesConfigModel {
     }
 
     public transformIncludesConfig(options?: object): IncludeModel[] {
-        return this.includes
+        return this.config.includes
             .map(x => {
                 const customAttributes = this.getCustomAttributes(options, x.path);
                 if (!customAttributes.length) {
@@ -107,7 +116,7 @@ export class AttributesConfig implements AttributesConfigModel {
             })
             .map(x => {
                 if (!options) {
-                    const { where, ...values } = x;
+                    const {where, ...values} = x;
                     return values;
                 }
 
@@ -123,11 +132,11 @@ export class AttributesConfig implements AttributesConfigModel {
     }
 
     public getCustomAttributes(options?: object, path?: string): CustomAttributesModel[] {
-        return this.customAttributes
+        return this.config.customAttributes
             .filter(x => x.config.path === path)
             .map(x => ({
                 key: x.key,
-                attribute: x.transform(options, this.path.path),
+                attribute: x.withContext(this.dialectFormatterService).transform(options, this.config.path.path),
                 path: (x.config as any).path ? {
                     path: (x.config as any).path,
                     paranoid: true

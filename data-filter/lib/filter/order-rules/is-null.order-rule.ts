@@ -1,5 +1,5 @@
 import { literal } from "sequelize";
-import { M, SequelizeUtils } from "../../sequelize.utils";
+import { M } from "../../sequelize.utils";
 import { BaseOrderRuleDefinition, OrderItemColumn, OrderRule } from "./order-rule";
 
 export class IsNullOrderRule extends OrderRule {
@@ -8,7 +8,7 @@ export class IsNullOrderRule extends OrderRule {
     }
 
     public getOrderOption(model: typeof M): OrderItemColumn {
-        const order = `${this.path ? SequelizeUtils.getLiteralFullName(this.attribute, this.path) : `\`${model.name}\`.\`${this.attribute}\``} IS NULL`;
+        const order = `${this.path ? this._dialectFormatterService.getLiteralFullName(this.attribute, this.path) : this._dialectFormatterService.formatCol(model.name, this.attribute)} IS NULL`;
         return literal(order);
     }
 }

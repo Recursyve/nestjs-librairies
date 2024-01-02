@@ -28,7 +28,7 @@ export class GeoLocalizationFilter extends GroupFilter implements GroupFilterDef
     public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions> {
         const [root, value] = this.getRules(rule);
         const name = this.rootFilter.path ?
-            SequelizeUtils.getLiteralFullName(this.rootFilter.attribute, this.rootFilter.path) :
+            this._dialectFormatterService.getLiteralFullName(this.rootFilter.attribute, this.rootFilter.path) :
             this.rootFilter.attribute;
         const [latitude, longitude] = CoordinateFilter.getCoordinates(root);
         const location = fn("ST_GeometryFromText", literal(`'POINT(${latitude} ${longitude})'`), this.srid ?? 0);

@@ -20,6 +20,7 @@ import { DataFilterService } from "../data-filter.service";
 import { DataFilterUserModel } from "../models/user.model";
 import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";
 import { M, SequelizeUtils } from "../sequelize.utils";
+import { DialectFormatterService } from "../services/dialect-formatter.service";
 import { BaseFilter } from "./base-filter";
 import { FilterUtils } from "./filter.utils";
 import {
@@ -50,6 +51,7 @@ export class FilterService<Data> {
         private model: BaseFilter<Data>,
         private sequelizeModelScanner: SequelizeModelScanner,
         private dataFilter: DataFilterService,
+        private dialectFormatterService: DialectFormatterService,
         private options?: { disableAccessControl?: boolean }
     ) {
         this.init();
@@ -65,6 +67,7 @@ export class FilterService<Data> {
             } as unknown as BaseFilter<T>,
             this.sequelizeModelScanner,
             this.dataFilter,
+            this.dialectFormatterService,
             this.options
         );
     }
@@ -216,6 +219,7 @@ export class FilterService<Data> {
         this.repository = this.dataFilter.for(this.model.dataDefinition);
         this.exportRepository = this.dataFilter.for(this.model.exportDataDefinition ?? this.model.dataDefinition);
         this.model.translateService = this.translateAdapter;
+        this.model.dialectFormatterService = this.dialectFormatterService;
 
         this.definitions = {};
         for (const key in this.model) {
@@ -408,9 +412,9 @@ export class FilterService<Data> {
 
     private addGroupOption(filter: FilterQueryModel, options: CountOptions): void {
         const model = this.repository.model;
-        options.group = [`${model.name}.id`];
+        options.group = [this.dialectFormatterService.formatCol(model.name, "id")];
         if (filter.groupBy) {
-            options.group.push(SequelizeUtils.getGroupLiteral(this.repository.model, filter.groupBy));
+            options.group.push(this.dialectFormatterService.getGroupLiteral(this.repository.model, filter.groupBy));
         }
 
         if (!filter.order || (filter.order instanceof Array && !filter.order.length)) {
@@ -431,7 +435,7 @@ export class FilterService<Data> {
             const values = order.column.split(".");
             const column = values.pop();
             if (!values.length) {
-                options.group.push(`${model.name}.${SequelizeUtils.findColumnFieldName(model, column)}`);
+                options.group.push(this.dialectFormatterService.formatCol(model.name, SequelizeUtils.findColumnFieldName(model, column)));
             } else {
                 options.group.push(...this.sequelizeModelScanner.getGroup(model, order));
             }
@@ -631,7 +635,7 @@ export class FilterService<Data> {
             }
 
             const customAttribute = this.repository.getCustomAttribute(order.column);
-            const attribute = customAttribute.transform(data) as ProjectionAlias;
+            const attribute = customAttribute.withContext(this.dialectFormatterService).transform(data) as ProjectionAlias;
             if (attribute) {
                 attributes.push(attribute);
             }
@@ -642,7 +646,7 @@ export class FilterService<Data> {
     private generateRepositoryGroupBy(filter: FilterQueryModel): GroupOption | null {
         const group: GroupOption = [];
         if (filter.groupBy) {
-            group.push(SequelizeUtils.getGroupLiteral(this.repository.model, filter.groupBy));
+            group.push(this.dialectFormatterService.getGroupLiteral(this.repository.model, filter.groupBy));
         }
 
         const groupBy = this.repository.getCustomAttributeGroupBy();
@@ -667,7 +671,7 @@ export class FilterService<Data> {
 
             const rule = this.definitions[order.column] as OrderRuleDefinition;
             if (!rule || !OrderRule.validate(rule)) {
-                group.push(`${this.repository.model.name}.${SequelizeUtils.findColumnFieldName(this.repository.model, order.column)}`);
+                group.push(this.dialectFormatterService.formatCol(this.repository.model.name, SequelizeUtils.findColumnFieldName(this.repository.model, order.column)));
             } else {
                 group.push(...this.sequelizeModelScanner.getGroup(this.repository.model, order));
             }

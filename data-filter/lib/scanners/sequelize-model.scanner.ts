@@ -2,14 +2,16 @@ import { Injectable } from "@nestjs/common";
 import { TypeUtils } from "@recursyve/nestjs-common";
 import { FindAttributeOptions, IncludeOptions, literal, Order } from "sequelize";
 import { Association, BaseAssociation, getAssociations, Model } from "sequelize-typescript";
-import { OrderModel } from "..";
-import { IncludeModel } from "..";
+import { IncludeModel, OrderModel } from "..";
 import { PathModel } from "../models/path.model";
 import { SearchAttributesModel } from "../models/search-attributes.model";
 import { M, SequelizeUtils } from "../sequelize.utils";
+import { DialectFormatterService } from "../services/dialect-formatter.service";
 
 @Injectable()
 export class SequelizeModelScanner {
+    constructor(private dialectFormatterService: DialectFormatterService) {}
+
     public getIncludes(
         model: typeof Model,
         path: PathModel,
@@ -113,7 +115,7 @@ export class SequelizeModelScanner {
             ...(attributes as string[]).map(a => ({
                 name: a,
                 key: SequelizeUtils.getAttributeFullName(a, path.path),
-                literalKey: SequelizeUtils.getLiteralFullName(a, path.path),
+                literalKey: this.dialectFormatterService.getLiteralFullName(a, path.path),
                 isJson: SequelizeUtils.isColumnJson(model as typeof M, a)
             }))
         );
@@ -134,7 +136,7 @@ export class SequelizeModelScanner {
                 ).map(a => ({
                     name: a.name,
                     key: SequelizeUtils.getAttributeFullName(a.name, [path.path, include.path].join(".")),
-                    literalKey: SequelizeUtils.getLiteralFullName(a.name, [path.path, include.path].join(".")),
+                    literalKey: this.dialectFormatterService.getLiteralFullName(a.name, [path.path, include.path].join(".")),
                     isJson: a.isJson
                 }))
             );
@@ -156,8 +158,8 @@ export class SequelizeModelScanner {
         }
         const col = SequelizeUtils.findColumnFieldName(model as typeof M, column);
         let literalOrder = values.length ?
-            SequelizeUtils.getLiteralFullName(col, values) :
-            `\`${model.name}\`.\`${col}\``;
+            this.dialectFormatterService.getLiteralFullName(col, values) :
+            this.dialectFormatterService.formatCol(model.name, col);
 
         if (orderObj.nullLast) {
             literalOrder = `-${literalOrder}`;
@@ -184,8 +186,8 @@ export class SequelizeModelScanner {
             group.push(value);
         }
         return [
-            SequelizeUtils.getOrderFullName("id", group),
-            SequelizeUtils.getOrderFullName(SequelizeUtils.findColumnFieldName(model as typeof M, column), group)
+            this.dialectFormatterService.getOrderFullName("id", group),
+            this.dialectFormatterService.getOrderFullName(SequelizeUtils.findColumnFieldName(model as typeof M, column), group)
         ];
     }
 
