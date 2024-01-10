@@ -8,36 +8,41 @@ import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
 import { BaseFilterDefinition, Filter, FilterCondition, FilterConditionRule } from "./filter";
 
-export interface RadioFilterOption {
+export interface OptionsFilterOption {
     key: string;
     value?: unknown;
     operator?: FilterOperatorTypes;
     condition?: FilterCondition;
 }
 
-export interface RadioFilterDefinition {
-    options: RadioFilterOption[];
+export type OptionsFilterSelectionMode = "radio" | "select";
+
+export interface OptionsFilterDefinition {
+    selectionMode: OptionsFilterSelectionMode;
+    options: OptionsFilterOption[];
 }
 
-export interface RadioFilterOptionConfiguration {
+export interface OptionsFilterOptionConfiguration {
     key: string;
     name?: string;
 }
 
-export interface RadioFilterConfigurationModel extends FilterBaseConfigurationModel {
-    options: RadioFilterOptionConfiguration[];
+export interface OptionsFilterConfigurationModel extends FilterBaseConfigurationModel {
+    selectionMode: OptionsFilterSelectionMode;
+    options: OptionsFilterOptionConfiguration[];
 }
 
-export class RadioFilter extends Filter implements RadioFilterDefinition {
-    public type = FilterType.Radio;
+export class OptionsFilter extends Filter implements OptionsFilterDefinition {
+    public type = FilterType.Options;
     public operators = [FilterOperatorTypes.Equal];
-    public options!: RadioFilterOption[];
+    public selectionMode!: OptionsFilterSelectionMode;
+    public options!: OptionsFilterOption[];
 
-    constructor(definition: BaseFilterDefinition & RadioFilterDefinition) {
+    constructor(definition: BaseFilterDefinition & OptionsFilterDefinition) {
         super(definition);
     }
 
-    public async getConfig<Request>(key: string, request: Request, user?: DataFilterUserModel): Promise<RadioFilterConfigurationModel | null> {
+    public async getConfig<Request>(key: string, request: Request, user?: DataFilterUserModel): Promise<OptionsFilterConfigurationModel | null> {
         const config = await super.getConfig(key, request, user);
 
         if (!config) {
@@ -46,6 +51,7 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
 
         return {
             ...config,
+            selectionMode: this.selectionMode,
             options: await Promise.all(this.options.map(async x => ({
                 key: x.key,
                 name: await this._translateService.getTranslation(
@@ -128,5 +134,19 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
         }
 
         return paths;
+    }
+}
+
+/**
+ * @deprecated: Use OptionsFilter instead
+ */
+export class RadioFilter extends OptionsFilter {
+    public type = FilterType.Radio;
+
+    constructor(definition: BaseFilterDefinition & Omit<OptionsFilterDefinition, "selectionMode">) {
+        super({
+            ...definition,
+            selectionMode: "radio"
+        });
     }
 }
