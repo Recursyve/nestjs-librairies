@@ -353,3 +353,17 @@ SelectFilter({
 ### Bugfix
 
 - Fix issues with filter group and count with joins
+
+## [10.1.0] - 2024-01-10
+
+### Added
+
+- Rename RadioFilter for OptionsFilter to support different selection mode (radio and select)
+
+### Bugfix
+
+- Fix some issues with typings for the SelectFilter
+
+### Deprecation
+
+- RadioFilter is now deprecated, you should use OptionsFilter instead
