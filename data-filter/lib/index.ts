@@ -16,6 +16,8 @@ import { createFilterProvider } from "./filter/filter.provider";
 import { defaultFilterOptionConfig, FilterOptionConfig } from "./filter/filter.config";
 import { FILTER_OPTION, VALIDATE_DATA } from "./constant";
 import { DataFilterValidationService } from "./services/data-filter-validation.service";
+import { getDataFilterRepositoryToken } from "./repositories";
+import { createDataFilterRepositoryProvider } from "./repositories/data-filter-repository.provider";
 
 export interface DataFilterConfig {
     imports?: Array<Type | DynamicModule | Promise<DynamicModule> | ForwardReference>;
@@ -28,7 +30,8 @@ export interface DataFilterConfig {
 }
 
 export interface DataFilterFeatureConfig extends DataFilterConfig {
-    filters: { filter: Type<BaseFilter<any>>; inject?: any[]; disableAccessControl?: boolean; }[];
+    filters: { filter: Type<BaseFilter<any>>; inject?: any[]; disableAccessControl?: boolean }[];
+    repositories?: Function[];
 }
 
 @Global()
@@ -83,7 +86,7 @@ export class DataFilterModule {
 
     public static forFeature(option: DataFilterFeatureConfig): DynamicModule {
         const providerOverride = Object.keys(option).map(x => {
-            if (x === "imports" || x === "filters") {
+            if (x === "imports" || x === "filters" || x === "repositories") {
                 return;
             }
             return (option as any)[x];
@@ -100,10 +103,12 @@ export class DataFilterModule {
                         inject: x.inject ?? []
                     },
                     createFilterProvider(x.filter, x.disableAccessControl)
-                ]))
+                ])),
+                ...(option?.repositories ?? []).map(createDataFilterRepositoryProvider),
             ],
             exports: [
-                ...option.filters.map(x => FilterUtils.getProviderToken(x.filter))
+                ...option.filters.map((x) => FilterUtils.getProviderToken(x.filter)),
+                ...(option?.repositories ?? []).map(getDataFilterRepositoryToken)
             ]
         };
     }
@@ -119,3 +124,4 @@ export * from "./models/export-types.model";
 export * from "./models/filter.model";
 export * from "./models/include.model";
 export * from "./models/user.model";
+export * from "./repositories";
