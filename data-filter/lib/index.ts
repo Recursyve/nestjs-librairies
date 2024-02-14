@@ -30,7 +30,7 @@ export interface DataFilterConfig {
 }
 
 export interface DataFilterFeatureConfig extends DataFilterConfig {
-    filters: { filter: Type<BaseFilter<any>>; inject?: any[]; disableAccessControl?: boolean }[];
+    filters: { filter: Type<BaseFilter<any>>; inject?: any[]; disableAccessControl?: boolean; }[];
     repositories?: Function[];
 }
 
