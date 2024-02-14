@@ -110,7 +110,7 @@ export class ResourceAccessService {
     }
 
     public async deleteResourceAccesses(resourceName: string, resourceId: ResourceId): Promise<void> {
-        await this.redisService.scanDel(RedisKeyUtils.userResourceIdPattern(resourceName, resourceId));
+        await this.redisService.scanDel(RedisKeyUtils.userResourceIdPattern(resourceName, resourceId), { count: 10000 });
     }
 
     private async setUserAccessControlType(

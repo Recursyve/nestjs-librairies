@@ -103,7 +103,7 @@ export class ResourceAccessControlService {
         );
 
         const nestedMatchedKeys = await Promise.all(
-            keyPatterns.map((keyPattern) => this.redisService.scan(keyPattern))
+            keyPatterns.map((keyPattern) => this.redisService.scan(keyPattern, { count: 10000 }))
         );
         const matchedKeysWithResourceId = nestedMatchedKeys.map(
             (matchedKeys, index) => [matchedKeys, parsedResourceIds[index]] as [string[], ResourceId]
@@ -165,7 +165,8 @@ export class ResourceAccessControlService {
 
     private async getWildcardUsersAccess(options?: { role?: string; action?: AccessActionType }): Promise<Users[]> {
         const matchedKeys = await this.redisService.scan(
-            RedisKeyUtils.usersResourceActionWildcardPattern(this.resourceName, options?.role)
+            RedisKeyUtils.usersResourceActionWildcardPattern(this.resourceName, options?.role),
+            { count: 10000 }
         );
 
         if (!options?.action) {

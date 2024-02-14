@@ -34,10 +34,10 @@ export class AccessControlService {
 
     public async clearCacheForUser(user: Users) {
         await Promise.all([
-            this.redisService.scanDel(RedisKeyUtils.userAccessControl(user, "*")),
-            this.redisService.scanDel(RedisKeyUtils.userResourceActionKey(user, "*", "*" as AccessActionType)),
-            this.redisService.scanDel(RedisKeyUtils.userResourceActionPattern(user, "*")),
-            this.redisService.scanDel(RedisKeyUtils.userResourceIdKey("*", "*" as any, user)),
+            this.redisService.scanDel(RedisKeyUtils.userAccessControl(user, "*"), { count: 10000 }),
+            this.redisService.scanDel(RedisKeyUtils.userResourceActionKey(user, "*", "*" as AccessActionType), { count: 10000 }),
+            this.redisService.scanDel(RedisKeyUtils.userResourceActionPattern(user, "*"), { count: 10000 }),
+            this.redisService.scanDel(RedisKeyUtils.userResourceIdKey("*", "*" as any, user), { count: 10000 }),
         ]);
     }
 }
