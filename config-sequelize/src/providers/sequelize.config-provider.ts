@@ -86,15 +86,20 @@ export class SequelizeConfigProvider implements IConfigProvider {
                         };
                     })
                     .filter(({ key }) => key)
-                    .map(({ key, value }) =>
-                        this.repository.update(
-                            { value },
-                            {
-                                where: { key },
-                                transaction
-                            }
-                        )
-                    )
+                    .map(async ({ key, value }) => {
+                        const constant = await this.repository.findOne({ where: { key }, transaction });
+                        if (constant) {
+                            return this.repository.update(
+                                { value },
+                                {
+                                    where: { key },
+                                    transaction
+                                }
+                            );
+                        }
+
+                        return this.repository.create({ key, value }, { transaction });
+                    })
             );
 
             for (const key in update) {
