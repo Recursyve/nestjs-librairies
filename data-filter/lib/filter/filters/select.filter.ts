@@ -13,6 +13,8 @@ export interface SelectFilterGetValuesOptions<T = any, User = any, Request = any
     value: T;
     user?: User;
     request?: Request
+    page: number | null;
+    pageSize: number | null;
 }
 
 export interface SelectFilterGetResourceOptions<User = any, Request = any> {
@@ -22,7 +24,7 @@ export interface SelectFilterGetResourceOptions<User = any, Request = any> {
 }
 
 export interface SelectFilterDefinition<T> {
-    values: ({ value, user, request }: SelectFilterGetValuesOptions) => Promise<SelectFilterValue[]>;
+    values: ({ value, page, pageSize, user, request }: SelectFilterGetValuesOptions) => Promise<SelectFilterValue[]>;
     lazyLoading?: boolean;
     getResourceById?: ({ id, user, request }: SelectFilterGetResourceOptions) => Promise<SelectFilterValue | null>;
 }
@@ -51,7 +53,7 @@ export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T>
 
         return {
             ...config,
-            values: this.lazyLoading ? [] : await this.values({ value: null, user, request }),
+            values: this.lazyLoading ? [] : await this.values({ value: null, user, request, page: null, pageSize: null }),
             lazyLoading: this.lazyLoading
         };
     }
