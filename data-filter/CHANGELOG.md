@@ -323,3 +323,9 @@ SelectFilter({
 ### Bugfix
 
 -  Fix issues with date time filters with a path
+
+## [9.4.0] - 2024-08-13
+
+### Added
+
+- Added page and page size query params for SelectFilter
