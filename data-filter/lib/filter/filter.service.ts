@@ -101,10 +101,25 @@ export class FilterService<Data> {
 
         const filter = this.definitions[search.id];
         if (filter instanceof SelectFilter) {
-            return await filter.values({ value: search.value, user, request });
+            return await filter.values({
+                value: search.value,
+                user,
+                request,
+                page: this.convertNumber(search.page),
+                pageSize: this.convertNumber(search.pageSize),
+            });
         }
 
         return [];
+    }
+
+    private convertNumber(value?: string | number): number | null {
+        if (!value) {
+            return null;
+        }
+
+        const parsedNumber = Number(value);
+        return isNaN(parsedNumber) ? null : parsedNumber;
     }
 
     public async findResourceValueById(request: any, search: FilterResourceValueModel, user?: DataFilterUserModel): Promise<SelectFilterValue | null> {
