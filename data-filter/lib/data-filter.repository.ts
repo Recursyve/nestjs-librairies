@@ -449,7 +449,7 @@ export class DataFilterRepository<Data> {
         while (keys.length) {
             key = keys.shift() as string;
             if (data) {
-                data = (data as string)[key as any] as any;
+                data = (data as any)[key as any] as any;
             }
         }
 
