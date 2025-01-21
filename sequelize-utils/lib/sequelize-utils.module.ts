@@ -30,5 +30,6 @@ export class SequelizeUtilsModule implements OnModuleInit {
         this.sequelize.addHook("afterBulkCreate", "transform-date-only", AfterBulkCreateFormatDateOnlyHook);
         this.sequelize.addHook("afterCreate", "transform-date-only", AfterCreateFormatDateOnlyHook);
         this.sequelize.addHook("afterFind", "transform-date-only", AfterFindFormatDateOnlyHook);
+        this.sequelize.addHook("afterUpdate", "transform-date-only", AfterFindFormatDateOnlyHook);
     }
 }
