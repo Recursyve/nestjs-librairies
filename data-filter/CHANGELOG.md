@@ -329,3 +329,9 @@ SelectFilter({
 ### Added
 
 - Added page and page size query params for SelectFilter
+
+## [9.4.1] - 2025-01-28
+
+### Bugfix
+
+-  Fix issues with json columns in Filters
