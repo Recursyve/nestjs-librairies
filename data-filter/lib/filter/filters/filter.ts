@@ -358,7 +358,7 @@ export abstract class Filter implements FilterDefinition {
         const colName = this.path ? Sequelize.literal(SequelizeUtils.getLiteralFullName(this.attribute, this.path)) : Sequelize.col(this.attribute);
         const value = SequelizeUtils.generateWhereValue(rule);
         if (this.json.path) {
-            return Sequelize.where(Sequelize.fn("JSON_EXTRACT", colName, this.json.path), value as LogicType);
+            return Sequelize.where(Sequelize.fn("JSON_EXTRACT", colName, Sequelize.literal("$." + this.json.path)), value as LogicType);
         }
 
         return Sequelize.where(Sequelize.fn("JSON_EXTRACT", colName), value as LogicType);
