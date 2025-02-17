@@ -335,3 +335,53 @@ SelectFilter({
 ### Bugfix
 
 -  Fix issues with json columns in Filters
+
+## [10.0.0] - 2023-10-18
+
+### Added
+
+- Upgrade @nestjs dependencies to 10.x.x
+
+## [10.0.1] - 2023-10-18
+
+### Bugfix
+
+- Fix issues with filters from json columns
+
+## [10.0.2] - 2023-11-22
+
+### Bugfix
+
+- Fix issues with filter group and count with joins
+
+## [10.1.0] - 2024-01-10
+
+### Added
+
+- Rename RadioFilter for OptionsFilter to support different selection mode (radio and select)
+
+### Bugfix
+
+- Fix some issues with typings for the SelectFilter
+
+### Deprecation
+
+- RadioFilter is now deprecated, you should use OptionsFilter instead
+
+## [10.1.1] - 2024-05-10
+
+### Bugfix
+
+- Fix crash caused when using an old client library.
+
+## [10.1.2] - 2024-05-10
+
+### Bugfix
+
+- Fix crash caused when using an old client library.
+
+## [10.1.3] - 2025-01-19
+
+### Patch
+
+- Update dependencies

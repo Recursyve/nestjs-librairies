@@ -518,9 +518,9 @@ export class FilterService<Data> {
             options.where = await this.getAccessControlWhereCondition(options.where, userOrOFilter as Users);
         }
 
-        const order = this.getOrderOptions(filter.order as OrderModel[]);
-
-        const nonNestedOrderColumns = (filter.order as OrderModel[])
+        const order = this.getOrderOptions(filter.order ?? []);
+        const nonNestedOrderColumns = (Array.isArray(filter.order) ? filter.order : [filter.order])
+            .filter((order): order is OrderModel => !!order)
             .map(order => {
                 const rule = this.definitions[order.column] as OrderRuleDefinition;
                 if (!rule || !OrderRule.validate(rule)) {
@@ -530,7 +530,7 @@ export class FilterService<Data> {
                 }
             })
             .filter(column => column && !column.includes(".") && !repository.hasCustomAttribute(column));
-        const customAttributes = this.getOrderCustomAttribute(filter.order as OrderModel[], filter.data);
+        const customAttributes = filter.order ? this.getOrderCustomAttribute(filter.order, filter.data) : [];
 
         const values = await repository.model.findAll({
             ...options,

@@ -9,7 +9,7 @@ export interface SelectFilterValue {
     name: string;
 }
 
-export interface SelectFilterGetValuesOptions<T = any, User = any, Request = any> {
+export interface SelectFilterGetValuesOptions<T = any, User = DataFilterUserModel, Request = any> {
     value: T;
     user?: User;
     request?: Request
@@ -17,7 +17,7 @@ export interface SelectFilterGetValuesOptions<T = any, User = any, Request = any
     pageSize: number | null;
 }
 
-export interface SelectFilterGetResourceOptions<User = any, Request = any> {
+export interface SelectFilterGetResourceOptions<User = DataFilterUserModel, Request = any> {
     id: number | string;
     user?: User;
     request?: Request

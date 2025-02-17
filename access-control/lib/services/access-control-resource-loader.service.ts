@@ -22,7 +22,9 @@ export class AccessControlResourceLoaderService {
             return this.fetchingResources.get(fetchKey) as Observable<Resources>;
         }
 
-        const resources$ = from(this.fetchResources(user, resourceName));
+        const resources$ = from(this.fetchResources(user, resourceName)).pipe(
+            map((res) => res === null ? Resources.fromIds([]) : res),
+        );
         this.fetchingResources.set(fetchKey, resources$);
 
         return resources$.pipe(
