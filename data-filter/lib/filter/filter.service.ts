@@ -622,8 +622,12 @@ export class FilterService<Data> {
             const defaultOrders = Array.isArray(this.model.defaultOrderRule.order)
                 ? this.model.defaultOrderRule.order
                 : [this.model.defaultOrderRule.order];
+           
+            const applicableDefaultOrderRule = defaultOrders.filter(
+                (order) => !(orders as OrderModel[]).some((o) => o.column === order.column)
+            );
 
-            orders = [...defaultOrders, ...orders];
+            orders = [...applicableDefaultOrderRule, ...orders];
         }
 
         const generatedOrder: Order = [];
