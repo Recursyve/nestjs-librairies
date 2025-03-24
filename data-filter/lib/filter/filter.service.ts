@@ -518,7 +518,7 @@ export class FilterService<Data> {
             options.where = await this.getAccessControlWhereCondition(options.where, userOrOFilter as Users);
         }
 
-        const order = this.getOrderOptions(filter.order ?? []);
+        const order = this.getOrderOptions(filter.order ?? [], "language" in userOrOFilter ? userOrOFilter.language ?? null : null);
         const nonNestedOrderColumns = (Array.isArray(filter.order) ? filter.order : [filter.order])
             .filter((order): order is OrderModel => !!order)
             .map(order => {
@@ -613,7 +613,7 @@ export class FilterService<Data> {
         ];
     }
 
-    private getOrderOptions(orders: OrderModel | OrderModel[]): Order {
+    private getOrderOptions(orders: OrderModel | OrderModel[], language: string  | null): Order {
         if (!Array.isArray(orders)) {
             orders = [orders];
         }
@@ -644,7 +644,7 @@ export class FilterService<Data> {
             if (!rule || !OrderRule.validate(rule)) {
                 generatedOrder.push(this.sequelizeModelScanner.getOrder(this.repository.model, order) as OrderItem);
             } else {
-                generatedOrder.push([rule.getOrderOption(this.repository.model), order.direction.toUpperCase()]);
+                generatedOrder.push([rule.getOrderOption(this.repository.model, language), order.direction.toUpperCase()]);
             }
         }
 

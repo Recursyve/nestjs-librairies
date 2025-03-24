@@ -10,7 +10,7 @@ export interface BaseOrderRuleDefinition {
 }
 
 export interface OrderRuleDefinition extends BaseOrderRuleDefinition, IRule {
-    getOrderOption(model: typeof M): OrderItemColumn;
+    getOrderOption(model: typeof M, language: string | null): OrderItemColumn;
 }
 
 export abstract class OrderRule implements OrderRuleDefinition {
@@ -29,5 +29,5 @@ export abstract class OrderRule implements OrderRuleDefinition {
         return definition["_type"] === "order_rule";
     }
 
-    public abstract getOrderOption(model: typeof M): OrderItemColumn;
+    public abstract getOrderOption(model: typeof M, language: string | null): OrderItemColumn;
 }
