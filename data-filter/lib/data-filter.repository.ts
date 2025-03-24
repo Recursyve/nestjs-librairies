@@ -108,9 +108,9 @@ export class DataFilterRepository<Data> {
         return this.model.count(options);
     }
 
-    public async search(search: string, options?: FindOptions, conditions?: object): Promise<Data[]> {
+    public async search(search: string, language: string | null = null, options?: FindOptions, conditions?: object): Promise<Data[]> {
         const findOptions = this.generateFindOptions(options, conditions);
-        this.addSearchCondition(search, findOptions);
+        this.addSearchCondition(search, findOptions, language);
 
         const result = await this.model.findAll(findOptions);
         if (!result?.length) {
@@ -121,7 +121,7 @@ export class DataFilterRepository<Data> {
 
     public async searchFromUser(user: DataFilterUserModel, search: string, options?: FindOptions, conditions?: object): Promise<Data[]> {
         const findOptions = this.generateFindOptions(options, conditions);
-        this.addSearchCondition(search, findOptions);
+        this.addSearchCondition(search, findOptions, user.language);
 
         findOptions.where = await this.mergeAccessControlCondition(findOptions.where, user);
         const result = await this.model.findAll(findOptions);
@@ -258,7 +258,7 @@ export class DataFilterRepository<Data> {
                 continue;
             }
 
-            const attr = definition.ignoreInSearch ? [] : definition.searchableAttributes ?? definition.attributes;
+            const attr = (definition.ignoreInSearch || definition.searchableTranslationAttributes?.length && !definition.searchableAttributes?.length) ? [] : definition.searchableAttributes ?? definition.attributes;
             const additionalIncludes = definition.transformIncludesConfig({});
             attributes.push(
                 ...this.sequelizeModelScanner.getAttributes(
@@ -266,6 +266,41 @@ export class DataFilterRepository<Data> {
                     definition.path as PathModel,
                     additionalIncludes,
                     attr
+                )
+            );
+        }
+
+        return attributes;
+    }
+
+    public getSearchTranslationAttributes(): SearchAttributesModel[] {
+        if (!this._config.getSearchableTranslationAttributes().length) {
+            return [];
+        }
+
+        const attributes: SearchAttributesModel[] = [];
+        const modelAttr = this._config.getSearchableTranslationAttributes();
+        attributes.push(
+            ...modelAttr.map(attribute => ({
+                name: attribute,
+                key: attribute,
+                isJson: SequelizeUtils.isColumnJson(this.model, attribute),
+                isTranslationAttribute: true
+            }))
+        );
+
+        for (const definition of this._definitions) {
+            if (!definition.path || !definition.searchableTranslationAttributes?.length) {
+                continue;
+            }
+
+            const additionalIncludes = definition.transformIncludesConfig({});
+            attributes.push(
+                ...this.sequelizeModelScanner.getAttributes(
+                    this.model,
+                    definition.path as PathModel,
+                    additionalIncludes,
+                    definition.searchableTranslationAttributes
                 )
             );
         }
@@ -374,7 +409,7 @@ export class DataFilterRepository<Data> {
         this._definitions = this.dataFilterScanner.getAttributes(this.dataDef);
     }
 
-    public addSearchCondition(search: string, options: FindOptions): void {
+    public addSearchCondition(search: string, options: FindOptions, language: string | null = null): void {
         if (!search) {
             return;
         }
@@ -393,9 +428,12 @@ export class DataFilterRepository<Data> {
 
         const where = options.where;
         const generateFieldsObject = (searchValue: string) =>
-            this.getSearchAttributes()
+            [
+                ...this.getSearchAttributes(), 
+                ...this.getSearchTranslationAttributes()
+            ]
                 .map(a => {
-                    if (a.isJson) {
+                    if (a.isJson && !a.isTranslationAttribute) {
                         const field = a.literalKey ?? `\`${this.model.name}\`.\`${a.key}\``;
 
                         /**
@@ -405,6 +443,13 @@ export class DataFilterRepository<Data> {
                         const value = this.model.sequelize?.escape(`%${searchValue.toUpperCase()}%`);
                         return new Utils.Literal(`UPPER(JSON_EXTRACT(${field}, '$')) LIKE ${value}`);
                     }
+
+                    if (a.isJson && a.isTranslationAttribute) {
+                        const field = a.literalKey ?? `\`${this.model.name}\`.\`${a.name}\``;
+                        const value = this.model.sequelize?.escape(`%${searchValue.toUpperCase()}%`);
+                        return new Utils.Literal(`UPPER(JSON_UNQUOTE(JSON_EXTRACT(${field}, '$.${language}'))) LIKE ${value}`);
+                    }
+
                     return {
                         [a.key]: {
                             [Op.like]: `%${searchValue}%`

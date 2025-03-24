@@ -135,7 +135,8 @@ export class SequelizeModelScanner {
                     name: a.name,
                     key: SequelizeUtils.getAttributeFullName(a.name, [path.path, include.path].join(".")),
                     literalKey: SequelizeUtils.getLiteralFullName(a.name, [path.path, include.path].join(".")),
-                    isJson: a.isJson
+                    isJson: a.isJson,
+                    isTranslationAttribute: include.searchableTranslationAttributes?.includes(a.name) ?? false
                 }))
             );
         }

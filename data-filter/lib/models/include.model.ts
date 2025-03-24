@@ -23,6 +23,7 @@ export interface IncludeModel {
     path: string;
     attributes?: FindAttributeOptions;
     searchableAttributes?: string[];
+    searchableTranslationAttributes?: string[];
     ignoreInSearch?: boolean;
     order?: Order;
     where?: WhereOptions;
