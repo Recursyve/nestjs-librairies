@@ -614,25 +614,21 @@ export class FilterService<Data> {
     }
 
     private getOrderOptions(orders: OrderModel | OrderModel[], language: string  | null): Order {
-        if (!Array.isArray(orders)) {
-            orders = [orders];
-        }
+        let orderColumns = Array.isArray(orders) ? orders : [orders];
 
         if (this.model.defaultOrderRule) {
             const defaultOrders = Array.isArray(this.model.defaultOrderRule.order)
                 ? this.model.defaultOrderRule.order
                 : [this.model.defaultOrderRule.order];
            
-            const applicableDefaultOrderRule = defaultOrders.filter(
-                (order) => !(orders as OrderModel[]).some((o) => o.column === order.column)
-            );
+            const applicableDefaultOrderRule = defaultOrders.filter((order) => !orderColumns.some((o) => o.column === order.column));
 
-            orders = [...applicableDefaultOrderRule, ...orders];
+            orderColumns = [...applicableDefaultOrderRule, ...orderColumns];
         }
 
         const generatedOrder: Order = [];
 
-        for (const order of orders) {
+        for (const order of orderColumns) {
             if (!order?.column || !order.direction) {
                 continue;
             }
