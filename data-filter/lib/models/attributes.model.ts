@@ -13,9 +13,11 @@ export interface AttributesConfigModel {
 }
 
 export class AttributesConfig implements AttributesConfigModel {
+    private _searchableAttributes?: string[];
+
     public readonly key: string;
     public attributes?: FindAttributeOptions;
-    public searchableAttributes?: string[];
+    public searchableTranslationAttributes?: string[];
     public path: PathConfig;
     public includes: IncludeConfig[] = [];
     public customAttributes: CustomAttributesConfig[] = [];
@@ -29,12 +31,20 @@ export class AttributesConfig implements AttributesConfigModel {
         });
     }
 
+    public get searchableAttributes(): string[] | undefined {
+        return this._searchableAttributes?.filter(attribute => !this.searchableTranslationAttributes?.includes(attribute));
+    }
+
     public setAttributes(attributes?: FindAttributeOptions) {
         this.attributes = attributes;
     }
 
     public setSearchableAttributes(attributes: string[]) {
-        this.searchableAttributes = attributes;
+        this._searchableAttributes = attributes;
+    }
+
+    public setSearchableTranslationAttributes(attributes: string[]): void {
+        this.searchableTranslationAttributes = attributes;
     }
 
     public setPath(path: PathConfig) {

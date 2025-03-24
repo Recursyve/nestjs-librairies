@@ -144,7 +144,7 @@ export class FilterService<Data> {
 
         const countOptions = await this.getFindOptions(this.repository.model, options.query);
         if (options.search) {
-            this.addSearchCondition(options.search, countOptions);
+            this.addSearchCondition(options.search, countOptions, user?.language ?? null);
         }
         return user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions);
     }
@@ -162,7 +162,7 @@ export class FilterService<Data> {
 
         const countOptions = await this.getFindOptions(this.repository.model, options.query, options.data);
         if (options.search) {
-            this.addSearchCondition(options.search, countOptions);
+            this.addSearchCondition(options.search, countOptions, user?.language ?? null);
         }
         if (options.order) {
             this.addOrderCondition(options.order, countOptions, options.data);
@@ -191,7 +191,7 @@ export class FilterService<Data> {
         }
 
         if (options.search) {
-            this.addSearchCondition(options.search, findOptions);
+            this.addSearchCondition(options.search, findOptions, user?.language ?? null);
         }
         if (options.order) {
             this.addOrderCondition(options.order, findOptions, options.data);
@@ -396,13 +396,13 @@ export class FilterService<Data> {
         }
     }
 
-    private addSearchCondition(search: FilterSearchModel, options: CountOptions): void {
+    private addSearchCondition(search: FilterSearchModel, options: CountOptions, language: string | null): void {
         const value = search?.value?.toString();
         if (!value?.length) {
             return;
         }
 
-        this.repository.addSearchCondition(search.value, options);
+        this.repository.addSearchCondition(search.value, options, language);
     }
 
     private addOrderCondition(orders: OrderModel[], options: CountOptions, data?: object): void {

@@ -3,4 +3,5 @@ export interface SearchAttributesModel {
     key: string;
     literalKey?: string;
     isJson?: boolean;
+    isTranslationAttribute?: boolean;
 }
