@@ -526,9 +526,6 @@ export class FilterService<Data> {
             options.where = await this.getAccessControlWhereCondition(options.where, user);
         }
 
-        console.log(filter);
-        
-
         const order = this.getOrderOptions(filter.order ?? [], { request, user });
         const nonNestedOrderColumns = (Array.isArray(filter.order) ? filter.order : [filter.order])
             .filter((order): order is OrderModel => !!order)
