@@ -1,13 +1,20 @@
-import { M, SequelizeUtils } from "../../sequelize.utils";
+import { literal } from "sequelize";
+import { M } from "../../sequelize.utils";
 import { BaseOrderRuleDefinition, OrderItemColumn, OrderRule } from "./order-rule";
 
-export class TranslationOrderRule extends OrderRule {
-    constructor(definition: BaseOrderRuleDefinition, private readonly defaultLanguage: string) {
+export interface TranslationRuleDefinition {
+    defaultLanguage: string;
+}
+
+export class TranslationOrderRule extends OrderRule implements TranslationRuleDefinition {
+    public defaultLanguage!: string;
+
+    constructor(definition: BaseOrderRuleDefinition & TranslationRuleDefinition) {
         super(definition);
     }
 
     public getOrderOption(model: typeof M, language: string | null): OrderItemColumn {
         const lang = language ?? this.defaultLanguage;
-        return `UPPER(JSON_UNQUOTE(JSON_EXTRACT(${`\`${model.name}\`.\`${this.attribute}\``}, '$.${lang}')))`;
+        return literal(`UPPER(JSON_UNQUOTE(JSON_EXTRACT(${`\`${model.name}\`.\`${this.attribute}\``}, '$.${lang}')))`);
     }
 }
