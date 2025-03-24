@@ -107,7 +107,11 @@ export class DataFilterConfig implements DataFilterConfigModel {
             return [];
         }
 
-        if (this.searchableAttributes) {
+        if (!this.searchableAttributes?.length && this.searchableTranslationAttributes?.length) {
+            return [];
+        }
+
+        if (this.searchableAttributes ) {
             return SequelizeUtils.getModelSearchableFieldAttributes(this.model as typeof M, this.searchableAttributes);
         }
 

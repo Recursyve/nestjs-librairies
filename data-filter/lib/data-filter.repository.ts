@@ -290,7 +290,7 @@ export class DataFilterRepository<Data> {
         );
 
         for (const definition of this._definitions) {
-            if (!definition.path || !definition.searchableTranslationAttributes?.length) {
+            if (!definition.path || definition.ignoreInSearch || !definition.searchableTranslationAttributes?.length) {
                 continue;
             }
 
@@ -300,7 +300,8 @@ export class DataFilterRepository<Data> {
                     this.model,
                     definition.path as PathModel,
                     additionalIncludes,
-                    definition.searchableTranslationAttributes
+                    definition.searchableTranslationAttributes,
+                    true
                 )
             );
         }

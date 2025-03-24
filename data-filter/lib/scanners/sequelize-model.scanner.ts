@@ -94,7 +94,8 @@ export class SequelizeModelScanner {
         model: typeof Model,
         path: PathModel,
         additionalIncludes: IncludeModel[],
-        attributes?: FindAttributeOptions
+        attributes?: FindAttributeOptions,
+        isTranslationAttribute = false
     ): SearchAttributesModel[] {
         const objects = path.path.split(".");
         if (!objects.length) {
@@ -114,31 +115,34 @@ export class SequelizeModelScanner {
                 name: a,
                 key: SequelizeUtils.getAttributeFullName(a, path.path),
                 literalKey: SequelizeUtils.getLiteralFullName(a, path.path),
-                isJson: SequelizeUtils.isColumnJson(model as typeof M, a)
+                isJson: SequelizeUtils.isColumnJson(model as typeof M, a),
+                isTranslationAttribute
             }))
         );
 
-        for (const include of additionalIncludes) {
-            if (include.ignoreInSearch) {
-                continue;
+        if (!isTranslationAttribute) {
+            for (const include of additionalIncludes) {
+                if (include.ignoreInSearch) {
+                    continue;
+                }
+    
+                result.push(
+                    ...this.getAttributes(
+                        model as typeof Model,
+                        {
+                            path: include.path
+                        },
+                        [],
+                        include.searchableAttributes ?? include.attributes
+                    ).map(a => ({
+                        name: a.name,
+                        key: SequelizeUtils.getAttributeFullName(a.name, [path.path, include.path].join(".")),
+                        literalKey: SequelizeUtils.getLiteralFullName(a.name, [path.path, include.path].join(".")),
+                        isJson: a.isJson,
+                        isTranslationAttribute: include.searchableTranslationAttributes?.includes(a.name) ?? false
+                    }))
+                );
             }
-
-            result.push(
-                ...this.getAttributes(
-                    model as typeof Model,
-                    {
-                        path: include.path
-                    },
-                    [],
-                    include.searchableAttributes ?? include.attributes
-                ).map(a => ({
-                    name: a.name,
-                    key: SequelizeUtils.getAttributeFullName(a.name, [path.path, include.path].join(".")),
-                    literalKey: SequelizeUtils.getLiteralFullName(a.name, [path.path, include.path].join(".")),
-                    isJson: a.isJson,
-                    isTranslationAttribute: include.searchableTranslationAttributes?.includes(a.name) ?? false
-                }))
-            );
         }
 
         return result;
