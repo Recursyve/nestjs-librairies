@@ -36,7 +36,7 @@ import { QueryModel, QueryRuleModel } from "./models";
 import { FilterConfigurationSearchModel } from "./models/filter-configuration-search.model";
 import { FilterConfigurationModel } from "./models/filter-configuration.model";
 import { FilterResourceValueModel } from "./models/filter-resource-value.model";
-import { OrderRule, OrderRuleDefinition } from "./order-rules/order-rule";
+import { OrderRule, OrderRuleContext, OrderRuleDefinition } from "./order-rules/order-rule";
 
 @Injectable()
 export class FilterService<Data> {
@@ -149,12 +149,16 @@ export class FilterService<Data> {
         return user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions);
     }
 
-    public async filter(user: DataFilterUserModel, options: FilterQueryModel): Promise<FilterResultModel<Data>>;
-    public async filter(options: FilterQueryModel): Promise<FilterResultModel<Data>>;
-    public async filter(...args: [DataFilterUserModel | FilterQueryModel, FilterQueryModel?]): Promise<FilterResultModel<Data>> {
-        const [userOrOpt, opt] = args;
-        const options = opt ? opt : userOrOpt as FilterQueryModel;
-        const user = opt ? userOrOpt as DataFilterUserModel : null;
+    public async filter<Request>(user: DataFilterUserModel, request: Request, options: FilterQueryModel): Promise<FilterResultModel<Data>>;
+    public async filter<Request>(request: Request, options: FilterQueryModel): Promise<FilterResultModel<Data>>;
+    public async filter<Request>(
+        userOrRequest: DataFilterUserModel | Request, 
+        requestOrOptions: Request | FilterQueryModel,
+        maybeOptions?: FilterQueryModel
+    ): Promise<FilterResultModel<Data>> {
+        const options = maybeOptions ?? (requestOrOptions as FilterQueryModel);
+        const request = maybeOptions ? (requestOrOptions as Request) : (userOrRequest as Request);
+        const user = maybeOptions ? (userOrRequest as DataFilterUserModel) : null;
 
         if (options.order) {
             options.order = this.normalizeOrder(options.order);
@@ -170,7 +174,7 @@ export class FilterService<Data> {
         this.addGroupOption(options, countOptions);
 
         const total = await (user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions));
-        const values = await (user ? this.findValues(user, options, countOptions) : this.findValues(options, countOptions));
+        const values = await (user ? this.findValues(user, request, options, countOptions) : this.findValues(request, options, countOptions));
         return {
             total,
             page: options.page,
@@ -178,8 +182,9 @@ export class FilterService<Data> {
         };
     }
 
-    public async downloadData(
+    public async downloadData<Request>(
         user: DataFilterUserModel | null,
+        request: Request,
         type: ExportTypes,
         options: FilterQueryModel,
         exportOptions?: object
@@ -197,7 +202,7 @@ export class FilterService<Data> {
             this.addOrderCondition(options.order, findOptions, options.data);
         }
         delete options.page;
-        const values = await (user ? this.findValues(user, options, findOptions, this.exportRepository) : this.findValues(options, findOptions, this.exportRepository));
+        const values = await (user ? this.findValues(user, request, options, findOptions, this.exportRepository) : this.findValues(request, options, findOptions, this.exportRepository));
         const headers = await this.model.getExportedFieldsKeys(type);
         if (headers.length) {
             const data = await Promise.all(values.map((value) => this.model.getExportedFields(value, user?.language ?? "fr", type)));
@@ -500,25 +505,31 @@ export class FilterService<Data> {
         }
     }
 
-    private async findValues<Users extends DataFilterUserModel>(user: Users, filter: FilterQueryModel, options: FindOptions, repository?: DataFilterRepository<Data>): Promise<Data[]>;
-    private async findValues<Users extends DataFilterUserModel>(filter: FilterQueryModel, options: FindOptions, repository?: DataFilterRepository<Data>): Promise<Data[]>;
-    private async findValues<Users extends DataFilterUserModel>(...args: [Users | FilterQueryModel, FilterQueryModel | FindOptions, FindOptions | DataFilterRepository<Data> | undefined, DataFilterRepository<Data>?]): Promise<Data[]> {
-        const [userOrOFilter, filterOrOpt, optOrRepo, repo] = args;
-        const optOrRepoIsRepo = optOrRepo instanceof DataFilterRepository;
+    private async findValues<Users extends DataFilterUserModel, Request>(user: Users, request: Request, filter: FilterQueryModel, options: FindOptions, repository?: DataFilterRepository<Data>): Promise<Data[]>;
+    private async findValues<Users extends DataFilterUserModel, Request>(request: Request, filter: FilterQueryModel, options: FindOptions, repository?: DataFilterRepository<Data>): Promise<Data[]>;
+    private async findValues<Users extends DataFilterUserModel, Request>(
+        userOrRequest: Users | Request,
+        requestOrFilter: Request | FilterQueryModel,
+        filterOrOptions: FilterQueryModel | FindOptions,
+        optionsOrRepository?: FindOptions | DataFilterRepository<Data>,
+        maybeRepository?: DataFilterRepository<Data>
+    ): Promise<Data[]> {
+        const optionsOrRepositoryIsRepository = optionsOrRepository instanceof DataFilterRepository;
 
-        const options = optOrRepo && !optOrRepoIsRepo ? optOrRepo : filterOrOpt as FindOptions;
-        const filter = optOrRepo && !optOrRepoIsRepo ? filterOrOpt as FilterQueryModel : userOrOFilter as FilterQueryModel;
-
-        const repository = repo ?? (optOrRepoIsRepo ? optOrRepo : this.repository);
-
-        /**
-         * This means that findValues was called with a user
-         */
-        if (repo) {
-            options.where = await this.getAccessControlWhereCondition(options.where, userOrOFilter as Users);
+        const filter = optionsOrRepository && !optionsOrRepositoryIsRepository ? filterOrOptions as FilterQueryModel : userOrRequest as FilterQueryModel;
+        const options = optionsOrRepository && !optionsOrRepositoryIsRepository ? optionsOrRepository : filterOrOptions as FindOptions;
+        const repository = maybeRepository ?? (optionsOrRepositoryIsRepository ? optionsOrRepository : this.repository);
+        const request = optionsOrRepository && !optionsOrRepositoryIsRepository ? requestOrFilter as Request : userOrRequest as Request;
+        const user = optionsOrRepositoryIsRepository ? userOrRequest as Users : null;
+      
+        if (user) {
+            options.where = await this.getAccessControlWhereCondition(options.where, user);
         }
 
-        const order = this.getOrderOptions(filter.order ?? [], "language" in userOrOFilter ? userOrOFilter.language ?? null : null);
+        console.log(filter);
+        
+
+        const order = this.getOrderOptions(filter.order ?? [], { request, user });
         const nonNestedOrderColumns = (Array.isArray(filter.order) ? filter.order : [filter.order])
             .filter((order): order is OrderModel => !!order)
             .map(order => {
@@ -535,7 +546,7 @@ export class FilterService<Data> {
         const values = await repository.model.findAll({
             ...options,
             attributes: ["id", ...nonNestedOrderColumns, ...customAttributes],
-            limit: filter.page ? filter.page.size : undefined,
+            limit: filter.page?.size,
             offset: filter.page ? filter.page.number * filter.page.size + (filter.page.offset ?? 0) : undefined,
             subQuery: false,
             group: filter.groupBy ?? options.group,
@@ -613,7 +624,7 @@ export class FilterService<Data> {
         ];
     }
 
-    private getOrderOptions(orders: OrderModel | OrderModel[], language: string  | null): Order {
+    private getOrderOptions(orders: OrderModel | OrderModel[], context: OrderRuleContext): Order {
         let orderColumns = Array.isArray(orders) ? orders : [orders];
 
         if (this.model.defaultOrderRule) {
@@ -621,10 +632,14 @@ export class FilterService<Data> {
                 ? this.model.defaultOrderRule.order
                 : [this.model.defaultOrderRule.order];
            
+            
             const applicableDefaultOrderRule = defaultOrders.filter((order) => !orderColumns.some((o) => o.column === order.column));
-
+            console.log(applicableDefaultOrderRule);
+            
             orderColumns = [...applicableDefaultOrderRule, ...orderColumns];
         }
+
+        console.log(orderColumns);
 
         const generatedOrder: Order = [];
 
@@ -644,7 +659,7 @@ export class FilterService<Data> {
             if (!rule || !OrderRule.validate(rule)) {
                 generatedOrder.push(this.sequelizeModelScanner.getOrder(this.repository.model, order) as OrderItem);
             } else {
-                generatedOrder.push([rule.getOrderOption(this.repository.model, language), order.direction.toUpperCase()]);
+                generatedOrder.push([rule.getOrderOption(this.repository.model, context), order.direction.toUpperCase()]);
             }
         }
 

@@ -39,7 +39,7 @@ export class FilterController<Data> {
     @UseGuards(FilterQueryGuard)
     public async filter(@Body() query: FilterQueryModel, @Req() req: any): Promise<FilterResultModel<Data>> {
         const user = await this.getUser(req);
-        return user ? this.filterService.filter(user, query) : this.filterService.filter(query);
+        return user ? this.filterService.filter(user, req, query) : this.filterService.filter(req, query);
     }
 
     @Post("filter-count")
@@ -58,7 +58,7 @@ export class FilterController<Data> {
         @Req() req: any
     ): Promise<Buffer | string> {
         const user = await this.getUser(req);
-        return await this.filterService.downloadData(user, type, query);
+        return await this.filterService.downloadData(user, req, type, query);
     }
 
     @Get("filter/config")

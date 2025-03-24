@@ -40,7 +40,7 @@ export abstract class DynamicFilterController<Data> {
     public async filter(@Body() query: FilterQueryModel, @Req() req: any): Promise<FilterResultModel<Data>> {
         query = this.transformQuery(query, req);
         const user = await this.getUser(req);
-        return user ? this.filterService.filter(user, query) : this.filterService.filter(query);
+        return user ? this.filterService.filter(user, req, query) : this.filterService.filter(req, query);
     }
 
     @Post("filter-count")
@@ -61,7 +61,7 @@ export abstract class DynamicFilterController<Data> {
     ): Promise<Buffer | string> {
         query = this.transformQuery(query, req);
         const user = await this.getUser(req);
-        return await this.filterService.downloadData(user, type, query);
+        return await this.filterService.downloadData(user, req, type, query);
     }
 
     @Get("filter/config")
