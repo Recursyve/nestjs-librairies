@@ -630,7 +630,6 @@ export class FilterService<Data> {
                 ? this.model.defaultOrderRule.order
                 : [this.model.defaultOrderRule.order];
            
-            
             const applicableDefaultOrderRule = defaultOrders.filter((order) => !orderColumns.some((o) => o.column === order.column));
             
             orderColumns = [...applicableDefaultOrderRule, ...orderColumns];
