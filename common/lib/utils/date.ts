@@ -1,4 +1,4 @@
-import { add, differenceInDays, format } from "date-fns";
+import { add, differenceInDays, format, Locale } from "date-fns";
 import { frCA, enCA } from "date-fns/locale";
 
 export class DateUtils {
