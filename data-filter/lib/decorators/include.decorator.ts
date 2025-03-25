@@ -3,7 +3,7 @@ import { AttributesHandler } from "../handlers/attributes.handler";
 
 /**
  * @deprecated
- * Should should @Include(path, options?) instead
+ * Should @Include(path, options?) instead
  */
 export function Include(options: IncludeConfig): PropertyDecorator;
 export function Include(path: string, separate?: boolean): PropertyDecorator;
