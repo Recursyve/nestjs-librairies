@@ -38,6 +38,30 @@ import { FilterConfigurationModel } from "./models/filter-configuration.model";
 import { FilterResourceValueModel } from "./models/filter-resource-value.model";
 import { OrderRule, OrderRuleContext, OrderRuleDefinition } from "./order-rules/order-rule";
 
+interface CountParams<Users extends DataFilterUserModel> {
+    options: FilterQueryModel;
+    user?: Users | null;
+}
+
+interface CountTotalValuesParams<Users extends DataFilterUserModel> {
+    options: FindOptions;
+    user?: Users | null;
+}
+
+interface FilterParams<Users extends DataFilterUserModel, Request> {
+    options: FilterQueryModel;
+    request: Request;
+    user?: Users | null;
+}
+
+interface FindValuesParams<Users extends DataFilterUserModel, Request, Data> {
+    filter: FilterQueryModel;
+    options: FindOptions;
+    repository?: DataFilterRepository<Data>;
+    request: Request;
+    user?: Users | null;
+}
+
 @Injectable()
 export class FilterService<Data> {
     private definitions!: { [name: string]: FilterDefinition | GroupFilterDefinition | OrderRuleDefinition };
@@ -135,30 +159,21 @@ export class FilterService<Data> {
         return null;
     }
 
-    public async count(user: DataFilterUserModel, options: FilterQueryModel): Promise<number>;
-    public async count(options: FilterQueryModel): Promise<number>;
-    public async count(...args: [DataFilterUserModel | FilterQueryModel, FilterQueryModel?]): Promise<number> {
-        const [userOrOpt, opt] = args;
-        const options = opt ? opt : userOrOpt as FilterQueryModel;
-        const user = opt ? userOrOpt as DataFilterUserModel : null;
+    public async count<Users extends DataFilterUserModel>(params: CountParams<Users> ): Promise<number> {
+        const { options } = params;
+        const user = params.user ?? null;
 
         const countOptions = await this.getFindOptions(this.repository.model, options.query);
         if (options.search) {
             this.addSearchCondition(options.search, countOptions, user?.language ?? null);
         }
-        return user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions);
+
+        return this.countTotalValues( { options: countOptions, user });
     }
 
-    public async filter<Request>(user: DataFilterUserModel, request: Request, options: FilterQueryModel): Promise<FilterResultModel<Data>>;
-    public async filter<Request>(request: Request, options: FilterQueryModel): Promise<FilterResultModel<Data>>;
-    public async filter<Request>(
-        userOrRequest: DataFilterUserModel | Request, 
-        requestOrOptions: Request | FilterQueryModel,
-        maybeOptions?: FilterQueryModel
-    ): Promise<FilterResultModel<Data>> {
-        const options = maybeOptions ?? (requestOrOptions as FilterQueryModel);
-        const request = maybeOptions ? (requestOrOptions as Request) : (userOrRequest as Request);
-        const user = maybeOptions ? (userOrRequest as DataFilterUserModel) : null;
+    public async filter<Request, Users extends DataFilterUserModel>(params: FilterParams<DataFilterUserModel, Request>): Promise<FilterResultModel<Data>> {
+        const { options, request } = params;
+        const user = params.user ?? null;
 
         if (options.order) {
             options.order = this.normalizeOrder(options.order);
@@ -173,8 +188,9 @@ export class FilterService<Data> {
         }
         this.addGroupOption(options, countOptions);
 
-        const total = await (user ? this.countTotalValues(user, countOptions) : this.countTotalValues(countOptions));
-        const values = await (user ? this.findValues(user, request, options, countOptions) : this.findValues(request, options, countOptions));
+        const total = await this.countTotalValues({ options: countOptions, user });
+        const values = await this.findValues({ filter: options, options: countOptions, request, user });
+
         return {
             total,
             page: options.page,
@@ -202,7 +218,9 @@ export class FilterService<Data> {
             this.addOrderCondition(options.order, findOptions, options.data);
         }
         delete options.page;
-        const values = await (user ? this.findValues(user, request, options, findOptions, this.exportRepository) : this.findValues(request, options, findOptions, this.exportRepository));
+
+        const values = await this.findValues({ filter: options, options: findOptions, repository: this.exportRepository, request, user });
+
         const headers = await this.model.getExportedFieldsKeys(type);
         if (headers.length) {
             const data = await Promise.all(values.map((value) => this.model.getExportedFields(value, user?.language ?? "fr", type)));
@@ -472,17 +490,12 @@ export class FilterService<Data> {
         }
     }
 
-    private async countTotalValues(user: DataFilterUserModel, options: FindOptions): Promise<number>;
-    private async countTotalValues(options: FindOptions): Promise<number>;
-    private async countTotalValues(...args: [DataFilterUserModel | FindOptions, FindOptions?]): Promise<number> {
-        const [userOrOpt, opt] = args;
-        const options = opt ? opt : userOrOpt as FindOptions;
+    private async countTotalValues<Users extends DataFilterUserModel>(params: CountTotalValuesParams<Users>): Promise<number> {
+        const { options } = params;
+        const user = params.user ?? null;
 
-        /**
-         * This means that countTotalValues was called with a user
-         */
-        if (opt) {
-            options.where = await this.getAccessControlWhereCondition(options.where, userOrOpt as DataFilterUserModel);
+        if (user) {
+            options.where = await this.getAccessControlWhereCondition(options.where, user);
         }
 
         if (options.having) {
@@ -505,23 +518,11 @@ export class FilterService<Data> {
         }
     }
 
-    private async findValues<Users extends DataFilterUserModel, Request>(user: Users, request: Request, filter: FilterQueryModel, options: FindOptions, repository?: DataFilterRepository<Data>): Promise<Data[]>;
-    private async findValues<Users extends DataFilterUserModel, Request>(request: Request, filter: FilterQueryModel, options: FindOptions, repository?: DataFilterRepository<Data>): Promise<Data[]>;
-    private async findValues<Users extends DataFilterUserModel, Request>(
-        userOrRequest: Users | Request,
-        requestOrFilter: Request | FilterQueryModel,
-        filterOrOptions: FilterQueryModel | FindOptions,
-        optionsOrRepository?: FindOptions | DataFilterRepository<Data>,
-        maybeRepository?: DataFilterRepository<Data>
-    ): Promise<Data[]> {
-        const optionsOrRepositoryIsRepository = optionsOrRepository instanceof DataFilterRepository;
+    private async findValues<Users extends DataFilterUserModel, Request>(params: FindValuesParams<Users, Request, Data>): Promise<Data[]> {
+        const { filter, options, request } = params;
+        const user = params.user ?? null;
+        const repository = params.repository ?? this.repository;
 
-        const filter = optionsOrRepository && !optionsOrRepositoryIsRepository ? filterOrOptions as FilterQueryModel : userOrRequest as FilterQueryModel;
-        const options = optionsOrRepository && !optionsOrRepositoryIsRepository ? optionsOrRepository : filterOrOptions as FindOptions;
-        const repository = maybeRepository ?? (optionsOrRepositoryIsRepository ? optionsOrRepository : this.repository);
-        const request = optionsOrRepository && !optionsOrRepositoryIsRepository ? requestOrFilter as Request : userOrRequest as Request;
-        const user = optionsOrRepositoryIsRepository ? userOrRequest as Users : null;
-      
         if (user) {
             options.where = await this.getAccessControlWhereCondition(options.where, user);
         }

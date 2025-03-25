@@ -37,10 +37,10 @@ export abstract class DynamicFilterController<Data> {
     @Post("filter")
     @HttpCode(HttpStatus.OK)
     @UseGuards(FilterQueryGuard)
-    public async filter(@Body() query: FilterQueryModel, @Req() req: any): Promise<FilterResultModel<Data>> {
-        query = this.transformQuery(query, req);
-        const user = await this.getUser(req);
-        return user ? this.filterService.filter(user, req, query) : this.filterService.filter(req, query);
+    public async filter(@Body() query: FilterQueryModel, @Req() request: any): Promise<FilterResultModel<Data>> {
+        query = this.transformQuery(query, request);
+        const user = await this.getUser(request);
+        return this.filterService.filter({ options: query, request, user });
     }
 
     @Post("filter-count")
@@ -48,7 +48,7 @@ export abstract class DynamicFilterController<Data> {
     public async filterCount(@Body() query: FilterQueryModel, @Req() req: any): Promise<number> {
         query = this.transformQuery(query, req);
         const user = await this.getUser(req);
-        return user ? this.filterService.count(user, query) : this.filterService.count(query);
+        return this.filterService.count({ options: query, user });
     }
 
     @Post("download/:type")
