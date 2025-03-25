@@ -45,9 +45,9 @@ export abstract class DynamicFilterController<Data> {
 
     @Post("filter-count")
     @HttpCode(HttpStatus.OK)
-    public async filterCount(@Body() query: FilterQueryModel, @Req() req: any): Promise<number> {
-        query = this.transformQuery(query, req);
-        const user = await this.getUser(req);
+    public async filterCount(@Body() query: FilterQueryModel, @Req() request: any): Promise<number> {
+        query = this.transformQuery(query, request);
+        const user = await this.getUser(request);
         return this.filterService.count({ options: query, user });
     }
 
@@ -57,41 +57,41 @@ export abstract class DynamicFilterController<Data> {
     public async downloadData(
         @Body() query: FilterQueryModel,
         @Param("type") type: ExportTypes,
-        @Req() req: any
+        @Req() request: any
     ): Promise<Buffer | string> {
-        query = this.transformQuery(query, req);
-        const user = await this.getUser(req);
-        return await this.filterService.downloadData(user, req, type, query);
+        query = this.transformQuery(query, request);
+        const user = await this.getUser(request);
+        return await this.filterService.downloadData({ options: query, request, type, user });
     }
 
     @Get("filter/config")
-    public async getFilterConfig(@Req() req: any): Promise<FilterConfigurationModel[]> {
-        return await this.filterService.getConfig(req, await this.getUser(req) ?? {} as DataFilterUserModel);
+    public async getFilterConfig(@Req() request: any): Promise<FilterConfigurationModel[]> {
+        return await this.filterService.getConfig(request, await this.getUser(request) ?? {} as DataFilterUserModel);
     }
 
     @Get("filter/config/id")
     public async searchFilterResourceValue(
         @Query() search: FilterResourceValueModel,
-        @Req() req: any
+        @Req() request: any
     ): Promise<SelectFilterValue | null> {
-        return await this.filterService.findResourceValueById(req, search, await this.getUser(req) ?? {} as DataFilterUserModel);
+        return await this.filterService.findResourceValueById(request, search, await this.getUser(request) ?? {} as DataFilterUserModel);
     }
 
     @Get("filter/config/value")
     public async searchFilterConfigValues(
         @Query() search: FilterConfigurationSearchModel,
-        @Req() req: any
+        @Req() request: any
     ): Promise<SelectFilterValue[]> {
-        return await this.filterService.searchConfigValues(req, search, await this.getUser(req) ?? {} as DataFilterUserModel);
+        return await this.filterService.searchConfigValues(request, search, await this.getUser(request) ?? {} as DataFilterUserModel);
     }
 
-    protected async getUser(req: any): Promise<DataFilterUserModel | null> {
+    protected async getUser(request: any): Promise<DataFilterUserModel | null> {
         if (!this.userUserDeserializer || this.option.disableAccessControl) {
             return null;
         }
 
-        return this.userUserDeserializer.deserializeUser(req);
+        return this.userUserDeserializer.deserializeUser(request);
     }
 
-    protected abstract transformQuery(query: FilterQueryModel, req: any): FilterQueryModel;
+    protected abstract transformQuery(query: FilterQueryModel, request: any): FilterQueryModel;
 }

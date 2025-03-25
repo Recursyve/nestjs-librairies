@@ -48,6 +48,14 @@ interface CountTotalValuesParams<Users extends DataFilterUserModel> {
     user?: Users | null;
 }
 
+interface DownloadDataParams<Users extends DataFilterUserModel, Request> {
+    exportOptions?: object;
+    options: FilterQueryModel;
+    request: Request;
+    type: ExportTypes;
+    user: Users | null;
+}
+
 interface FilterParams<Users extends DataFilterUserModel, Request> {
     options: FilterQueryModel;
     request: Request;
@@ -198,13 +206,9 @@ export class FilterService<Data> {
         };
     }
 
-    public async downloadData<Request>(
-        user: DataFilterUserModel | null,
-        request: Request,
-        type: ExportTypes,
-        options: FilterQueryModel,
-        exportOptions?: object
-    ): Promise<Buffer | string> {
+    public async downloadData<Request>(params: DownloadDataParams<DataFilterUserModel, Request>): Promise<Buffer | string> {
+        const { exportOptions, options, request, type, user } = params;
+
         const findOptions = await this.getFindOptions(this.exportRepository.model, options.query);
 
         if (options.order) {
