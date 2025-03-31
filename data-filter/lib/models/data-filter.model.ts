@@ -12,9 +12,11 @@ export interface DataFilterConfigModel {
 }
 
 export class DataFilterConfig implements DataFilterConfigModel {
+    private _searchableAttributes?: string[];
+
     public model!: typeof Model;
     public attributes?: FindAttributeOptions;
-    public searchableAttributes?: string[];
+    public searchableTranslationAttributes?: string[];
     public exportColumns?: string[];
     public customAttributes: CustomAttributesConfig[] = [];
     public ignoreInSearch = false;
@@ -31,8 +33,16 @@ export class DataFilterConfig implements DataFilterConfigModel {
         this.attributes = attributes;
     }
 
+    public get searchableAttributes(): string[] | undefined {
+        return this._searchableAttributes?.filter((attribute) => !this.searchableTranslationAttributes?.includes(attribute));
+    }
+
     public setSearchableAttributes(attributes: string[]) {
-        this.searchableAttributes = attributes;
+        this._searchableAttributes = attributes;
+    }
+
+    public setSearchableTranslationAttributes(attributes: string[]): void {
+        this.searchableTranslationAttributes = attributes;
     }
 
     public setExportColumns(exportColumns: string[]) {
@@ -97,14 +107,33 @@ export class DataFilterConfig implements DataFilterConfigModel {
             return [];
         }
 
-        if (this.searchableAttributes) {
+        if (!this.searchableAttributes?.length && this.searchableTranslationAttributes?.length) {
+            return [];
+        }
+
+        if (this.searchableAttributes ) {
             return SequelizeUtils.getModelSearchableFieldAttributes(this.model as typeof M, this.searchableAttributes);
         }
 
         const searchableAttributes = SequelizeUtils.getModelSearchableAttributes(this.model as typeof M);
         const attributes = SequelizeUtils.getModelSearchableFieldAttributes(this.model as typeof M, this.attributes as string[] ?? []);
-        return attributes.length ?
-            (attributes as string[])?.filter(x => searchableAttributes.some(attr => attr === x)) :
-            searchableAttributes;
+        return (attributes.length ?
+            attributes.filter(x => searchableAttributes.includes(x)) :
+            searchableAttributes).filter(attribute => !this.searchableTranslationAttributes?.includes(attribute)); 
+    }
+
+    public getSearchableTranslationAttributes(): string[] {
+        if (this.ignoreInSearch) {
+            return [];
+        }
+
+        if (!this.searchableTranslationAttributes) {
+            return [];
+        }
+
+        return SequelizeUtils.getModelSearchableFieldAttributes(
+            this.model as typeof M,
+            this.searchableTranslationAttributes
+        );
     }
 }

@@ -11,6 +11,7 @@ export * from "./paranoid.decorator";
 export * from "./path.decorator";
 export * from "./required.decorator";
 export * from "./seachable-attributes.decorator";
+export * from "./searchable-translation-attributes.decorator";
 export * from "./separate.decorator";
 export * from "./sum.decorator";
 export * from "./where.decorator";

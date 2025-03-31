@@ -10,6 +10,7 @@ import { Condition, QueryModel, QueryRuleModel } from "../models/query.model";
 import { IRule, RuleModel } from "../models/rule.model";
 import { CustomOperator, FilterOperators, FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
+import { OrderRuleContext } from "../order-rules/order-rule";
 
 // TODO: Deprecate key to use attribute instead to be consistent with the BaseFilterDefinition
 export interface FilterConditionRule {
@@ -25,9 +26,11 @@ export interface FilterCondition {
     rules: (FilterConditionRule | FilterCondition)[];
 }
 
+type JsonCallback<Request = unknown> = (context: OrderRuleContext) => string;
+
 export interface JsonConfig {
     type: "array" | "object";
-    path?: string;
+    path?: JsonCallback | string;
 }
 
 export type PathCondition = boolean | {

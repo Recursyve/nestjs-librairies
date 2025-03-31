@@ -8,6 +8,7 @@ export interface IncludeConfig {
     path: string;
     attributes?: FindAttributeOptions;
     searchableAttributes?: string[];
+    searchableTranslationAttributes?: string[];
     ignoreInSearch?: boolean;
     order?: Order;
     where?: IncludeWhereModel;
@@ -22,6 +23,7 @@ export interface IncludeModel {
     path: string;
     attributes?: FindAttributeOptions;
     searchableAttributes?: string[];
+    searchableTranslationAttributes?: string[];
     ignoreInSearch?: boolean;
     order?: Order;
     where?: WhereOptions;
