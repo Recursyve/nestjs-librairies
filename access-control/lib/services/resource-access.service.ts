@@ -1,5 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { CommandBus } from "@nestjs/cqrs";
 import { RedisService } from "@recursyve/nestjs-redis";
+import { ResourceAccessUpdatedCommand } from "../commands";
 import {
     AccessActionType,
     accessActionTypeValues,
@@ -11,8 +13,6 @@ import {
     Users
 } from "../models";
 import { RedisKeyUtils } from "../utils";
-import { CommandBus } from "@nestjs/cqrs";
-import { ResourceAccessUpdatedCommand } from "../commands";
 
 @Injectable()
 export class ResourceAccessService {
@@ -21,7 +21,8 @@ export class ResourceAccessService {
     constructor(
         private redisService: RedisService,
         private commandBus: CommandBus
-    ) {}
+    ) {
+    }
 
     public async setUserAccessRules(
         user: Users,
@@ -34,10 +35,10 @@ export class ResourceAccessService {
             case PolicyResourceTypes.Resources:
                 await Promise.all(
                     accessActionTypeValues.map((action) =>
-                        this.setUserAccessActions(user, resourceName, policyResources.resources, action)
+                        this.setUserAccessActions(user, resourceName, policyResources.resources ?? [], action)
                     )
                 );
-                await this.setUserResourceIdsRules(user, resourceName, policyResources.resources);
+                await this.setUserResourceIdsRules(user, resourceName, policyResources.resources ?? []);
                 break;
             case PolicyResourceTypes.Condition:
                 await this.redisService.set(
@@ -64,13 +65,17 @@ export class ResourceAccessService {
         );
 
         await Promise.all(
-            filteredUserResources.map((userResource) =>
-                this.setUserResourceIdsRules(
+            filteredUserResources.map((userResource) => {
+                if (!userResource.resourceName || !userResource.resourceId) {
+                    return;
+                }
+
+                return this.setUserResourceIdsRules(
                     { id: userResource.userId, role: userResource.userRole },
                     userResource.resourceName,
                     [{ resourceId: userResource.resourceId, rules: userResource.rules }]
-                )
-            )
+                );
+            })
         );
 
         await this.commandBus.execute(new ResourceAccessUpdatedCommand(filteredUserResources));
@@ -80,7 +85,9 @@ export class ResourceAccessService {
         const filteredUserResources = await this.filterOutUninitializedUserResources(userResources);
 
         const delKeys = new Map(
-            filteredUserResources.map((userResource) => [
+            filteredUserResources
+                .filter((userResources): userResources is UserResources & { resourceName: string, resourceId: ResourceId } => !!userResources.resourceName && !!userResources.resourceId)
+                .map((userResource) => [
                 RedisKeyUtils.userResourceIdKey(userResource.resourceName, userResource.resourceId, {
                     id: userResource.userId,
                     role: userResource.userRole
@@ -97,13 +104,17 @@ export class ResourceAccessService {
         );
 
         await Promise.all(
-            filteredUserResources.map((userResource) =>
-                this.setUserResourceIdsRules(
+            filteredUserResources.map((userResource) => {
+                if (!userResource.resourceName || !userResource.resourceId) {
+                    return;
+                }
+
+                return this.setUserResourceIdsRules(
                     { id: userResource.userId, role: userResource.userRole },
                     userResource.resourceName,
                     [{ resourceId: userResource.resourceId, rules: userResource.rules }]
-                )
-            )
+                );
+            })
         );
 
         await this.commandBus.execute(new ResourceAccessUpdatedCommand(filteredUserResources));
@@ -127,6 +138,10 @@ export class ResourceAccessService {
     private async filterOutUninitializedUserResources(userResources: UserResources[]): Promise<UserResources[]> {
         const groupedUserResources: Record<string, UserResources[]> = {};
         for (const userResource of userResources) {
+            if (!userResource.resourceName) {
+                continue;
+            }
+
             const key = RedisKeyUtils.userAccessControl(
                 { id: userResource.userId, role: userResource.userRole },
                 userResource.resourceName
@@ -168,13 +183,17 @@ export class ResourceAccessService {
                 continue;
             }
 
+            if (!userResource.resourceName || !userResource.resourceId) {
+                continue;
+            }
+
             const cacheKey = RedisKeyUtils.userResourceActionKey(
                 { id: userResource.userId, role: userResource.userRole },
                 userResource.resourceName,
                 action
             );
             if (resourceIdsByCacheKey.has(cacheKey)) {
-                resourceIdsByCacheKey.get(cacheKey).push(userResource.resourceId.toString());
+                resourceIdsByCacheKey.get(cacheKey)?.push(userResource.resourceId.toString());
             } else {
                 resourceIdsByCacheKey.set(cacheKey, [userResource.resourceId.toString()]);
             }
@@ -212,16 +231,20 @@ export class ResourceAccessService {
 
         const resourcesToRemove = userResources.filter((resource) => !resource.rules[action]);
         await Promise.all(
-            resourcesToRemove.map((userResource) =>
-                this.deleteUserResourceAccessAction(
+            resourcesToRemove.map((userResource) => {
+                if (!userResource.resourceName || !userResource.resourceId) {
+                    return;
+                }
+
+                return this.deleteUserResourceAccessAction(
                     {
                         id: userResource.userId,
                         role: userResource.userRole
                     },
                     { id: userResource.resourceId, name: userResource.resourceName },
                     action
-                )
-            )
+                );
+            })
         );
     }
 
