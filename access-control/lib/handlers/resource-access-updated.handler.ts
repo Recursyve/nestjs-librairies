@@ -20,7 +20,7 @@ export class AccessControlResourceAccessUpdatedHandler implements ICommandHandle
         for (const userResource of command.userResources) {
             const key = `${userResource.resourceName}:${userResource.resourceId}`;
             if (userResourcesByResourceMap.has(key)) {
-                userResourcesByResourceMap.get(key).push(userResource);
+                userResourcesByResourceMap.get(key)?.push(userResource);
             } else {
                 userResourcesByResourceMap.set(key, [userResource]);
             }
@@ -28,13 +28,18 @@ export class AccessControlResourceAccessUpdatedHandler implements ICommandHandle
 
         const userResourcesByResource = [...userResourcesByResourceMap.values()];
         const nestedUserResources = await Promise.all(
-            userResourcesByResource.map((userResources) =>
-                this.resourceAccessUpdatedPolicyService.execute(
-                    userResources[0].resourceName,
-                    userResources[0].resourceId,
+            userResourcesByResource.map((userResources) => {
+                const firstUserResource = userResources[0];
+                if (!firstUserResource.resourceName || !firstUserResource.resourceId) {
+                    return [];
+                }
+
+                return this.resourceAccessUpdatedPolicyService.execute(
+                    firstUserResource.resourceName,
+                    firstUserResource.resourceId,
                     userResources
                 )
-            )
+            })
         );
         const flattenedUserResources: UserResources[] = [];
         for (const [index, userResources] of nestedUserResources.entries()) {
