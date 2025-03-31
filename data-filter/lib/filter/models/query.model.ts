@@ -1,12 +1,24 @@
+import { ApiExtraModels, ApiProperty, getSchemaPath } from "@nestjs/swagger";
 import { RuleModel } from "./rule.model";
 
-export type Condition = "and" | "or";
+const conditions = ["and", "or"] as const;
+export type Condition = (typeof conditions)[number];
 
-export interface QueryRuleModel extends RuleModel {
-    id: string;
+export class QueryRuleModel extends RuleModel {
+    @ApiProperty({ type: () => String })
+    id!: string;
 }
 
-export interface QueryModel {
-    condition: Condition;
-    rules: (QueryRuleModel | QueryModel)[];
+@ApiExtraModels(QueryRuleModel)
+export class QueryModel {
+    @ApiProperty({ enum: conditions })
+    condition!: Condition;
+
+    @ApiProperty({
+        oneOf: [
+            { type: "array", items: { $ref: getSchemaPath(QueryRuleModel) } },
+            { type: "array", items: { $ref: getSchemaPath(QueryModel) } },
+        ],
+    })
+    rules!: (QueryRuleModel | QueryModel)[];
 }

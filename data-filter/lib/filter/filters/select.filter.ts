@@ -3,10 +3,14 @@ import { FilterType } from "../type";
 import { SelectOperators } from "../operators";
 import { BaseFilterDefinition, Filter } from "./filter";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
+import { ApiProperty } from "@nestjs/swagger";
 
-export interface SelectFilterValue {
-    id: number | string;
-    name: string;
+export class SelectFilterValue {
+    @ApiProperty({ oneOf: [{ type: "string" }, { type: "number" }] })
+    id!: number | string;
+
+    @ApiProperty({ type: () => String })
+    name!: string;
 }
 
 export interface SelectFilterGetValuesOptions<T = any, User = DataFilterUserModel, Request = any> {

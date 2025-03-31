@@ -1,41 +1,78 @@
 import { FilterType } from "../type";
-import { OptionsFilterOptionConfiguration, OptionsFilterSelectionMode } from "../filters";
+import { OptionsFilterOptionConfiguration, OptionsFilterSelectionMode, optionsFilterSelectionModes } from "../filters";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
-export interface FilterOperatorsConfiguration {
-    id: string;
-    name: string;
+export class FilterOperatorsConfiguration {
+    @ApiProperty({ type: () => String })
+    id!: string;
+
+    @ApiProperty({ type: () => String })
+    name!: string;
 }
 
-export interface FilterGroupConfiguration {
-    key: string;
-    name: string;
+export class FilterGroupConfiguration {
+    @ApiProperty({ type: () => String })
+    key!: string;
+
+    @ApiProperty({ type: () => String })
+    name!: string;
 }
 
-export interface FilterBaseConfigurationModel {
-    type: FilterType;
-    operators: FilterOperatorsConfiguration[];
+export class FilterBaseConfigurationModel {
+    @ApiProperty({ enum: FilterType })
+    type!: FilterType;
+
+    @ApiProperty({ isArray: true, type: () => FilterOperatorsConfiguration })
+    operators!: FilterOperatorsConfiguration[];
+
+    @ApiPropertyOptional({ isArray: true, type: () => Object })
     values?: unknown[];
+
+    @ApiPropertyOptional({ type: () => Boolean })
     lazyLoading?: boolean;
+
+    @ApiPropertyOptional({ enum: optionsFilterSelectionModes })
     selectionMode?: OptionsFilterSelectionMode;
+
+    @ApiPropertyOptional({ isArray: true, type: () => OptionsFilterOptionConfiguration })
     options?: OptionsFilterOptionConfiguration[];
+
+    @ApiPropertyOptional({ type: () => FilterGroupConfiguration })
     group?: FilterGroupConfiguration;
+
+    @ApiPropertyOptional({ type: () => String })
     mask?: string;
 }
 
-export interface FilterConfigurationModel extends FilterBaseConfigurationModel {
-    id: string;
-    name: string;
+export class FilterConfigurationModel extends FilterBaseConfigurationModel {
+    @ApiProperty({ type: () => String })
+    id!: string;
+
+    @ApiProperty({ type: () => String })
+    name!: string;
 }
 
-export interface GroupFilterBaseConfigurationModel {
-    type: FilterType;
-    rootFilter: FilterBaseConfigurationModel | null;
+export class GroupFilterBaseConfigurationModel {
+    @ApiProperty({ enum: FilterType })
+    type!: FilterType;
+
+    @ApiProperty({ type: () => FilterBaseConfigurationModel })
+    rootFilter!: FilterBaseConfigurationModel | null;
+
+    @ApiPropertyOptional({ type: () => FilterBaseConfigurationModel })
     valueFilter?: FilterBaseConfigurationModel | null;
+
+    @ApiPropertyOptional({ type: () => Boolean })
     lazyLoading?: boolean;
+
+    @ApiPropertyOptional({ type: () => FilterGroupConfiguration })
     group?: FilterGroupConfiguration;
 }
 
-export interface GroupFilterConfigurationModel extends GroupFilterBaseConfigurationModel {
-    id: string;
-    name: string;
+export class GroupFilterConfigurationModel extends GroupFilterBaseConfigurationModel {
+    @ApiProperty({ type: () => String })
+    id!: string;
+
+    @ApiProperty({ type: () => String })
+    name!: string;
 }
