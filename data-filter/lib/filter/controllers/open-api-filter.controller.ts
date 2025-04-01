@@ -55,6 +55,7 @@ export function OpenApiFilterController<T extends Type, D>(
         @HttpCode(HttpStatus.OK)
         @UseInterceptors(DataFileDownloadInterceptor)
         @ApiOkResponse({ type: () => Buffer })
+        @ApiParam({ name: "type", enum: ExportTypes, enumName: "ExportTypes" })
         @ApiOperation({ operationId: `download${Base.name}Data` })
         public async downloadData(
             @Body() query: FilterQueryModel,

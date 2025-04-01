@@ -11,7 +11,7 @@ export class QueryRuleModel extends RuleModel {
 
 @ApiExtraModels(QueryRuleModel)
 export class QueryModel {
-    @ApiProperty({ enum: conditions })
+    @ApiProperty({ enum: conditions, enumName: "Condition" })
     condition!: Condition;
 
     @ApiProperty({

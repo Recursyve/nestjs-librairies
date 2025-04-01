@@ -19,7 +19,7 @@ export class FilterGroupConfiguration {
 }
 
 export class FilterBaseConfigurationModel {
-    @ApiProperty({ enum: FilterType })
+    @ApiProperty({ enum: FilterType, enumName: "FilterType" })
     type!: FilterType;
 
     @ApiProperty({ isArray: true, type: () => FilterOperatorsConfiguration })
@@ -31,7 +31,7 @@ export class FilterBaseConfigurationModel {
     @ApiPropertyOptional({ type: () => Boolean })
     lazyLoading?: boolean;
 
-    @ApiPropertyOptional({ enum: optionsFilterSelectionModes })
+    @ApiPropertyOptional({ enum: optionsFilterSelectionModes, enumName: "OptionsFilterSelectionMode" })
     selectionMode?: OptionsFilterSelectionMode;
 
     @ApiPropertyOptional({ isArray: true, type: () => OptionsFilterOptionConfiguration })
@@ -53,7 +53,7 @@ export class FilterConfigurationModel extends FilterBaseConfigurationModel {
 }
 
 export class GroupFilterBaseConfigurationModel {
-    @ApiProperty({ enum: FilterType })
+    @ApiProperty({ enum: FilterType, enumName: "FilterType" })
     type!: FilterType;
 
     @ApiProperty({ type: () => FilterBaseConfigurationModel })

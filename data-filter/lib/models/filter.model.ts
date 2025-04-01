@@ -25,7 +25,7 @@ export class OrderModel {
     @ApiProperty({ type: () => String })
     column!: string;
 
-    @ApiPropertyOptional({ enum: directions })
+    @ApiPropertyOptional({ enum: directions, enumName: "Direction" })
     direction!: Direction;
 
     @ApiPropertyOptional({ type: () => Boolean })

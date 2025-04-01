@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { FilterOperatorTypes } from "../operators";
 
 export class RuleModel {
-    @ApiProperty({ enum: FilterOperatorTypes })
+    @ApiProperty({ enum: FilterOperatorTypes, enumName: "FilterOperatorTypes" })
     operation!: FilterOperatorTypes;
 
     @ApiProperty({
