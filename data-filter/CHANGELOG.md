@@ -403,3 +403,22 @@ SelectFilter({
 ### Bugfix
 
 - Fix issues with the JsonOrderRule custom path
+
+## [11.0.0] - 2024-03-25
+
+### Added
+
+- Upgrade @nestjs dependencies to 10.x.x
+
+## [11.1.0] - 2025-04-01
+
+## Breaking changes
+
+- The definition of the main FilterService function has changed (count, filter, downloadData)
+
+### Added
+
+- We added a JsonOrderRule
+- We added the concept of _SearchableTranslationAttribute_ to fix issues with JSON column containing transactions.
+  - ex: { "fr": "Bon matin!", "en": "Good morning!" }
+- We added support for the OpenApi spec with `@nestjs/swagger` (OpenApiFilterController)
