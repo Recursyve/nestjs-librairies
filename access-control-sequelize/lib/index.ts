@@ -17,4 +17,4 @@ export class AccessControlSequelizeModule {
 export * from "./adapters/database.adapter";
 export * from "./decorators";
 export * from "./hooks/sequelize-hooks.module";
-export * from "./repositories";
+export * from "./repositories/repositories";
