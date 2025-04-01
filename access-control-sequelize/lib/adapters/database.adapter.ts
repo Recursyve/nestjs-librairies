@@ -28,7 +28,7 @@ export class SequelizeDatabaseAdapter implements IDatabaseAdapter {
         return ids.map(id => +id);
     }
 
-    public checkIfResourceExist(model: typeof SequelizeEntities, resourceId: number, condition: any): Promise<boolean> {
+    public async checkIfResourceExist(model: typeof SequelizeEntities, resourceId: number, condition: any): Promise<boolean> {
         return model
             .count({
                 where: {
