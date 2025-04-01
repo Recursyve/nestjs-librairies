@@ -22,13 +22,14 @@ export class MongooseDatabaseAdapter implements IDatabaseAdapter {
         return ids;
     }
 
-    public checkIfResourceExist(model: Model<any>, resourceId: string, condition: any): Promise<boolean> {
+    public async checkIfResourceExist(model: Model<any>, resourceId: string, condition: any): Promise<boolean> {
         const m = this.connection.models[model.name];
         if (!m) {
             throw new Error(`Mongoose model '${model}' not found`);
         }
+
         return m
-            .count({
+            .countDocuments({
                 _id: resourceId,
                 ...condition
             })
