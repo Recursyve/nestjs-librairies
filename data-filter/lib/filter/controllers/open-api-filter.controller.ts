@@ -25,7 +25,7 @@ import {
 import { FilterService } from "../filter.service";
 import { FilterQueryGuard } from "../guards/filter-query.guard";
 import { DataFileDownloadInterceptor } from "../interceptors/data-file-download.interceptor";
-import { ApiOkResponse, ApiOperation, ApiBody, ApiQuery, ApiParam } from "@nestjs/swagger";
+import { ApiOkResponse, ApiOperation, ApiParam } from "@nestjs/swagger";
 import { FilterResourceValueModel } from "../models/filter-resource-value.model";
 
 export function OpenApiFilterController<T extends Type, D>(
@@ -54,7 +54,19 @@ export function OpenApiFilterController<T extends Type, D>(
         @Post("download/:type")
         @HttpCode(HttpStatus.OK)
         @UseInterceptors(DataFileDownloadInterceptor)
-        @ApiOkResponse({ type: () => Buffer })
+        @ApiOkResponse({
+            description: 'Returns file data as binary (Buffer) or as text (string) depending on the export type.',
+            content: {
+              'application/octet-stream': {
+                schema: {
+                  oneOf: [
+                    { type: 'string', format: 'binary' },
+                    { type: 'string' }
+                  ]
+                }
+              }
+            }
+          })
         @ApiParam({ name: "type", enum: ExportTypes, enumName: "ExportTypes" })
         @ApiOperation({ operationId: `download${Base.name}Data` })
         public async downloadData(
