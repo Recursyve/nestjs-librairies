@@ -7,6 +7,7 @@ import { FilterBaseConfigurationModel } from "../models/filter-configuration.mod
 import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
 import { BaseFilterDefinition, Filter, FilterCondition, FilterConditionRule } from "./filter";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export interface OptionsFilterOption {
     key: string;
@@ -15,15 +16,19 @@ export interface OptionsFilterOption {
     condition?: FilterCondition;
 }
 
-export type OptionsFilterSelectionMode = "radio" | "select";
+export const optionsFilterSelectionModes = ["radio", "select"] as const;
+export type OptionsFilterSelectionMode = (typeof optionsFilterSelectionModes)[number];
 
 export interface OptionsFilterDefinition {
     selectionMode: OptionsFilterSelectionMode;
     options: OptionsFilterOption[];
 }
 
-export interface OptionsFilterOptionConfiguration {
-    key: string;
+export class OptionsFilterOptionConfiguration {
+    @ApiProperty({ type: () => String })
+    key!: string;
+
+    @ApiPropertyOptional({ type: () => String })
     name?: string;
 }
 

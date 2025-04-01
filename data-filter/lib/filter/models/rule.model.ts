@@ -1,7 +1,13 @@
-import { FilterOperators } from "../operators";
+import { ApiProperty } from "@nestjs/swagger";
+import { FilterOperatorTypes } from "../operators";
 
-export interface RuleModel {
-    operation: FilterOperators;
+export class RuleModel {
+    @ApiProperty({ enum: FilterOperatorTypes, enumName: "FilterOperatorTypes" })
+    operation!: FilterOperatorTypes;
+
+    @ApiProperty({
+        oneOf: [{ type: "object" }, { type: "array", items: { type: "object" } }],
+    })
     value: unknown | unknown[];
 }
 
