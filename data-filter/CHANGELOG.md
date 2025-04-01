@@ -385,3 +385,15 @@ SelectFilter({
 ### Patch
 
 - Update dependencies
+
+## [10.2.0] - 2025-04-01
+
+## Breaking changes
+
+- The definition of the main FilterService function has changed (count, filter, downloadData)
+
+### Added
+
+- We added a JsonOrderRule
+- We added the concept of _SearchableTranslationAttribute_ to fix issues with JSON column containing transactions.
+  - ex: { "fr": "Bon matin!", "en": "Good morning!" }
