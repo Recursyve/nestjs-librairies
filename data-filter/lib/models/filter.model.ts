@@ -1,7 +1,7 @@
 import { Type as _Type } from "@nestjs/common";
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsBoolean, IsIn, IsInt, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
+import { IsBoolean, IsDefined, IsIn, IsInt, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
 import { QueryModel } from "../filter/models/query.model";
 
 export class FilterPageModel {
@@ -65,8 +65,7 @@ export class FilterQueryModel {
     query?: QueryModel;
 
     @IsOptional()
-    @ValidateNested()
-    @Type(() => OrderModel)
+    @IsDefined()
     @ApiPropertyOptional({
         oneOf: [
             {
