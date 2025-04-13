@@ -18,3 +18,4 @@ export * from "./adapters/database.adapter";
 export * from "./decorators";
 export * from "./hooks/sequelize-hooks.module";
 export * from "./repositories/repositories";
+export * from "./utils/where-option-generator";
