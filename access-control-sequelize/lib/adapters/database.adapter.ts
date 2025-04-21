@@ -33,7 +33,7 @@ export class SequelizeDatabaseAdapter implements IDatabaseAdapter {
             .count({
                 where: {
                     [model.primaryKeyAttribute]: resourceId,
-                    ...condition.where
+                    ...condition
                 }
             })
             .then((x) => !!x);
