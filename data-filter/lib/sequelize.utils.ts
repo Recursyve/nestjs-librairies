@@ -346,9 +346,9 @@ export class SequelizeUtils {
                 return true;
             }
 
-            return (model.rawAttributes as any)[key].field === name;
+            return (model.rawAttributes as any)[key]?.field === name;
         });
-        return (model.rawAttributes as any)[field as string].field ?? name;
+        return (model.rawAttributes as any)[field as string]?.field ?? name;
     }
 
     public static isColumnJson(model: typeof M, name: string): boolean {
