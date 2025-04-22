@@ -1,5 +1,5 @@
 import { literal } from "sequelize";
-import { M } from "../../sequelize.utils";
+import { M, SequelizeUtils } from "../../sequelize.utils";
 import { BaseOrderRuleDefinition, OrderItemColumn, OrderRule, OrderRuleContext } from "./order-rule";
 import { JsonConfig } from "../..";
 
@@ -15,7 +15,16 @@ export class JsonOrderRule extends OrderRule implements JsonRuleDefinition {
     }
 
     public getOrderOption(model: typeof M, context: OrderRuleContext): OrderItemColumn {
-        const path = typeof this.json.path === "function" ? this.json.path(context) : this.json.path;
-        return literal(`UPPER(JSON_UNQUOTE(JSON_EXTRACT(${`\`${model.name}\`.\`${this.attribute}\``}, '$.${path}')))`);
+        const jsonPath = typeof this.json.path === "function" ? this.json.path(context) : this.json.path;
+        const modelPath = this.getModelPath(model);
+        return literal(`UPPER(JSON_UNQUOTE(JSON_EXTRACT(${modelPath}, '$.${jsonPath}')))`);
+    }
+
+    private getModelPath(model: typeof M): string {
+        if (this.path) {
+            return SequelizeUtils.getLiteralFullName(this.attribute, this.path);
+        }
+
+        return `\`${model.name}\`.\`${this.attribute}\``;
     }
 }
