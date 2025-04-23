@@ -397,3 +397,9 @@ SelectFilter({
 - We added a JsonOrderRule
 - We added the concept of _SearchableTranslationAttribute_ to fix issues with JSON column containing transactions.
   - ex: { "fr": "Bon matin!", "en": "Good morning!" }
+
+## [10.2.1] - 2025-04-23
+
+### Bugfix
+
+- Fix issues with the JsonOrderRule custom path
