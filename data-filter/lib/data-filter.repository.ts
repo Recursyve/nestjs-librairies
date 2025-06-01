@@ -274,10 +274,6 @@ export class DataFilterRepository<Data> {
     }
 
     public getSearchTranslationAttributes(): SearchAttributesModel[] {
-        if (!this._config.getSearchableTranslationAttributes().length) {
-            return [];
-        }
-
         const attributes: SearchAttributesModel[] = [];
         const modelAttr = this._config.getSearchableTranslationAttributes();
         attributes.push(
