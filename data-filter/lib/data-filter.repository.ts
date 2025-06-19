@@ -191,7 +191,7 @@ export class DataFilterRepository<Data> {
         return this.sequelizeModelScanner.getOrderIncludes(this.model, order);
     }
 
-    public generateSearchInclude(conditions?: object): Includeable[] {
+    public generateSearchInclude(conditions?: object, ignoreAttributes = false): Includeable[] {
         const nestedIncludes: Array<IncludeOptions | IncludeOptions[]> = [
             ...this._definitions.map(x => {
                 if (!x.path || x.path.separate || x.ignoreInSearch) {
@@ -200,7 +200,7 @@ export class DataFilterRepository<Data> {
                 const path = x.path.transformPathConfig(conditions);
                 const attributes = x.withContext(this.dialectFormatterService).transformAttributesConfig(conditions);
                 const additionalIncludes = x.withContext(this.dialectFormatterService).transformIncludesConfig(conditions);
-                return this.sequelizeModelScanner.getIncludes(this.model, path, additionalIncludes, attributes);
+                return this.sequelizeModelScanner.getIncludes(this.model, path, additionalIncludes, attributes, ignoreAttributes);
             }),
             ...this._config.getCustomAttributesIncludes().map(x => {
                 if (!x.path || x.separate || x.ignoreInSearch) {
@@ -212,7 +212,7 @@ export class DataFilterRepository<Data> {
                     paranoid: x.paranoid,
                     subQuery: x.subQuery,
                     where: x.where ? SequelizeUtils.generateWhereConditions(x.where, conditions) : undefined
-                }, [], x.attributes);
+                }, [], x.attributes, ignoreAttributes);
             })
         ];
 
@@ -376,12 +376,12 @@ export class DataFilterRepository<Data> {
         this._definitions = this.dataFilterScanner.getAttributes(this.dataDef);
     }
 
-    public addSearchCondition(search: string, options: FindOptions): void {
+    public addSearchCondition(search: string, options: FindOptions, ignoreAttributes = false): void {
         if (!search) {
             return;
         }
 
-        const searchInclude = this.generateSearchInclude({});
+        const searchInclude = this.generateSearchInclude({}, ignoreAttributes);
         options.include = SequelizeUtils.mergeIncludes(
             options.include as IncludeOptions | IncludeOptions[],
             searchInclude as IncludeOptions[]

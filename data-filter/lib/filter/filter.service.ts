@@ -375,7 +375,7 @@ export class FilterService<Data> {
             return;
         }
 
-        this.repository.addSearchCondition(search.value, options);
+        this.repository.addSearchCondition(search.value, options, true);
     }
 
     private addOrderCondition(orders: OrderModel[], options: CountOptions, data?: object): void {
@@ -516,6 +516,9 @@ export class FilterService<Data> {
             group: filter.groupBy ?? options.group,
             order
         });
+        if (!values.length) {
+            return [];
+        }
 
         const group = this.generateRepositoryGroupBy(filter);
         return await repository.findAll({

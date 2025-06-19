@@ -10,7 +10,8 @@ import { DialectFormatterService } from "../services/dialect-formatter.service";
 
 @Injectable()
 export class SequelizeModelScanner {
-    constructor(private dialectFormatterService: DialectFormatterService) {}
+    constructor(private dialectFormatterService: DialectFormatterService) {
+    }
 
     public getIncludes(
         model: typeof Model,
@@ -34,7 +35,8 @@ export class SequelizeModelScanner {
                 model: association.getAssociatedClass(),
                 attributes: ignoreAttributes ? [] : { include: [] },
                 include: [],
-                required: false
+                required: false,
+                ...(ignoreAttributes && association.getAssociation() === "belongsToMany" && { through: { attributes: [] } })
             });
 
             if (i++ < objects.length - 1) {
