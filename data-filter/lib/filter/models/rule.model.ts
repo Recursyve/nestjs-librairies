@@ -5,7 +5,7 @@ import { FilterOperatorTypes } from "../operators";
 export class RuleModel {
     @IsIn(Object.values(FilterOperatorTypes))
     @ApiProperty({ enum: FilterOperatorTypes, enumName: "FilterOperatorTypes" })
-    operation!: FilterOperatorTypes;
+    operation!: FilterOperatorTypes | string;
 
     @IsDefined()
     @ApiProperty({

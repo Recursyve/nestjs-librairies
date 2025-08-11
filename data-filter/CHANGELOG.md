@@ -408,7 +408,7 @@ SelectFilter({
 
 ### Added
 
-- Upgrade @nestjs dependencies to 10.x.x
+- Upgrade @nestjs dependencies to 11.x.x
 
 ## [11.1.0] - 2025-04-01
 
@@ -422,3 +422,10 @@ SelectFilter({
 - We added the concept of _SearchableTranslationAttribute_ to fix issues with JSON column containing transactions.
   - ex: { "fr": "Bon matin!", "en": "Good morning!" }
 - We added support for the OpenApi spec with `@nestjs/swagger` (OpenApiFilterController)
+
+## [11.2.0] - 2025-08-11
+
+### Added
+
+- We added support for the OpenApi spec with `@nestjs/swagger` (OpenApiFilterController)
+- We added support for the OpenApi spec with `@nestjs/swagger` (OpenApiDynamicFilterController)
