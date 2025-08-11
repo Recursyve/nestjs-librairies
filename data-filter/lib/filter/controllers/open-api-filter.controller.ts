@@ -1,18 +1,6 @@
+import { Body, HttpCode, HttpStatus, Param, Post, Query, Req, Type, UseGuards, UseInterceptors } from "@nestjs/common";
+import { ApiOkResponse, ApiOperation, ApiParam } from "@nestjs/swagger";
 import {
-    Type,
-    Post,
-    HttpCode,
-    HttpStatus,
-    UseGuards,
-    UseInterceptors,
-    Body,
-    Get,
-    Param,
-    Query,
-    Req,
-} from "@nestjs/common";
-import {
-    DataFilterUserModel,
     ExportTypes,
     FilterConfigurationModel,
     FilterConfigurationSearchModel,
@@ -20,12 +8,11 @@ import {
     FilterQueryModel,
     FilterResultModel,
     FilterResultModelMixin,
-    SelectFilterValue,
+    SelectFilterValue
 } from "../..";
 import { FilterService } from "../filter.service";
 import { FilterQueryGuard } from "../guards/filter-query.guard";
 import { DataFileDownloadInterceptor } from "../interceptors/data-file-download.interceptor";
-import { ApiOkResponse, ApiOperation, ApiParam } from "@nestjs/swagger";
 import { FilterResourceValueModel } from "../models/filter-resource-value.model";
 
 export function OpenApiFilterController<T extends Type, D>(

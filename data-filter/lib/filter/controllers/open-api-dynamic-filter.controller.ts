@@ -1,5 +1,18 @@
-import { Body, HttpCode, HttpStatus, Param, Post, Query, Req, Type, UseGuards, UseInterceptors } from "@nestjs/common";
+import {
+    applyDecorators,
+    Body,
+    HttpCode,
+    HttpStatus,
+    Param,
+    Post,
+    Query,
+    Req,
+    Type,
+    UseGuards,
+    UseInterceptors
+} from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiParam } from "@nestjs/swagger";
+import { ApiParamOptions } from "@nestjs/swagger/dist/decorators/api-param.decorator";
 import {
     DynamicFilterController,
     ExportTypes,
@@ -15,8 +28,13 @@ import { FilterQueryGuard } from "../guards/filter-query.guard";
 import { DataFileDownloadInterceptor } from "../interceptors/data-file-download.interceptor";
 import { FilterResourceValueModel } from "../models/filter-resource-value.model";
 
+export type OpenApiDynamicFilterControllerOptions = {
+    param?: ApiParamOptions;
+};
+
 export function OpenApiDynamicFilterController<T extends Type, D>(
-    Base: T
+    Base: T,
+    options?: OpenApiDynamicFilterControllerOptions
 ): Type<DynamicFilterController<D>> & (abstract new (filterService: FilterService<D>) => DynamicFilterController<D>) {
     const _FilterResultModel = FilterResultModelMixin(Base);
 
@@ -42,18 +60,18 @@ export function OpenApiDynamicFilterController<T extends Type, D>(
         @HttpCode(HttpStatus.OK)
         @UseInterceptors(DataFileDownloadInterceptor)
         @ApiOkResponse({
-            description: 'Returns file data as binary (Buffer) or as text (string) depending on the export type.',
+            description: "Returns file data as binary (Buffer) or as text (string) depending on the export type.",
             content: {
-              'application/octet-stream': {
-                schema: {
-                  oneOf: [
-                    { type: 'string', format: 'binary' },
-                    { type: 'string' }
-                  ]
+                "application/octet-stream": {
+                    schema: {
+                        oneOf: [
+                            { type: "string", format: "binary" },
+                            { type: "string" }
+                        ]
+                    }
                 }
-              }
             }
-          })
+        })
         @ApiParam({ name: "type", enum: ExportTypes, enumName: "ExportTypes" })
         @ApiOperation({ operationId: `download${Base.name}Data` })
         public async downloadData(
@@ -90,6 +108,10 @@ export function OpenApiDynamicFilterController<T extends Type, D>(
         ): Promise<SelectFilterValue[]> {
             return super.searchFilterConfigValues(search, req);
         }
+    }
+
+    if (options?.param) {
+        applyDecorators(ApiParam(options.param))(_FilterController);
     }
 
     // @ts-ignore

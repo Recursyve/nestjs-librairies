@@ -429,3 +429,9 @@ SelectFilter({
 
 - We added support for the OpenApi spec with `@nestjs/swagger` (OpenApiFilterController)
 - We added support for the OpenApi spec with `@nestjs/swagger` (OpenApiDynamicFilterController)
+
+## [11.2.1] - 2025-08-11
+
+### Added
+
+- We added options to configure OpenApi router parameter for the OpenApiDynamicFilterController
