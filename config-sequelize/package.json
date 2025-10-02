@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-config-sequelize",
-    "version": "11.0.0",
+    "version": "11.0.1",
     "scripts": {
         "build": "rimraf dist && nest build",
         "build:lib": "rimraf dist && nest build -p tsconfig.lib.json",
