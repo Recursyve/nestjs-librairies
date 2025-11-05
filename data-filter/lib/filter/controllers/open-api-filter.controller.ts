@@ -1,4 +1,16 @@
-import { Body, HttpCode, HttpStatus, Param, Post, Query, Req, Type, UseGuards, UseInterceptors } from "@nestjs/common";
+import {
+    Body,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Param,
+    Post,
+    Query,
+    Req,
+    Type,
+    UseGuards,
+    UseInterceptors
+} from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiParam } from "@nestjs/swagger";
 import {
     ExportTypes,
@@ -64,14 +76,14 @@ export function OpenApiFilterController<T extends Type, D>(
             return super.downloadData(query, type, req);
         }
 
-        @Post("filter/config")
+        @Get("filter/config")
         @ApiOkResponse({ type: () => FilterConfigurationModel, isArray: true })
         @ApiOperation({ operationId: `get${Base.name}FilterConfig` })
         public async getFilterConfig(@Req() req: any): Promise<FilterConfigurationModel[]> {
             return super.getFilterConfig(req);
         }
 
-        @Post("filter/config/id")
+        @Get("filter/config/id")
         @ApiOkResponse({ type: () => SelectFilterValue })
         @ApiOperation({ operationId: `search${Base.name}FilterResourceValue` })
         public async searchFilterResourceValue(
@@ -81,7 +93,7 @@ export function OpenApiFilterController<T extends Type, D>(
             return super.searchFilterResourceValue(search, req);
         }
 
-        @Post("filter/config/value")
+        @Get("filter/config/value")
         @ApiOkResponse({ type: () => SelectFilterValue, isArray: true })
         @ApiOperation({ operationId: `search${Base.name}FilterConfigValues` })
         public async searchFilterConfigValues(

@@ -1,6 +1,6 @@
 import {
     applyDecorators,
-    Body,
+    Body, Get,
     HttpCode,
     HttpStatus,
     Param,
@@ -82,14 +82,14 @@ export function OpenApiDynamicFilterController<T extends Type, D>(
             return super.downloadData(query, type, req);
         }
 
-        @Post("filter/config")
+        @Get("filter/config")
         @ApiOkResponse({ type: () => FilterConfigurationModel, isArray: true })
         @ApiOperation({ operationId: `get${Base.name}FilterConfig` })
         public async getFilterConfig(@Req() req: any): Promise<FilterConfigurationModel[]> {
             return super.getFilterConfig(req);
         }
 
-        @Post("filter/config/id")
+        @Get("filter/config/id")
         @ApiOkResponse({ type: () => SelectFilterValue })
         @ApiOperation({ operationId: `search${Base.name}FilterResourceValue` })
         public async searchFilterResourceValue(
@@ -99,7 +99,7 @@ export function OpenApiDynamicFilterController<T extends Type, D>(
             return super.searchFilterResourceValue(search, req);
         }
 
-        @Post("filter/config/value")
+        @Get("filter/config/value")
         @ApiOkResponse({ type: () => SelectFilterValue, isArray: true })
         @ApiOperation({ operationId: `search${Base.name}FilterConfigValues` })
         public async searchFilterConfigValues(

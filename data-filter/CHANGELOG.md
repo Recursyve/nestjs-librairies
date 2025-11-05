@@ -435,3 +435,10 @@ SelectFilter({
 ### Added
 
 - We added options to configure OpenApi router parameter for the OpenApiDynamicFilterController
+
+## [11.3.0] - 2025-11-05
+
+### Fix
+
+- Invalid HTTP verb for the OpenApiFilterController
+- Invalid HTTP verb for the OpenApiDynamicFilterController
