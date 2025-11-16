@@ -1,12 +1,13 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Expose } from "class-transformer";
+import { IsDefined, IsNotEmpty, IsString } from "class-validator";
 
 export class FilterResourceValueModel {
-    @Expose()
+    @IsString()
+    @IsNotEmpty()
     @ApiProperty({ type: () => String })
     id!: string;
 
-    @Expose()
+    @IsDefined()
     @ApiProperty({ oneOf: [{ type: "string" }, { type: "number" }] })
     resourceId!: number | string;
 }

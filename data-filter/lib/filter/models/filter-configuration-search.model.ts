@@ -1,20 +1,27 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { Expose } from "class-transformer";
+import { Transform } from "class-transformer";
+import { IsDefined, IsInt, IsOptional, IsString } from "class-validator";
 
 export class FilterConfigurationSearchModel {
-    @Expose()
+    @IsString()
+    @IsDefined()
     @ApiProperty({ type: () => String })
     id!: string;
 
-    @Expose()
-    @ApiProperty({ type: () => Object })
+    @IsOptional()
+    @IsString()
+    @ApiProperty({ type: () => String })
     value!: unknown;
 
-    @Expose()
+    @IsOptional()
+    @IsInt()
     @ApiPropertyOptional({ type: () => Number })
+    @Transform(({ value }) => typeof value === "string" ? parseInt(value) : value)
     pageSize?: number;
 
-    @Expose()
+    @IsOptional()
+    @IsInt()
     @ApiPropertyOptional({ type: () => Number })
+    @Transform(({ value }) => typeof value === "string" ? parseInt(value) : value)
     page?: number;
 }
