@@ -442,3 +442,9 @@ SelectFilter({
 
 - Invalid HTTP verb for the OpenApiFilterController
 - Invalid HTTP verb for the OpenApiDynamicFilterController
+
+## [11.4.0] - 2025-11-18
+
+### Improvement
+
+- Optimization of the SQL query for that fetches the filtered resources of the FilterService.filter function.

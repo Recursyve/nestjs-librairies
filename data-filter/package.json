@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-data-filter",
-    "version": "11.3.2",
+    "version": "11.4.1",
     "description": "NestJs DataFilter library",
     "main": "index.js",
     "scripts": {

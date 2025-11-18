@@ -11,6 +11,7 @@ import {
     OrderItem,
     WhereOptions
 } from "sequelize";
+import { Sequelize } from "sequelize-typescript";
 import { GroupOption, ProjectionAlias } from "sequelize/types/model";
 import { ExportTypes, FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
@@ -138,20 +139,11 @@ export class FilterService<Data> {
                 user,
                 request,
                 page: this.convertNumber(search.page),
-                pageSize: this.convertNumber(search.pageSize),
+                pageSize: this.convertNumber(search.pageSize)
             });
         }
 
         return [];
-    }
-
-    private convertNumber(value?: string | number): number | null {
-        if (!value) {
-            return null;
-        }
-
-        const parsedNumber = Number(value);
-        return isNaN(parsedNumber) ? null : parsedNumber;
     }
 
     public async findResourceValueById(request: any, search: FilterResourceValueModel, user?: DataFilterUserModel): Promise<SelectFilterValue | null> {
@@ -167,7 +159,7 @@ export class FilterService<Data> {
         return null;
     }
 
-    public async count<Users extends DataFilterUserModel>(params: CountParams<Users> ): Promise<number> {
+    public async count<Users extends DataFilterUserModel>(params: CountParams<Users>): Promise<number> {
         const { options } = params;
         const user = params.user ?? null;
 
@@ -176,7 +168,7 @@ export class FilterService<Data> {
             this.addSearchCondition(options.search, countOptions, user?.language ?? null);
         }
 
-        return this.countTotalValues( { options: countOptions, user });
+        return this.countTotalValues({ options: countOptions, user });
     }
 
     public async filter<Request, Users extends DataFilterUserModel>(params: FilterParams<DataFilterUserModel, Request>): Promise<FilterResultModel<Data>> {
@@ -194,7 +186,10 @@ export class FilterService<Data> {
         if (options.order) {
             this.addOrderCondition(options.order, countOptions, options.data);
         }
-        this.addGroupOption(options, countOptions);
+
+        if (options.groupBy) {
+            countOptions.group = [SequelizeUtils.getGroupLiteral(this.repository.model, options.groupBy)];
+        }
 
         const total = await this.countTotalValues({ options: countOptions, user });
         const values = await this.findValues({ filter: options, options: countOptions, request, user });
@@ -223,7 +218,13 @@ export class FilterService<Data> {
         }
         delete options.page;
 
-        const values = await this.findValues({ filter: options, options: findOptions, repository: this.exportRepository, request, user });
+        const values = await this.findValues({
+            filter: options,
+            options: findOptions,
+            repository: this.exportRepository,
+            request,
+            user
+        });
 
         const headers = await this.model.getExportedFieldsKeys(type);
         if (headers.length) {
@@ -266,6 +267,15 @@ export class FilterService<Data> {
         }
 
         return option;
+    }
+
+    private convertNumber(value?: string | number): number | null {
+        if (!value) {
+            return null;
+        }
+
+        const parsedNumber = Number(value);
+        return isNaN(parsedNumber) ? null : parsedNumber;
     }
 
     private init() {
@@ -462,38 +472,6 @@ export class FilterService<Data> {
         }
     }
 
-    private addGroupOption(filter: FilterQueryModel, options: CountOptions): void {
-        const model = this.repository.model;
-        options.group = [`${model.name}.id`];
-        if (filter.groupBy) {
-            options.group.push(SequelizeUtils.getGroupLiteral(this.repository.model, filter.groupBy));
-        }
-
-        if (!filter.order || (filter.order instanceof Array && !filter.order.length)) {
-            return;
-        }
-
-        const orders = this.normalizeOrder(filter.order);
-        for (const order of orders) {
-            const rule = this.definitions[order.column] as OrderRuleDefinition;
-            if (rule && OrderRule.validate(rule)) {
-                continue;
-            }
-
-            if (this.repository.hasCustomAttribute(order.column)) {
-                continue;
-            }
-
-            const values = order.column.split(".");
-            const column = values.pop() as string;
-            if (!values.length) {
-                options.group.push(`${model.name}.${SequelizeUtils.findColumnFieldName(model, column)}`);
-            } else {
-                options.group.push(...this.sequelizeModelScanner.getGroup(model, order));
-            }
-        }
-    }
-
     private async countTotalValues<Users extends DataFilterUserModel>(params: CountTotalValuesParams<Users>): Promise<number> {
         const { options } = params;
         const user = params.user ?? null;
@@ -532,26 +510,15 @@ export class FilterService<Data> {
         }
 
         const order = this.getOrderOptions(filter.order ?? [], { request, user });
-        const nonNestedOrderColumns = (Array.isArray(filter.order) ? filter.order : [filter.order])
-            .filter((order): order is OrderModel => !!order)
-            .map(order => {
-                const rule = this.definitions[order.column] as OrderRuleDefinition;
-                if (!rule || !OrderRule.validate(rule)) {
-                    return order.column;
-                } else {
-                    return [rule.path ?? "", rule.attribute].join(".");
-                }
-            })
-            .filter(column => column && !column.includes(".") && !repository.hasCustomAttribute(column));
         const customAttributes = filter.order ? this.getOrderCustomAttribute(filter.order, filter.data) : [];
 
         const values = await repository.model.findAll({
             ...options,
-            attributes: ["id", ...nonNestedOrderColumns, ...customAttributes],
+            attributes: [[Sequelize.literal(`DISTINCT \`${this.repository.model.name}\`.\`id\``), "id"], ...customAttributes],
             limit: filter.page?.size,
             offset: filter.page ? filter.page.number * filter.page.size + (filter.page.offset ?? 0) : undefined,
             subQuery: false,
-            group: filter.groupBy ?? options.group,
+            raw: true,
             order
         });
 
@@ -622,7 +589,7 @@ export class FilterService<Data> {
                 paranoid: filter.paranoid,
                 where: filter.where ? FilterUtils.generateWhereConditions(filter.where, data) : undefined
             }, [], [], true),
-            filter.condition ? this.getConditionInclude(model, filter.condition): []
+            filter.condition ? this.getConditionInclude(model, filter.condition) : []
         ];
     }
 
@@ -696,28 +663,6 @@ export class FilterService<Data> {
         }
 
         group.push(...groupBy);
-        if (!filter.order || (filter.order instanceof Array && !filter.order.length)) {
-            return group;
-        }
-
-        const orders = this.normalizeOrder(filter.order);
-        for (const order of orders) {
-            if (!order?.column || !order.direction) {
-                continue;
-            }
-
-            if (this.repository.hasCustomAttribute(order.column)) {
-                continue;
-            }
-
-            const rule = this.definitions[order.column] as OrderRuleDefinition;
-            if (!rule || !OrderRule.validate(rule)) {
-                group.push(`${this.repository.model.name}.${SequelizeUtils.findColumnFieldName(this.repository.model, order.column)}`);
-            } else {
-                group.push(...this.sequelizeModelScanner.getGroup(this.repository.model, order));
-            }
-        }
-
         return group;
     }
 
