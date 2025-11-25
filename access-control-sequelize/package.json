@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-access-control-sequelize",
-    "version": "11.1.1",
+    "version": "11.2.0",
     "description": "Sequelize utilities for Recursyve's NestJs AccessControl library",
     "main": "index.js",
     "scripts": {
@@ -23,7 +23,7 @@
         "@nestjs/common": ">=11.0.0",
         "@nestjs/core": ">=11.0.0",
         "@nestjs/sequelize": ">=11.0.0",
-        "@recursyve/nestjs-access-control": ">=11.0.0",
+        "@recursyve/nestjs-access-control": ">=11.1.0",
         "@recursyve/nestjs-sequelize-utils": ">=11.0.0",
         "sequelize": ">=6.37.0",
         "sequelize-typescript": ">=2.1.0"
@@ -36,7 +36,7 @@
         "@nestjs/terminus": "^11.0.0",
         "@nestjs/testing": "^11.0.12",
         "@recursyve/eslint-config-node": "^1.0.1",
-        "@recursyve/nestjs-access-control": "^11.0.0",
+        "@recursyve/nestjs-access-control": "../access-control/dist",
         "@recursyve/nestjs-redis": "^11.0.0",
         "@recursyve/nestjs-sequelize-utils": "^11.0.0",
         "@types/jest": "^29.5.14",

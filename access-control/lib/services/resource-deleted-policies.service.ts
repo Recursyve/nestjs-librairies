@@ -23,6 +23,10 @@ export class ResourceDeletedPoliciesService {
         return this._policies;
     }
 
+    public exists(resourceName: string): boolean {
+        return this._policies.some(x => x.resourceName === resourceName) || this._policies.some(x => x.parentResourceName === resourceName);
+    }
+
     public async execute(resourceName: string, resource: any): Promise<UserResources[]> {
         const policies = this._policies.filter(x => x.resourceName === resourceName && !x.parentResourceName);
         const policiesRes = await Promise.all(policies.map(async policy => {
