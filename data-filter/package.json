@@ -10,7 +10,10 @@
         "pack:lib": "npm run build:lib && cd dist && npm pack",
         "publish-package": "npm run build:lib && npm run copy:lib && npm publish ./dist --access public",
         "publish-package:beta": "npm run publish-package -- --tag beta --access public",
-        "publish-package:dry-run": "npm run publish-package -- --dry-run"
+        "publish-package:dry-run": "npm run publish-package -- --dry-run",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage"
     },
     "repository": {
         "type": "git",
