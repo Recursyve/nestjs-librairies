@@ -46,7 +46,7 @@ export class FilterController<Data> {
     @HttpCode(HttpStatus.OK)
     public async filterCount(@Body() query: FilterQueryModel, @Req() request: any): Promise<number> {
         const user = await this.getUser(request);
-        return this.filterService.count({ options: query, user });
+        return this.filterService.count({ options: query, request, user });
     }
 
     @Post("download/:type")

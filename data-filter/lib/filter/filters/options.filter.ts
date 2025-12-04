@@ -67,14 +67,14 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
         };
     }
 
-    public getIncludePaths(rule: QueryRuleModel, data?: object): PathModel[] {
+    public getIncludePaths<Request>(rule: QueryRuleModel, request: Request, user: DataFilterUserModel | null, data?: object): PathModel[] {
         const option = this.options.find(x => x.key === rule.value);
         const condition = option?.condition;
         if (!condition) {
-            return super.getIncludePaths(rule);
+            return super.getIncludePaths(rule, request, user);
         }
 
-        return this.getRulePaths(condition.rules, data);
+        return this.getRulePaths(condition.rules, request, user, data);
     }
 
     public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined> {
@@ -117,17 +117,22 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
         });
     }
 
-    private getRulePaths(rules: (FilterConditionRule | FilterCondition)[], data?: object): PathModel[] {
+    private getRulePaths<Request>(rules: (FilterConditionRule | FilterCondition)[], request: Request, user: DataFilterUserModel | null, data?: object): PathModel[] {
         const paths: PathModel[] = [];
 
         for (const rule of rules) {
             if ((rule as FilterCondition).rules) {
-                paths.push(...this.getRulePaths((rule as FilterCondition).rules, data));
+                paths.push(...this.getRulePaths((rule as FilterCondition).rules, request, user, data));
             } else if ((rule as FilterConditionRule).path) {
                 if (paths.every((path) => path.path !== (rule as FilterConditionRule).path)) {
                     const r = rule as FilterConditionRule;
                     if (!r.path) {
                         continue;
+                    }
+
+
+                    if (typeof r.where === "function") {
+                        r.where = r.where({ request, user });
                     }
 
                     paths.push({

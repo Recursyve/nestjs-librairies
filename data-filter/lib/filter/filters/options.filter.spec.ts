@@ -5,6 +5,7 @@ import { FilterBaseConfigurationModel } from "../models/filter-configuration.mod
 import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
 import { OptionsFilter, RadioFilter } from "./options.filter";
+import { PathModel } from "../../models/path.model";
 
 describe("RadioFilter", () => {
     describe("getConfig", () => {
@@ -241,6 +242,9 @@ describe("RadioFilter", () => {
     });
 
     describe("getIncludePaths", () => {
+        const request = {};
+        const user = null;
+        
         it("with conditions containing path should returns the paths", async () => {
             const filter = new RadioFilter({
                 attribute: "test",
@@ -278,12 +282,61 @@ describe("RadioFilter", () => {
                 id: "test",
                 value: "no",
                 operation: FilterOperatorTypes.Equal
-            });
+            }, request, user);
             expect(paths).toBeDefined();
             expect(paths).toStrictEqual([
                 {
                     path: "test_2",
                     where: undefined
+                }
+            ]);
+        });
+
+        it("with conditions containing path and where callback should returns the paths with resolved where", async () => {
+            const testRequest = { tenantId: 123 };
+            const testUser = { id: 1, language: "en" } as any;
+            const callbackSpy = jest.fn(({ request, user }) => ({
+                status: () => "active",
+                tenant_id: () => (request as any).tenantId
+            }));
+            
+            const filter = new OptionsFilter({
+                attribute: "test",
+                selectionMode: "select",
+                options: [
+                    {
+                        key: "no",
+                        value: null,
+                        operator: FilterOperatorTypes.IsNotNull,
+                        condition: {
+                            condition: "or",
+                            rules: [
+                                {
+                                    key: "test_2",
+                                    operation: FilterOperatorTypes.IsNotNull,
+                                    path: "test_2",
+                                    value: null,
+                                    where: callbackSpy
+                                }
+                            ]
+                        }
+                    }
+                ]
+            });
+
+            const paths = filter.getIncludePaths({
+                id: "test",
+                value: "no",
+                operation: FilterOperatorTypes.Equal
+            }, testRequest, testUser);
+            
+            expect(paths).toStrictEqual<PathModel[]>([
+                {
+                    path: "test_2",
+                    where: {
+                        status: "active",
+                        tenant_id: 123
+                    }
                 }
             ]);
         });
@@ -530,6 +583,9 @@ describe("OptionsFilter", () => {
     });
 
     describe("getIncludePaths", () => {
+        const request = {};
+        const user = null;
+
         it("with conditions containing path should returns the paths", async () => {
             const filter = new OptionsFilter({
                 attribute: "test",
@@ -568,7 +624,7 @@ describe("OptionsFilter", () => {
                 id: "test",
                 value: "no",
                 operation: FilterOperatorTypes.Equal
-            });
+            }, request, user);
             expect(paths).toBeDefined();
             expect(paths).toStrictEqual([
                 {

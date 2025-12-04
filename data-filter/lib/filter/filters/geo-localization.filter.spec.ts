@@ -15,6 +15,7 @@ import { FilterService } from "../filter.service";
 import { SequelizeModelScanner } from "../../scanners/sequelize-model.scanner";
 import { DataFilterService } from "../../data-filter.service";
 import { DataFilterScanner } from "../../scanners/data-filter.scanner";
+import { Locations } from "../../test/models/locations/locations.model";
 
 describe("GeoLocalizationFilter", () => {
     describe("getConfig", () => {
@@ -184,6 +185,17 @@ class GeoLocalizationTestFilter extends BaseFilter<GeoLocalizationTestData> {
             attribute: "geo_point"
         })
     });
+
+    public distanceWithCallback = new GeoLocalizationFilter({
+        rootFilter: new CoordinateFilter({
+            attribute: "geo_point",
+            path: "location",
+            where: ({ request, user }) => ({
+                status: () => "active",
+                user_id: () => user?.id ?? null
+            })
+        })
+    });
 }
 
 describe("GeoLocalizationTestFilter", () => {
@@ -206,6 +218,9 @@ describe("GeoLocalizationTestFilter", () => {
     });
 
     it("getFindOptions should return a valid options config", async () => {
+        const request = {};
+        const user = null;
+
         const options = await filter.getFindOptions(Coords, {
             condition: "and",
             rules: [
@@ -238,7 +253,7 @@ describe("GeoLocalizationTestFilter", () => {
                     ] as [RuleModel, RuleModel]
                 }
             ]
-        });
+        }, request, user);
         expect(options).toBeDefined();
         expect(options).toStrictEqual<FindOptions>({
             include: [],
@@ -250,6 +265,57 @@ describe("GeoLocalizationTestFilter", () => {
                     where(fn("ST_Distance_Sphere", literal("geo_point"), fn("ST_GeometryFromText",  literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), {
                         [Op.lte]: 5000
                     }),
+                ]
+            }
+        });
+    });
+
+    it("getFindOptions should handle filter with where callback", async () => {
+        const testRequest = { tenantId: 123 };
+        const testUser = { id: 1, language: "en" } as any;
+        
+        const options = await filter.getFindOptions(Coords, {
+            condition: "and",
+            rules: [
+                {
+                    id: "distanceWithCallback",
+                    operation: FilterOperatorTypes.Equal,
+                    value: [
+                        {
+                            value: [45.8797953, -73.2815516],
+                            operation: FilterOperatorTypes.Equal
+                        },
+                        {
+                            value: 25000,
+                            operation: FilterOperatorTypes.LessOrEqual
+                        }
+                    ] as [RuleModel, RuleModel]
+                }
+            ]
+        }, testRequest, testUser);
+        
+        expect(options).toStrictEqual<FindOptions>({
+            include: [
+                {
+                    as: "location",
+                    attributes: [],
+                    include: [],
+                    model: Locations,
+                    order: undefined,
+                    paranoid: true,
+                    required: false,
+                    separate: false,
+                    where: {
+                        status: "active",
+                        user_id: 1,
+                    },
+                },
+            ],
+            where: {
+                [Op.and]: [
+                    where(fn("ST_Distance_Sphere", literal("`location`.`geo_point`"), fn("ST_GeometryFromText", literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), {
+                        [Op.lte]: 25000
+                    })
                 ]
             }
         });

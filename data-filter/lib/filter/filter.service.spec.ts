@@ -81,6 +81,16 @@ export class TestFilter extends BaseFilter<ContractSystemsTest> {
         group: "visit",
         having: fn("count", col("visits.visit.id"))
     });
+
+    public contractWithCallback = new TextFilter({
+        attribute: "id",
+        path: "contract",
+        group: "contract",
+        where: ({ request, user }) => ({
+            status: () => "active",
+            tenant_id: () => (request as any).tenantId
+        })
+    });
 }
 
 describe("FilterService", () => {
@@ -103,6 +113,9 @@ describe("FilterService", () => {
     });
 
     it("getFindOptions should return a valid Sequelize FindOptions", async () => {
+        const request = {};
+        const user = null;
+
         const options = await filterService.getFindOptions(ContractSystems, {
             condition: "and",
             rules: [
@@ -122,7 +135,7 @@ describe("FilterService", () => {
                     operation: FilterOperatorTypes.GreaterOrEqual
                 }
             ]
-        });
+        }, request, user);
         expect(options).toBeDefined();
         expect(options).toStrictEqual({
             include: [
@@ -212,5 +225,86 @@ describe("FilterService", () => {
                 ]
             }
         } as FindOptions);
+    });
+
+    it("getFindOptions should handle filter with where callback", async () => {
+        const testRequest = { tenantId: 123 };
+        const testUser = { id: 1, language: "en" } as any;
+        
+        const options = await filterService.getFindOptions(ContractSystems, {
+            condition: "and",
+            rules: [
+                {
+                    id: "contractWithCallback",
+                    value: "test",
+                    operation: FilterOperatorTypes.Equal
+                }
+            ]
+        }, testRequest, testUser);
+        
+        expect(options).toStrictEqual<FindOptions>({
+            include: [
+                {
+                    as: "contract",
+                    model: Contracts,
+                    required: false,
+                    paranoid: true,
+                    attributes: [],
+                    include: [],
+                    order: undefined,
+                    separate: false,
+                    where: {
+                        status: "active",
+                        tenant_id: 123
+                    }
+                },
+                {
+                    as: "system",
+                    model: Systems,
+                    required: false,
+                    attributes: [],
+                    include: [
+                        {
+                            as: "place",
+                            model: Places,
+                            required: false,
+                            attributes: [],
+                            include: [
+                                {
+                                    as: "owners",
+                                    model: Owners,
+                                    required: false,
+                                    attributes: [],
+                                    include: [
+                                        {
+                                            as: "person",
+                                            model: Persons,
+                                            order: undefined,
+                                            required: false,
+                                            separate: false,
+                                            paranoid: true,
+                                            attributes: [],
+                                            include: []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            where: {
+                [Op.and]: [
+                    {
+                        "$contract.id$": "test"
+                    },
+                    {
+                        "$system.place.owners.person.email$": {
+                            [Op.like]: "%@%"
+                        }
+                    }
+                ]
+            }
+        });
     });
 });

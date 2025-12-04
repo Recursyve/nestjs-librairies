@@ -18,8 +18,15 @@ export interface FilterConditionRule {
     path?: string;
     operation: FilterOperators;
     value?: (unknown | unknown[]) | ((value: unknown | unknown[]) => unknown | unknown[]);
-    where?: IncludeWhereModel;
+    where?: IncludeWhereModel | IncludeWhereModalCallback;
 }
+
+export interface IncludeWhereModelContext<Request = unknown> {
+    request: Request;
+    user: DataFilterUserModel | null;
+}
+
+type IncludeWhereModalCallback = (context: IncludeWhereModelContext) => IncludeWhereModel;
 
 export interface FilterCondition {
     condition: Condition;
@@ -49,7 +56,7 @@ export interface BaseFilterDefinition {
     paranoid?: boolean;
     condition?: FilterCondition;
     group?: string;
-    where?: IncludeWhereModel;
+    where?: IncludeWhereModel | IncludeWhereModalCallback;
     pathCondition?: PathCondition;
     json?: JsonConfig;
     enabled?: ({ user, request }: EnabledConfig) => Promise<boolean>;
@@ -65,7 +72,7 @@ export interface FilterDefinition extends BaseFilterDefinition, IRule {
     operators: (FilterOperatorTypes | CustomOperator)[];
 
     getConfig<Request>(key: string, req: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel | null>;
-    getIncludePaths(rule: QueryRuleModel, data?: object): PathModel[];
+    getIncludePaths<Request>(rule: QueryRuleModel, request: Request, user: DataFilterUserModel | null, data?: object): PathModel[];
     getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined>;
     getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined>;
     usePathCondition(query: QueryModel): boolean;
@@ -159,7 +166,7 @@ export abstract class Filter implements FilterDefinition {
         return config;
     }
 
-    public getIncludePaths(rule: QueryRuleModel, data?: object): PathModel[] {
+    public getIncludePaths<Request>(rule: QueryRuleModel, request: Request, user: DataFilterUserModel | null, data?: object): PathModel[] {
         return [];
     }
 
