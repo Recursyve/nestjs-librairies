@@ -448,3 +448,9 @@ SelectFilter({
 ### Improvement
 
 - Optimization of the SQL query for that fetches the filtered resources of the FilterService.filter function.
+
+## [11.5.0] - 2024-12-04
+
+### Improvement
+
+- The `where` condition of the filter definition now supports a callback for more dynamic conditions with the HTTP context.
