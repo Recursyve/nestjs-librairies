@@ -346,6 +346,128 @@ describe("DateOnlyFilter", () => {
                 }
             });
         });
+
+        describe("early returns", () => {
+            it("with between operator and non-array value should return undefined", async () => {
+                const filter = new DateOnlyFilter({
+                    attribute: "test"
+                });
+                const options = await filter.getWhereOptions({
+                    id: "test",
+                    value: "2020-03-06T00:55:12",
+                    operation: FilterOperatorTypes.Between
+                });
+                expect(options).toBeUndefined();
+            });
+
+            it("with between operator and array with wrong length should return undefined", async () => {
+                const filter = new DateOnlyFilter({
+                    attribute: "test"
+                });
+                const options = await filter.getWhereOptions({
+                    id: "test",
+                    value: ["2020-03-06T00:55:12"],
+                    operation: FilterOperatorTypes.Between
+                });
+                expect(options).toBeUndefined();
+            });
+
+            it("with between operator and array with non-string values should return undefined", async () => {
+                const filter = new DateOnlyFilter({
+                    attribute: "test"
+                });
+                const options = await filter.getWhereOptions({
+                    id: "test",
+                    value: [123, "2020-06-06T00:55:12"],
+                    operation: FilterOperatorTypes.Between
+                });
+                expect(options).toBeUndefined();
+            });
+
+            it("with not between operator and non-array value should return undefined", async () => {
+                const filter = new DateOnlyFilter({
+                    attribute: "test"
+                });
+                const options = await filter.getWhereOptions({
+                    id: "test",
+                    value: "2020-03-06T00:55:12",
+                    operation: FilterOperatorTypes.NotBetween
+                });
+                expect(options).toBeUndefined();
+            });
+
+            it("with not between operator and array with wrong length should return undefined", async () => {
+                const filter = new DateOnlyFilter({
+                    attribute: "test"
+                });
+                const options = await filter.getWhereOptions({
+                    id: "test",
+                    value: ["2020-03-06T00:55:12", "2020-06-06T00:55:12", "2020-09-06T00:55:12"],
+                    operation: FilterOperatorTypes.NotBetween
+                });
+                expect(options).toBeUndefined();
+            });
+
+            it("with not between operator and array with non-string values should return undefined", async () => {
+                const filter = new DateOnlyFilter({
+                    attribute: "test"
+                });
+                const options = await filter.getWhereOptions({
+                    id: "test",
+                    value: ["2020-03-06T00:55:12", 456],
+                    operation: FilterOperatorTypes.NotBetween
+                });
+                expect(options).toBeUndefined();
+            });
+
+            it("with equal operator and non-string value should return undefined", async () => {
+                const filter = new DateOnlyFilter({
+                    attribute: "test"
+                });
+                const options = await filter.getWhereOptions({
+                    id: "test",
+                    value: 123,
+                    operation: FilterOperatorTypes.Equal
+                });
+                expect(options).toBeUndefined();
+            });
+
+            it("with not equal operator and non-string value should return undefined", async () => {
+                const filter = new DateOnlyFilter({
+                    attribute: "test"
+                });
+                const options = await filter.getWhereOptions({
+                    id: "test",
+                    value: null,
+                    operation: FilterOperatorTypes.NotEqual
+                });
+                expect(options).toBeUndefined();
+            });
+
+            it("with less operator and non-string value should return undefined", async () => {
+                const filter = new DateOnlyFilter({
+                    attribute: "test"
+                });
+                const options = await filter.getWhereOptions({
+                    id: "test",
+                    value: [],
+                    operation: FilterOperatorTypes.Less
+                });
+                expect(options).toBeUndefined();
+            });
+
+            it("with greater operator and non-string value should return undefined", async () => {
+                const filter = new DateOnlyFilter({
+                    attribute: "test"
+                });
+                const options = await filter.getWhereOptions({
+                    id: "test",
+                    value: {},
+                    operation: FilterOperatorTypes.Greater
+                });
+                expect(options).toBeUndefined();
+            });
+        });
     });
 });
 
