@@ -192,8 +192,9 @@ export class FilterService<Data> {
             countOptions.group = [SequelizeUtils.getGroupLiteral(this.repository.model, options.groupBy)];
         }
 
-        const total = await this.countTotalValues({ options: countOptions, user });
-        const values = await this.findValues({ filter: options, options: countOptions, request, user });
+        const optionsForCountAndIds = this.getOptionsForCountAndIds(countOptions);
+        const total = await this.countTotalValues({ options: optionsForCountAndIds, user });
+        const values = await this.findValues({ filter: options, options: optionsForCountAndIds, request, user });
 
         return {
             total,
@@ -473,6 +474,18 @@ export class FilterService<Data> {
         }
     }
 
+    private getOptionsForCountAndIds(options: FindOptions): FindOptions {
+        const include = options.include as IncludeOptions[] | undefined;
+        if (!include || (Array.isArray(include) && include.length === 0)) {
+            return options;
+        }
+
+        return {
+            ...options,
+            include: SequelizeUtils.stripIncludeAttributes(include)
+        };
+    }
+
     private async countTotalValues<Users extends DataFilterUserModel>(params: CountTotalValuesParams<Users>): Promise<number> {
         const { options } = params;
         const user = params.user ?? null;
@@ -482,9 +495,12 @@ export class FilterService<Data> {
         }
 
         if (options.having) {
+            const modelName = this.repository.model.name;
             const data = await this.repository.model.findAll({
                 ...options,
-                subQuery: false
+                attributes: [[Sequelize.literal(`DISTINCT \`${modelName}\`.\`id\``), "id"]],
+                subQuery: false,
+                raw: true
             });
             return data.length;
         } else {

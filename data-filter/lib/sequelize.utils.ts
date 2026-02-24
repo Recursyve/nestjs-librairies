@@ -31,6 +31,19 @@ export class SequelizeUtils {
         return include;
     }
 
+    public static stripIncludeAttributes(includes: IncludeOptions[] | IncludeOptions): IncludeOptions[] {
+        const arr = !includes ? [] : Array.isArray(includes) ? includes : [includes];
+        if (!arr.length) {
+            return [];
+        }
+
+        return arr.map((include) => ({
+            ...include,
+            attributes: [],
+            include: include.include ? this.stripIncludeAttributes(include.include as IncludeOptions[]) : [],
+        }));
+    }
+
     public static mergeIncludes(a: IncludeOptions | IncludeOptions[] = [], b: IncludeOptions | IncludeOptions[] = [], ignoreAttributes = false) {
         if (!Array.isArray(a)) {
             a = [a];
