@@ -15,13 +15,8 @@ export class SequelizeAccessControlFindOptionsGenerator<T extends Model<object, 
             return {};
         }
 
-        const where = generateWhereOptionFromAccessControlResource(resource);
-        if (!where) {
-            return {};
-        }
-
         return {
-            where
+            where: generateWhereOptionFromAccessControlResource(resource)
         };
     }
 }
