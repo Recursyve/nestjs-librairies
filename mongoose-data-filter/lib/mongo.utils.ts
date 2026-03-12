@@ -1,10 +1,10 @@
 import { RuleModel } from "./filter/models";
 import { AddFieldModel } from "./models/add-field.model";
 import { FilterOperatorTypes } from "./filter";
-import { FilterQuery } from "mongoose";
+import { QueryFilter } from "mongoose";
 
 export class MongoUtils {
-    public static generateWhereValue(rule: RuleModel): FilterQuery<any> {
+    public static generateWhereValue(rule: RuleModel): QueryFilter<any> {
         switch (rule.operation) {
             case "equal":
                 return rule.value as any;

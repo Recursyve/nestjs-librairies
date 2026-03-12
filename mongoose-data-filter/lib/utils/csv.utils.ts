@@ -1,5 +1,5 @@
 import { ObjectUtils } from "@recursyve/nestjs-common";
-import * as csv from "csv-stringify";
+import { stringify } from "csv-stringify";
 import { promisify } from "util";
 
 export class CsvUtils {
@@ -18,7 +18,7 @@ export class CsvUtils {
             aoa.unshift(header);
         }
 
-        const csvAsPromise = promisify<any[][], string>(csv);
+        const csvAsPromise = promisify<any[][], string>(stringify);
         return Buffer.from(await csvAsPromise(aoa));
     }
 }

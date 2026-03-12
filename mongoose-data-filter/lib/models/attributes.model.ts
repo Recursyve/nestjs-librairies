@@ -2,7 +2,7 @@ import { MongoUtils } from "../mongo.utils";
 import { AddFieldModel } from "./add-field.model";
 import { IncludeConfig, IncludeWhereModel } from "./include.model";
 import { PathConfig, PathModel } from "./path.model";
-import { FilterQuery } from "mongoose";
+import { QueryFilter } from "mongoose";
 
 export interface AttributesConfigModel {
     key: string;
@@ -65,7 +65,7 @@ export class AttributesConfig implements AttributesConfigModel {
         return MongoUtils.reduceFieldsToAdd(this.fieldsToAdd);
     }
 
-    private generateWhereConditions(model: IncludeWhereModel, options?: object): FilterQuery<any> {
+    private generateWhereConditions(model: IncludeWhereModel, options?: object): QueryFilter<any> {
         const where = {};
         for (const key in model) {
             if (!model.hasOwnProperty(key)) {

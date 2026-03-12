@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
-import { Connection, FilterQuery, Schema } from "mongoose";
+import { Connection, QueryFilter, Schema } from "mongoose";
 import { IncludeModel } from "../models/include.model";
 import { PathModel } from "../models/path.model";
 import { MongoUtils } from "../mongo.utils";
@@ -73,7 +73,7 @@ export class MongoSchemaScanner {
         return result;
     }
 
-    private getSingleLookups(obj: any, path: string, where?: FilterQuery<any>): [any, boolean] {
+    private getSingleLookups(obj: any, path: string, where?: QueryFilter<any>): [any, boolean] {
         const fromCollection = this.connection.model(obj?.ref)?.collection?.name;
         if (!fromCollection) {
             throw new Error(`No collection found for reference ${path}`);

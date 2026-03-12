@@ -1,3 +1,4 @@
+import { QueryFilter } from "mongoose";
 import * as mongoose from "mongoose";
 import { TranslateAdapter } from "../../adapters";
 import { MongoUtils } from "../../mongo.utils";
@@ -24,7 +25,7 @@ export interface FilterDefinition extends BaseFilterDefinition {
 
     getConfig(key: string, requestInfo: RequestInfo): Promise<FilterBaseConfigurationModel>;
 
-    getMatchOptions(rule: QueryRuleModel): Promise<mongoose.FilterQuery<any>>;
+    getMatchOptions(rule: QueryRuleModel): Promise<QueryFilter<any>>;
 }
 
 export abstract class Filter implements FilterDefinition {
@@ -95,7 +96,7 @@ export abstract class Filter implements FilterDefinition {
         return config;
     }
 
-    public async getMatchOptions(rule: QueryRuleModel, name?: string): Promise<mongoose.FilterQuery<any>> {
+    public async getMatchOptions(rule: QueryRuleModel, name?: string): Promise<QueryFilter<any>> {
         if (!name) {
             name = this.path ? `${this.path}.${this.attribute}` : this.attribute;
         }

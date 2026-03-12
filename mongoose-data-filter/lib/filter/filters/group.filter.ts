@@ -1,6 +1,6 @@
+import { QueryFilter } from "mongoose";
 import * as mongoose from "mongoose";
 import { TranslateAdapter } from "../../adapters/translate.adapter";
-import { DataFilterUserModel } from "../../models/user.model";
 import { FilterUtils } from "../filter.utils";
 import { GroupFilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { QueryRuleModel } from "../models/query.model";
@@ -19,7 +19,7 @@ export interface BaseGroupFilterDefinition {
 
 export interface GroupFilterDefinition extends BaseGroupFilterDefinition {
     getConfig(key: string, requestInfo: RequestInfo): Promise<GroupFilterBaseConfigurationModel>;
-    getMatchOptions(rule: QueryRuleModel, name?: string): Promise<mongoose.FilterQuery<any>>;
+    getMatchOptions(rule: QueryRuleModel, name?: string): Promise<QueryFilter<any>>;
 }
 
 export class GroupFilter implements GroupFilterDefinition {
@@ -72,7 +72,7 @@ export class GroupFilter implements GroupFilterDefinition {
         return config;
     }
 
-    public async getMatchOptions(rule: QueryRuleModel, name?: string): Promise<mongoose.FilterQuery<any>> {
+    public async getMatchOptions(rule: QueryRuleModel, name?: string): Promise<QueryFilter<any>> {
         const [root, value] = this.getRules(rule);
         if (!root || !value) {
             return {};

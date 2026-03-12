@@ -2,9 +2,9 @@ import { Injectable } from "@nestjs/common";
 import {
     Aggregate,
     Connection,
-    FilterQuery,
     QueryOptions,
-    Model
+    Model,
+    QueryFilter
 } from "mongoose";
 import { AccessControlAdapter, ExportAdapter, TranslateAdapter } from "./adapters";
 import { AddFieldModel } from "./models/add-field.model";
@@ -42,7 +42,7 @@ export class DataFilterRepository<Data> {
     }
 
     public async findOne(
-        conditions?: FilterQuery<Data>,
+        conditions?: QueryFilter<Data>,
         projection?: any | null,
         options?: QueryOptions,
         config?: object,
@@ -58,7 +58,7 @@ export class DataFilterRepository<Data> {
     }
 
     public async find(
-        conditions?: FilterQuery<Data>,
+        conditions?: QueryFilter<Data>,
         projection?: any | null,
         options?: QueryOptions,
         config?: object,
@@ -72,7 +72,7 @@ export class DataFilterRepository<Data> {
         return results.map(x => this.transformObject(x));
     }
 
-    public async count(conditions?: FilterQuery<Data>): Promise<Data[]> {
+    public async count(conditions?: QueryFilter<Data>): Promise<Data[]> {
         const aggregation = this.getFilterAggregation(conditions);
         return await aggregation.count("total").exec().then(x => x?.shift()?.total)
     }
@@ -117,7 +117,7 @@ export class DataFilterRepository<Data> {
     }
 
     public getFilterAggregation(
-        conditions?: FilterQuery<any>,
+        conditions?: QueryFilter<Data>,
         options?: QueryOptions,
         config?: object,
         addFields?: AddFieldModel[]
@@ -125,7 +125,7 @@ export class DataFilterRepository<Data> {
         let aggregation = this.model.aggregate(this.getLookups(config));
 
         if (conditions) {
-            aggregation = aggregation.match(conditions);
+            aggregation = aggregation.match(conditions as QueryFilter<any>);
         }
         if (addFields?.length) {
             aggregation = aggregation.addFields(MongoUtils.reduceFieldsToAdd(addFields));

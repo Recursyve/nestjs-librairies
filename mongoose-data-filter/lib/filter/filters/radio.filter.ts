@@ -1,5 +1,5 @@
+import { QueryFilter } from "mongoose";
 import * as mongoose from "mongoose";
-import { DataFilterUserModel } from "../../models/user.model";
 import { FilterUtils } from "../filter.utils";
 import { QueryRuleModel } from "../models";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
@@ -54,7 +54,7 @@ export class RadioFilter extends Filter implements RadioFilterDefinition {
         };
     }
 
-    public async getMatchOptions(rule: QueryRuleModel): Promise<mongoose.FilterQuery<any>> {
+    public async getMatchOptions(rule: QueryRuleModel): Promise<QueryFilter<any>> {
         const option = this.options.find(x => x.key === rule.value);
         if (!option) {
             return super.getMatchOptions(rule);

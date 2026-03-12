@@ -1,4 +1,4 @@
-import { FilterQuery } from "mongoose";
+import { QueryFilter } from "mongoose";
 import { OrderModel } from "../..";
 import { AddFieldModel } from "../../models/add-field.model";
 
@@ -7,7 +7,7 @@ export type SortItemColumn = string;
 export interface BaseSortRuleDefinition {
     attribute: string;
     path?: string;
-    where?: FilterQuery<any>;
+    where?: QueryFilter<any>;
 }
 
 export interface SortRuleDefinition extends BaseSortRuleDefinition {
@@ -20,7 +20,7 @@ export abstract class SortRule implements SortRuleDefinition {
 
     public attribute: string;
     public path?: string;
-    public where?: FilterQuery<any>;
+    public where?: QueryFilter<any>;
 
     protected constructor(definition?: BaseSortRuleDefinition) {
         if (definition) {

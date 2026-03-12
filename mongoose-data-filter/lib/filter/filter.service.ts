@@ -1,6 +1,6 @@
 import { Injectable, Type } from "@nestjs/common";
 import * as mongoose from "mongoose";
-import { Model } from "mongoose";
+import { Model, QueryFilter } from "mongoose";
 import { ExportTypes } from "..";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
@@ -157,14 +157,14 @@ export class FilterService<Data> {
         pipeline.push(...MongoUtils.mergeLookups(queryLookups, orderLookups));
 
         const match: any = {};
-        const searchConditions: mongoose.FilterQuery<any>[] = [];
+        const searchConditions: QueryFilter<any>[] = [];
         if (options.search?.value?.length) {
             match.$match = { $and: searchConditions };
 
             searchConditions.push(this.generateSearchOptions(options.search));
         }
 
-        const matchConditions: mongoose.FilterQuery<any>[] = [];
+        const matchConditions: QueryFilter<any>[] = [];
         await this.generateMatchOptions(options.query, matchConditions);
 
         if (!match.$match && matchConditions.length) {
@@ -253,7 +253,7 @@ export class FilterService<Data> {
         return MongoUtils.reduceLookups(lookups);
     }
 
-    private async generateMatchOptions(query: QueryModel, filters: mongoose.FilterQuery<any>[]): Promise<void> {
+    private async generateMatchOptions(query: QueryModel, filters: QueryFilter<any>[]): Promise<void> {
         if (!query?.rules) {
             return;
         }
@@ -261,9 +261,9 @@ export class FilterService<Data> {
         for (const rule of query.rules) {
             const c = rule as QueryModel;
             if (c.condition) {
-                const conditions: mongoose.FilterQuery<any>[] = [];
+                const conditions: QueryFilter<any>[] = [];
                 const op = c.condition === "and" ? "$and" : "$or";
-                const where: mongoose.FilterQuery<any> = { [op]: conditions };
+                const where: QueryFilter<any> = { [op]: conditions };
                 await this.generateMatchOptions(c, conditions);
 
                 if (where[op as any].length) {

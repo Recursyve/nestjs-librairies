@@ -1,9 +1,9 @@
-import * as mongoose from "mongoose";
+import * as moment from "moment";
+import { QueryFilter } from "mongoose";
 import { QueryRuleModel } from "../models";
 import { DateOperators, FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
 import { BaseFilterDefinition, Filter } from "./filter";
-import * as moment from "moment";
 
 // Filters a row by exact date given in the rules. We strip the time from the date.
 //
@@ -22,7 +22,7 @@ export class DateFilter extends Filter {
         super(definition);
     }
 
-    public async getMatchOptions(rule: QueryRuleModel): Promise<mongoose.FilterQuery<any>> {
+    public async getMatchOptions(rule: QueryRuleModel): Promise<QueryFilter<any>> {
         if (rule.operation === FilterOperatorTypes.Between || rule.operation === FilterOperatorTypes.NotBetween) {
             const values = [
                 moment(rule.value[0])
@@ -67,7 +67,7 @@ export class DateFilter extends Filter {
         }
     }
 
-    private async getEqualWhereOptions(rule: QueryRuleModel, start: string, end: string): Promise<mongoose.FilterQuery<any>> {
+    private async getEqualWhereOptions(rule: QueryRuleModel, start: string, end: string): Promise<QueryFilter<any>> {
         return super.getMatchOptions({
             operation: FilterOperatorTypes.Between,
             value: [start, end],
@@ -75,7 +75,7 @@ export class DateFilter extends Filter {
         });
     }
 
-    private async getNotEqualWhereOptions(rule: QueryRuleModel, start: string, end: string): Promise<mongoose.FilterQuery<any>> {
+    private async getNotEqualWhereOptions(rule: QueryRuleModel, start: string, end: string): Promise<QueryFilter<any>> {
         return {
             $or: [
                 await super.getMatchOptions({
@@ -92,7 +92,7 @@ export class DateFilter extends Filter {
         };
     }
 
-    private async getLessWhereOptions(rule: QueryRuleModel, start: string): Promise<mongoose.FilterQuery<any>> {
+    private async getLessWhereOptions(rule: QueryRuleModel, start: string): Promise<QueryFilter<any>> {
         return super.getMatchOptions({
             operation: FilterOperatorTypes.Less,
             value: start,
@@ -100,7 +100,7 @@ export class DateFilter extends Filter {
         });
     }
 
-    private async getLessOrEqualWhereOptions(rule: QueryRuleModel, end: string): Promise<mongoose.FilterQuery<any>> {
+    private async getLessOrEqualWhereOptions(rule: QueryRuleModel, end: string): Promise<QueryFilter<any>> {
         return super.getMatchOptions({
             operation: FilterOperatorTypes.LessOrEqual,
             value: end,
@@ -108,7 +108,7 @@ export class DateFilter extends Filter {
         });
     }
 
-    private async getGreaterWhereOptions(rule: QueryRuleModel, end: string): Promise<mongoose.FilterQuery<any>> {
+    private async getGreaterWhereOptions(rule: QueryRuleModel, end: string): Promise<QueryFilter<any>> {
         return super.getMatchOptions({
             operation: FilterOperatorTypes.Greater,
             value: end,
@@ -116,7 +116,7 @@ export class DateFilter extends Filter {
         });
     }
 
-    private async getGreaterOrEqualWhereOptions(rule: QueryRuleModel, start: string): Promise<mongoose.FilterQuery<any>> {
+    private async getGreaterOrEqualWhereOptions(rule: QueryRuleModel, start: string): Promise<QueryFilter<any>> {
         return super.getMatchOptions({
             operation: FilterOperatorTypes.GreaterOrEqual,
             value: start,

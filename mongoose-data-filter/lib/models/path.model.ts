@@ -1,4 +1,4 @@
-import { FilterQuery } from "mongoose";
+import { QueryFilter } from "mongoose";
 import { IncludeWhereModel } from "./include.model";
 
 export interface PathConfig {
@@ -6,8 +6,7 @@ export interface PathConfig {
     where?: IncludeWhereModel;
 }
 
-
 export interface PathModel {
     path: string;
-    where?: FilterQuery<any>;
+    where?: QueryFilter<any>;
 }
