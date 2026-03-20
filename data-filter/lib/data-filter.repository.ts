@@ -108,6 +108,12 @@ export class DataFilterRepository<Data> {
         return this.model.count(options);
     }
 
+    public async countFromUser(user: DataFilterUserModel, where?: WhereOptions, conditions?: object): Promise<number> {
+        const options = this.generateFindOptions({ where }, conditions);
+        options.where = await this.mergeAccessControlCondition(options.where, user);
+        return this.model.count(options);
+    }
+
     public async search(search: string, language: string | null = null, options?: FindOptions, conditions?: object): Promise<Data[]> {
         const findOptions = this.generateFindOptions(options, conditions);
         this.addSearchCondition(search, findOptions, language);
