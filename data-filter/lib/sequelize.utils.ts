@@ -39,8 +39,8 @@ export class SequelizeUtils {
 
         return arr.map((include) => ({
             ...include,
+            ...(include.through != null ? { through: { ...include.through, attributes: [] } } : {}),
             attributes: [],
-            through: { attributes: [] },
             include: include.include ? this.stripIncludeAttributes(include.include as IncludeOptions[]) : [],
         }));
     }

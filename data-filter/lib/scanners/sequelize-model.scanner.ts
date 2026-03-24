@@ -31,6 +31,7 @@ export class SequelizeModelScanner {
                 as: association.getAs() as string,
                 model: association.getAssociatedClass(),
                 attributes: ignoreAttributes ? [] : { include: [] },
+                through: association.getAssociation() === Association.BelongsToMany ? { attributes: [] } : undefined,
                 include: [],
                 required: false
             });
