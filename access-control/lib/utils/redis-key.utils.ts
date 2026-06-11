@@ -1,21 +1,21 @@
 import { AccessActionType, ResourceId, Users } from "../models";
-import * as querystring from "querystring";
 
 export class RedisKeyUtils {
     public static prefix = "access-control";
+    public static rolePrefix = "role@";
 
     public static userResourceActionKey(user: Users, resourceName: string, action: AccessActionType): string {
         if (!user.role) {
             return `${this.prefix}:${user.id}:${resourceName}:${action}`;
         }
-        return `${this.prefix}:${user.id}-${user.role}:${resourceName}:${action}`;
+        return `${this.prefix}:${user.id}-${this.rolePrefix}${user.role}:${resourceName}:${action}`;
     }
 
     public static userResourceActionWildcardKey(user: Users, resourceName: string): string {
         if (!user.role) {
             return `${this.prefix}:${user.id}:${resourceName}:wildcard`;
         }
-        return `${this.prefix}:${user.id}-${user.role}:${resourceName}:wildcard`;
+        return `${this.prefix}:${user.id}-${this.rolePrefix}${user.role}:${resourceName}:wildcard`;
     }
 
     public static usersResourceActionWildcardPattern(resourceName: string, role?: string): string {
@@ -23,7 +23,7 @@ export class RedisKeyUtils {
             return `${this.prefix}:*:${resourceName}:wildcard`;
         }
 
-        return `${this.prefix}:*-${role}:${resourceName}:wildcard`;
+        return `${this.prefix}:*-${this.rolePrefix}${role}:${resourceName}:wildcard`;
     }
 
     public static extractUserFromUsersResourceActionWildcardPatternMatch(
@@ -40,22 +40,21 @@ export class RedisKeyUtils {
             return null;
         }
 
-        const [id, role] = userIdAndMaybeRole.split("-");
-        return { id, role };
+        return this.extractUserFromKey(userIdAndMaybeRole);
     }
 
     public static userResourceActionConditionKey(user: Users, resourceName: string): string {
         if (!user.role) {
-            return `${this.prefix}:${user.id}:${resourceName}::condition`;
+            return `${this.prefix}:${user.id}:${resourceName}:condition`;
         }
-        return `${this.prefix}:${user.id}-${user.role}:${resourceName}:condition`;
+        return `${this.prefix}:${user.id}-${this.rolePrefix}${user.role}:${resourceName}:condition`;
     }
 
     public static userResourceActionPattern(user: Users, resourceName: string): string {
         if (!user.role) {
             return `${this.prefix}:${user.id}:${resourceName}:*`;
         }
-        return `${this.prefix}:${user.id}-${user.role}:${resourceName}:*`;
+        return `${this.prefix}:${user.id}-${this.rolePrefix}${user.role}:${resourceName}:*`;
     }
 
     public static resourceActionPattern(resourceName: string): string {
@@ -66,7 +65,7 @@ export class RedisKeyUtils {
         if (!user.role) {
             return `${this.prefix}:${resourceName}:${resourceId}:${user.id}`;
         }
-        return `${this.prefix}:${resourceName}:${resourceId}:${user.id}-${user.role}`;
+        return `${this.prefix}:${resourceName}:${resourceId}:${user.id}-${this.rolePrefix}${user.role}`;
     }
 
     public static userResourceIdPattern(resourceName: string, resourceId: ResourceId, role?: string): string {
@@ -75,7 +74,7 @@ export class RedisKeyUtils {
             return pattern;
         }
 
-        return `${pattern}-${role}`;
+        return `${pattern}-${this.rolePrefix}${role}`;
     }
 
     public static extractUserFromUserResourceIdPatternMatch(
@@ -89,21 +88,29 @@ export class RedisKeyUtils {
             return null;
         }
 
-        const [id, role] = userIdAndMaybeRole.split("-");
-        return { id, role };
+        return this.extractUserFromKey(userIdAndMaybeRole);
     }
 
     public static userAccessControl(user: Users, resourceName: string): string {
         if (!user.role) {
             return `${this.prefix}:${user.id}:${resourceName}`;
         }
-        return `${this.prefix}:${user.id}-${user.role}:${resourceName}`;
+        return `${this.prefix}:${user.id}-${this.rolePrefix}${user.role}:${resourceName}`;
     }
 
     public static userAccessControlType(user: Users, resourceName: string): string {
         if (!user.role) {
             return `${this.prefix}:${user.id}:${resourceName}:type`;
         }
-        return `${this.prefix}:${user.id}-${user.role}:${resourceName}:type`;
+        return `${this.prefix}:${user.id}-${this.rolePrefix}${user.role}:${resourceName}:type`;
+    }
+
+    public static extractUserFromKey(key: string): Users {
+        if (!key.includes(`-${this.rolePrefix}`)) {
+            return { id: key };
+        }
+
+        const [id, role] = key.split(`-${this.rolePrefix}`);
+        return { id, role };
     }
 }
