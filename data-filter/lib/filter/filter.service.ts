@@ -182,6 +182,8 @@ export class FilterService<Data> {
 
         this.addSearchCondition(options.search, findOptions);
         this.addOrderCondition(options.order, findOptions, options.data);
+        this.addGroupOption(options, findOptions);
+
         delete options.page;
         const values = await (user ? this.findValues(user, options, findOptions, this.exportRepository) : this.findValues(options, findOptions, this.exportRepository));
         const headers = await this.model.getExportedFieldsKeys(type);
