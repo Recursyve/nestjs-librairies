@@ -11,7 +11,17 @@ export default {
     // Workspace: test-app resolves the lib via file:.. → dist/; sandboxing breaks that path.
     inPlace: true,
     coverageAnalysis: "off",
-    mutate: ["lib/sequelize.utils.ts:215-277"],
+    mutate: [
+        "lib/data-filter.repository.ts:415-471",
+        "lib/filter/filter.service.ts:163-204",
+        "lib/filter/filter.service.ts:206-238",
+        "lib/filter/filter.service.ts:438-445",
+        "lib/filter/filter.service.ts:477-487",
+        "lib/filter/filter.service.ts:489-551",
+        "lib/filter/filter.service.ts:553-578",
+        "lib/filter/filters/geo-bounds.filter.ts:34-49",
+        "lib/sequelize.utils.ts:215-277",
+    ],
     ignorePatterns: ["dist/**", "coverage/**", "reports/**", ".stryker-tmp/**", "**/*.spec.ts", "test-app/dist/**"],
     concurrency: 4,
     timeoutMS: 300_000,
