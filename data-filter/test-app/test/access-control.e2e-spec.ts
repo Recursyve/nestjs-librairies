@@ -71,7 +71,10 @@ describe("access control integration", () => {
 
     /**
      * @p0 legacy-contract
-     * Observed: when access control is enabled globally but no user is deserialized, FilterService skips ACL WHERE merging.
+     * Descriptive only — not intended authorization semantics.
+     * Observed: when access control is enabled globally but no user is deserialized,
+     * FilterService skips ACL WHERE merging and returns the unscoped dataset.
+     * Frozen for Phase 1 unless changed via an explicit behavior amendment.
      */
     it("currently returns all rows when the request has no deserialized user", async () => {
         await using first = await createSeededPerson({
@@ -124,6 +127,45 @@ describe("access control integration", () => {
         expect(TestHarness.mapFilterRowIds(TestHarness.parseFilterBody<{ id: number }>(response))).not.toContain(
             other.id
         );
+    });
+
+    it("intersects resources.where ACL with normal filter rules using adversarial rows", async () => {
+        await using scopedMatch = await createSeededPerson({
+            email: "scoped-match@example.com",
+            first_name: "Scoped",
+            last_name: "Match",
+            user_id: "scope-a"
+        });
+        await using scopedNoMatch = await createSeededPerson({
+            email: "scoped-nomatch@example.com",
+            first_name: "Outside",
+            last_name: "ScopeA",
+            user_id: "scope-a"
+        });
+        await using otherScopeMatch = await createSeededPerson({
+            email: "other-scope-match@example.com",
+            first_name: "Scoped",
+            last_name: "OtherScope",
+            user_id: "scope-b"
+        });
+
+        const response = await harness.postFilter(
+            route,
+            {
+                page: TestHarness.defaultPage,
+                query: {
+                    condition: "and",
+                    rules: [{ id: "firstName", operation: FilterOperatorTypes.Equal, value: "Scoped" }]
+                }
+            },
+            { id: "scope-a", scopeUserId: "scope-a" }
+        );
+
+        expect(response.status).toBe(200);
+        const ids = TestHarness.mapFilterRowIds(TestHarness.parseFilterBody<{ id: number }>(response));
+        expect(ids).toEqual([scopedMatch.id]);
+        expect(ids).not.toContain(scopedNoMatch.id);
+        expect(ids).not.toContain(otherScopeMatch.id);
     });
 });
 
