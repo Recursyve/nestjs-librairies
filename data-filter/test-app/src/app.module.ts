@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { ContractSystemsModule } from "./contract-systems/contract-systems.module";
 import { ContractsModule } from "./contracts/contracts.module";
 import { CoordsModule } from "./coords/coords.module";
 import { InvoicesModule } from "./invoices/invoices.module";
@@ -14,6 +15,7 @@ import { VisitsModule } from "./visits/visits.module";
 
 @Module({
     imports: [
+        ContractSystemsModule,
         ContractsModule,
         CoordsModule,
         InvoicesModule,
