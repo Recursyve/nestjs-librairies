@@ -1,0 +1,44 @@
+---
+description: Principes de migration data-filter — hard gates, couplages, anti-patterns
+globs: data-filter/**
+alwaysApply: false
+---
+
+# data-filter — migration
+
+Source de vérité : `data-filter/ARCHITECTURE_DOCUMENT.md`.
+
+## Hard gate
+
+- **Phase 0 (characterization MySQL E2E) doit être complète** avant tout refactor de production motivé par la migration.
+- Interdit : démarrer P1 / « petit fix quoting » / cleanup avec un corpus P0 partiel (« le core suffit »).
+- Première phase à implémenter : **Phase 0 only**.
+
+## Preserve the outside
+
+Ne pas casser / redessiner en early phase :
+
+- décorateurs (`@Data`, `@Path`, `@Attributes`, `@Include`, `@Where`, …)
+- `FilterController` / OpenAPI / `@InjectFilter` / `forRoot` / `forFeature`
+- `BaseFilter` + configuration class-based
+- reflection / metadata (`DATA_FILTER`, `ATTRIBUTES`, scanners)
+
+## Trois couplages (ne jamais collapser)
+
+1. **MySQL accidentel** — backticks, `IF()` → Phase 1 sous l’API publique
+2. **Sequelize** — `Op`, `$path$`, includes, `fn`/`literal` → reste Sequelize tant que non prouvé autrement
+3. **Capabilities** — JSON, spatial, collation → gates / compilers dédiés plus tard, pas un port fourre-tout
+
+## Interdit
+
+- Rewrite greenfield / nouvelle DX d’authoring early
+- Large `DialectSql` / « SequelizeUtils as interface »
+- IR / SchemaPort / split packages / 2ᵉ ORM **avant** P0 complet + preuves P1/PG
+- Remplacer Sequelize comme nouvelle SoT
+- « Corriger » un comportement surprenant en P0 → encoder Y observé + tag `suspected-defect` / `legacy-contract`
+- Traiter un vert P0 comme preuve que le comportement est **souhaité**
+- Assertions `WhereOptions` / SQLite comme substitut au contrat E2E MySQL
+
+## Quoting Phase 1 (quand autorisé)
+
+Autorisé : quoting dialect-aware Sequelize **étroit**, ou mini-abstraction `ident`/`qualify` — **rien d’autre**.
