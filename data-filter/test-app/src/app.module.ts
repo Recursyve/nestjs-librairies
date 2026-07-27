@@ -3,11 +3,20 @@ import { ContractsModule } from "./contracts/contracts.module";
 import { CoordsModule } from "./coords/coords.module";
 import { InvoicesModule } from "./invoices/invoices.module";
 import { LocationsModule } from "./locations/locations.module";
+import { PersonsModule } from "./persons/persons.module";
 import { ProductsModule } from "./products/products.module";
 import { VisitsModule } from "./visits/visits.module";
 
 @Module({
-    imports: [ContractsModule, CoordsModule, InvoicesModule, LocationsModule, ProductsModule, VisitsModule],
+    imports: [
+        ContractsModule,
+        CoordsModule,
+        InvoicesModule,
+        LocationsModule,
+        PersonsModule,
+        ProductsModule,
+        VisitsModule
+    ],
     controllers: [],
     providers: []
 })
