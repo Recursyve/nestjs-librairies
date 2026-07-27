@@ -42,10 +42,11 @@ describe("controller / decorator integration", () => {
         });
 
         expect(response.status).toBe(200);
-        expect(response.body.total).toBe(1);
-        expect(response.body.values[0].id).toBe(alice.id);
-        expect(response.body.values[0].first_name).toBe("Alice");
-        expect(response.body.page).toEqual(TestHarness.defaultPage);
+        const body = TestHarness.parseFilterBody<{ id: number; first_name: string }>(response);
+        expect(body.total).toBe(1);
+        expect(body.values[0].id).toBe(alice.id);
+        expect(body.values[0].first_name).toBe("Alice");
+        expect(body.page).toEqual(TestHarness.defaultPage);
     });
 
     it("exposes POST /persons/filter-count", async () => {
@@ -72,8 +73,51 @@ describe("controller / decorator integration", () => {
         expect(harness.parseCountBody(response)).toBe(1);
     });
 
-    it("exports filtered persons to CSV with expected headers and rows", async () => {
+    it("returns the same filtered count from filter-count as filter total", async () => {
         await using alice = await createSeededPerson({
+            email: "alice@example.com",
+            first_name: "Alice",
+            last_name: "Alpha"
+        });
+        await using bob = await createSeededPerson({
+            email: "bob@example.com",
+            first_name: "Bob",
+            last_name: "Beta"
+        });
+        await using charlie = await createSeededPerson({
+            email: "charlie@example.com",
+            first_name: "Charlie",
+            last_name: "Gamma"
+        });
+        await using outsider = await createSeededPerson({
+            email: "outsider@otherdomain.com",
+            first_name: "Outside",
+            last_name: "World"
+        });
+
+        const query = {
+            page: TestHarness.defaultPage,
+            search: { value: "example" },
+            query: {
+                condition: "and" as const,
+                rules: [{ id: "firstName", operation: FilterOperatorTypes.NotEqual, value: "Charlie" }]
+            }
+        };
+
+        const filterResponse = await harness.postFilter("persons", query);
+        const countResponse = await harness.postFilterCount("persons", query);
+
+        expect(filterResponse.status).toBe(200);
+        expect(countResponse.status).toBe(200);
+        const filterBody = TestHarness.parseFilterBody<{ id: number }>(filterResponse);
+        expect(harness.parseCountBody(countResponse)).toBe(filterBody.total);
+        expect(TestHarness.mapFilterRowIds(filterBody).sort()).toEqual([alice.id, bob.id].sort());
+        expect(TestHarness.mapFilterRowIds(filterBody)).not.toContain(charlie.id);
+        expect(TestHarness.mapFilterRowIds(filterBody)).not.toContain(outsider.id);
+    });
+
+    it("exports filtered persons to CSV with expected headers and rows", async () => {
+        await using _alice = await createSeededPerson({
             email: "alice@example.com",
             first_name: "Alice",
             last_name: "Alpha"
@@ -104,7 +148,7 @@ describe("controller / decorator integration", () => {
     });
 
     it("exports filtered persons to XLSX with expected content type", async () => {
-        await using alice = await createSeededPerson({
+        await using _alice = await createSeededPerson({
             email: "alice@example.com",
             first_name: "Alice",
             last_name: "Alpha"
@@ -115,7 +159,7 @@ describe("controller / decorator integration", () => {
             last_name: "Beta"
         });
 
-        const response = await harness.postDownload("persons", "xlsx", {
+        const response = await harness.postDownloadBinary("persons", "xlsx", {
             page: TestHarness.defaultPage,
             query: {
                 condition: "and",
@@ -128,13 +172,18 @@ describe("controller / decorator integration", () => {
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         );
         expect(Number(response.headers["content-length"])).toBeGreaterThan(0);
+
+        const rows = TestHarness.parseXlsx(response.body as Buffer);
+        expect(rows[0]).toEqual(["exports.email", "exports.first_name", "exports.last_name"]);
+        expect(rows[1]).toEqual(["alice@example.com", "Alice", "Alpha"]);
+        expect(rows).toHaveLength(2);
     });
 
     it("exposes GET /persons/filter/config", async () => {
         const response = await harness.getFilterConfig("persons");
 
         expect(response.status).toBe(200);
-        const ids = response.body.map((item: { id: string }) => item.id);
+        const ids = TestHarness.parseFilterConfig(response).map((item) => item.id);
         expect(ids).toEqual(expect.arrayContaining(["firstName", "lastName", "email", "postalCode", "city"]));
     });
 
@@ -211,7 +260,8 @@ describe("controller / decorator integration", () => {
         });
 
         expect(response.status).toBe(200);
-        expect(response.body.values.map((row: { id: number }) => row.id)).toEqual([cs.id]);
-        expect(response.body.values.map((row: { id: number }) => row.id)).not.toContain(inactiveCs.id);
+        const body = TestHarness.parseFilterBody<{ id: number }>(response);
+        expect(TestHarness.mapFilterRowIds(body)).toEqual([cs.id]);
+        expect(TestHarness.mapFilterRowIds(body)).not.toContain(inactiveCs.id);
     });
 });

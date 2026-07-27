@@ -28,7 +28,7 @@ describe("equality / inequality operators", () => {
             first_name: "Alice",
             last_name: "Alpha"
         });
-        await using bob = await createSeededPerson({
+        await using _bob = await createSeededPerson({
             email: "bob@example.com",
             first_name: "Bob",
             last_name: "Beta"

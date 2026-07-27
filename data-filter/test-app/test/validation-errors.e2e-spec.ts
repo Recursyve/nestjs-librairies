@@ -29,10 +29,9 @@ describe("validation and error behavior", () => {
         });
 
         expect(response.status).toBe(200);
-        expect(response.body.total).toBe(4);
-        expect(response.body.values.map((row: { id: number }) => row.id).sort()).toEqual(
-            [a.id, b.id, c.id, d.id].sort()
-        );
+        const body = TestHarness.parseFilterBody<{ id: number }>(response);
+        expect(body.total).toBe(4);
+        expect(TestHarness.mapFilterRowIds(body).sort()).toEqual([a.id, b.id, c.id, d.id].sort());
     });
 
     it("returns 400 when POST /filter omits page.size", async () => {
@@ -41,7 +40,7 @@ describe("validation and error behavior", () => {
         });
 
         expect(response.status).toBe(400);
-        expect(response.body.message).toContain("page size");
+        expect(TestHarness.parseValidationMessage(response)).toContain("page size");
     });
 
     it("returns 400 when POST /filter page.size exceeds maxPage", async () => {
@@ -51,7 +50,7 @@ describe("validation and error behavior", () => {
         });
 
         expect(response.status).toBe(400);
-        expect(response.body.message).toContain("lower than 50");
+        expect(TestHarness.parseValidationMessage(response)).toContain("lower than 50");
     });
 
     it("returns empty array for unknown select config id", async () => {
@@ -127,7 +126,7 @@ describe("download edge behavior", () => {
     });
 
     it("accepts download without page.size", async () => {
-        await using alice = await createSeededPerson({
+        await using _alice = await createSeededPerson({
             email: "alice@example.com",
             first_name: "Alice",
             last_name: "Alpha"
@@ -161,7 +160,7 @@ describe("download edge behavior", () => {
         });
 
         expect(filterResponse.status).toBe(400);
-        expect(filterResponse.body.message).toContain("page size");
+        expect(TestHarness.parseValidationMessage(filterResponse)).toContain("page size");
         expect(downloadResponse.status).toBe(200);
     });
 });

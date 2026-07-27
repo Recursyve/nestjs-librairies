@@ -97,16 +97,27 @@ describe("string operators", () => {
             first_name: "Alice",
             last_name: "Alpha"
         });
+        await using middleDomain = await createSeededPerson({
+            email: "user@example.com@backup.org",
+            first_name: "Middle",
+            last_name: "Domain"
+        });
+        await using prefixDomain = await createSeededPerson({
+            email: "prefix-bob@example.com",
+            first_name: "Prefix",
+            last_name: "Domain"
+        });
 
         const ids = await harness.filterIds("persons", {
             page: TestHarness.defaultPage,
             query: {
                 condition: "and",
-                rules: [{ id: "email", operation: FilterOperatorTypes.EndsWith, value: "bob@example.com" }]
+                rules: [{ id: "email", operation: FilterOperatorTypes.EndsWith, value: "@example.com" }]
             }
         });
 
-        expect(ids).toEqual([bob.id]);
+        expect(ids.sort()).toEqual([alice.id, bob.id, prefixDomain.id].sort());
+        expect(ids).not.toContain(middleDomain.id);
     });
 
     it("filters with not_begins_with on first name", async () => {
@@ -144,17 +155,29 @@ describe("string operators", () => {
             first_name: "Alice",
             last_name: "Alpha"
         });
+        await using middleDomain = await createSeededPerson({
+            email: "user@example.com@backup.org",
+            first_name: "Middle",
+            last_name: "Domain"
+        });
+        await using prefixDomain = await createSeededPerson({
+            email: "prefix-bob@example.com",
+            first_name: "Prefix",
+            last_name: "Domain"
+        });
 
         const ids = await harness.filterIds("persons", {
             page: TestHarness.defaultPage,
             query: {
                 condition: "and",
-                rules: [{ id: "email", operation: FilterOperatorTypes.NotEndsWith, value: "bob@example.com" }]
+                rules: [{ id: "email", operation: FilterOperatorTypes.NotEndsWith, value: "@example.com" }]
             }
         });
 
-        expect(ids).toEqual([alice.id]);
+        expect(ids).toEqual([middleDomain.id]);
         expect(ids).not.toContain(bob.id);
+        expect(ids).not.toContain(alice.id);
+        expect(ids).not.toContain(prefixDomain.id);
     });
 
     it("filters with not_contains on city", async () => {
@@ -179,7 +202,7 @@ describe("string operators", () => {
             address: "200 King Street",
             postal_code: "M5H1A1"
         });
-        await using alice = await createSeededPerson({
+        await using _alice = await createSeededPerson({
             coord_id: montrealCoord.id,
             email: "alice@example.com",
             first_name: "Alice",
@@ -191,7 +214,7 @@ describe("string operators", () => {
             first_name: "Bob",
             last_name: "Beta"
         });
-        await using charlie = await createSeededPerson({
+        await using _charlie = await createSeededPerson({
             coord_id: montrealCoord.id,
             email: "charlie@example.com",
             first_name: "Charlie",
@@ -291,7 +314,7 @@ describe("IN / NOT IN operators", () => {
             stock: 0,
             tags: ["sale"]
         });
-        await using manual = await createSeededProduct({
+        await using _manual = await createSeededProduct({
             metadata: { category: "books", language: "en" },
             name: "Operator Manual",
             sku: "BK-003",
@@ -335,7 +358,7 @@ describe("IN / NOT IN operators", () => {
             stock: 0,
             tags: ["sale"]
         });
-        await using manual = await createSeededProduct({
+        await using _manual = await createSeededProduct({
             metadata: { category: "books", language: "en" },
             name: "Operator Manual",
             sku: "BK-003",
@@ -379,7 +402,7 @@ describe("NULL behavior", () => {
             email: "diana@example.com",
             first_name: "Diana"
         });
-        await using alice = await createSeededPerson({
+        await using _alice = await createSeededPerson({
             email: "alice@example.com",
             first_name: "Alice",
             last_name: "Alpha"
@@ -412,7 +435,7 @@ describe("NULL behavior", () => {
             first_name: "Charlie",
             last_name: "Gamma"
         });
-        await using diana = await createSeededPerson({
+        await using _diana = await createSeededPerson({
             email: "diana@example.com",
             first_name: "Diana"
         });
@@ -436,7 +459,7 @@ describe("NULL behavior", () => {
             status: "active",
             tags: ["legacy"]
         });
-        await using widget = await createSeededProduct({
+        await using _widget = await createSeededProduct({
             metadata: { brand: "Acme", category: "electronics", rating: 5 },
             name: "Widget Pro",
             sku: "WDG-001",

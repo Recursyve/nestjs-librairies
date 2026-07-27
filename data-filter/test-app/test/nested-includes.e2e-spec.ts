@@ -274,7 +274,11 @@ describe("nested includes / associations", () => {
             }
         });
 
-        const row = response.body.values.find((r: { id: number }) => r.id === cs.id);
-        expect(row.system.place.owners[0].person.email).toBe("alice@example.com");
+        const body = TestHarness.parseFilterBody<{
+            id: number;
+            system: { place: { owners: Array<{ person: { email: string } }> } };
+        }>(response);
+        const row = body.values.find((r) => r.id === cs.id);
+        expect(row?.system.place.owners[0].person.email).toBe("alice@example.com");
     });
 });

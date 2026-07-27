@@ -15,7 +15,7 @@ import { Coords } from "../models/coords.model";
 @Distance({
     name: "distance",
     attribute: "geo_point",
-    coordinates: (option) => option.coordinates
+    coordinates: (option: { coordinates: [number, number] }) => option.coordinates
 })
 export class CoordsData {}
 
