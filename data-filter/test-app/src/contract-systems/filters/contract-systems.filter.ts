@@ -115,6 +115,14 @@ export class ContractSystemsFilter extends BaseFilter<ContractSystemsData> {
             Promise.resolve([
                 { id: "inspection", name: "Inspection" },
                 { id: "repair", name: "Repair" }
-            ])
+            ]),
+        getResourceById: async ({ id }) => {
+            const values: SelectFilterValue[] = await Promise.resolve([
+                { id: "inspection", name: "Inspection" },
+                { id: "repair", name: "Repair" }
+            ]);
+
+            return values.find((value) => value.id === id) ?? null;
+        }
     });
 }

@@ -109,3 +109,59 @@ describe("filter-count edge behavior", () => {
         expect(harness.parseCountBody(response)).toBe(1);
     });
 });
+
+/**
+ * @p0 legacy-contract
+ * Observed: POST /download does not enforce page.size via FilterQueryGuard.
+ * Intended: parity with POST /filter validation may be desirable later.
+ */
+describe("download edge behavior", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("accepts download without page.size", async () => {
+        await using alice = await createSeededPerson({
+            email: "alice@example.com",
+            first_name: "Alice",
+            last_name: "Alpha"
+        });
+        await using _bob = await createSeededPerson({
+            email: "bob@example.com",
+            first_name: "Bob",
+            last_name: "Beta"
+        });
+
+        const response = await harness.postDownload("persons", "csv", {
+            query: {
+                condition: "and",
+                rules: [{ id: "firstName", operation: FilterOperatorTypes.Equal, value: "Alice" }]
+            }
+        });
+
+        expect(response.status).toBe(200);
+        expect(TestHarness.parseCsv(response.text)).toEqual([
+            ["exports.email", "exports.first_name", "exports.last_name"],
+            ["alice@example.com", "Alice", "Alpha"]
+        ]);
+    });
+
+    it("returns 400 when POST /filter omits page.size while download remains accepted", async () => {
+        const filterResponse = await harness.postFilter("persons", {
+            query: { condition: "and", rules: [] }
+        });
+        const downloadResponse = await harness.postDownload("persons", "csv", {
+            query: { condition: "and", rules: [] }
+        });
+
+        expect(filterResponse.status).toBe(400);
+        expect(filterResponse.body.message).toContain("page size");
+        expect(downloadResponse.status).toBe(200);
+    });
+});

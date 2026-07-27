@@ -72,7 +72,7 @@ describe("controller / decorator integration", () => {
         expect(harness.parseCountBody(response)).toBe(1);
     });
 
-    it("exposes POST /persons/download/csv", async () => {
+    it("exports filtered persons to CSV with expected headers and rows", async () => {
         await using alice = await createSeededPerson({
             email: "alice@example.com",
             first_name: "Alice",
@@ -94,8 +94,40 @@ describe("controller / decorator integration", () => {
 
         expect(response.status).toBe(200);
         expect(response.headers["content-type"]).toContain("text/csv");
-        expect(response.text).toContain("alice@example.com");
-        expect(response.text).not.toContain("bob@example.com");
+
+        const rows = TestHarness.parseCsv(response.text);
+        expect(rows).toEqual([
+            ["exports.email", "exports.first_name", "exports.last_name"],
+            ["alice@example.com", "Alice", "Alpha"]
+        ]);
+        expect(rows).toHaveLength(2);
+    });
+
+    it("exports filtered persons to XLSX with expected content type", async () => {
+        await using alice = await createSeededPerson({
+            email: "alice@example.com",
+            first_name: "Alice",
+            last_name: "Alpha"
+        });
+        await using _bob = await createSeededPerson({
+            email: "bob@example.com",
+            first_name: "Bob",
+            last_name: "Beta"
+        });
+
+        const response = await harness.postDownload("persons", "xlsx", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "firstName", operation: FilterOperatorTypes.Equal, value: "Alice" }]
+            }
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.headers["content-type"]).toContain(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+        expect(Number(response.headers["content-length"])).toBeGreaterThan(0);
     });
 
     it("exposes GET /persons/filter/config", async () => {

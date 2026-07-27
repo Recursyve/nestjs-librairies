@@ -92,7 +92,7 @@ describe("JSON filtering and search behavior", () => {
             tags: ["new", "featured"]
         });
         await using gadget = await createSeededProduct({
-            metadata: { brand: "BetaCorp", category: "electronics" },
+            metadata: { brand: "BetaCorp", category: "electronics", note: "bookmarked" },
             name: "Gadget Basic",
             sku: "GDG-002",
             status: "pending",
