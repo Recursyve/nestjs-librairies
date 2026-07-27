@@ -5,6 +5,11 @@ export default defineConfig({
     plugins: [swc.vite()],
     test: {
         globals: true,
-        include: ["**/*.e2e-spec.ts"]
+        pool: "forks",
+        maxWorkers: 1,
+        fileParallelism: false,
+        globalSetup: ["./test/harness/global-setup.ts"],
+        setupFiles: ["./test/harness/setup-env.ts"],
+        include: ["test/**/*.e2e-spec.ts"]
     }
 });
