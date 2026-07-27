@@ -5,6 +5,7 @@ import { InvoicesModule } from "./invoices/invoices.module";
 import { LocationsModule } from "./locations/locations.module";
 import { PersonsModule } from "./persons/persons.module";
 import { ProductsModule } from "./products/products.module";
+import { SystemsModule } from "./systems/systems.module";
 import { VisitsModule } from "./visits/visits.module";
 
 @Module({
@@ -15,6 +16,7 @@ import { VisitsModule } from "./visits/visits.module";
         LocationsModule,
         PersonsModule,
         ProductsModule,
+        SystemsModule,
         VisitsModule
     ],
     controllers: [],
