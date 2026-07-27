@@ -1,5 +1,5 @@
 import { FilterOperatorTypes } from "@recursyve/nestjs-data-filter";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
 import { createSeededContract } from "./seeds/create-seeded-contract";
 import { createSeededContractSystem } from "./seeds/create-seeded-contract-system";
@@ -15,6 +15,10 @@ describe("controller / decorator integration", () => {
 
     beforeAll(async () => {
         harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
     });
 
     it("exposes POST /persons/filter through FilterController", async () => {
@@ -68,6 +72,32 @@ describe("controller / decorator integration", () => {
         expect(harness.parseCountBody(response)).toBe(1);
     });
 
+    it("exposes POST /persons/download/csv", async () => {
+        await using alice = await createSeededPerson({
+            email: "alice@example.com",
+            first_name: "Alice",
+            last_name: "Alpha"
+        });
+        await using _bob = await createSeededPerson({
+            email: "bob@example.com",
+            first_name: "Bob",
+            last_name: "Beta"
+        });
+
+        const response = await harness.postDownload("persons", "csv", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "firstName", operation: FilterOperatorTypes.Equal, value: "Alice" }]
+            }
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.headers["content-type"]).toContain("text/csv");
+        expect(response.text).toContain("alice@example.com");
+        expect(response.text).not.toContain("bob@example.com");
+    });
+
     it("exposes GET /persons/filter/config", async () => {
         const response = await harness.getFilterConfig("persons");
 
@@ -114,6 +144,32 @@ describe("controller / decorator integration", () => {
             activated_date: "2024-02-01"
         });
 
+        await using inactiveSystem = await createSeededSystem({
+            place_id: place.id,
+            file_number: "SYS-002",
+            latitude: 45.5018,
+            longitude: -73.5674
+        });
+        await using inactiveInvoice = await createSeededInvoice({
+            invoice_number: "INV-002",
+            paid: true,
+            subtotal: 100,
+            total_cost: 115
+        });
+        await using inactiveContract = await createSeededContract({
+            start_date: "2024-01-01",
+            end_date: "2025-12-31",
+            invoice_id: inactiveInvoice.id,
+            payable_by: "2024-06-01",
+            total_cost: 1000
+        });
+        await using inactiveCs = await createSeededContractSystem({
+            contract_id: inactiveContract.id,
+            system_id: inactiveSystem.id,
+            active: false,
+            activated_date: "2024-02-01"
+        });
+
         const response = await harness.postFilter("contract-systems", {
             page: TestHarness.defaultPage,
             query: {
@@ -123,7 +179,7 @@ describe("controller / decorator integration", () => {
         });
 
         expect(response.status).toBe(200);
-        expect(response.body.total).toBeGreaterThan(0);
-        expect(response.body.values.map((row: { id: number }) => row.id)).toContain(cs.id);
+        expect(response.body.values.map((row: { id: number }) => row.id)).toEqual([cs.id]);
+        expect(response.body.values.map((row: { id: number }) => row.id)).not.toContain(inactiveCs.id);
     });
 });

@@ -1,5 +1,5 @@
 import { FilterOperatorTypes } from "@recursyve/nestjs-data-filter";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
 import { createSeededContract } from "./seeds/create-seeded-contract";
 import { createSeededContractSystem } from "./seeds/create-seeded-contract-system";
@@ -17,6 +17,10 @@ describe("nested includes / associations", () => {
 
     beforeAll(async () => {
         harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
     });
 
     it("filters persons on nested coord postal code", async () => {

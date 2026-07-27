@@ -1,10 +1,15 @@
 import { FilterOperatorTypes } from "@recursyve/nestjs-data-filter";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
 import { createSeededCoords } from "./seeds/create-seeded-coords";
 import { createSeededLocation } from "./seeds/create-seeded-location";
 import { createSeededPlace } from "./seeds/create-seeded-place";
 import { createSeededSystem } from "./seeds/create-seeded-system";
+
+const montrealCenter = { type: "Point" as const, coordinates: [-73.5673, 45.5017] as [number, number] };
+const quebecPoint = { type: "Point" as const, coordinates: [-71.208, 46.8139] as [number, number] };
+// ~550 m north of Montreal center
+const nearbyPoint = { type: "Point" as const, coordinates: [-73.5673, 45.5067] as [number, number] };
 
 describe("spatial behavior", () => {
     let harness: TestHarness;
@@ -13,14 +18,26 @@ describe("spatial behavior", () => {
         harness = await TestHarness.create();
     });
 
-    it("filters coords within geo localization distance", async () => {
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("filters coords within a wide geo localization distance", async () => {
         await using montrealLoc = await createSeededLocation({ value: "Montreal", unique_code: "MTL" });
         await using montreal = await createSeededCoords({
             location_id: montrealLoc.id,
             street_number: 100,
             address: "100 Main Street",
             postal_code: "H1A1A1",
-            geo_point: { type: "Point", coordinates: [-73.5673, 45.5017] }
+            geo_point: montrealCenter
+        });
+        await using nearbyLoc = await createSeededLocation({ value: "Montreal North", unique_code: "MTL-N" });
+        await using nearby = await createSeededCoords({
+            location_id: nearbyLoc.id,
+            street_number: 150,
+            address: "150 North Street",
+            postal_code: "H1A1A2",
+            geo_point: nearbyPoint
         });
         await using quebecLoc = await createSeededLocation({ value: "Quebec", unique_code: "QC" });
         await using _quebec = await createSeededCoords({
@@ -28,7 +45,7 @@ describe("spatial behavior", () => {
             street_number: 200,
             address: "200 Rue Saint-Jean",
             postal_code: "G1R1R1",
-            geo_point: { type: "Point", coordinates: [-71.208, 46.8139] }
+            geo_point: quebecPoint
         });
 
         const ids = await harness.filterIds("coords", {
@@ -48,25 +65,33 @@ describe("spatial behavior", () => {
             }
         });
 
-        expect(ids).toEqual([montreal.id]);
+        expect(ids.sort()).toEqual([montreal.id, nearby.id].sort());
     });
 
     it("filters coords within a tight geo localization distance", async () => {
-        await using montrealLoc = await createSeededLocation({ value: "Montreal", unique_code: "MTL" });
+        await using montrealLoc = await createSeededLocation({ value: "Montreal", unique_code: "MTL-T" });
         await using montreal = await createSeededCoords({
             location_id: montrealLoc.id,
             street_number: 100,
             address: "100 Main Street",
             postal_code: "H1A1A1",
-            geo_point: { type: "Point", coordinates: [-73.5673, 45.5017] }
+            geo_point: montrealCenter
         });
-        await using quebecLoc = await createSeededLocation({ value: "Quebec", unique_code: "QC" });
+        await using nearbyLoc = await createSeededLocation({ value: "Montreal North", unique_code: "MTL-TN" });
+        await using nearby = await createSeededCoords({
+            location_id: nearbyLoc.id,
+            street_number: 150,
+            address: "150 North Street",
+            postal_code: "H1A1A2",
+            geo_point: nearbyPoint
+        });
+        await using quebecLoc = await createSeededLocation({ value: "Quebec", unique_code: "QC-T" });
         await using _quebec = await createSeededCoords({
             location_id: quebecLoc.id,
             street_number: 200,
             address: "200 Rue Saint-Jean",
             postal_code: "G1R1R1",
-            geo_point: { type: "Point", coordinates: [-71.208, 46.8139] }
+            geo_point: quebecPoint
         });
 
         const ids = await harness.filterIds("coords", {
@@ -79,7 +104,7 @@ describe("spatial behavior", () => {
                         operation: FilterOperatorTypes.Equal,
                         value: [
                             { operation: FilterOperatorTypes.Equal, value: [45.5017, -73.5673] },
-                            { operation: FilterOperatorTypes.LessOrEqual, value: 1000 }
+                            { operation: FilterOperatorTypes.LessOrEqual, value: 50 }
                         ]
                     }
                 ]
@@ -87,6 +112,7 @@ describe("spatial behavior", () => {
         });
 
         expect(ids).toEqual([montreal.id]);
+        expect(ids).not.toContain(nearby.id);
     });
 });
 
@@ -102,6 +128,10 @@ describe("geo bounds on MySQL", () => {
         harness = await TestHarness.create();
     });
 
+    afterAll(async () => {
+        await harness.close();
+    });
+
     it("currently returns an empty result set for a covering polygon", async () => {
         await using location = await createSeededLocation({ value: "Montreal", unique_code: "MTL" });
         await using coord = await createSeededCoords({
@@ -109,10 +139,10 @@ describe("geo bounds on MySQL", () => {
             street_number: 100,
             address: "100 Main",
             postal_code: "H1A1A1",
-            geo_point: { type: "Point", coordinates: [-73.5673, 45.5017] }
+            geo_point: montrealCenter
         });
         await using place = await createSeededPlace({ billing_coord_id: coord.id, geo_coord_id: coord.id });
-        await using _system = await createSeededSystem({
+        await using system = await createSeededSystem({
             place_id: place.id,
             file_number: "SYS-MTL-001",
             latitude: 45.5017,
@@ -135,12 +165,13 @@ describe("geo bounds on MySQL", () => {
         });
 
         expect(ids).toEqual([]);
+        expect(ids).not.toContain(system.id);
     });
 });
 
 /**
  * @p0 legacy-contract
- * Observed: distance ordering returns rows but not necessarily nearest-first on MySQL with SRID 0 points.
+ * Observed: distance ordering returns distance values, but row order is not guaranteed nearest-first on MySQL with SRID 0 points.
  */
 describe("distance ordering on coords", () => {
     let harness: TestHarness;
@@ -149,22 +180,26 @@ describe("distance ordering on coords", () => {
         harness = await TestHarness.create();
     });
 
-    it("returns distance custom attribute when ordering coords by distance", async () => {
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("returns distance values where nearer coords have smaller distances", async () => {
         await using montrealLoc = await createSeededLocation({ value: "Montreal", unique_code: "MTL" });
         await using montreal = await createSeededCoords({
             location_id: montrealLoc.id,
             street_number: 100,
             address: "100 Main Street",
             postal_code: "H1A1A1",
-            geo_point: { type: "Point", coordinates: [-73.5673, 45.5017] }
+            geo_point: montrealCenter
         });
         await using quebecLoc = await createSeededLocation({ value: "Quebec", unique_code: "QC" });
-        await using _quebec = await createSeededCoords({
+        await using quebec = await createSeededCoords({
             location_id: quebecLoc.id,
             street_number: 200,
             address: "200 Rue Saint-Jean",
             postal_code: "G1R1R1",
-            geo_point: { type: "Point", coordinates: [-71.208, 46.8139] }
+            geo_point: quebecPoint
         });
 
         const response = await harness.postFilter("coords", {
@@ -175,7 +210,13 @@ describe("distance ordering on coords", () => {
         });
 
         expect(response.status).toBe(200);
-        expect(response.body.values[0].distance).toBeDefined();
-        expect(response.body.values.map((row: { id: number }) => row.id)).toContain(montreal.id);
+
+        const rows = response.body.values as Array<{ id: number; distance: number }>;
+        const montrealRow = rows.find((row) => row.id === montreal.id);
+        const quebecRow = rows.find((row) => row.id === quebec.id);
+
+        expect(montrealRow?.distance).toBeDefined();
+        expect(quebecRow?.distance).toBeDefined();
+        expect(montrealRow!.distance).toBeLessThan(quebecRow!.distance);
     });
 });

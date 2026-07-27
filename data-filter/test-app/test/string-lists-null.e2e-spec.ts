@@ -1,5 +1,5 @@
 import { FilterOperatorTypes } from "@recursyve/nestjs-data-filter";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
 import { createSeededCoords } from "./seeds/create-seeded-coords";
 import { createSeededLocation } from "./seeds/create-seeded-location";
@@ -11,6 +11,10 @@ describe("string operators", () => {
 
     beforeAll(async () => {
         harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
     });
 
     it("filters with contains on email", async () => {
@@ -34,6 +38,12 @@ describe("string operators", () => {
             first_name: "Diana"
         });
 
+        await using outsider = await createSeededPerson({
+            email: "outsider@otherdomain.com",
+            first_name: "Outside",
+            last_name: "World"
+        });
+
         const ids = await harness.filterIds("persons", {
             page: TestHarness.defaultPage,
             query: {
@@ -42,7 +52,8 @@ describe("string operators", () => {
             }
         });
 
-        expect(ids).toHaveLength(4);
+        expect(ids.sort()).toEqual([alice.id, bob.id, charlie.id, diana.id].sort());
+        expect(ids).not.toContain(outsider.id);
     });
 
     it("filters with begins_with on first name", async () => {
@@ -89,6 +100,54 @@ describe("string operators", () => {
         });
 
         expect(ids).toEqual([bob.id]);
+    });
+
+    it("filters with not_begins_with on first name", async () => {
+        await using charlie = await createSeededPerson({
+            email: "charlie@example.com",
+            first_name: "Charlie",
+            last_name: "Gamma"
+        });
+        await using alice = await createSeededPerson({
+            email: "alice@example.com",
+            first_name: "Alice",
+            last_name: "Alpha"
+        });
+
+        const ids = await harness.filterIds("persons", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "firstName", operation: FilterOperatorTypes.NotBeginsWith, value: "Ch" }]
+            }
+        });
+
+        expect(ids).toEqual([alice.id]);
+        expect(ids).not.toContain(charlie.id);
+    });
+
+    it("filters with not_ends_with on email", async () => {
+        await using bob = await createSeededPerson({
+            email: "bob@example.com",
+            first_name: "Bob",
+            last_name: "Beta"
+        });
+        await using alice = await createSeededPerson({
+            email: "alice@example.com",
+            first_name: "Alice",
+            last_name: "Alpha"
+        });
+
+        const ids = await harness.filterIds("persons", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "email", operation: FilterOperatorTypes.NotEndsWith, value: "bob@example.com" }]
+            }
+        });
+
+        expect(ids).toEqual([alice.id]);
+        expect(ids).not.toContain(bob.id);
     });
 
     it("filters with not_contains on city", async () => {
@@ -147,6 +206,54 @@ describe("string operators", () => {
 
         expect(ids.sort()).toEqual([bob.id, diana.id].sort());
     });
+
+    it("filters with is_empty on first name", async () => {
+        await using emptyName = await createSeededPerson({
+            email: "empty@example.com",
+            first_name: "",
+            last_name: "Empty"
+        });
+        await using alice = await createSeededPerson({
+            email: "alice@example.com",
+            first_name: "Alice",
+            last_name: "Alpha"
+        });
+
+        const ids = await harness.filterIds("persons", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "firstName", operation: FilterOperatorTypes.IsEmpty, value: null }]
+            }
+        });
+
+        expect(ids).toEqual([emptyName.id]);
+        expect(ids).not.toContain(alice.id);
+    });
+
+    it("filters with is_not_empty on first name", async () => {
+        await using emptyName = await createSeededPerson({
+            email: "empty@example.com",
+            first_name: "",
+            last_name: "Empty"
+        });
+        await using alice = await createSeededPerson({
+            email: "alice@example.com",
+            first_name: "Alice",
+            last_name: "Alpha"
+        });
+
+        const ids = await harness.filterIds("persons", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "firstName", operation: FilterOperatorTypes.IsNotEmpty, value: null }]
+            }
+        });
+
+        expect(ids).toEqual([alice.id]);
+        expect(ids).not.toContain(emptyName.id);
+    });
 });
 
 describe("IN / NOT IN operators", () => {
@@ -154,6 +261,10 @@ describe("IN / NOT IN operators", () => {
 
     beforeAll(async () => {
         harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
     });
 
     it("filters products with in on status", async () => {
@@ -250,6 +361,10 @@ describe("NULL behavior", () => {
 
     beforeAll(async () => {
         harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
     });
 
     it("filters persons with is_null on last name", async () => {

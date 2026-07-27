@@ -1,5 +1,5 @@
 import { FilterOperatorTypes } from "@recursyve/nestjs-data-filter";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
 import { createSeededPerson } from "./seeds/create-seeded-person";
 
@@ -10,11 +10,15 @@ describe("validation and error behavior", () => {
         harness = await TestHarness.create();
     });
 
-    it("returns 200 with empty values for unknown filter id", async () => {
-        await using _a = await createSeededPerson({ email: "a@example.com", first_name: "A", last_name: "One" });
-        await using _b = await createSeededPerson({ email: "b@example.com", first_name: "B", last_name: "Two" });
-        await using _c = await createSeededPerson({ email: "c@example.com", first_name: "C", last_name: "Three" });
-        await using _d = await createSeededPerson({ email: "d@example.com", first_name: "D", last_name: "Four" });
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("returns 200 with all rows when filter id is unknown", async () => {
+        await using a = await createSeededPerson({ email: "a@example.com", first_name: "A", last_name: "One" });
+        await using b = await createSeededPerson({ email: "b@example.com", first_name: "B", last_name: "Two" });
+        await using c = await createSeededPerson({ email: "c@example.com", first_name: "C", last_name: "Three" });
+        await using d = await createSeededPerson({ email: "d@example.com", first_name: "D", last_name: "Four" });
 
         const response = await harness.postFilter("persons", {
             page: { number: 0, size: 20 },
@@ -26,6 +30,28 @@ describe("validation and error behavior", () => {
 
         expect(response.status).toBe(200);
         expect(response.body.total).toBe(4);
+        expect(response.body.values.map((row: { id: number }) => row.id).sort()).toEqual(
+            [a.id, b.id, c.id, d.id].sort()
+        );
+    });
+
+    it("returns 400 when POST /filter omits page.size", async () => {
+        const response = await harness.postFilter("persons", {
+            query: { condition: "and", rules: [] }
+        });
+
+        expect(response.status).toBe(400);
+        expect(response.body.message).toContain("page size");
+    });
+
+    it("returns 400 when POST /filter page.size exceeds maxPage", async () => {
+        const response = await harness.postFilter("persons", {
+            page: { number: 0, size: 51 },
+            query: { condition: "and", rules: [] }
+        });
+
+        expect(response.status).toBe(400);
+        expect(response.body.message).toContain("lower than 50");
     });
 
     it("returns empty array for unknown select config id", async () => {
@@ -59,6 +85,10 @@ describe("filter-count edge behavior", () => {
 
     beforeAll(async () => {
         harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
     });
 
     it("accepts filter-count without page.size", async () => {

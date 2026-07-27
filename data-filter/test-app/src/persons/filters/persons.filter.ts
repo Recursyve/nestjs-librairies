@@ -4,6 +4,7 @@ import {
     BaseFilter,
     Data,
     EnumOrderRule,
+    Exports,
     IfOrderRule,
     Include,
     IsNullOrderRule,
@@ -15,6 +16,7 @@ import { Coords } from "../../coords/models/coords.model";
 import { Persons } from "../models/persons.model";
 
 @Data(Persons)
+@Exports(["email", "first_name", "last_name"])
 @Attributes(["first_name", "last_name", "email"])
 @SearchableAttributes(["first_name", "last_name", "email"])
 export class PersonsData {

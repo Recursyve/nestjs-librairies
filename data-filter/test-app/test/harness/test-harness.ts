@@ -28,12 +28,20 @@ export class TestHarness {
         return new TestHarness(app);
     }
 
+    public async close(): Promise<void> {
+        await this.app.close();
+    }
+
     public postFilter<T>(route: string, body: FilterQueryModel) {
         return request(this.app.getHttpServer()).post(`/${route}/filter`).send(body);
     }
 
     public postFilterCount(route: string, body: FilterQueryModel) {
         return request(this.app.getHttpServer()).post(`/${route}/filter-count`).send(body);
+    }
+
+    public postDownload(route: string, type: string, body: FilterQueryModel) {
+        return request(this.app.getHttpServer()).post(`/${route}/download/${type}`).send(body);
     }
 
     public parseCountBody(response: { status: number; text: string }): number {

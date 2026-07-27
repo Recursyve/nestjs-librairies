@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
 import { createSeededCoords } from "./seeds/create-seeded-coords";
 import { createSeededLocation } from "./seeds/create-seeded-location";
@@ -10,6 +10,10 @@ describe("search", () => {
 
     beforeAll(async () => {
         harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
     });
 
     it("searches persons by first name token", async () => {
@@ -31,6 +35,7 @@ describe("search", () => {
         });
 
         expect(ids).toEqual([alice.id]);
+        expect(ids).not.toContain(bob.id);
     });
 
     it("searches persons across nested address fields", async () => {
@@ -60,6 +65,7 @@ describe("search", () => {
         });
 
         expect(ids).toEqual([bob.id]);
+        expect(ids).not.toContain(alice.id);
     });
 
     it("matches multiple tokens with AND semantics on persons search", async () => {
@@ -73,6 +79,11 @@ describe("search", () => {
             first_name: "Alice",
             last_name: "Alpha"
         });
+        await using charlieBeta = await createSeededPerson({
+            email: "charlie@example.com",
+            first_name: "Charlie",
+            last_name: "Beta"
+        });
 
         const ids = await harness.filterIds("persons", {
             page: TestHarness.defaultPage,
@@ -81,6 +92,8 @@ describe("search", () => {
         });
 
         expect(ids).toEqual([bob.id]);
+        expect(ids).not.toContain(alice.id);
+        expect(ids).not.toContain(charlieBeta.id);
     });
 
     it("searches products by sku", async () => {
@@ -108,5 +121,34 @@ describe("search", () => {
         });
 
         expect(ids).toEqual([widget.id]);
+        expect(ids).not.toContain(gadget.id);
+    });
+
+    it("searches products by JSON metadata content", async () => {
+        await using widget = await createSeededProduct({
+            metadata: { brand: "Acme", category: "electronics", rating: 5 },
+            name: "Widget Pro",
+            sku: "WDG-001",
+            status: "active",
+            stock: 10,
+            tags: ["new", "featured"]
+        });
+        await using gadget = await createSeededProduct({
+            metadata: { brand: "BetaCorp", category: "electronics" },
+            name: "Gadget Basic",
+            sku: "GDG-002",
+            status: "pending",
+            stock: 0,
+            tags: ["sale"]
+        });
+
+        const ids = await harness.filterIds("products", {
+            page: TestHarness.defaultPage,
+            search: { value: "BetaCorp" },
+            query: { condition: "and", rules: [] }
+        });
+
+        expect(ids).toEqual([gadget.id]);
+        expect(ids).not.toContain(widget.id);
     });
 });
