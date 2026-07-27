@@ -5,19 +5,9 @@ import { defineConfig } from "vitest/config";
 
 const testAppRoot = path.dirname(fileURLToPath(import.meta.url));
 
-const defaultMutationSpecs = ["test/string-lists-null.e2e-spec.ts", "test/operators.e2e-spec.ts"];
-
 /**
- * Optional comma-separated override for mutation campaigns, e.g.
- * MUTATION_TEST_SPECS=test/string-lists-null.e2e-spec.ts
- */
-const mutationSpecs = process.env.MUTATION_TEST_SPECS
-    ? process.env.MUTATION_TEST_SPECS.split(",").map((spec) => spec.trim())
-    : defaultMutationSpecs;
-
-/**
- * Narrow Vitest config for Stryker proof runs.
- * Exercises generateWhereValue operators via HTTP characterization without running the full 81-test suite per mutant.
+ * Vitest config for Stryker mutation runs.
+ * Runs the full E2E characterization suite; mutation scope is controlled by stryker.config.mjs.
  */
 export default defineConfig({
     root: testAppRoot,
@@ -29,6 +19,6 @@ export default defineConfig({
         fileParallelism: false,
         globalSetup: [path.join(testAppRoot, "test/setup/global-setup.ts")],
         setupFiles: [path.join(testAppRoot, "test/setup/setup-env.ts")],
-        include: mutationSpecs
+        include: ["test/**/*.e2e-spec.ts"]
     }
 });
