@@ -169,3 +169,6 @@ fabric.properties
 build/
 dist/
 .idea
+.stryker-tmp/
+.cache/
+reports/mutation/
