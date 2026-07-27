@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { SequelizeModule } from "@nestjs/sequelize";
+import { DataFilterModule } from "@recursyve/nestjs-data-filter";
 import { ContractSystemsModule } from "./contract-systems/contract-systems.module";
 import { ContractsModule } from "./contracts/contracts.module";
 import { CoordsModule } from "./coords/coords.module";
@@ -16,6 +17,10 @@ import { VisitsModule } from "./visits/visits.module";
 
 @Module({
     imports: [
+        DataFilterModule.forRoot({
+            filter: { maxPage: 50, disableAccessControl: true },
+            validateData: false
+        }),
         SequelizeModule.forRoot({
             dialect: "mysql",
             host: "localhost",
