@@ -1,3 +1,4 @@
+import { FilterOperatorTypes } from "@recursyve/nestjs-data-filter";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
 import { createSeededCoords } from "./seeds/create-seeded-coords";
@@ -74,6 +75,11 @@ describe("search", () => {
             first_name: "Bob",
             last_name: "Beta"
         });
+        await using bobAlpha = await createSeededPerson({
+            email: "bob.alpha@example.com",
+            first_name: "Bob",
+            last_name: "Alp ha"
+        });
         await using alice = await createSeededPerson({
             email: "alice@example.com",
             first_name: "Alice",
@@ -92,6 +98,7 @@ describe("search", () => {
         });
 
         expect(ids).toEqual([bob.id]);
+        expect(ids).not.toContain(bobAlpha.id);
         expect(ids).not.toContain(alice.id);
         expect(ids).not.toContain(charlieBeta.id);
     });
@@ -150,5 +157,125 @@ describe("search", () => {
 
         expect(ids).toEqual([gadget.id]);
         expect(ids).not.toContain(widget.id);
+    });
+});
+
+describe("search combined with filters", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("applies search and filter rules together", async () => {
+        await using both = await createSeededPerson({
+            email: "alice.search@example.com",
+            first_name: "Alice",
+            last_name: "Searchable"
+        });
+        await using filterOnly = await createSeededPerson({
+            email: "bob@example.com",
+            first_name: "Bob",
+            last_name: "FilterOnly"
+        });
+        await using searchOnly = await createSeededPerson({
+            email: "charlie.search@example.com",
+            first_name: "Charlie",
+            last_name: "Gamma"
+        });
+        await using neither = await createSeededPerson({
+            email: "outsider@otherdomain.com",
+            first_name: "Outside",
+            last_name: "World"
+        });
+
+        const ids = await harness.filterIds("persons", {
+            page: TestHarness.defaultPage,
+            search: { value: "search" },
+            query: {
+                condition: "and",
+                rules: [{ id: "firstName", operation: FilterOperatorTypes.Equal, value: "Alice" }]
+            }
+        });
+
+        expect(ids).toEqual([both.id]);
+        expect(ids).not.toContain(filterOnly.id);
+        expect(ids).not.toContain(searchOnly.id);
+        expect(ids).not.toContain(neither.id);
+    });
+});
+
+describe("search with pagination", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("paginates search matches with stable ordering and disjoint pages", async () => {
+        await using alpha = await createSeededPerson({
+            email: "alpha.team@example.com",
+            first_name: "Alpha",
+            last_name: "Team"
+        });
+        await using beta = await createSeededPerson({
+            email: "beta.team@example.com",
+            first_name: "Beta",
+            last_name: "Team"
+        });
+        await using gamma = await createSeededPerson({
+            email: "gamma.team@example.com",
+            first_name: "Gamma",
+            last_name: "Team"
+        });
+        await using outsider = await createSeededPerson({
+            email: "outsider@otherdomain.com",
+            first_name: "Outside",
+            last_name: "World"
+        });
+
+        const firstPage = await harness.postFilter("persons", {
+            page: { number: 0, size: 1 },
+            order: [{ column: "id", direction: "asc" }],
+            search: { value: "team" },
+            query: { condition: "and", rules: [] }
+        });
+        const secondPage = await harness.postFilter("persons", {
+            page: { number: 1, size: 1 },
+            order: [{ column: "id", direction: "asc" }],
+            search: { value: "team" },
+            query: { condition: "and", rules: [] }
+        });
+        const thirdPage = await harness.postFilter("persons", {
+            page: { number: 2, size: 1 },
+            order: [{ column: "id", direction: "asc" }],
+            search: { value: "team" },
+            query: { condition: "and", rules: [] }
+        });
+
+        expect(firstPage.status).toBe(200);
+        const firstBody = TestHarness.parseFilterBody<{ id: number }>(firstPage);
+        expect(firstBody.total).toBe(3);
+        expect(TestHarness.mapFilterRowIds(firstBody)).toEqual([alpha.id]);
+
+        expect(secondPage.status).toBe(200);
+        const secondBody = TestHarness.parseFilterBody<{ id: number }>(secondPage);
+        expect(TestHarness.mapFilterRowIds(secondBody)).toEqual([beta.id]);
+
+        expect(thirdPage.status).toBe(200);
+        const thirdBody = TestHarness.parseFilterBody<{ id: number }>(thirdPage);
+        expect(TestHarness.mapFilterRowIds(thirdBody)).toEqual([gamma.id]);
+
+        const allIds = [...firstBody.values, ...secondBody.values, ...thirdBody.values].map((row) => row.id);
+        expect(allIds).not.toContain(outsider.id);
+        expect(new Set(allIds).size).toBe(3);
     });
 });

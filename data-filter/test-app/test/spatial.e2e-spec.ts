@@ -185,14 +185,6 @@ describe("distance ordering on coords", () => {
     });
 
     it("returns distance values with nearer coords first in response order", async () => {
-        await using montrealLoc = await createSeededLocation({ value: "Montreal", unique_code: "MTL" });
-        await using montreal = await createSeededCoords({
-            location_id: montrealLoc.id,
-            street_number: 100,
-            address: "100 Main Street",
-            postal_code: "H1A1A1",
-            geo_point: montrealCenter
-        });
         await using quebecLoc = await createSeededLocation({ value: "Quebec", unique_code: "QC" });
         await using quebec = await createSeededCoords({
             location_id: quebecLoc.id,
@@ -200,6 +192,14 @@ describe("distance ordering on coords", () => {
             address: "200 Rue Saint-Jean",
             postal_code: "G1R1R1",
             geo_point: quebecPoint
+        });
+        await using montrealLoc = await createSeededLocation({ value: "Montreal", unique_code: "MTL" });
+        await using montreal = await createSeededCoords({
+            location_id: montrealLoc.id,
+            street_number: 100,
+            address: "100 Main Street",
+            postal_code: "H1A1A1",
+            geo_point: montrealCenter
         });
 
         const response = await harness.postFilter("coords", {
@@ -211,7 +211,8 @@ describe("distance ordering on coords", () => {
 
         expect(response.status).toBe(200);
 
-        const rows = response.body.values as Array<{ id: number; distance: number }>;
+        const body = TestHarness.parseFilterBody<{ id: number; distance: number }>(response);
+        const rows = body.values;
         expect(rows.map((row) => row.id)).toEqual([montreal.id, quebec.id]);
 
         const montrealRow = rows.find((row) => row.id === montreal.id);

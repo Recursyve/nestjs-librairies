@@ -38,7 +38,8 @@ describe("sorting on MySQL", () => {
         });
 
         expect(response.status).toBe(200);
-        expect(response.body.values.map((row: { id: number }) => row.id)).toEqual([third.id, second.id, first.id]);
+        const body = TestHarness.parseFilterBody<{ id: number }>(response);
+        expect(TestHarness.mapFilterRowIds(body)).toEqual([third.id, second.id, first.id]);
     });
 });
 
