@@ -12,7 +12,8 @@
     },
     "scripts": {
         "build": "rimraf dist && nest build",
-        "build:lib": "rimraf dist && nest build -p tsconfig.lib.json",
+        "build:lib": "rimraf dist .cache/tsconfig.lib.tsbuildinfo && nest build -p tsconfig.lib.json",
+        "build:lib:mutation": "tsc -p tsconfig.lib.json",
         "copy:lib": "cp package.json .npmignore dist",
         "pack:lib": "npm run build:lib && cd dist && npm pack",
         "publish-package": "npm run build:lib && npm run copy:lib && npm publish ./dist --access public",
@@ -21,6 +22,7 @@
         "test": "TZ=UTC jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
+        "test:mutation": "node scripts/run-mutation-tests.mjs",
         "test:e2e": "npm run build:lib && npm run test:e2e --workspace=test-app"
     },
     "repository": {
@@ -52,6 +54,8 @@
         "@nestjs/core": "^11.0.12",
         "@nestjs/testing": "^11.0.12",
         "@recursyve/nestjs-common": "^11.0.0",
+        "@stryker-mutator/core": "^9.6.1",
+        "@stryker-mutator/vitest-runner": "^9.6.1",
         "@types/express": "^5.0.1",
         "@types/jest": "^29.5.14",
         "@types/node": "^22.13.13",
