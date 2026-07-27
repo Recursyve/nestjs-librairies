@@ -12,10 +12,10 @@ export class TestAccessControlAdapter extends AccessControlAdapter {
             return Promise.resolve(AccessControlResources.fromCondition({ user_id: user.scopeUserId }));
         }
 
-        if (user.allowedPersonIds !== undefined) {
+        if (user.allowedPersonIds) {
             return Promise.resolve(AccessControlResources.fromIds(user.allowedPersonIds));
         }
 
-        return Promise.resolve(AccessControlResources.all());
+        return Promise.resolve(AccessControlResources.fromIds([]));
     }
 }

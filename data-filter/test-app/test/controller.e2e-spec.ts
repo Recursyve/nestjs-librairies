@@ -116,6 +116,62 @@ describe("controller / decorator integration", () => {
         expect(TestHarness.mapFilterRowIds(filterBody)).not.toContain(outsider.id);
     });
 
+    it("exports the same rows to CSV when search and filter rules are combined", async () => {
+        await using both = await createSeededPerson({
+            email: "alice.special@example.com",
+            first_name: "Alice",
+            last_name: "Searchable"
+        });
+        await using filterOnly = await createSeededPerson({
+            email: "bob.other@example.com",
+            first_name: "Alice",
+            last_name: "FilterOnly"
+        });
+        await using searchOnly = await createSeededPerson({
+            email: "charlie.search@example.com",
+            first_name: "Charlie",
+            last_name: "Gamma"
+        });
+        await using neither = await createSeededPerson({
+            email: "outsider@otherdomain.com",
+            first_name: "Outside",
+            last_name: "World"
+        });
+
+        const query = {
+            page: TestHarness.defaultPage,
+            search: { value: "special" },
+            query: {
+                condition: "and" as const,
+                rules: [{ id: "firstName", operation: FilterOperatorTypes.Equal, value: "Alice" }]
+            }
+        };
+
+        const filterResponse = await harness.postFilter("persons", query);
+        const downloadResponse = await harness.postDownload("persons", "csv", query);
+
+        expect(filterResponse.status).toBe(200);
+        expect(downloadResponse.status).toBe(200);
+        const filterBody = TestHarness.parseFilterBody<{
+            id: number;
+            email: string;
+            first_name: string;
+            last_name: string;
+        }>(filterResponse);
+        expect(TestHarness.mapFilterRowIds(filterBody)).toEqual([both.id]);
+        expect(TestHarness.mapFilterRowIds(filterBody)).not.toContain(filterOnly.id);
+        expect(TestHarness.mapFilterRowIds(filterBody)).not.toContain(searchOnly.id);
+        expect(TestHarness.mapFilterRowIds(filterBody)).not.toContain(neither.id);
+
+        const rows = TestHarness.parseCsv(downloadResponse.text);
+        expect(rows).toEqual([
+            ["exports.email", "exports.first_name", "exports.last_name"],
+            ["alice.special@example.com", "Alice", "Searchable"]
+        ]);
+        expect(rows.some((row) => row.includes("bob.other@example.com"))).toBe(false);
+        expect(rows.some((row) => row.includes("charlie.search@example.com"))).toBe(false);
+    });
+
     it("exports filtered persons to CSV with expected headers and rows", async () => {
         await using _alice = await createSeededPerson({
             email: "alice@example.com",
