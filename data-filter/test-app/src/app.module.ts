@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { SequelizeModule } from "@nestjs/sequelize";
-import { DataFilterModule } from "@recursyve/nestjs-data-filter";
+import { AccessControlAdapter, DataFilterModule, UserDeserializer } from "@recursyve/nestjs-data-filter";
 import { ContractSystemsModule } from "./contract-systems/contract-systems.module";
 import { ContractsModule } from "./contracts/contracts.module";
 import { CoordsModule } from "./coords/coords.module";
@@ -13,12 +13,22 @@ import { PlaceOwnersModule } from "./place-owners/place-owners.module";
 import { PlacesModule } from "./places/places.module";
 import { ProductsModule } from "./products/products.module";
 import { SystemsModule } from "./systems/systems.module";
+import { TestAccessControlAdapter } from "./test-access-control/test-access-control.adapter";
+import { TestUserDeserializer } from "./test-access-control/test-user.deserializer";
 import { VisitsModule } from "./visits/visits.module";
 
 @Module({
     imports: [
         DataFilterModule.forRoot({
-            filter: { maxPage: 50, disableAccessControl: true },
+            filter: { maxPage: 50 },
+            accessControlAdapter: {
+                provide: AccessControlAdapter,
+                useClass: TestAccessControlAdapter
+            },
+            deserializer: {
+                provide: UserDeserializer,
+                useClass: TestUserDeserializer
+            },
             validateData: false
         }),
         SequelizeModule.forRoot({

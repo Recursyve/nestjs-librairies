@@ -3,10 +3,11 @@ import { getConnectionToken } from "@nestjs/sequelize";
 import { Test } from "@nestjs/testing";
 import { FilterConfigurationModel, FilterQueryModel, FilterResultModel } from "@recursyve/nestjs-data-filter";
 import { Sequelize } from "sequelize-typescript";
-import request from "supertest";
+import request, { Test as SupertestTest } from "supertest";
 import { App } from "supertest/types";
 import { expect } from "vitest";
 import { AppModule } from "../../src/app.module";
+import { TestAccessControlUser } from "../../src/test-access-control/test-access-control-user.model";
 
 export class TestHarness {
     public static defaultPage = { number: 0, size: 20 };
@@ -34,28 +35,44 @@ export class TestHarness {
         await this.app.close();
     }
 
-    public postFilter(route: string, body: FilterQueryModel) {
-        return request(this.app.getHttpServer()).post(`/${route}/filter`).send(body);
+    private withUser(request: SupertestTest, user?: TestAccessControlUser | null): SupertestTest {
+        if (user === undefined || user === null) {
+            return request;
+        }
+
+        return request.set("x-test-user", JSON.stringify(user));
     }
 
-    public postFilterCount(route: string, body: FilterQueryModel) {
-        return request(this.app.getHttpServer()).post(`/${route}/filter-count`).send(body);
+    public postFilter(route: string, body: FilterQueryModel, user?: TestAccessControlUser | null) {
+        return this.withUser(request(this.app.getHttpServer()).post(`/${route}/filter`).send(body), user);
     }
 
-    public postDownload(route: string, type: string, body: FilterQueryModel) {
-        return request(this.app.getHttpServer()).post(`/${route}/download/${type}`).send(body);
+    public postFilterCount(route: string, body: FilterQueryModel, user?: TestAccessControlUser | null) {
+        return this.withUser(request(this.app.getHttpServer()).post(`/${route}/filter-count`).send(body), user);
     }
 
-    public postDownloadBinary(route: string, type: string, body: FilterQueryModel) {
-        return request(this.app.getHttpServer())
-            .post(`/${route}/download/${type}`)
-            .buffer(true)
-            .parse((response, callback) => {
-                const chunks: Buffer[] = [];
-                response.on("data", (chunk: Buffer) => chunks.push(chunk));
-                response.on("end", () => callback(null, Buffer.concat(chunks)));
-            })
-            .send(body);
+    public postDownload(route: string, type: string, body: FilterQueryModel, user?: TestAccessControlUser | null) {
+        return this.withUser(request(this.app.getHttpServer()).post(`/${route}/download/${type}`).send(body), user);
+    }
+
+    public postDownloadBinary(
+        route: string,
+        type: string,
+        body: FilterQueryModel,
+        user?: TestAccessControlUser | null
+    ) {
+        return this.withUser(
+            request(this.app.getHttpServer())
+                .post(`/${route}/download/${type}`)
+                .buffer(true)
+                .parse((response, callback) => {
+                    const chunks: Buffer[] = [];
+                    response.on("data", (chunk: Buffer) => chunks.push(chunk));
+                    response.on("end", () => callback(null, Buffer.concat(chunks)));
+                })
+                .send(body),
+            user
+        );
     }
 
     public parseCountBody(response: { status: number; text: string }): number {
@@ -79,20 +96,24 @@ export class TestHarness {
         return response.body as FilterConfigurationModel[];
     }
 
-    public getFilterConfig(route: string) {
-        return request(this.app.getHttpServer()).get(`/${route}/filter/config`);
+    public getFilterConfig(route: string, user?: TestAccessControlUser | null) {
+        return this.withUser(request(this.app.getHttpServer()).get(`/${route}/filter/config`), user);
     }
 
-    public getFilterConfigValue(route: string, query: Record<string, string>) {
-        return request(this.app.getHttpServer()).get(`/${route}/filter/config/value`).query(query);
+    public getFilterConfigValue(route: string, query: Record<string, string>, user?: TestAccessControlUser | null) {
+        return this.withUser(request(this.app.getHttpServer()).get(`/${route}/filter/config/value`).query(query), user);
     }
 
-    public getFilterConfigId(route: string, query: Record<string, string>) {
-        return request(this.app.getHttpServer()).get(`/${route}/filter/config/id`).query(query);
+    public getFilterConfigId(route: string, query: Record<string, string>, user?: TestAccessControlUser | null) {
+        return this.withUser(request(this.app.getHttpServer()).get(`/${route}/filter/config/id`).query(query), user);
     }
 
-    public async filterIds(route: string, body: FilterQueryModel): Promise<number[]> {
-        const response = await this.postFilter(route, body).expect(200);
+    public async filterIds(
+        route: string,
+        body: FilterQueryModel,
+        user?: TestAccessControlUser | null
+    ): Promise<number[]> {
+        const response = await this.postFilter(route, body, user).expect(200);
         return TestHarness.mapFilterRowIds(TestHarness.parseFilterBody<{ id: number }>(response));
     }
 
