@@ -23,11 +23,26 @@ import { VisitsModule } from "./visits/visits.module";
         }),
         SequelizeModule.forRoot({
             dialect: "mysql",
-            host: "localhost",
-            port: 3306,
-            username: "root",
-            password: "root",
-            database: "test"
+            host: process.env.DB_HOST ?? "localhost",
+            port: Number(process.env.DB_PORT ?? 3306),
+            username: process.env.DB_USERNAME ?? "root",
+            password: process.env.DB_PASSWORD ?? "root",
+            database: process.env.DB_NAME ?? "test",
+            autoLoadModels: true,
+            synchronize: false,
+            logging: false,
+            define: {
+                timestamps: true,
+                paranoid: true,
+                updatedAt: "updated_at",
+                createdAt: "created_at",
+                deletedAt: "deleted_at",
+                defaultScope: {
+                    attributes: {
+                        exclude: ["updated_at", "created_at", "deleted_at"]
+                    }
+                }
+            }
         }),
         ContractSystemsModule,
         ContractsModule,
