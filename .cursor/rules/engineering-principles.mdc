@@ -1,0 +1,47 @@
+---
+description: Repository-wide engineering principles
+alwaysApply: true
+---
+
+# Engineering principles
+
+## Prefer explicit code
+
+- Prefer explicit control flow and dependencies over hidden behavior.
+- Avoid introducing reflection, decorators, metadata, global state, or framework magic unless the existing public API requires it.
+- Do not create abstractions merely to reduce duplication.
+- A new abstraction must represent a stable concept or boundary, not just hide implementation details.
+
+## Preserve boundaries
+
+- Keep domain/policy decisions separate from framework, persistence, transport, and serialization concerns.
+- Do not leak ORM/database-specific concepts into otherwise technology-agnostic code without a deliberate reason.
+- When existing code violates a boundary, do not spread the coupling further just for consistency.
+
+## Changes
+
+- Prefer the smallest coherent change that solves the requested problem.
+- Do not perform unrelated cleanup while implementing a feature or fix.
+- Preserve existing public behavior unless the task explicitly changes it.
+- Do not silently fix surprising legacy behavior encountered during unrelated work.
+
+## Tests
+
+- Test observable behavior rather than implementation details when practical.
+- A test must be capable of failing for the behavior it claims to protect.
+- Bug fixes should include a regression test when practical.
+- Do not weaken assertions merely to make a failing test pass.
+- Do not mock infrastructure when the integration with that infrastructure is itself the behavior under test.
+
+## Types
+
+- Preserve type information instead of escaping the type system.
+- Avoid `any`, unsafe casts, and non-null assertions unless the boundary genuinely cannot be represented more precisely.
+- Validate untrusted/runtime input at the boundary rather than relying on TypeScript types.
+
+## Maintainability
+
+- Optimize for code that another engineer can understand locally.
+- Prefer boring, composable code over clever generic machinery.
+- Comments should explain constraints, intent, or non-obvious decisions — not narrate the code.
+- Delete dead code rather than preserving speculative extension points.
