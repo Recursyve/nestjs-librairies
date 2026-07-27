@@ -8,8 +8,8 @@ export default defineConfig({
         pool: "forks",
         maxWorkers: 1,
         fileParallelism: false,
-        globalSetup: ["./test/harness/global-setup.ts"],
-        setupFiles: ["./test/harness/setup-env.ts"],
+        globalSetup: ["./test/setup/global-setup.ts"],
+        setupFiles: ["./test/setup/setup-env.ts"],
         include: ["test/**/*.e2e-spec.ts"]
     }
 });

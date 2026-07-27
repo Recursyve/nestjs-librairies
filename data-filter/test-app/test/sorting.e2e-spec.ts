@@ -1,5 +1,7 @@
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { CharacterizationHarness, defaultPage, getCharacterizationHarness } from "./harness/characterization-harness";
+import { beforeAll, describe, expect, it } from "vitest";
+import { TestHarness } from "./harness/test-harness";
+import { createSeededPerson } from "./seeds/create-seeded-person";
+import { createSeededProduct } from "./seeds/create-seeded-product";
 
 /**
  * @p0 suspected-defect
@@ -7,19 +9,21 @@ import { CharacterizationHarness, defaultPage, getCharacterizationHarness } from
  * Intended: order rules should sort results without database errors.
  */
 describe("sorting and order rules on MySQL", () => {
-    let harness: CharacterizationHarness;
+    let harness: TestHarness;
 
     beforeAll(async () => {
-        harness = await getCharacterizationHarness();
-    });
-
-    beforeEach(async () => {
-        await harness.resetSeed();
+        harness = await TestHarness.create();
     });
 
     it("currently responds with 500 when ordering persons by first_name", async () => {
+        await using _person = await createSeededPerson({
+            email: "alice@example.com",
+            first_name: "Alice",
+            last_name: "Alpha"
+        });
+
         const response = await harness.postFilter("persons", {
-            page: defaultPage,
+            page: TestHarness.defaultPage,
             order: [{ column: "first_name", direction: "asc" }],
             query: { condition: "and", rules: [] }
         });
@@ -28,8 +32,17 @@ describe("sorting and order rules on MySQL", () => {
     });
 
     it("currently responds with 500 when ordering products by enum order rule", async () => {
+        await using _product = await createSeededProduct({
+            metadata: { category: "electronics" },
+            name: "Widget",
+            sku: "WDG-001",
+            status: "active",
+            stock: 1,
+            tags: []
+        });
+
         const response = await harness.postFilter("products", {
-            page: defaultPage,
+            page: TestHarness.defaultPage,
             order: [{ column: "statusOrder", direction: "desc" }],
             query: { condition: "and", rules: [] }
         });
@@ -38,8 +51,14 @@ describe("sorting and order rules on MySQL", () => {
     });
 
     it("currently responds with 500 when ordering persons by is-null order rule", async () => {
+        await using _person = await createSeededPerson({
+            email: "alice@example.com",
+            first_name: "Alice",
+            last_name: "Alpha"
+        });
+
         const response = await harness.postFilter("persons", {
-            page: defaultPage,
+            page: TestHarness.defaultPage,
             order: [{ column: "lastNameNullOrder", direction: "asc" }],
             query: { condition: "and", rules: [] }
         });
@@ -48,8 +67,14 @@ describe("sorting and order rules on MySQL", () => {
     });
 
     it("currently responds with 500 when ordering persons by if order rule", async () => {
+        await using _person = await createSeededPerson({
+            email: "alice@example.com",
+            first_name: "Alice",
+            last_name: "Alpha"
+        });
+
         const response = await harness.postFilter("persons", {
-            page: defaultPage,
+            page: TestHarness.defaultPage,
             order: [{ column: "emailIfOrder", direction: "desc" }],
             query: { condition: "and", rules: [] }
         });

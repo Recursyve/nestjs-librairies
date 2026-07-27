@@ -1,18 +1,20 @@
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { CharacterizationHarness, getCharacterizationHarness } from "./harness/characterization-harness";
+import { beforeAll, describe, expect, it } from "vitest";
+import { TestHarness } from "./harness/test-harness";
+import { createSeededPerson } from "./seeds/create-seeded-person";
 
 describe("pagination", () => {
-    let harness: CharacterizationHarness;
+    let harness: TestHarness;
 
     beforeAll(async () => {
-        harness = await getCharacterizationHarness();
-    });
-
-    beforeEach(async () => {
-        await harness.resetSeed();
+        harness = await TestHarness.create();
     });
 
     it("returns the first page without an explicit order clause", async () => {
+        await using _a = await createSeededPerson({ email: "a@example.com", first_name: "A", last_name: "One" });
+        await using _b = await createSeededPerson({ email: "b@example.com", first_name: "B", last_name: "Two" });
+        await using _c = await createSeededPerson({ email: "c@example.com", first_name: "C", last_name: "Three" });
+        await using _d = await createSeededPerson({ email: "d@example.com", first_name: "D", last_name: "Four" });
+
         const response = await harness.postFilter("persons", {
             page: { number: 0, size: 2 },
             query: { condition: "and", rules: [] }
@@ -25,6 +27,11 @@ describe("pagination", () => {
     });
 
     it("returns the second page without an explicit order clause", async () => {
+        await using _a = await createSeededPerson({ email: "a@example.com", first_name: "A", last_name: "One" });
+        await using _b = await createSeededPerson({ email: "b@example.com", first_name: "B", last_name: "Two" });
+        await using _c = await createSeededPerson({ email: "c@example.com", first_name: "C", last_name: "Three" });
+        await using _d = await createSeededPerson({ email: "d@example.com", first_name: "D", last_name: "Four" });
+
         const response = await harness.postFilter("persons", {
             page: { number: 1, size: 2 },
             query: { condition: "and", rules: [] }
@@ -35,6 +42,11 @@ describe("pagination", () => {
     });
 
     it("honors page offset", async () => {
+        await using _a = await createSeededPerson({ email: "a@example.com", first_name: "A", last_name: "One" });
+        await using _b = await createSeededPerson({ email: "b@example.com", first_name: "B", last_name: "Two" });
+        await using _c = await createSeededPerson({ email: "c@example.com", first_name: "C", last_name: "Three" });
+        await using _d = await createSeededPerson({ email: "d@example.com", first_name: "D", last_name: "Four" });
+
         const response = await harness.postFilter("persons", {
             page: { number: 0, size: 2, offset: 1 },
             query: { condition: "and", rules: [] }
@@ -51,13 +63,19 @@ describe("pagination", () => {
  * Intended: paginated responses should support stable ordering.
  */
 describe("pagination with attribute ordering on MySQL", () => {
-    let harness: CharacterizationHarness;
+    let harness: TestHarness;
 
     beforeAll(async () => {
-        harness = await getCharacterizationHarness();
+        harness = await TestHarness.create();
     });
 
     it("currently responds with 500 when ordering by first_name during pagination", async () => {
+        await using _person = await createSeededPerson({
+            email: "alice@example.com",
+            first_name: "Alice",
+            last_name: "Alpha"
+        });
+
         const response = await harness.postFilter("persons", {
             page: { number: 10, size: 5 },
             order: [{ column: "first_name", direction: "asc" }],

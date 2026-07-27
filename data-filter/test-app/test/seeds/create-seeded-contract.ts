@@ -19,6 +19,14 @@ type SeededContract = Seeded<{
     total_cost: number;
 }>;
 
+function toDateOnlyString(value: Date | string): string {
+    if (typeof value === "string") {
+        return value;
+    }
+
+    return value.toISOString().slice(0, 10);
+}
+
 export async function createSeededContract(params: CreateSeededContractParams): Promise<SeededContract> {
     const row = await Contracts.create(params);
     if (!arePropertiesDefined(row, "id", "end_date", "invoice_id", "payable_by", "start_date", "total_cost")) {
@@ -27,10 +35,10 @@ export async function createSeededContract(params: CreateSeededContractParams): 
 
     return {
         id: row.id,
-        end_date: row.end_date.toISOString(),
+        end_date: toDateOnlyString(row.end_date),
         invoice_id: row.invoice_id,
-        payable_by: row.payable_by.toISOString(),
-        start_date: row.start_date.toISOString(),
+        payable_by: toDateOnlyString(row.payable_by),
+        start_date: toDateOnlyString(row.start_date),
         total_cost: row.total_cost,
         async [Symbol.asyncDispose]() {
             await row.destroy({ force: true });
