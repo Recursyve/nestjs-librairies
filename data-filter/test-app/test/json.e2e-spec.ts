@@ -1,5 +1,5 @@
 import { FilterOperatorTypes } from "@recursyve/nestjs-data-filter";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
 import { createSeededProduct } from "./seeds/create-seeded-product";
 
@@ -8,6 +8,10 @@ describe("JSON filtering and search behavior", () => {
 
     beforeAll(async () => {
         harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
     });
 
     it("filters products by JSON object path category", async () => {
@@ -45,6 +49,7 @@ describe("JSON filtering and search behavior", () => {
         });
 
         expect(ids.sort()).toEqual([widget.id, gadget.id].sort());
+        expect(ids).not.toContain(manual.id);
     });
 
     it("filters products by JSON object path brand", async () => {
@@ -74,6 +79,46 @@ describe("JSON filtering and search behavior", () => {
         });
 
         expect(ids).toEqual([widget.id]);
+        expect(ids).not.toContain(gadget.id);
+    });
+
+    it("filters products by JSON object path using contains", async () => {
+        await using widget = await createSeededProduct({
+            metadata: { brand: "Acme", category: "electronics", rating: 5 },
+            name: "Widget Pro",
+            sku: "WDG-001",
+            status: "active",
+            stock: 10,
+            tags: ["new", "featured"]
+        });
+        await using gadget = await createSeededProduct({
+            metadata: { brand: "BetaCorp", category: "electronics" },
+            name: "Gadget Basic",
+            sku: "GDG-002",
+            status: "pending",
+            stock: 0,
+            tags: ["sale"]
+        });
+        await using manual = await createSeededProduct({
+            metadata: { category: "books", language: "en" },
+            name: "Operator Manual",
+            sku: "BK-003",
+            status: "inactive",
+            stock: 25,
+            tags: ["used"]
+        });
+
+        const ids = await harness.filterIds("products", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "category", operation: FilterOperatorTypes.Contains, value: "book" }]
+            }
+        });
+
+        expect(ids).toEqual([manual.id]);
+        expect(ids).not.toContain(widget.id);
+        expect(ids).not.toContain(gadget.id);
     });
 
     it("filters products by JSON array tag equal", async () => {
@@ -103,5 +148,6 @@ describe("JSON filtering and search behavior", () => {
         });
 
         expect(ids).toEqual([widget.id]);
+        expect(ids).not.toContain(gadget.id);
     });
 });

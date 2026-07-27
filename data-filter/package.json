@@ -21,7 +21,7 @@
         "test": "TZ=UTC jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
-        "test:e2e": "npm run build:lib && npm --prefix test-app run test:e2e"
+        "test:e2e": "npm run build:lib && npm run test:e2e --workspace=test-app"
     },
     "workspaces": [
         "test-app"
@@ -32,9 +32,6 @@
     },
     "author": "Recursyve",
     "license": "MIT",
-    "workspaces": [
-        "test-app"
-    ],
     "peerDependencies": {
         "@nestjs/common": ">=11.0.0",
         "@nestjs/core": ">=11.0.0",

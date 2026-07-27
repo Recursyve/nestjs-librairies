@@ -1,5 +1,5 @@
 import { FilterType } from "@recursyve/nestjs-data-filter";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
 
 describe("filter configuration endpoint", () => {
@@ -7,6 +7,10 @@ describe("filter configuration endpoint", () => {
 
     beforeAll(async () => {
         harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
     });
 
     it("returns operator metadata for text filters on persons", async () => {

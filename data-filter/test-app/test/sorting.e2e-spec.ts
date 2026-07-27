@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
 import { createSeededPerson } from "./seeds/create-seeded-person";
 import { createSeededProduct } from "./seeds/create-seeded-product";
@@ -13,6 +13,10 @@ describe("sorting and order rules on MySQL", () => {
 
     beforeAll(async () => {
         harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
     });
 
     it("currently responds with 500 when ordering persons by first_name", async () => {

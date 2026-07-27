@@ -12,7 +12,7 @@ import { Products } from "../models/products.model";
 
 @Data(Products)
 @Attributes(["sku", "name", "status", "stock"])
-@SearchableAttributes(["name", "sku"])
+@SearchableAttributes(["name", "sku", "metadata"])
 export class ProductsData {}
 
 @Injectable()
