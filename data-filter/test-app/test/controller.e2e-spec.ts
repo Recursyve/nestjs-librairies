@@ -203,6 +203,43 @@ describe("controller / decorator integration", () => {
         expect(rows).toHaveLength(2);
     });
 
+    it("exports download rows in the requested order", async () => {
+        await using first = await createSeededPerson({
+            email: "first@example.com",
+            first_name: "First",
+            last_name: "One"
+        });
+        await using second = await createSeededPerson({
+            email: "second@example.com",
+            first_name: "Second",
+            last_name: "Two"
+        });
+
+        const filterResponse = await harness.postFilter("persons", {
+            page: TestHarness.defaultPage,
+            order: [{ column: "id", direction: "desc" }],
+            query: { condition: "and", rules: [] }
+        });
+        const downloadResponse = await harness.postDownload("persons", "csv", {
+            page: TestHarness.defaultPage,
+            order: [{ column: "id", direction: "desc" }],
+            query: { condition: "and", rules: [] }
+        });
+
+        expect(filterResponse.status).toBe(200);
+        expect(downloadResponse.status).toBe(200);
+
+        const filterIds = TestHarness.mapFilterRowIds(TestHarness.parseFilterBody<{ id: number }>(filterResponse));
+        expect(filterIds).toEqual([second.id, first.id]);
+
+        const rows = TestHarness.parseCsv(downloadResponse.text);
+        expect(rows).toEqual([
+            ["exports.email", "exports.first_name", "exports.last_name"],
+            ["second@example.com", "Second", "Two"],
+            ["first@example.com", "First", "One"]
+        ]);
+    });
+
     it("exports filtered persons to XLSX with expected content type", async () => {
         await using _alice = await createSeededPerson({
             email: "alice@example.com",
