@@ -7,7 +7,6 @@ type CreateSeededPersonParams = {
     email: string;
     first_name: string;
     last_name?: string;
-    user_id?: string;
 };
 type SeededPerson = Seeded<{
     id: number;

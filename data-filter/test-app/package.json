@@ -26,6 +26,7 @@
         "@nestjs/sequelize": "^11.0.1",
         "@recursyve/nestjs-common": "^11.0.0",
         "@recursyve/nestjs-data-filter": "file:..",
+        "@recursyve/nice-ts-utils": "^0.0.3",
         "class-transformer": "^0.5.1",
         "class-validator": "^0.14.1",
         "date-fns": "^4.1.0",
