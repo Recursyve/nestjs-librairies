@@ -8,12 +8,12 @@ export default {
         fileName: "reports/mutation/mutation-report.html",
     },
     buildCommand: "npm run build:lib:mutation",
-    // Workspace: test-app resolves the lib via file:.. → dist/; sandboxing breaks that. concurrency > 1 is unsafe with inPlace.
+    // Workspace: test-app resolves the lib via file:.. → dist/; sandboxing breaks that path.
     inPlace: true,
     coverageAnalysis: "off",
     mutate: ["lib/sequelize.utils.ts:215-277"],
     ignorePatterns: ["dist/**", "coverage/**", "reports/**", ".stryker-tmp/**", "**/*.spec.ts", "test-app/dist/**"],
-    concurrency: 1,
+    concurrency: 4,
     timeoutMS: 300_000,
     vitest: {
         configFile: "test-app/vitest.config.mutation.e2e.ts",

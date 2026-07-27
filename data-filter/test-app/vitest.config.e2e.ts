@@ -6,8 +6,8 @@ export default defineConfig({
     test: {
         globals: true,
         pool: "forks",
-        maxWorkers: 1,
-        fileParallelism: false,
+        maxWorkers: 4,
+        fileParallelism: true,
         globalSetup: ["./test/setup/global-setup.ts"],
         setupFiles: ["./test/setup/setup-env.ts"],
         include: ["test/**/*.e2e-spec.ts"]
