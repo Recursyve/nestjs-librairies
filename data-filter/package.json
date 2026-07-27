@@ -2,7 +2,14 @@
     "name": "@recursyve/nestjs-data-filter",
     "version": "11.5.2",
     "description": "NestJs DataFilter library",
-    "main": "index.js",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        }
+    },
     "scripts": {
         "build": "rimraf dist && nest build",
         "build:lib": "rimraf dist && nest build -p tsconfig.lib.json",
@@ -21,6 +28,9 @@
     },
     "author": "Recursyve",
     "license": "MIT",
+    "workspaces": [
+        "test-app"
+    ],
     "peerDependencies": {
         "@nestjs/common": ">=11.0.0",
         "@nestjs/core": ">=11.0.0",
