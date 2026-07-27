@@ -4,6 +4,7 @@ import { CoordsModule } from "./coords/coords.module";
 import { InvoicesModule } from "./invoices/invoices.module";
 import { LocationsModule } from "./locations/locations.module";
 import { PersonsModule } from "./persons/persons.module";
+import { PlaceOwnersModule } from "./place-owners/place-owners.module";
 import { ProductsModule } from "./products/products.module";
 import { SystemsModule } from "./systems/systems.module";
 import { VisitsModule } from "./visits/visits.module";
@@ -15,6 +16,7 @@ import { VisitsModule } from "./visits/visits.module";
         InvoicesModule,
         LocationsModule,
         PersonsModule,
+        PlaceOwnersModule,
         ProductsModule,
         SystemsModule,
         VisitsModule
