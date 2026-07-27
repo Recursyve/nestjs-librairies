@@ -318,6 +318,83 @@ describe("numeric comparisons", () => {
         expect(ids.sort()).toEqual([gadget.id, widget.id].sort());
         expect(ids).not.toContain(manual.id);
     });
+
+    it("filters products with between on stock", async () => {
+        await using widget = await createSeededProduct({
+            metadata: { brand: "Acme", category: "electronics" },
+            name: "Widget Pro",
+            sku: "WDG-001",
+            status: "active",
+            stock: 5,
+            tags: []
+        });
+        await using gadget = await createSeededProduct({
+            metadata: { brand: "BetaCorp", category: "electronics" },
+            name: "Gadget Basic",
+            sku: "GDG-002",
+            status: "pending",
+            stock: 15,
+            tags: []
+        });
+        await using manual = await createSeededProduct({
+            metadata: { category: "books" },
+            name: "Operator Manual",
+            sku: "BK-003",
+            status: "inactive",
+            stock: 25,
+            tags: []
+        });
+
+        const ids = await harness.filterIds("products", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "stock", operation: FilterOperatorTypes.Between, value: [10, 20] }]
+            }
+        });
+
+        expect(ids).toEqual([gadget.id]);
+        expect(ids).not.toContain(widget.id);
+        expect(ids).not.toContain(manual.id);
+    });
+
+    it("filters products with not_between on stock", async () => {
+        await using widget = await createSeededProduct({
+            metadata: { brand: "Acme", category: "electronics" },
+            name: "Widget Pro",
+            sku: "WDG-001",
+            status: "active",
+            stock: 5,
+            tags: []
+        });
+        await using gadget = await createSeededProduct({
+            metadata: { brand: "BetaCorp", category: "electronics" },
+            name: "Gadget Basic",
+            sku: "GDG-002",
+            status: "pending",
+            stock: 15,
+            tags: []
+        });
+        await using manual = await createSeededProduct({
+            metadata: { category: "books" },
+            name: "Operator Manual",
+            sku: "BK-003",
+            status: "inactive",
+            stock: 25,
+            tags: []
+        });
+
+        const ids = await harness.filterIds("products", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "stock", operation: FilterOperatorTypes.NotBetween, value: [10, 20] }]
+            }
+        });
+
+        expect(ids.sort()).toEqual([widget.id, manual.id].sort());
+        expect(ids).not.toContain(gadget.id);
+    });
 });
 
 describe("date comparisons on nested contract paths", () => {
@@ -649,5 +726,266 @@ describe("date comparisons on nested contract paths", () => {
 
         expect(ids).toEqual([recentCs.id]);
         expect(ids).not.toContain(cs.id);
+    });
+
+    it("filters contract-systems with greater on contract start date", async () => {
+        await using earlyLocation = await createSeededLocation({ value: "Montreal", unique_code: "MTL-GT-E" });
+        await using earlyCoord = await createSeededCoords({
+            location_id: earlyLocation.id,
+            street_number: 100,
+            address: "100 Main Street",
+            postal_code: "H1A1A1"
+        });
+        await using earlyPlace = await createSeededPlace({
+            billing_coord_id: earlyCoord.id,
+            geo_coord_id: earlyCoord.id
+        });
+        await using earlySystem = await createSeededSystem({
+            place_id: earlyPlace.id,
+            file_number: "SYS-GT-E",
+            latitude: 45.5017,
+            longitude: -73.5673
+        });
+        await using earlyInvoice = await createSeededInvoice({
+            invoice_number: "INV-GT-E",
+            paid: true,
+            subtotal: 1000,
+            total_cost: 1150
+        });
+        await using earlyContract = await createSeededContract({
+            invoice_id: earlyInvoice.id,
+            start_date: "2024-06-01",
+            end_date: "2025-12-31",
+            payable_by: "2024-07-01",
+            total_cost: 1150
+        });
+        await using earlyCs = await createSeededContractSystem({
+            contract_id: earlyContract.id,
+            system_id: earlySystem.id,
+            active: true,
+            activated_date: "2024-06-01"
+        });
+
+        await using laterLocation = await createSeededLocation({ value: "Quebec", unique_code: "MTL-GT-L" });
+        await using laterCoord = await createSeededCoords({
+            location_id: laterLocation.id,
+            street_number: 200,
+            address: "200 Rue Saint-Jean",
+            postal_code: "G1R1R1"
+        });
+        await using laterPlace = await createSeededPlace({
+            billing_coord_id: laterCoord.id,
+            geo_coord_id: laterCoord.id
+        });
+        await using laterSystem = await createSeededSystem({
+            place_id: laterPlace.id,
+            file_number: "SYS-GT-L",
+            latitude: 46.8139,
+            longitude: -71.208
+        });
+        await using laterInvoice = await createSeededInvoice({
+            invoice_number: "INV-GT-L",
+            paid: true,
+            subtotal: 1000,
+            total_cost: 1150
+        });
+        await using laterContract = await createSeededContract({
+            invoice_id: laterInvoice.id,
+            start_date: "2024-07-01",
+            end_date: "2025-12-31",
+            payable_by: "2024-08-01",
+            total_cost: 1150
+        });
+        await using laterCs = await createSeededContractSystem({
+            contract_id: laterContract.id,
+            system_id: laterSystem.id,
+            active: true,
+            activated_date: "2024-07-01"
+        });
+
+        const ids = await harness.filterIds("contract-systems", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "contractStart", operation: FilterOperatorTypes.Greater, value: "2024-06-15" }]
+            }
+        });
+
+        expect(ids).toEqual([laterCs.id]);
+        expect(ids).not.toContain(earlyCs.id);
+    });
+
+    it("filters contract-systems with less on contract start date", async () => {
+        await using earlyLocation = await createSeededLocation({ value: "Montreal", unique_code: "MTL-LT-E" });
+        await using earlyCoord = await createSeededCoords({
+            location_id: earlyLocation.id,
+            street_number: 101,
+            address: "101 Main Street",
+            postal_code: "H1A1A1"
+        });
+        await using earlyPlace = await createSeededPlace({
+            billing_coord_id: earlyCoord.id,
+            geo_coord_id: earlyCoord.id
+        });
+        await using earlySystem = await createSeededSystem({
+            place_id: earlyPlace.id,
+            file_number: "SYS-LT-E",
+            latitude: 45.5017,
+            longitude: -73.5673
+        });
+        await using earlyInvoice = await createSeededInvoice({
+            invoice_number: "INV-LT-E",
+            paid: true,
+            subtotal: 1000,
+            total_cost: 1150
+        });
+        await using earlyContract = await createSeededContract({
+            invoice_id: earlyInvoice.id,
+            start_date: "2024-06-01",
+            end_date: "2025-12-31",
+            payable_by: "2024-07-01",
+            total_cost: 1150
+        });
+        await using earlyCs = await createSeededContractSystem({
+            contract_id: earlyContract.id,
+            system_id: earlySystem.id,
+            active: true,
+            activated_date: "2024-06-01"
+        });
+
+        await using laterLocation = await createSeededLocation({ value: "Quebec", unique_code: "MTL-LT-L" });
+        await using laterCoord = await createSeededCoords({
+            location_id: laterLocation.id,
+            street_number: 201,
+            address: "201 Rue Saint-Jean",
+            postal_code: "G1R1R1"
+        });
+        await using laterPlace = await createSeededPlace({
+            billing_coord_id: laterCoord.id,
+            geo_coord_id: laterCoord.id
+        });
+        await using laterSystem = await createSeededSystem({
+            place_id: laterPlace.id,
+            file_number: "SYS-LT-L",
+            latitude: 46.8139,
+            longitude: -71.208
+        });
+        await using laterInvoice = await createSeededInvoice({
+            invoice_number: "INV-LT-L",
+            paid: true,
+            subtotal: 1000,
+            total_cost: 1150
+        });
+        await using laterContract = await createSeededContract({
+            invoice_id: laterInvoice.id,
+            start_date: "2024-07-01",
+            end_date: "2025-12-31",
+            payable_by: "2024-08-01",
+            total_cost: 1150
+        });
+        await using laterCs = await createSeededContractSystem({
+            contract_id: laterContract.id,
+            system_id: laterSystem.id,
+            active: true,
+            activated_date: "2024-07-01"
+        });
+
+        const ids = await harness.filterIds("contract-systems", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "contractStart", operation: FilterOperatorTypes.Less, value: "2024-06-15" }]
+            }
+        });
+
+        expect(ids).toEqual([earlyCs.id]);
+        expect(ids).not.toContain(laterCs.id);
+    });
+
+    it("filters contract-systems with not_equal on contract start date", async () => {
+        await using juneLocation = await createSeededLocation({ value: "Montreal", unique_code: "MTL-NE-J" });
+        await using juneCoord = await createSeededCoords({
+            location_id: juneLocation.id,
+            street_number: 102,
+            address: "102 Main Street",
+            postal_code: "H1A1A1"
+        });
+        await using junePlace = await createSeededPlace({
+            billing_coord_id: juneCoord.id,
+            geo_coord_id: juneCoord.id
+        });
+        await using juneSystem = await createSeededSystem({
+            place_id: junePlace.id,
+            file_number: "SYS-NE-J",
+            latitude: 45.5017,
+            longitude: -73.5673
+        });
+        await using juneInvoice = await createSeededInvoice({
+            invoice_number: "INV-NE-J",
+            paid: true,
+            subtotal: 1000,
+            total_cost: 1150
+        });
+        await using juneContract = await createSeededContract({
+            invoice_id: juneInvoice.id,
+            start_date: "2024-06-01",
+            end_date: "2025-12-31",
+            payable_by: "2024-07-01",
+            total_cost: 1150
+        });
+        await using juneCs = await createSeededContractSystem({
+            contract_id: juneContract.id,
+            system_id: juneSystem.id,
+            active: true,
+            activated_date: "2024-06-01"
+        });
+
+        await using julyLocation = await createSeededLocation({ value: "Quebec", unique_code: "MTL-NE-L" });
+        await using julyCoord = await createSeededCoords({
+            location_id: julyLocation.id,
+            street_number: 202,
+            address: "202 Rue Saint-Jean",
+            postal_code: "G1R1R1"
+        });
+        await using julyPlace = await createSeededPlace({
+            billing_coord_id: julyCoord.id,
+            geo_coord_id: julyCoord.id
+        });
+        await using julySystem = await createSeededSystem({
+            place_id: julyPlace.id,
+            file_number: "SYS-NE-L",
+            latitude: 46.8139,
+            longitude: -71.208
+        });
+        await using julyInvoice = await createSeededInvoice({
+            invoice_number: "INV-NE-L",
+            paid: true,
+            subtotal: 1000,
+            total_cost: 1150
+        });
+        await using julyContract = await createSeededContract({
+            invoice_id: julyInvoice.id,
+            start_date: "2024-07-01",
+            end_date: "2025-12-31",
+            payable_by: "2024-08-01",
+            total_cost: 1150
+        });
+        await using julyCs = await createSeededContractSystem({
+            contract_id: julyContract.id,
+            system_id: julySystem.id,
+            active: true,
+            activated_date: "2024-07-01"
+        });
+
+        const ids = await harness.filterIds("contract-systems", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "contractStart", operation: FilterOperatorTypes.NotEqual, value: "2024-06-01" }]
+            }
+        });
+
+        expect(ids).toEqual([julyCs.id]);
+        expect(ids).not.toContain(juneCs.id);
     });
 });

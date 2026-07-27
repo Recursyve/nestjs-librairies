@@ -57,4 +57,30 @@ describe("filter configuration endpoint", () => {
             { id: "repair", name: "Repair" }
         ]);
     });
+
+    it("returns date, radio, and geo filter metadata from public config endpoints", async () => {
+        const contractSystems = await harness.getFilterConfig("contract-systems");
+        const coords = await harness.getFilterConfig("coords");
+        const systems = await harness.getFilterConfig("systems");
+
+        const contractStart = contractSystems.body.find((item: { id: string }) => item.id === "contractStart");
+        const active = contractSystems.body.find((item: { id: string }) => item.id === "active");
+        const distance = coords.body.find((item: { id: string }) => item.id === "distance");
+        const geoBounds = systems.body.find((item: { id: string }) => item.id === "geoBounds");
+
+        expect(contractStart.type).toBe(FilterType.Date);
+        expect(active.type).toBe(FilterType.Radio);
+        expect(distance.type).toBe(FilterType.GeoLocalization);
+        expect(geoBounds.type).toBe(FilterType.GeoBounds);
+    });
+
+    it("returns a select resource by id from filter/config/id", async () => {
+        const response = await harness.getFilterConfigId("contract-systems", {
+            id: "statusSelect",
+            resourceId: "repair"
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({ id: "repair", name: "Repair" });
+    });
 });

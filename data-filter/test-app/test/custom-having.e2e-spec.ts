@@ -72,6 +72,12 @@ describe("custom HAVING operators on MySQL", () => {
             activated_date: "2024-02-01"
         });
 
+        const control = await harness.postFilter("contract-systems", {
+            page: TestHarness.defaultPage,
+            query: { condition: "and", rules: [] }
+        });
+        expect(control.status).toBe(200);
+
         const response = await harness.postFilter("contract-systems", {
             page: TestHarness.defaultPage,
             query: {
@@ -80,7 +86,7 @@ describe("custom HAVING operators on MySQL", () => {
             }
         });
 
-        expect(response.status).toBe(500);
+        TestHarness.expectInternalServerErrorFilterResponse(response);
     });
 
     it("currently responds with 500 for visit count having greater_or_equal", async () => {
@@ -130,6 +136,12 @@ describe("custom HAVING operators on MySQL", () => {
         await using _mv1 = await createSeededMaintenanceVisit({ visit_id: v1.id, contract_system_id: cs.id });
         await using _mv2 = await createSeededMaintenanceVisit({ visit_id: v2.id, contract_system_id: cs.id });
 
+        const control = await harness.postFilter("contract-systems", {
+            page: TestHarness.defaultPage,
+            query: { condition: "and", rules: [] }
+        });
+        expect(control.status).toBe(200);
+
         const response = await harness.postFilter("contract-systems", {
             page: TestHarness.defaultPage,
             query: {
@@ -138,7 +150,7 @@ describe("custom HAVING operators on MySQL", () => {
             }
         });
 
-        expect(response.status).toBe(500);
+        TestHarness.expectInternalServerErrorFilterResponse(response);
     });
 });
 

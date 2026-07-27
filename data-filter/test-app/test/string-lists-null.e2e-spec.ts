@@ -62,6 +62,11 @@ describe("string operators", () => {
             first_name: "Charlie",
             last_name: "Gamma"
         });
+        await using arcChael = await createSeededPerson({
+            email: "arc@example.com",
+            first_name: "ArcChael",
+            last_name: "Middle"
+        });
         await using alice = await createSeededPerson({
             email: "alice@example.com",
             first_name: "Alice",
@@ -77,6 +82,8 @@ describe("string operators", () => {
         });
 
         expect(ids).toEqual([charlie.id]);
+        expect(ids).not.toContain(arcChael.id);
+        expect(ids).not.toContain(alice.id);
     });
 
     it("filters with ends_with on email", async () => {

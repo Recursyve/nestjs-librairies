@@ -171,7 +171,7 @@ describe("geo bounds on MySQL", () => {
 
 /**
  * @p0 legacy-contract
- * Observed: distance ordering returns distance values, but row order is not guaranteed nearest-first on MySQL with SRID 0 points.
+ * Observed: distance ordering returns distance values and currently orders rows nearest-first on this fixture.
  */
 describe("distance ordering on coords", () => {
     let harness: TestHarness;
@@ -184,7 +184,7 @@ describe("distance ordering on coords", () => {
         await harness.close();
     });
 
-    it("returns distance values where nearer coords have smaller distances", async () => {
+    it("returns distance values with nearer coords first in response order", async () => {
         await using montrealLoc = await createSeededLocation({ value: "Montreal", unique_code: "MTL" });
         await using montreal = await createSeededCoords({
             location_id: montrealLoc.id,
@@ -212,6 +212,8 @@ describe("distance ordering on coords", () => {
         expect(response.status).toBe(200);
 
         const rows = response.body.values as Array<{ id: number; distance: number }>;
+        expect(rows.map((row) => row.id)).toEqual([montreal.id, quebec.id]);
+
         const montrealRow = rows.find((row) => row.id === montreal.id);
         const quebecRow = rows.find((row) => row.id === quebec.id);
 

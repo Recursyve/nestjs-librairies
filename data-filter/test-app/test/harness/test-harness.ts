@@ -4,6 +4,7 @@ import { Test } from "@nestjs/testing";
 import { FilterQueryModel, FilterResultModel } from "@recursyve/nestjs-data-filter";
 import { Sequelize } from "sequelize-typescript";
 import request from "supertest";
+import { expect } from "vitest";
 import { AppModule } from "../../src/app.module";
 
 export class TestHarness {
@@ -64,5 +65,20 @@ export class TestHarness {
         const response = await this.postFilter<unknown>(route, body).expect(200);
         const payload = response.body as FilterResultModel<{ id: number }>;
         return payload.values.map((row) => row.id);
+    }
+
+    public static expectInternalServerErrorFilterResponse(response: { status: number; body: unknown }): void {
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({
+            statusCode: 500,
+            message: "Internal server error"
+        });
+    }
+
+    public static parseCsv(text: string): string[][] {
+        return text
+            .trim()
+            .split("\n")
+            .map((line) => line.split(","));
     }
 }

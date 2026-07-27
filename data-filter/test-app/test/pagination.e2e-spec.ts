@@ -98,12 +98,19 @@ describe("pagination with attribute ordering on MySQL", () => {
             last_name: "Alpha"
         });
 
+        const control = await harness.postFilter("persons", {
+            page: { number: 10, size: 5 },
+            order: [{ column: "id", direction: "asc" }],
+            query: { condition: "and", rules: [] }
+        });
+        expect(control.status).toBe(200);
+
         const response = await harness.postFilter("persons", {
             page: { number: 10, size: 5 },
             order: [{ column: "first_name", direction: "asc" }],
             query: { condition: "and", rules: [] }
         });
 
-        expect(response.status).toBe(500);
+        TestHarness.expectInternalServerErrorFilterResponse(response);
     });
 });
