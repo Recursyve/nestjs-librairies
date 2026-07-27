@@ -1,15 +1,21 @@
 import { FilterOperatorTypes } from "@recursyve/nestjs-data-filter";
 import { beforeAll, describe, expect, it } from "vitest";
-import { CharacterizationHarness, getCharacterizationHarness } from "./harness/characterization-harness";
+import { TestHarness } from "./harness/test-harness";
+import { createSeededPerson } from "./seeds/create-seeded-person";
 
 describe("validation and error behavior", () => {
-    let harness: CharacterizationHarness;
+    let harness: TestHarness;
 
     beforeAll(async () => {
-        harness = await getCharacterizationHarness();
+        harness = await TestHarness.create();
     });
 
     it("returns 200 with empty values for unknown filter id", async () => {
+        await using _a = await createSeededPerson({ email: "a@example.com", first_name: "A", last_name: "One" });
+        await using _b = await createSeededPerson({ email: "b@example.com", first_name: "B", last_name: "Two" });
+        await using _c = await createSeededPerson({ email: "c@example.com", first_name: "C", last_name: "Three" });
+        await using _d = await createSeededPerson({ email: "d@example.com", first_name: "D", last_name: "Four" });
+
         const response = await harness.postFilter("persons", {
             page: { number: 0, size: 20 },
             query: {
@@ -49,13 +55,19 @@ describe("validation and error behavior", () => {
  * Intended: parity with POST /filter validation may be desirable later.
  */
 describe("filter-count edge behavior", () => {
-    let harness: CharacterizationHarness;
+    let harness: TestHarness;
 
     beforeAll(async () => {
-        harness = await getCharacterizationHarness();
+        harness = await TestHarness.create();
     });
 
     it("accepts filter-count without page.size", async () => {
+        await using _alice = await createSeededPerson({
+            email: "alice@example.com",
+            first_name: "Alice",
+            last_name: "Alpha"
+        });
+
         const response = await harness.postFilterCount("persons", {
             query: {
                 condition: "and",
