@@ -3,6 +3,7 @@ export * from "./date.filter";
 export * from "./date-only.filter";
 export * from "./date-time.filter";
 export * from "./filter";
+export * from "./geo-bounds.filter";
 export * from "./geo-localization.filter";
 export * from "./group.filter";
 export * from "./number.filter";
