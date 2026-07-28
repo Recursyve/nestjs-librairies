@@ -1,9 +1,11 @@
 import { Module } from "@nestjs/common";
 import { SequelizeModule } from "@nestjs/sequelize";
 import { AccessControlAdapter, DataFilterModule, UserDeserializer } from "@recursyve/nestjs-data-filter";
+import { CatalogItemsModule } from "./catalog-items/catalog-items.module";
 import { ContractSystemsModule } from "./contract-systems/contract-systems.module";
 import { ContractsModule } from "./contracts/contracts.module";
 import { CoordsModule } from "./coords/coords.module";
+import { EditionsModule } from "./editions/editions.module";
 import { InvoicesModule } from "./invoices/invoices.module";
 import { LocationsModule } from "./locations/locations.module";
 import { MaintenanceVisitsModule } from "./maintenance-visits/maintenance-visits.module";
@@ -12,6 +14,9 @@ import { PersonsModule } from "./persons/persons.module";
 import { PlaceOwnersModule } from "./place-owners/place-owners.module";
 import { PlacesModule } from "./places/places.module";
 import { ProductsModule } from "./products/products.module";
+import { ResidentAddressesModule } from "./resident-addresses/resident-addresses.module";
+import { ResidentsModule } from "./residents/residents.module";
+import { SubscribersModule } from "./subscribers/subscribers.module";
 import { SystemsModule } from "./systems/systems.module";
 import { TestAccessControlAdapter } from "./test-access-control/test-access-control.adapter";
 import { TestUserDeserializer } from "./test-access-control/test-user.deserializer";
@@ -54,9 +59,11 @@ import { VisitsModule } from "./visits/visits.module";
                 }
             }
         }),
+        CatalogItemsModule,
         ContractSystemsModule,
         ContractsModule,
         CoordsModule,
+        EditionsModule,
         InvoicesModule,
         LocationsModule,
         MaintenanceVisitsModule,
@@ -65,6 +72,9 @@ import { VisitsModule } from "./visits/visits.module";
         PlaceOwnersModule,
         PlacesModule,
         ProductsModule,
+        ResidentAddressesModule,
+        ResidentsModule,
+        SubscribersModule,
         SystemsModule,
         VisitsModule
     ],
