@@ -1,0 +1,50 @@
+---
+description: Rules for Phase 0 characterization of data-filter
+globs: data-filter/**
+alwaysApply: false
+---
+
+# Phase 0 Characterization Rules
+
+This rule applies when working on the `data-filter` Phase 0 characterization suite, test application, mutation testing, or migration contract.
+
+## What is protected
+
+The production `data-filter` library is the protected artifact.
+
+During Phase 0:
+
+- do not change production behavior;
+- do not fix defects;
+- do not refactor production implementation;
+- do not normalize weird legacy behavior;
+- avoid modifying `lib/` except when required to expose an already-existing public capability, such as a missing public export;
+- temporary mutation probes in `lib/` are allowed only for characterization testing and must be reverted immediately.
+
+The characterization suite exists to describe the current library, not to improve it.
+
+## Test app
+
+The test app should remain coherent, but it is a testing fixture, not production architecture. Prefer adding a clear dedicated resource over contorting an existing one through DI overrides.
+
+Provider overrides are appropriate only when provider replacement itself is the public behavior being characterized.
+
+## Tests are NOT sacred either
+
+Existing characterization tests may be rewritten, split, strengthened, reseeded, reorganized, or replaced. The public behavior is the contract; the current test implementation is not.
+
+## Entire public surface is in scope
+
+Nothing publicly supported by `data-filter` is outside Phase 0. Do NOT classify public behavior as `OUTSIDE P0` because the test app does not expose it yet, there is no fixture, it is uncommon, or it is awkward to test. If the test app cannot exercise it yet, expand the test app.
+
+## Mutation policy
+
+Valid final classifications: `KILLED`, `EQUIVALENT`, `UNREACHABLE`, `ACCEPTED OBSERVABILITY LIMITATION`.
+
+Do not use `OUTSIDE P0` or `DIMINISHING RETURN` to dismiss publicly supported behavior.
+
+## Guiding principle
+
+During Phase 0:
+
+> Production is frozen. Expand the test app when needed to exercise and freeze public behavior.
