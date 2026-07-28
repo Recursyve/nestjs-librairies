@@ -1,11 +1,18 @@
 import { Module } from "@nestjs/common";
 import { SequelizeModule } from "@nestjs/sequelize";
-import { AccessControlAdapter, DataFilterModule, UserDeserializer } from "@recursyve/nestjs-data-filter";
+import {
+    AccessControlAdapter,
+    DataFilterModule,
+    TranslateAdapter,
+    UserDeserializer
+} from "@recursyve/nestjs-data-filter";
 import { CatalogItemsModule } from "./catalog-items/catalog-items.module";
+import { ConfigLabItemsModule } from "./config-lab/config-lab-items.module";
 import { ContractSystemsModule } from "./contract-systems/contract-systems.module";
 import { ContractsModule } from "./contracts/contracts.module";
 import { CoordsModule } from "./coords/coords.module";
 import { EditionsModule } from "./editions/editions.module";
+import { FilterLabModule } from "./filter-lab/filter-lab.module";
 import { InvoicesModule } from "./invoices/invoices.module";
 import { LocationsModule } from "./locations/locations.module";
 import { MaintenanceVisitsModule } from "./maintenance-visits/maintenance-visits.module";
@@ -26,6 +33,7 @@ import { SubscribersModule } from "./subscribers/subscribers.module";
 import { SystemsModule } from "./systems/systems.module";
 import { TestAccessControlAdapter } from "./test-access-control/test-access-control.adapter";
 import { TestUserDeserializer } from "./test-access-control/test-user.deserializer";
+import { TestTranslateAdapter } from "./test-translate/test-translate.adapter";
 import { TicketTypesModule } from "./ticket-types/ticket-types.module";
 import { VisitsModule } from "./visits/visits.module";
 
@@ -36,6 +44,10 @@ import { VisitsModule } from "./visits/visits.module";
             accessControlAdapter: {
                 provide: AccessControlAdapter,
                 useClass: TestAccessControlAdapter
+            },
+            translateAdapter: {
+                provide: TranslateAdapter,
+                useClass: TestTranslateAdapter
             },
             deserializer: {
                 provide: UserDeserializer,
@@ -67,10 +79,12 @@ import { VisitsModule } from "./visits/visits.module";
             }
         }),
         CatalogItemsModule,
+        ConfigLabItemsModule,
         ContractSystemsModule,
         ContractsModule,
         CoordsModule,
         EditionsModule,
+        FilterLabModule,
         InvoicesModule,
         LocationsModule,
         MaintenanceVisitsModule,
