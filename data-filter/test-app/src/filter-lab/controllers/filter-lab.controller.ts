@@ -8,6 +8,12 @@ export class FilterLabController extends FilterController<FilterLabDetailData> {
         super(filterService);
     }
 
+    @Get("config-without-user")
+    @HttpCode(HttpStatus.OK)
+    public async configWithoutUser() {
+        return this.filterService.getConfig({}, undefined);
+    }
+
     @Get("for-data-summary")
     @HttpCode(HttpStatus.OK)
     public async forDataSummary(): Promise<{ codes: string[]; hasDetailNote: boolean }> {

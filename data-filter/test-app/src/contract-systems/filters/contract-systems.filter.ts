@@ -93,6 +93,14 @@ export class ContractSystemsFilter extends BaseFilter<ContractSystemsData> {
         path: "contract"
     });
 
+    public readonly scopedContractCost = new TextFilter({
+        attribute: "total_cost",
+        path: "contract",
+        where: ({ request }) => ({
+            total_cost: () => (request as { minCost?: number }).minCost
+        })
+    });
+
     public readonly invoicePaid = new RadioFilter({
         attribute: "paid",
         path: "contract.invoice",
