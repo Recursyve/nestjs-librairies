@@ -114,6 +114,10 @@ export class TestHarness {
         return this.withUser(request(this.app.getHttpServer()).get(`/${route}/filter/config/id`).query(query), user);
     }
 
+    public getForDataSummary(route: string) {
+        return request(this.app.getHttpServer()).get(`/${route}/for-data-summary`);
+    }
+
     public async filterIds(
         route: string,
         body: FilterQueryModel,
