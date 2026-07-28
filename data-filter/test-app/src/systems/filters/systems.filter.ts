@@ -14,6 +14,7 @@ export class SystemsFilter extends BaseFilter<SystemsData> {
 
     public readonly geoBounds = new GeoBoundsFilter({
         latAttribute: "latitude",
-        lngAttribute: "longitude"
+        lngAttribute: "longitude",
+        srid: 4326
     });
 }

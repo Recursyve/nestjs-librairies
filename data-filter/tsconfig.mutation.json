@@ -1,0 +1,8 @@
+{
+    "extends": "./tsconfig.lib.json",
+    "compilerOptions": {
+        "noCheck": true,
+        "skipLibCheck": true,
+        "tsBuildInfoFile": "./.cache/tsconfig.mutation.tsbuildinfo"
+    }
+}

@@ -74,6 +74,21 @@ describe("filter configuration endpoint", () => {
         expect(geoBounds?.type).toBe(FilterType.GeoBounds);
     });
 
+    it("returns DateOnly, DateTime, Options, and Group filter metadata on public config endpoints", async () => {
+        const contracts = await harness.getFilterConfig("contracts");
+        const products = await harness.getFilterConfig("products");
+
+        const startDate = TestHarness.parseFilterConfig(contracts).find((item) => item.id === "startDate");
+        const listedAt = TestHarness.parseFilterConfig(products).find((item) => item.id === "listedAt");
+        const stockTier = TestHarness.parseFilterConfig(products).find((item) => item.id === "stockTier");
+        const stockStatusGroup = TestHarness.parseFilterConfig(products).find((item) => item.id === "stockStatusGroup");
+
+        expect(startDate?.type).toBe(FilterType.Date);
+        expect(listedAt?.type).toBe(FilterType.DateTime);
+        expect(stockTier?.type).toBe(FilterType.Options);
+        expect(stockStatusGroup?.type).toBe(FilterType.Group);
+    });
+
     it("returns a select resource by id from filter/config/id", async () => {
         const response = await harness.getFilterConfigId("contract-systems", {
             id: "statusSelect",
