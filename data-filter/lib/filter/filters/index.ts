@@ -2,6 +2,7 @@ export * from "./coordinate.filter";
 export * from "./date.filter";
 export * from "./date-only.filter";
 export * from "./date-time.filter";
+export * from "./default.filter";
 export * from "./filter";
 export * from "./geo-bounds.filter";
 export * from "./geo-localization.filter";

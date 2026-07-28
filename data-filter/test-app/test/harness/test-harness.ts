@@ -14,19 +14,25 @@ export class TestHarness {
 
     private constructor(public readonly app: INestApplication<App>) {}
 
-    public static async create(): Promise<TestHarness> {
-        const moduleRef = await Test.createTestingModule({
+    public static async create(options?: { validateData?: boolean }): Promise<TestHarness> {
+        let moduleBuilder = Test.createTestingModule({
             imports: [AppModule]
-        }).compile();
+        });
+
+        if (options?.validateData) {
+            moduleBuilder = moduleBuilder.overrideProvider("__VALIDATE_DATA__").useValue(true);
+        }
+
+        const moduleRef = await moduleBuilder.compile();
+
+        const sequelize = moduleRef.get<Sequelize>(getConnectionToken());
+        await sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
+        await sequelize.sync({ force: true });
+        await sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
 
         const app = moduleRef.createNestApplication<INestApplication<App>>();
         app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
         await app.init();
-
-        const sequelize = app.get<Sequelize>(getConnectionToken());
-        await sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
-        await sequelize.sync({ force: true });
-        await sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
 
         return new TestHarness(app);
     }

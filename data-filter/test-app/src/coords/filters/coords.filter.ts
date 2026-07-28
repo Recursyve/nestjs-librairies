@@ -26,6 +26,8 @@ export class CoordsFilter extends BaseFilter<CoordsData> {
 
     public readonly address = new TextFilter({ attribute: "address" });
 
+    public readonly geoPoint = new CoordinateFilter({ attribute: "geo_point" });
+
     public readonly distance = new GeoLocalizationFilter({
         rootFilter: new CoordinateFilter({ attribute: "geo_point" })
     });
