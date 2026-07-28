@@ -3,12 +3,14 @@ import { Products } from "../../src/products/models/products.model";
 import { Seeded } from "./seeded.type";
 
 type CreateSeededProductParams = {
+    listed_at?: Date | string;
     metadata: Record<string, any>;
     name: string;
     sku: string;
     status: string;
     stock?: number;
     tags: string[];
+    translations?: Record<string, string>;
 };
 
 type SeededProduct = Seeded<{

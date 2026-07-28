@@ -13,7 +13,7 @@
     "scripts": {
         "build": "rimraf dist && nest build",
         "build:lib": "rimraf dist .cache/tsconfig.lib.tsbuildinfo && nest build -p tsconfig.lib.json",
-        "build:lib:mutation": "tsc -p tsconfig.lib.json",
+        "build:lib:mutation": "tsc -p tsconfig.mutation.json",
         "copy:lib": "cp package.json .npmignore dist",
         "pack:lib": "npm run build:lib && cd dist && npm pack",
         "publish-package": "npm run build:lib && npm run copy:lib && npm publish ./dist --access public",

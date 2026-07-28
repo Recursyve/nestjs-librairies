@@ -3,16 +3,23 @@ import {
     Attributes,
     BaseFilter,
     Data,
+    DateTimeFilter,
     EnumOrderRule,
+    FilterOperatorTypes,
+    GroupFilter,
     NumberFilter,
+    OptionsFilter,
     SearchableAttributes,
+    SearchableTranslationAttributes,
+    SelectFilter,
     TextFilter
 } from "@recursyve/nestjs-data-filter";
 import { Products } from "../models/products.model";
 
 @Data(Products)
-@Attributes(["sku", "name", "status", "stock"])
+@Attributes(["sku", "name", "status", "stock", "listed_at"])
 @SearchableAttributes(["name", "sku", "metadata"])
+@SearchableTranslationAttributes(["translations"])
 export class ProductsData {}
 
 @Injectable()
@@ -22,6 +29,30 @@ export class ProductsFilter extends BaseFilter<ProductsData> {
     public readonly name = new TextFilter({ attribute: "name" });
     public readonly status = new TextFilter({ attribute: "status" });
     public readonly stock = new NumberFilter({ attribute: "stock" });
+    public readonly listedAt = new DateTimeFilter({ attribute: "listed_at" });
+
+    public readonly stockTier = new OptionsFilter({
+        attribute: "stock",
+        selectionMode: "select",
+        options: [
+            { key: "low", value: 5, operator: FilterOperatorTypes.LessOrEqual },
+            { key: "high", value: 5, operator: FilterOperatorTypes.Greater }
+        ]
+    });
+
+    public readonly stockStatusGroup = new GroupFilter({
+        rootFilter: new SelectFilter({
+            attribute: "status",
+            values: async () =>
+                Promise.resolve([
+                    { id: "active", name: "Active" },
+                    { id: "pending", name: "Pending" },
+                    { id: "inactive", name: "Inactive" }
+                ]),
+            lazyLoading: false
+        }),
+        valueFilter: new NumberFilter({ attribute: "stock" })
+    });
 
     public readonly category = new TextFilter({
         attribute: "metadata",

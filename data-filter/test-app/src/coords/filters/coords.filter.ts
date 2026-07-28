@@ -5,6 +5,7 @@ import {
     CoordinateFilter,
     Data,
     Distance,
+    GeoBoundsFilter,
     GeoLocalizationFilter,
     TextFilter
 } from "@recursyve/nestjs-data-filter";
@@ -27,5 +28,10 @@ export class CoordsFilter extends BaseFilter<CoordsData> {
 
     public readonly distance = new GeoLocalizationFilter({
         rootFilter: new CoordinateFilter({ attribute: "geo_point" })
+    });
+
+    public readonly geoPointBounds = new GeoBoundsFilter({
+        attribute: "geo_point",
+        srid: 4326
     });
 }

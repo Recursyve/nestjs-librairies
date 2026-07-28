@@ -38,6 +38,12 @@ export class Products extends Model {
     @Column(DataType.JSON)
     declare public readonly tags?: string[];
 
+    @Column(DataType.JSON)
+    declare public readonly translations?: Record<string, string>;
+
+    @Column(DataType.DATE)
+    declare public readonly listed_at?: Date;
+
     @CreatedAt
     declare public readonly created_at?: Date;
 
