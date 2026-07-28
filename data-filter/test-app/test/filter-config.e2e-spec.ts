@@ -119,6 +119,16 @@ describe("filter configuration endpoint", () => {
         expect(response.body).toEqual({});
     });
 
+    it("returns an empty array when searching config values on a non-select filter", async () => {
+        const response = await harness.getFilterConfigValue("contract-systems", {
+            id: "active",
+            value: "yes"
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual([]);
+    });
+
     it("returns null when requesting a select resource on a non-select filter", async () => {
         const response = await harness.getFilterConfigId("contract-systems", {
             id: "active",

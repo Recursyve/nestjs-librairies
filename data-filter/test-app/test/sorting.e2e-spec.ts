@@ -81,6 +81,11 @@ describe("sorting and order rules on MySQL", () => {
         TestHarness.expectInternalServerErrorFilterResponse(response);
     });
 
+    /**
+     * @p0 suspected-defect
+     * Observed: EnumOrderRule getOrderOption uses a synchronous loop; mutating ++i to --i is non-terminating
+     * and cannot be distinguished in-process via HTTP assertions (Stryker timeout finding).
+     */
     it("currently responds with 500 when ordering products by enum order rule", async () => {
         await using _product = await createSeededProduct({
             metadata: { category: "electronics" },

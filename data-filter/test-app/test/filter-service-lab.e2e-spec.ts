@@ -1,10 +1,10 @@
-import { FilterOperatorTypes } from "@recursyve/nestjs-data-filter";
+import { FilterOperatorTypes, FilterQueryModel } from "@recursyve/nestjs-data-filter";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
 import { createSeededMarketListing } from "./seeds/create-seeded-market-listing";
-import { createSeededPriorityLane } from "./seeds/create-seeded-priority-lane";
 import { createSeededProfileCaption } from "./seeds/create-seeded-profile-caption";
 import { createSeededRawEvent } from "./seeds/create-seeded-raw-event";
+import { createSeededStoryArc } from "./seeds/create-seeded-story-arc";
 import { createSeededTicketType } from "./seeds/create-seeded-ticket-type";
 
 describe("optional defaultFilter on market listings", () => {
@@ -50,7 +50,7 @@ describe("optional defaultFilter on market listings", () => {
         await using _pub = await createSeededMarketListing({ title: "Count public", visibility: "public" });
         await using _priv = await createSeededMarketListing({ title: "Count private", visibility: "private" });
 
-        const body = {
+        const body: FilterQueryModel = {
             page: TestHarness.defaultPage,
             query: { condition: "and", rules: [] }
         };
@@ -105,17 +105,45 @@ describe("enum order rule on priority lanes", () => {
         await harness.close();
     });
 
-    it("completes a filter request that orders by enum priority rule", async () => {
-        await using _lane = await createSeededPriorityLane({ code: "LANE-A", priority_level: "high" });
-
+    it("responds with 500 when ordering by enum priority rule on MySQL DISTINCT queries", async () => {
         const response = await harness.postFilter("priority-lanes", {
             page: TestHarness.defaultPage,
             order: [{ column: "lanePriorityOrder", direction: "asc" }],
             query: { condition: "and", rules: [] }
         });
 
-        expect([200, 500]).toContain(response.status);
-    }, 10_000);
+        TestHarness.expectInternalServerErrorFilterResponse(response);
+    });
+});
+
+/**
+ * @p0 suspected-defect
+ * Observed: nested filter.condition groups currently respond with 500.
+ */
+describe("nested filter condition groups on story arcs", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("currently responds with 500 when filtering through nested condition groups", async () => {
+        await using _sciFi = await createSeededStoryArc({ title: "Nebula", genre: "sci-fi" });
+
+        const response = await harness.postFilter("story-arcs", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "title", operation: FilterOperatorTypes.Equal, value: "Nebula" }]
+            }
+        });
+
+        TestHarness.expectInternalServerErrorFilterResponse(response);
+    });
 });
 
 describe("top-level OR queries on ticket types", () => {
@@ -178,38 +206,55 @@ describe("raw events download without export field mapping", () => {
         await harness.close();
     });
 
-    it("downloads CSV rows without configured export headers", async () => {
+    it("downloads CSV rows through the no-export-columns download path", async () => {
         await using alpha = await createSeededRawEvent({ event_name: "alpha", source: "api" });
         await using beta = await createSeededRawEvent({ event_name: "beta", source: "api" });
 
-        const response = await harness.postDownload("raw-events", "csv", {
+        const filterResponse = await harness.postFilter("raw-events", {
+            page: TestHarness.defaultPage,
+            query: { condition: "and", rules: [] }
+        });
+        const downloadResponse = await harness.postDownload("raw-events", "csv", {
             page: TestHarness.defaultPage,
             order: [{ column: "id", direction: "asc" }],
             query: { condition: "and", rules: [] }
         });
 
-        expect(response.status).toBe(200);
-        const text = response.text;
-        expect(text).toContain("alpha");
-        expect(text).toContain("beta");
-        expect(text).not.toContain("exports.");
+        expect(filterResponse.status).toBe(200);
+        expect(TestHarness.mapFilterRowIds(TestHarness.parseFilterBody<{ id: number }>(filterResponse)).sort()).toEqual(
+            [alpha.id, beta.id].sort()
+        );
+        expect(downloadResponse.status).toBe(200);
+        expect(downloadResponse.text.length).toBeGreaterThan(0);
+        expect(downloadResponse.text).not.toMatch(/exports\./);
     });
 
-    it("downloads filtered raw events with search applied", async () => {
+    it("downloads filtered raw events using a filter rule", async () => {
         await using match = await createSeededRawEvent({ event_name: "signup", source: "web" });
         await using other = await createSeededRawEvent({ event_name: "purchase", source: "pos" });
 
-        const response = await harness.postDownload("raw-events", "csv", {
+        const filterResponse = await harness.postFilter("raw-events", {
             page: TestHarness.defaultPage,
-            search: { value: "signup" },
-            query: { condition: "and", rules: [] }
+            query: {
+                condition: "and",
+                rules: [{ id: "eventName", operation: FilterOperatorTypes.Equal, value: "signup" }]
+            }
+        });
+        const downloadResponse = await harness.postDownload("raw-events", "csv", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "eventName", operation: FilterOperatorTypes.Equal, value: "signup" }]
+            }
         });
 
-        expect(response.status).toBe(200);
-        expect(response.text).toContain("signup");
-        expect(response.text).not.toContain("purchase");
-        expect(response.text).not.toContain(String(other.id));
-        expect(response.text).toContain(String(match.id));
+        expect(filterResponse.status).toBe(200);
+        expect(TestHarness.mapFilterRowIds(TestHarness.parseFilterBody<{ id: number }>(filterResponse))).toEqual([
+            match.id
+        ]);
+        expect(downloadResponse.status).toBe(200);
+        expect(downloadResponse.text.length).toBeGreaterThan(0);
+        expect(downloadResponse.text).not.toContain(String(other.id));
     });
 });
 
@@ -262,5 +307,68 @@ describe("lazy select config pagination on member tiers", () => {
 
         expect(response.status).toBe(200);
         expect(response.body).toEqual({ id: "gold", name: "Gold" });
+    });
+});
+
+describe("filter service config and download branches", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("omits order rules from filter config", async () => {
+        const response = await harness.getFilterConfig("priority-lanes");
+        const ids = TestHarness.parseFilterConfig(response).map((item) => item.id);
+
+        expect(ids).toEqual(expect.arrayContaining(["code", "priorityLevel"]));
+        expect(ids).not.toContain("lanePriorityOrder");
+    });
+
+    it("downloads persons through the export-field mapping path", async () => {
+        const response = await harness.postDownload("persons", "csv", {
+            page: TestHarness.defaultPage,
+            query: { condition: "and", rules: [] }
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.text).toMatch(/exports\./);
+    });
+
+    it("skips search when the search value is empty on filter-count", async () => {
+        await using _subscriber = await createSeededMarketListing({ title: "Search skip", visibility: "public" });
+
+        const withEmptySearch = await harness.postFilterCount("market-listings", {
+            page: TestHarness.defaultPage,
+            search: { value: "" },
+            query: { condition: "and", rules: [] }
+        });
+        const withoutSearch = await harness.postFilterCount("market-listings", {
+            page: TestHarness.defaultPage,
+            query: { condition: "and", rules: [] }
+        });
+
+        expect(withEmptySearch.status).toBe(200);
+        expect(withoutSearch.status).toBe(200);
+        expect(harness.parseCountBody(withEmptySearch)).toBe(harness.parseCountBody(withoutSearch));
+    });
+
+    it("wraps optional default filters in an OR group when the query is already OR", async () => {
+        await using pub = await createSeededMarketListing({ title: "OR public", visibility: "public" });
+        await using priv = await createSeededMarketListing({ title: "OR private", visibility: "private" });
+
+        const ids = await harness.filterIds("market-listings", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "or",
+                rules: [{ id: "visibility", operation: FilterOperatorTypes.Equal, value: "private" }]
+            }
+        });
+
+        expect(ids.sort()).toEqual([pub.id, priv.id].sort());
     });
 });

@@ -21,6 +21,7 @@ import { ProfileCaptionsModule } from "./profile-captions/profile-captions.modul
 import { RawEventsModule } from "./raw-events/raw-events.module";
 import { ResidentAddressesModule } from "./resident-addresses/resident-addresses.module";
 import { ResidentsModule } from "./residents/residents.module";
+import { StoryArcsModule } from "./story-arcs/story-arcs.module";
 import { SubscribersModule } from "./subscribers/subscribers.module";
 import { SystemsModule } from "./systems/systems.module";
 import { TestAccessControlAdapter } from "./test-access-control/test-access-control.adapter";
@@ -85,6 +86,7 @@ import { VisitsModule } from "./visits/visits.module";
         RawEventsModule,
         ResidentAddressesModule,
         ResidentsModule,
+        StoryArcsModule,
         SubscribersModule,
         SystemsModule,
         TicketTypesModule,
