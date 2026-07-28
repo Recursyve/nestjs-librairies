@@ -9,17 +9,23 @@ import { EditionsModule } from "./editions/editions.module";
 import { InvoicesModule } from "./invoices/invoices.module";
 import { LocationsModule } from "./locations/locations.module";
 import { MaintenanceVisitsModule } from "./maintenance-visits/maintenance-visits.module";
+import { MarketListingsModule } from "./market-listings/market-listings.module";
+import { MemberTiersModule } from "./member-tiers/member-tiers.module";
 import { OwnersModule } from "./owners/owners.module";
 import { PersonsModule } from "./persons/persons.module";
 import { PlaceOwnersModule } from "./place-owners/place-owners.module";
 import { PlacesModule } from "./places/places.module";
+import { PriorityLanesModule } from "./priority-lanes/priority-lanes.module";
 import { ProductsModule } from "./products/products.module";
+import { ProfileCaptionsModule } from "./profile-captions/profile-captions.module";
+import { RawEventsModule } from "./raw-events/raw-events.module";
 import { ResidentAddressesModule } from "./resident-addresses/resident-addresses.module";
 import { ResidentsModule } from "./residents/residents.module";
 import { SubscribersModule } from "./subscribers/subscribers.module";
 import { SystemsModule } from "./systems/systems.module";
 import { TestAccessControlAdapter } from "./test-access-control/test-access-control.adapter";
 import { TestUserDeserializer } from "./test-access-control/test-user.deserializer";
+import { TicketTypesModule } from "./ticket-types/ticket-types.module";
 import { VisitsModule } from "./visits/visits.module";
 
 @Module({
@@ -67,15 +73,21 @@ import { VisitsModule } from "./visits/visits.module";
         InvoicesModule,
         LocationsModule,
         MaintenanceVisitsModule,
+        MarketListingsModule,
+        MemberTiersModule,
         OwnersModule,
         PersonsModule,
         PlaceOwnersModule,
         PlacesModule,
+        PriorityLanesModule,
         ProductsModule,
+        ProfileCaptionsModule,
+        RawEventsModule,
         ResidentAddressesModule,
         ResidentsModule,
         SubscribersModule,
         SystemsModule,
+        TicketTypesModule,
         VisitsModule
     ],
     controllers: [],
