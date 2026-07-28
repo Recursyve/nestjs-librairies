@@ -98,4 +98,34 @@ describe("filter configuration endpoint", () => {
         expect(response.status).toBe(200);
         expect(response.body).toEqual({ id: "repair", name: "Repair" });
     });
+
+    it("returns empty select values for unknown filter ids", async () => {
+        const response = await harness.getFilterConfigValue("contract-systems", {
+            id: "unknown-filter",
+            value: "anything"
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual([]);
+    });
+
+    it("returns an empty object for unknown filter ids from filter/config/id", async () => {
+        const response = await harness.getFilterConfigId("contract-systems", {
+            id: "unknown-filter",
+            resourceId: "repair"
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({});
+    });
+
+    it("returns null when requesting a select resource on a non-select filter", async () => {
+        const response = await harness.getFilterConfigId("contract-systems", {
+            id: "active",
+            resourceId: "yes"
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({});
+    });
 });
