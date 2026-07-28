@@ -25,9 +25,17 @@ The characterization suite exists to describe the current library, not to improv
 
 ## Test app
 
-The test app should remain coherent, but it is a testing fixture, not production architecture. Prefer adding a clear dedicated resource over contorting an existing one through DI overrides.
+Treat the test app as a flexible playground for exercising the library's public behavior — not a realistic sample application.
 
-Provider overrides are appropriate only when provider replacement itself is the public behavior being characterized.
+Do not preserve its existing domain model for realism or consistency. Freely add resources, models, relationships, fields, decorators, modules, routes, and fixtures whenever they make a behavior easier to characterize.
+
+New test concepts need not belong to one coherent real-world application. Prefer distinct, memorable domain concepts over generic `*Lab`, `*Test`, or `*Fixture` resources.
+
+Examples (illustrative, not naming conventions): nested relationships → kingdoms, guilds, star systems; ordering → potion recipes, racing leagues, spell rankings; counts/aggregates → libraries/books, fleets/ships; permissions → vaults, classified archives, guild memberships. Do not force fantasy or absurdity where a simple domain concept is clearer.
+
+Realism is optional. A resource only needs enough internal coherence for a reader to understand what behavior is being tested. The goal is whatever test topology best exposes observable library behavior.
+
+Prefer adding a dedicated resource over contorting an existing one through DI overrides. Provider overrides are appropriate only when provider replacement itself is the public behavior being characterized.
 
 ## Tests are NOT sacred either
 

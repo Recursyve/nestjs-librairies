@@ -36,13 +36,26 @@ During Phase 0:
 
 ## Test app
 
-The test app should remain coherent, but it is a testing fixture, not production architecture. Prefer adding a clear dedicated resource over contorting an existing one through DI overrides.
+Treat the test app as a flexible playground for exercising the library's public behavior — not a realistic sample application.
+
+Do not preserve its existing domain model for realism or consistency. Freely add resources, models, relationships, fields, decorators, modules, routes, and fixtures whenever they make a behavior easier to characterize.
+
+New test concepts need not belong to one coherent real-world application. They may be completely unrelated to existing resources.
+
+Prefer distinct, memorable domain concepts over generic `*Lab`, `*Test`, or `*Fixture` resources. For example:
+
+- nested hierarchical relationships → kingdoms, guilds, star systems, dragons;
+- unusual ordering rules → potion recipes, racing leagues, spell rankings, municipal parking permits;
+- counts and aggregates → libraries and books, fleets and ships, taverns and patrons;
+- complex permissions → vaults, classified archives, guild memberships, space stations.
+
+These examples are illustrative, not naming conventions. Do not force fantasy or absurdity where a simple domain concept is clearer.
+
+Realism is optional. A resource only needs enough internal coherence for a reader to understand what behavior is being tested. The goal is whatever test topology best exposes observable library behavior.
 
 When a scenario needs a distinct public configuration, add a dedicated resource with a stable meaning across the suite — not a second meaning for the same resource via provider/config overrides.
 
 Provider overrides are appropriate only when provider replacement itself is the public behavior being characterized (injectable adapters/deserializers).
-
-You may add models, routes, filters, or fixtures that exist only to exercise a capability (JSON field, translated field, nested include, ACL shape, etc.). Domain realism is secondary to a clear characterization contract.
 
 ## Entire public surface is in scope
 

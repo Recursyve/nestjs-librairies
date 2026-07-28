@@ -49,16 +49,41 @@ export class TestHarness {
         return request.set("x-test-user", JSON.stringify(user));
     }
 
-    public postFilter(route: string, body: FilterQueryModel, user?: TestAccessControlUser | null) {
-        return this.withUser(request(this.app.getHttpServer()).post(`/${route}/filter`).send(body), user);
+    private withTenant(request: SupertestTest, tenantId?: number): SupertestTest {
+        if (tenantId === undefined) {
+            return request;
+        }
+
+        return request.set("x-tenant-id", String(tenantId));
+    }
+
+    public postFilter(
+        route: string,
+        body: FilterQueryModel,
+        user?: TestAccessControlUser | null,
+        options?: { tenantId?: number }
+    ) {
+        return this.withTenant(
+            this.withUser(request(this.app.getHttpServer()).post(`/${route}/filter`).send(body), user),
+            options?.tenantId
+        );
     }
 
     public postFilterCount(route: string, body: FilterQueryModel, user?: TestAccessControlUser | null) {
         return this.withUser(request(this.app.getHttpServer()).post(`/${route}/filter-count`).send(body), user);
     }
 
-    public postDownload(route: string, type: string, body: FilterQueryModel, user?: TestAccessControlUser | null) {
-        return this.withUser(request(this.app.getHttpServer()).post(`/${route}/download/${type}`).send(body), user);
+    public postDownload(
+        route: string,
+        type: string,
+        body: FilterQueryModel,
+        user?: TestAccessControlUser | null,
+        options?: { tenantId?: number }
+    ) {
+        return this.withTenant(
+            this.withUser(request(this.app.getHttpServer()).post(`/${route}/download/${type}`).send(body), user),
+            options?.tenantId
+        );
     }
 
     public postDownloadBinary(
@@ -121,9 +146,10 @@ export class TestHarness {
     public async filterIds(
         route: string,
         body: FilterQueryModel,
-        user?: TestAccessControlUser | null
+        user?: TestAccessControlUser | null,
+        options?: { tenantId?: number }
     ): Promise<number[]> {
-        const response = await this.postFilter(route, body, user).expect(200);
+        const response = await this.postFilter(route, body, user, options).expect(200);
         return TestHarness.mapFilterRowIds(TestHarness.parseFilterBody<{ id: number }>(response));
     }
 

@@ -1,12 +1,27 @@
 import { FilterOperatorTypes } from "@recursyve/nestjs-data-filter";
+import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
+import { createSeededArchiveItem, softDeleteArchiveItem } from "./seeds/create-seeded-archive-item";
 import { createSeededCatalogItem } from "./seeds/create-seeded-catalog-item";
 import { createSeededConfigLabItem } from "./seeds/create-seeded-config-lab-item";
+import { createSeededContract } from "./seeds/create-seeded-contract";
+import { createSeededContractSystem } from "./seeds/create-seeded-contract-system";
+import { createSeededCoords } from "./seeds/create-seeded-coords";
+import { createSeededExportLabRow } from "./seeds/create-seeded-export-lab-row";
 import { createSeededFilterLabRow } from "./seeds/create-seeded-filter-lab-row";
+import { createSeededGroupLabEntry } from "./seeds/create-seeded-group-lab-entry";
+import { createSeededInvoice } from "./seeds/create-seeded-invoice";
+import { createSeededLocation } from "./seeds/create-seeded-location";
 import { createSeededMarketListing } from "./seeds/create-seeded-market-listing";
+import { createSeededOrderLabRow } from "./seeds/create-seeded-order-lab-row";
+import { createSeededOwner } from "./seeds/create-seeded-owner";
 import { createSeededPerson } from "./seeds/create-seeded-person";
+import { createSeededPlace } from "./seeds/create-seeded-place";
+import { createSeededPlaceOwner } from "./seeds/create-seeded-place-owner";
 import { createSeededProduct } from "./seeds/create-seeded-product";
+import { createSeededSystem } from "./seeds/create-seeded-system";
+import { createSeededTenantScope } from "./seeds/create-seeded-tenant-scope";
 import { createSeededTicketType } from "./seeds/create-seeded-ticket-type";
 
 describe("filter service getConfig translation and visibility", () => {
@@ -283,6 +298,16 @@ describe("filter service select config pagination edge cases", () => {
         expect(response.body).toEqual({});
     });
 
+    it("resolves select resources by id when getResourceById is configured", async () => {
+        const response = await harness.getFilterConfigId("member-tiers", {
+            id: "tierSelect",
+            resourceId: "gold"
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({ id: "gold", name: "Gold" });
+    });
+
     it("treats zero pageSize as null and falls back to the select default page size", async () => {
         const zeroPageSize = await harness.getFilterConfigValue("member-tiers", {
             id: "tierSelect",
@@ -501,5 +526,500 @@ describe("filter service nested query branches", () => {
 
         expect(ids).toEqual([fiction.id]);
         expect(ids).not.toContain(essay.id);
+    });
+});
+
+describe("export lab localized download mapping", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("downloads localized export rows using the fr language branch", async () => {
+        await using _row = await createSeededExportLabRow({
+            code: "EXP-FR",
+            label_fr: "Libellé FR",
+            label_en: "Label EN"
+        });
+
+        const response = await harness.postDownload(
+            "export-lab",
+            "csv",
+            {
+                page: TestHarness.defaultPage,
+                query: { condition: "and", rules: [] }
+            },
+            { id: "fr-user", language: "fr" }
+        );
+
+        expect(response.status).toBe(200);
+        expect(TestHarness.parseCsv(response.text)[1]).toEqual(["Libellé FR"]);
+    });
+
+    it("downloads localized export rows using the en language branch", async () => {
+        await using _row = await createSeededExportLabRow({
+            code: "EXP-EN",
+            label_fr: "Libellé FR",
+            label_en: "Label EN"
+        });
+
+        const response = await harness.postDownload(
+            "export-lab",
+            "csv",
+            {
+                page: TestHarness.defaultPage,
+                query: { condition: "and", rules: [] }
+            },
+            { id: "en-user", language: "en" }
+        );
+
+        expect(response.status).toBe(200);
+        expect(TestHarness.parseCsv(response.text)[1]).toEqual(["Label EN"]);
+    });
+});
+
+describe("archive items paranoid false filter", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("includes soft-deleted rows when filtering through a paranoid false text filter", async () => {
+        await using deleted = await createSeededArchiveItem({ title: "Deleted memo", status: "archived" });
+        await using active = await createSeededArchiveItem({ title: "Active memo", status: "active" });
+        await softDeleteArchiveItem(deleted.id);
+
+        const ids = await harness.filterIds("archive-items", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "title", operation: FilterOperatorTypes.Contains, value: "memo" }]
+            }
+        });
+
+        expect(ids.sort()).toEqual([active.id, deleted.id].sort());
+    });
+});
+
+describe("tenant scope where callback and condition includes", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("filters tenant scopes through a where callback bound to the request tenant id", async () => {
+        await using tenantA = await createSeededTenantScope({ tenant_id: 11, label: "Tenant A scope" });
+        await using _tenantB = await createSeededTenantScope({ tenant_id: 22, label: "Tenant B scope" });
+
+        const ids = await harness.filterIds(
+            "tenant-scopes",
+            {
+                page: TestHarness.defaultPage,
+                query: {
+                    condition: "and",
+                    rules: [{ id: "tenantLabel", operation: FilterOperatorTypes.Equal, value: "Tenant A scope" }]
+                }
+            },
+            undefined,
+            { tenantId: 11 }
+        );
+
+        expect(ids).toEqual([tenantA.id]);
+    });
+
+    it("filters tenant scopes through an implicit category condition on the label filter", async () => {
+        await using match = await createSeededTenantScope({ tenant_id: 7, label: "Scoped label" });
+        await using wrongTenant = await createSeededTenantScope({ tenant_id: 8, label: "Scoped label" });
+
+        const ids = await harness.filterIds("tenant-scopes", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "categoryScoped", operation: FilterOperatorTypes.Equal, value: "Scoped label" }]
+            }
+        });
+
+        expect(ids).toEqual([match.id]);
+        expect(ids).not.toContain(wrongTenant.id);
+    });
+});
+
+describe("group lab eager and lazy include branches", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("filters through eager group status and score rules", async () => {
+        await using match = await createSeededGroupLabEntry({ status: "open", tier: "gold", score: 90 });
+        await using lowScore = await createSeededGroupLabEntry({ status: "open", tier: "gold", score: 10 });
+        await using closed = await createSeededGroupLabEntry({ status: "closed", tier: "gold", score: 90 });
+
+        const ids = await harness.filterIds("group-lab", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [
+                    {
+                        id: "eagerStatusScoreGroup",
+                        operation: FilterOperatorTypes.Equal,
+                        value: [
+                            { operation: FilterOperatorTypes.Equal, value: "open" },
+                            { operation: FilterOperatorTypes.Greater, value: 50 }
+                        ]
+                    }
+                ]
+            }
+        });
+
+        expect(ids).toEqual([match.id]);
+        expect(ids).not.toContain(lowScore.id);
+        expect(ids).not.toContain(closed.id);
+    });
+
+    it("filters through lazy group tier and score rules", async () => {
+        await using match = await createSeededGroupLabEntry({ status: "open", tier: "gold", score: 80 });
+        await using wrongTier = await createSeededGroupLabEntry({ status: "open", tier: "silver", score: 80 });
+        await using lowScore = await createSeededGroupLabEntry({ status: "open", tier: "gold", score: 5 });
+
+        const ids = await harness.filterIds("group-lab", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [
+                    {
+                        id: "lazyTierScoreGroup",
+                        operation: FilterOperatorTypes.Equal,
+                        value: [
+                            { operation: FilterOperatorTypes.Equal, value: "gold" },
+                            { operation: FilterOperatorTypes.Greater, value: 20 }
+                        ]
+                    }
+                ]
+            }
+        });
+
+        expect(ids).toEqual([match.id]);
+        expect(ids).not.toContain(wrongTier.id);
+        expect(ids).not.toContain(lowScore.id);
+    });
+});
+
+describe("order lab default order rule deduplication", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("deduplicates the default id order when explicit id desc is requested", async () => {
+        await using first = await createSeededOrderLabRow({ code: "A", label: "First" });
+        await using second = await createSeededOrderLabRow({ code: "B", label: "Second" });
+
+        const response = await harness.postFilter("order-lab", {
+            page: TestHarness.defaultPage,
+            order: [{ column: "id", direction: "desc" }],
+            query: { condition: "and", rules: [] }
+        });
+
+        expect(response.status).toBe(200);
+        expect(TestHarness.mapFilterRowIds(TestHarness.parseFilterBody<{ id: number }>(response))).toEqual([
+            second.id,
+            first.id
+        ]);
+    });
+});
+
+describe("contract systems condition includes and having characterization", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("filters contract-systems through owner first name with implicit last-name condition includes", async () => {
+        await using location = await createSeededLocation({ value: "Montreal", unique_code: "MTL-CS" });
+        await using coord = await createSeededCoords({
+            location_id: location.id,
+            street_number: 1,
+            address: "1 Test",
+            postal_code: "H1A1A1"
+        });
+        await using place = await createSeededPlace({ billing_coord_id: coord.id, geo_coord_id: coord.id });
+        await using alice = await createSeededPerson({
+            email: "alice.cs@example.com",
+            first_name: "Alice",
+            last_name: "Alpha"
+        });
+        await using owner = await createSeededOwner({ person_id: alice.id });
+        await using _placeOwner = await createSeededPlaceOwner({ place_id: place.id, owner_id: owner.id });
+        await using system = await createSeededSystem({
+            place_id: place.id,
+            file_number: "SYS-CS",
+            latitude: 45.5,
+            longitude: -73.5
+        });
+        await using invoice = await createSeededInvoice({
+            invoice_number: "INV-CS",
+            paid: true,
+            subtotal: 1,
+            total_cost: 1
+        });
+        await using contract = await createSeededContract({
+            invoice_id: invoice.id,
+            start_date: "2024-01-01",
+            end_date: "2025-12-31",
+            payable_by: "2024-06-01",
+            total_cost: 1000
+        });
+        await using csAlice = await createSeededContractSystem({
+            contract_id: contract.id,
+            system_id: system.id,
+            active: true,
+            activated_date: "2024-02-01"
+        });
+
+        await using locationB = await createSeededLocation({ value: "Quebec", unique_code: "QC-CS" });
+        await using coordB = await createSeededCoords({
+            location_id: locationB.id,
+            street_number: 2,
+            address: "2 Test",
+            postal_code: "G1R1R1"
+        });
+        await using placeB = await createSeededPlace({ billing_coord_id: coordB.id, geo_coord_id: coordB.id });
+        await using aliceBeta = await createSeededPerson({
+            email: "alice.beta.cs@example.com",
+            first_name: "Alice",
+            last_name: "Beta"
+        });
+        await using ownerB = await createSeededOwner({ person_id: aliceBeta.id });
+        await using _placeOwnerB = await createSeededPlaceOwner({ place_id: placeB.id, owner_id: ownerB.id });
+        await using systemB = await createSeededSystem({
+            place_id: placeB.id,
+            file_number: "SYS-CS-B",
+            latitude: 46.8,
+            longitude: -71.2
+        });
+        await using invoiceB = await createSeededInvoice({
+            invoice_number: "INV-CS-B",
+            paid: true,
+            subtotal: 1,
+            total_cost: 1
+        });
+        await using contractB = await createSeededContract({
+            invoice_id: invoiceB.id,
+            start_date: "2024-01-01",
+            end_date: "2025-12-31",
+            payable_by: "2024-06-01",
+            total_cost: 1000
+        });
+        await using _csAliceBeta = await createSeededContractSystem({
+            contract_id: contractB.id,
+            system_id: systemB.id,
+            active: true,
+            activated_date: "2024-02-01"
+        });
+
+        const ids = await harness.filterIds("contract-systems", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "ownerFirstName", operation: FilterOperatorTypes.Equal, value: "Alice" }]
+            }
+        });
+
+        expect(ids).toEqual([csAlice.id]);
+    });
+
+    it("routes visit count filters through the having branch with a stable MySQL error", async () => {
+        await using location = await createSeededLocation({ value: "Montreal", unique_code: "MTL-HV" });
+        await using coord = await createSeededCoords({
+            location_id: location.id,
+            street_number: 1,
+            address: "1 Test",
+            postal_code: "H1A1A1"
+        });
+        await using place = await createSeededPlace({ billing_coord_id: coord.id, geo_coord_id: coord.id });
+        await using system = await createSeededSystem({
+            place_id: place.id,
+            file_number: "SYS-HV",
+            latitude: 45.5,
+            longitude: -73.5
+        });
+        await using invoice = await createSeededInvoice({
+            invoice_number: "INV-HV",
+            paid: true,
+            subtotal: 1,
+            total_cost: 1
+        });
+        await using contract = await createSeededContract({
+            invoice_id: invoice.id,
+            start_date: "2024-01-01",
+            end_date: "2025-12-31",
+            payable_by: "2024-06-01",
+            total_cost: 1000
+        });
+        await using _cs = await createSeededContractSystem({
+            contract_id: contract.id,
+            system_id: system.id,
+            active: true,
+            activated_date: "2024-02-01"
+        });
+
+        const filterResponse = await harness.postFilter("contract-systems", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "visitCount", operation: FilterOperatorTypes.GreaterOrEqual, value: 1 }]
+            }
+        });
+        const countResponse = await harness.postFilterCount("contract-systems", {
+            page: TestHarness.defaultPage,
+            query: {
+                condition: "and",
+                rules: [{ id: "visitCount", operation: FilterOperatorTypes.GreaterOrEqual, value: 1 }]
+            }
+        });
+
+        TestHarness.expectInternalServerErrorFilterResponse(filterResponse);
+        expect(countResponse.status).toBe(500);
+    });
+});
+
+describe("filter service search count language branch", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("counts translated search matches for the deserialized user language", async () => {
+        await using _french = await createSeededProduct({
+            metadata: { brand: "Acme" },
+            name: "Count FR",
+            sku: "CNT-FR",
+            status: "active",
+            stock: 1,
+            tags: ["a"],
+            translations: { fr: "Bonjour", en: "Hello" }
+        });
+        await using _english = await createSeededProduct({
+            metadata: { brand: "Acme" },
+            name: "Count EN",
+            sku: "CNT-EN",
+            status: "active",
+            stock: 1,
+            tags: ["a"],
+            translations: { fr: "Salut", en: "Greetings" }
+        });
+
+        const frCount = await harness.postFilterCount(
+            "products",
+            {
+                page: TestHarness.defaultPage,
+                search: { value: "Bonjour" },
+                query: { condition: "and", rules: [] }
+            },
+            { id: "fr-user", language: "fr" }
+        );
+        const enCount = await harness.postFilterCount(
+            "products",
+            {
+                page: TestHarness.defaultPage,
+                search: { value: "Bonjour" },
+                query: { condition: "and", rules: [] }
+            },
+            { id: "en-user", language: "en" }
+        );
+
+        expect(frCount.status).toBe(200);
+        expect(enCount.status).toBe(200);
+        expect(harness.parseCountBody(frCount)).toBe(1);
+        expect(harness.parseCountBody(enCount)).toBe(0);
+    });
+});
+
+describe("filter lab config without user", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("uses fr fallback when getConfig is called with an undefined user", async () => {
+        const response = await request(harness.app.getHttpServer()).get("/filter-lab/config-without-user");
+
+        expect(response.status).toBe(200);
+        const code = TestHarness.parseFilterConfig(response).find((item) => item.id === "code");
+        expect(code?.name).toBe("filter.code.name@fr");
+    });
+});
+
+describe("required default filter with empty top-level query", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("applies required default filter when the incoming query is undefined-shaped as empty AND", async () => {
+        await using published = await createSeededCatalogItem({
+            code: "REQ-EMPTY-PUB",
+            label: "Published empty",
+            status: "published"
+        });
+        await using draft = await createSeededCatalogItem({
+            code: "REQ-EMPTY-DRAFT",
+            label: "Draft empty",
+            status: "draft"
+        });
+
+        const ids = await harness.filterIds("catalog-items", {
+            page: TestHarness.defaultPage,
+            query: { condition: "and", rules: [] }
+        });
+
+        expect(ids).toEqual([published.id]);
+        expect(ids).not.toContain(draft.id);
     });
 });

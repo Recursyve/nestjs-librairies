@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { SequelizeModule } from "@nestjs/sequelize";
 import {
     AccessControlAdapter,
@@ -6,18 +6,23 @@ import {
     TranslateAdapter,
     UserDeserializer
 } from "@recursyve/nestjs-data-filter";
+import { ArchiveItemsModule } from "./archive-items/archive-items.module";
 import { CatalogItemsModule } from "./catalog-items/catalog-items.module";
 import { ConfigLabItemsModule } from "./config-lab/config-lab-items.module";
 import { ContractSystemsModule } from "./contract-systems/contract-systems.module";
 import { ContractsModule } from "./contracts/contracts.module";
 import { CoordsModule } from "./coords/coords.module";
+import { CountLabModule } from "./count-lab/count-lab.module";
 import { EditionsModule } from "./editions/editions.module";
+import { ExportLabModule } from "./export-lab/export-lab.module";
 import { FilterLabModule } from "./filter-lab/filter-lab.module";
+import { GroupLabModule } from "./group-lab/group-lab.module";
 import { InvoicesModule } from "./invoices/invoices.module";
 import { LocationsModule } from "./locations/locations.module";
 import { MaintenanceVisitsModule } from "./maintenance-visits/maintenance-visits.module";
 import { MarketListingsModule } from "./market-listings/market-listings.module";
 import { MemberTiersModule } from "./member-tiers/member-tiers.module";
+import { OrderLabModule } from "./order-lab/order-lab.module";
 import { OwnersModule } from "./owners/owners.module";
 import { PersonsModule } from "./persons/persons.module";
 import { PlaceOwnersModule } from "./place-owners/place-owners.module";
@@ -31,6 +36,7 @@ import { ResidentsModule } from "./residents/residents.module";
 import { StoryArcsModule } from "./story-arcs/story-arcs.module";
 import { SubscribersModule } from "./subscribers/subscribers.module";
 import { SystemsModule } from "./systems/systems.module";
+import { TenantScopesModule } from "./tenant-scopes/tenant-scopes.module";
 import { TestAccessControlAdapter } from "./test-access-control/test-access-control.adapter";
 import { TestUserDeserializer } from "./test-access-control/test-user.deserializer";
 import { TestTranslateAdapter } from "./test-translate/test-translate.adapter";
@@ -78,18 +84,23 @@ import { VisitsModule } from "./visits/visits.module";
                 }
             }
         }),
+        ArchiveItemsModule,
         CatalogItemsModule,
         ConfigLabItemsModule,
         ContractSystemsModule,
         ContractsModule,
         CoordsModule,
+        CountLabModule,
         EditionsModule,
+        ExportLabModule,
         FilterLabModule,
+        GroupLabModule,
         InvoicesModule,
         LocationsModule,
         MaintenanceVisitsModule,
         MarketListingsModule,
         MemberTiersModule,
+        OrderLabModule,
         OwnersModule,
         PersonsModule,
         PlaceOwnersModule,
@@ -103,10 +114,23 @@ import { VisitsModule } from "./visits/visits.module";
         StoryArcsModule,
         SubscribersModule,
         SystemsModule,
+        TenantScopesModule,
         TicketTypesModule,
         VisitsModule
     ],
     controllers: [],
     providers: []
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+    public configure(consumer: MiddlewareConsumer): void {
+        consumer
+            .apply((req, _res, next) => {
+                const tenantHeader = req.headers["x-tenant-id"];
+                if (tenantHeader !== undefined) {
+                    (req as { tenantId?: number }).tenantId = Number(tenantHeader);
+                }
+                next();
+            })
+            .forRoutes("*");
+    }
+}

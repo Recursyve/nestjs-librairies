@@ -782,6 +782,10 @@ export class FilterService<Data> {
         return orders;
     }
 
+    // This method has no known internal callers and has been unused since its
+    // introduction. It is nevertheless emitted in the published package and
+    // remains runtime-accessible. Phase 0 preserves its observable behavior
+    // conservatively in case external consumers rely on it.
     private getNonNestedOrderColumns(orders: OrderModel[]): string[] {
         return orders.filter(order => order.column && !order.column.includes(".")).map(order => order.column);
     }
