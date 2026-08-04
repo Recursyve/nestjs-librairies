@@ -64,10 +64,6 @@ describe("default filter behavior", () => {
     });
 });
 
-/**
- * @p0 suspected-defect
- * Observed: default order rules combined with DISTINCT id pagination fail on MySQL.
- */
 describe("default and JSON order rules on MySQL", () => {
     let harness: TestHarness;
 
@@ -79,12 +75,18 @@ describe("default and JSON order rules on MySQL", () => {
         await harness.close();
     });
 
-    it("currently responds with 500 when defaultOrderRule applies on editions without explicit order", async () => {
-        await using _edition = await createSeededEdition({
-            code: "ED-001",
+    it("applies defaultOrderRule on editions when no explicit order is provided", async () => {
+        await using second = await createSeededEdition({
+            code: "ED-002",
             metadata: { imprint: "Zeta Press" },
             status: "active",
-            title: "Ordered edition"
+            title: "Second edition"
+        });
+        await using first = await createSeededEdition({
+            code: "ED-001",
+            metadata: { imprint: "Alpha Press" },
+            status: "active",
+            title: "First edition"
         });
 
         const response = await harness.postFilter("editions", {
@@ -92,15 +94,24 @@ describe("default and JSON order rules on MySQL", () => {
             query: { condition: "and", rules: [] }
         });
 
-        TestHarness.expectInternalServerErrorFilterResponse(response);
+        expect(response.status).toBe(200);
+        const body = TestHarness.parseFilterBody<{ id: number }>(response);
+        const ids = TestHarness.mapFilterRowIds(body).filter((id) => [first.id, second.id].includes(id));
+        expect(ids).toEqual([first.id, second.id]);
     });
 
-    it("currently responds with 500 when ordering editions by JsonOrderRule", async () => {
-        await using _edition = await createSeededEdition({
-            code: "ED-JSON",
+    it("orders editions by JsonOrderRule ascending", async () => {
+        await using zeta = await createSeededEdition({
+            code: "ED-ZETA",
+            metadata: { imprint: "Zeta Press" },
+            status: "active",
+            title: "Zeta edition"
+        });
+        await using acme = await createSeededEdition({
+            code: "ED-ACME",
             metadata: { imprint: "Acme Press" },
             status: "active",
-            title: "Imprint ordered edition"
+            title: "Acme edition"
         });
 
         const response = await harness.postFilter("editions", {
@@ -109,7 +120,10 @@ describe("default and JSON order rules on MySQL", () => {
             query: { condition: "and", rules: [] }
         });
 
-        TestHarness.expectInternalServerErrorFilterResponse(response);
+        expect(response.status).toBe(200);
+        const body = TestHarness.parseFilterBody<{ id: number }>(response);
+        const ids = TestHarness.mapFilterRowIds(body).filter((id) => [acme.id, zeta.id].includes(id));
+        expect(ids).toEqual([acme.id, zeta.id]);
     });
 });
 

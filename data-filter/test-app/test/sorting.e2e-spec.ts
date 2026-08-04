@@ -43,11 +43,6 @@ describe("sorting on MySQL", () => {
     });
 });
 
-/**
- * @p0 suspected-defect
- * Observed: ORDER BY (attribute columns and order-rules) combined with DISTINCT id pagination fails on MySQL.
- * Intended: order rules should sort results without database errors.
- */
 describe("sorting and order rules on MySQL", () => {
     let harness: TestHarness;
 
@@ -59,18 +54,22 @@ describe("sorting and order rules on MySQL", () => {
         await harness.close();
     });
 
-    it("currently responds with 500 when ordering persons by first_name", async () => {
-        await using _person = await createSeededPerson({
+    it("orders persons by first_name ascending", async () => {
+        await using charlie = await createSeededPerson({
+            email: "charlie@example.com",
+            first_name: "Charlie",
+            last_name: "C"
+        });
+        await using alice = await createSeededPerson({
             email: "alice@example.com",
             first_name: "Alice",
-            last_name: "Alpha"
+            last_name: "A"
         });
-
-        const control = await harness.postFilter("persons", {
-            page: TestHarness.defaultPage,
-            query: { condition: "and", rules: [] }
+        await using bob = await createSeededPerson({
+            email: "bob@example.com",
+            first_name: "Bob",
+            last_name: "B"
         });
-        expect(control.status).toBe(200);
 
         const response = await harness.postFilter("persons", {
             page: TestHarness.defaultPage,
@@ -78,29 +77,39 @@ describe("sorting and order rules on MySQL", () => {
             query: { condition: "and", rules: [] }
         });
 
-        TestHarness.expectInternalServerErrorFilterResponse(response);
+        expect(response.status).toBe(200);
+        const body = TestHarness.parseFilterBody<{ id: number }>(response);
+        const ids = TestHarness.mapFilterRowIds(body).filter((id) =>
+            [alice.id, bob.id, charlie.id].includes(id)
+        );
+        expect(ids).toEqual([alice.id, bob.id, charlie.id]);
     });
 
-    /**
-     * @p0 suspected-defect
-     * Observed: EnumOrderRule getOrderOption uses a synchronous loop; mutating ++i to --i is non-terminating
-     * and cannot be distinguished in-process via HTTP assertions (Stryker timeout finding).
-     */
-    it("currently responds with 500 when ordering products by enum order rule", async () => {
-        await using _product = await createSeededProduct({
+    it("orders products by enum order rule descending", async () => {
+        await using active = await createSeededProduct({
             metadata: { category: "electronics" },
-            name: "Widget",
-            sku: "WDG-001",
+            name: "Active widget",
+            sku: "WDG-ACTIVE",
             status: "active",
             stock: 1,
             tags: []
         });
-
-        const control = await harness.postFilter("products", {
-            page: TestHarness.defaultPage,
-            query: { condition: "and", rules: [] }
+        await using pending = await createSeededProduct({
+            metadata: { category: "electronics" },
+            name: "Pending widget",
+            sku: "WDG-PENDING",
+            status: "pending",
+            stock: 1,
+            tags: []
         });
-        expect(control.status).toBe(200);
+        await using inactive = await createSeededProduct({
+            metadata: { category: "electronics" },
+            name: "Inactive widget",
+            sku: "WDG-INACTIVE",
+            status: "inactive",
+            stock: 1,
+            tags: []
+        });
 
         const response = await harness.postFilter("products", {
             page: TestHarness.defaultPage,
@@ -108,21 +117,24 @@ describe("sorting and order rules on MySQL", () => {
             query: { condition: "and", rules: [] }
         });
 
-        TestHarness.expectInternalServerErrorFilterResponse(response);
+        expect(response.status).toBe(200);
+        const body = TestHarness.parseFilterBody<{ id: number }>(response);
+        const ids = TestHarness.mapFilterRowIds(body).filter((id) =>
+            [active.id, pending.id, inactive.id].includes(id)
+        );
+        expect(ids).toEqual([active.id, pending.id, inactive.id]);
     });
 
-    it("currently responds with 500 when ordering persons by is-null order rule", async () => {
-        await using _person = await createSeededPerson({
-            email: "alice@example.com",
-            first_name: "Alice",
-            last_name: "Alpha"
+    it("orders persons by is-null order rule ascending", async () => {
+        await using withLastName = await createSeededPerson({
+            email: "named@example.com",
+            first_name: "Named",
+            last_name: "Person"
         });
-
-        const control = await harness.postFilter("persons", {
-            page: TestHarness.defaultPage,
-            query: { condition: "and", rules: [] }
+        await using withoutLastName = await createSeededPerson({
+            email: "noname@example.com",
+            first_name: "No"
         });
-        expect(control.status).toBe(200);
 
         const response = await harness.postFilter("persons", {
             page: TestHarness.defaultPage,
@@ -130,21 +142,25 @@ describe("sorting and order rules on MySQL", () => {
             query: { condition: "and", rules: [] }
         });
 
-        TestHarness.expectInternalServerErrorFilterResponse(response);
+        expect(response.status).toBe(200);
+        const body = TestHarness.parseFilterBody<{ id: number }>(response);
+        const ids = TestHarness.mapFilterRowIds(body).filter((id) =>
+            [withLastName.id, withoutLastName.id].includes(id)
+        );
+        expect(ids).toEqual([withLastName.id, withoutLastName.id]);
     });
 
-    it("currently responds with 500 when ordering persons by if order rule", async () => {
-        await using _person = await createSeededPerson({
+    it("orders persons by if order rule descending", async () => {
+        await using alice = await createSeededPerson({
             email: "alice@example.com",
             first_name: "Alice",
             last_name: "Alpha"
         });
-
-        const control = await harness.postFilter("persons", {
-            page: TestHarness.defaultPage,
-            query: { condition: "and", rules: [] }
+        await using other = await createSeededPerson({
+            email: "other@example.com",
+            first_name: "Other",
+            last_name: "User"
         });
-        expect(control.status).toBe(200);
 
         const response = await harness.postFilter("persons", {
             page: TestHarness.defaultPage,
@@ -152,6 +168,9 @@ describe("sorting and order rules on MySQL", () => {
             query: { condition: "and", rules: [] }
         });
 
-        TestHarness.expectInternalServerErrorFilterResponse(response);
+        expect(response.status).toBe(200);
+        const body = TestHarness.parseFilterBody<{ id: number }>(response);
+        const ids = TestHarness.mapFilterRowIds(body).filter((id) => [alice.id, other.id].includes(id));
+        expect(ids).toEqual([alice.id, other.id]);
     });
 });

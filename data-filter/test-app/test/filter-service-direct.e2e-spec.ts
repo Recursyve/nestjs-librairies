@@ -11,6 +11,7 @@ import { GroupLabFilter } from "../src/group-lab/filters/group-lab.filter";
 import { GroupLabEntries } from "../src/group-lab/models/group-lab-entries.model";
 import { MarketListingsFilter } from "../src/market-listings/filters/market-listings.filter";
 import { MemberTiersFilter } from "../src/member-tiers/filters/member-tiers.filter";
+import { EditionsFilter } from "../src/editions/filters/editions.filter";
 import { OrderLabFilter } from "../src/order-lab/filters/order-lab.filter";
 import { PersonsFilter } from "../src/persons/filters/persons.filter";
 import { TenantScopesFilter } from "../src/tenant-scopes/filters/tenant-scopes.filter";
@@ -27,6 +28,11 @@ type FilterServiceInternals = {
     ) => unknown;
     getOrderCustomAttribute: (
         orders: Array<{ column: string; direction: string; nullLast?: boolean }>,
+        data?: object
+    ) => unknown;
+    getOrderSelectAttributes: (
+        orders: Array<{ column: string; direction: string; nullLast?: boolean }>,
+        context: { request: unknown; user: null },
         data?: object
     ) => unknown;
 };
@@ -338,6 +344,35 @@ describe("filter service direct order and default filter helpers", () => {
         expect(literalValue(order[0]?.[0])).toContain("CASE `Persons`.`last_name`");
         expect(literalValue(order[0]?.[0])).toContain("WHEN 'Alpha' THEN 3");
         expect(order[0]?.[1]).toBe("ASC");
+    });
+
+    it("projects model columns and order rules used in DISTINCT id pagination", () => {
+        const personsService = harness.app.get<FilterService<unknown>>(
+            FilterUtils.getProviderToken(PersonsFilter)
+        ) as unknown as FilterServiceInternals;
+
+        const attributes = personsService.getOrderSelectAttributes(
+            [{ column: "first_name", direction: "asc" }],
+            { request: {}, user: null }
+        ) as Array<[unknown, string]>;
+
+        expect(attributes).toHaveLength(1);
+        expect(literalValue(attributes[0]?.[0])).toBe("`Persons`.`first_name`");
+        expect(attributes[0]?.[1]).toBe("first_name");
+    });
+
+    it("includes defaultOrderRule columns in order select attributes", () => {
+        const editionsService = harness.app.get<FilterService<unknown>>(
+            FilterUtils.getProviderToken(EditionsFilter)
+        ) as unknown as FilterServiceInternals;
+
+        const attributes = editionsService.getOrderSelectAttributes([], { request: {}, user: null }) as Array<
+            [unknown, string]
+        >;
+
+        expect(attributes).toHaveLength(1);
+        expect(literalValue(attributes[0]?.[0])).toBe("`Editions`.`code`");
+        expect(attributes[0]?.[1]).toBe("code");
     });
 
     it("wraps required default filters in AND when the incoming query uses OR", () => {
