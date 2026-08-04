@@ -526,12 +526,16 @@ export class FilterService<Data> {
             options.where = await this.getAccessControlWhereCondition(options.where, user);
         }
 
-        const order = this.getOrderOptions(filter.order ?? [], { request, user });
-        const customAttributes = filter.order ? this.getOrderCustomAttribute(filter.order, filter.data) : [];
+        const orderContext: OrderRuleContext = { request, user };
+        const order = this.getOrderOptions(filter.order ?? [], orderContext);
+        const orderSelectAttributes = this.getOrderSelectAttributes(filter.order ?? [], orderContext, filter.data);
 
         const values = await repository.model.findAll({
             ...options,
-            attributes: [[Sequelize.literal(`DISTINCT \`${this.repository.model.name}\`.\`id\``), "id"], ...customAttributes],
+            attributes: [
+                [Sequelize.literal(`DISTINCT \`${this.repository.model.name}\`.\`id\``), "id"],
+                ...orderSelectAttributes
+            ],
             limit: filter.page?.size,
             offset: filter.page ? filter.page.number * filter.page.size + (filter.page.offset ?? 0) : undefined,
             subQuery: false,
@@ -616,19 +620,26 @@ export class FilterService<Data> {
         ];
     }
 
-    private getOrderOptions(orders: OrderModel | OrderModel[], context: OrderRuleContext): Order {
-        let orderColumns = Array.isArray(orders) ? orders : [orders];
+    private resolveOrderColumns(orders: OrderModel | OrderModel[]): OrderModel[] {
+        let orderColumns = Array.isArray(orders) ? [...orders] : [orders];
 
         if (this.model.defaultOrderRule) {
             const defaultOrders = Array.isArray(this.model.defaultOrderRule.order)
                 ? this.model.defaultOrderRule.order
                 : [this.model.defaultOrderRule.order];
 
-            const applicableDefaultOrderRule = defaultOrders.filter((order) => !orderColumns.some((o) => o.column === order.column));
+            const applicableDefaultOrderRule = defaultOrders.filter(
+                (order) => !orderColumns.some((o) => o.column === order.column)
+            );
 
             orderColumns = [...applicableDefaultOrderRule, ...orderColumns];
         }
 
+        return orderColumns.filter((order) => order?.column && order.direction);
+    }
+
+    private getOrderOptions(orders: OrderModel | OrderModel[], context: OrderRuleContext): Order {
+        const orderColumns = this.resolveOrderColumns(orders);
         const generatedOrder: Order = [];
 
         for (const order of orderColumns) {
@@ -671,6 +682,46 @@ export class FilterService<Data> {
                 attributes.push(attribute);
             }
         }
+        return attributes;
+    }
+
+    private getOrderSelectAttributes(
+        orders: OrderModel | OrderModel[],
+        context: OrderRuleContext,
+        data?: object
+    ): ProjectionAlias[] {
+        const orderColumns = this.resolveOrderColumns(orders);
+        const attributes: ProjectionAlias[] = [];
+        const seenColumns = new Set<string>();
+
+        for (const order of orderColumns) {
+            if (!order.column || order.column === "id" || seenColumns.has(order.column)) {
+                continue;
+            }
+
+            seenColumns.add(order.column);
+
+            if (this.repository.hasCustomAttribute(order.column)) {
+                const customAttribute = this.repository.getCustomAttribute(order.column);
+                const attribute = customAttribute?.transform(data) as ProjectionAlias;
+                if (attribute) {
+                    attributes.push(attribute);
+                }
+                continue;
+            }
+
+            const rule = this.definitions[order.column] as OrderRuleDefinition;
+            if (rule && OrderRule.validate(rule)) {
+                attributes.push([rule.getOrderOption(this.repository.model, context), order.column]);
+                continue;
+            }
+
+            const columnLiteral = this.sequelizeModelScanner.getOrderColumnLiteral(this.repository.model, order);
+            if (columnLiteral) {
+                attributes.push([literal(columnLiteral), order.column]);
+            }
+        }
+
         return attributes;
     }
 
