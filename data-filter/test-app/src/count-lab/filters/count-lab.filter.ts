@@ -1,11 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import { Attributes, BaseFilter, Count, Data, NumberFilter, TextFilter } from "@recursyve/nestjs-data-filter";
+import { Attributes, BaseFilter, Data, NumberFilter, TextFilter } from "@recursyve/nestjs-data-filter";
 import { col, fn } from "sequelize";
 import { CountLabParents } from "../models/count-lab-parents.model";
 
 @Data(CountLabParents)
 @Attributes(["code"])
-@Count("childCount", { attribute: "id", path: "children" })
 export class CountLabData {}
 
 @Injectable()
