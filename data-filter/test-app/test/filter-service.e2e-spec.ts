@@ -558,7 +558,7 @@ describe("localized export download", () => {
         );
 
         expect(response.status).toBe(200);
-        expect(TestHarness.parseCsv(response.text)[1]).toEqual(["Libellé FR"]);
+        expect(TestHarness.parseCsv(response.text)[1]).toEqual(["Libellé FR", "csv"]);
     });
 
     it("downloads localized export rows in en", async () => {
@@ -579,8 +579,48 @@ describe("localized export download", () => {
         );
 
         expect(response.status).toBe(200);
-        expect(TestHarness.parseCsv(response.text)[1]).toEqual(["Label EN"]);
+        expect(TestHarness.parseCsv(response.text)[1]).toEqual(["Label EN", "csv"]);
     });
+
+    it.each([
+        ["csv", (body: string | Buffer) => TestHarness.parseCsv(String(body))],
+        ["xlsx", (body: string | Buffer) => TestHarness.parseXlsx(body as Buffer)]
+    ] as const)(
+        "forwards ExportTypes.%s into getExportedFieldsKeys and getExportedFields",
+        async (type, parse) => {
+            await using _row = await createSeededExportLabRow({
+                code: `EXP-${type.toUpperCase()}`,
+                label_fr: "Libellé FR",
+                label_en: "Label EN"
+            });
+
+            const response =
+                type === "csv"
+                    ? await harness.postDownload(
+                          "export-lab",
+                          type,
+                          {
+                              page: TestHarness.defaultPage,
+                              query: { condition: "and", rules: [] }
+                          },
+                          { id: `${type}-user`, language: "fr" }
+                      )
+                    : await harness.postDownloadBinary(
+                          "export-lab",
+                          type,
+                          {
+                              page: TestHarness.defaultPage,
+                              query: { condition: "and", rules: [] }
+                          },
+                          { id: `${type}-user`, language: "fr" }
+                      );
+
+            expect(response.status).toBe(200);
+            const rows = parse(type === "csv" ? response.text : (response.body as Buffer));
+            expect(rows[0]).toEqual([`exports.localized_label`, `exports.download_type_${type}`]);
+            expect(rows[1]).toEqual(["Libellé FR", type]);
+        }
+    );
 });
 
 describe("paranoid false filters", () => {

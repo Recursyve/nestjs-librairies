@@ -48,6 +48,17 @@ export class CustomExportHarness {
             .send(body);
     }
 
+    public postExportProbe(
+        type: string,
+        body: {
+            exportOptions?: object;
+            language?: string;
+            query?: FilterQueryModel;
+        }
+    ) {
+        return request(this.app.getHttpServer()).post(`/harbor-export-probes/download/${type}`).send(body);
+    }
+
     public postFilter(route: string, body: FilterQueryModel) {
         return request(this.app.getHttpServer()).post(`/${route}/filter`).send(body);
     }
