@@ -45,6 +45,7 @@ export default {
         "lib/constant.ts",
         "lib/decorators/index.ts",
         "lib/deserializers/index.ts",
+        "lib/filter/controllers/open-api-*.ts",
         "lib/filter/filters/index.ts",
         "lib/filter/index.ts",
         "lib/filter/models/index.ts",
