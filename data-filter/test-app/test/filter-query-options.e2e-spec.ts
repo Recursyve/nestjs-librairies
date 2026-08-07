@@ -46,7 +46,7 @@ function literalValue(entry: unknown): string | undefined {
     return typeof candidate.val === "string" ? candidate.val : undefined;
 }
 
-describe("filter service direct getFindOptions", () => {
+describe("filter query options from getFindOptions", () => {
     let harness: TestHarness;
     let contractSystemsService: FilterService<unknown>;
 
@@ -273,7 +273,7 @@ describe("filter service direct getFindOptions", () => {
     });
 });
 
-describe("filter service direct order and default filter helpers", () => {
+describe("filter order and default filter helpers", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
