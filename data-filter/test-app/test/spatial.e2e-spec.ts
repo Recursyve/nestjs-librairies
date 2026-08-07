@@ -11,7 +11,7 @@ const quebecPoint = { type: "Point" as const, coordinates: [-71.208, 46.8139] as
 // ~550 m north of Montreal center
 const nearbyPoint = { type: "Point" as const, coordinates: [-73.5673, 45.5067] as [number, number] };
 
-describe("spatial behavior", () => {
+describe("geo localization filters", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -121,7 +121,7 @@ describe("spatial behavior", () => {
  * Observed: geo-bounds filter returns no systems for a polygon covering all seeded coordinates.
  * Intended: systems inside the polygon should match.
  */
-describe("geo bounds on MySQL", () => {
+describe("geo bounds", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -132,7 +132,7 @@ describe("geo bounds on MySQL", () => {
         await harness.close();
     });
 
-    it("currently returns an empty result set for a covering polygon", async () => {
+    it("returns an empty result set for a covering polygon", async () => {
         await using location = await createSeededLocation({ value: "Montreal", unique_code: "MTL" });
         await using coord = await createSeededCoords({
             location_id: location.id,

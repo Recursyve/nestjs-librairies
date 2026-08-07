@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
 import { createSeededProduct } from "./seeds/create-seeded-product";
 
-describe("JSON filtering and search behavior", () => {
+describe("JSON field filtering and search", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {

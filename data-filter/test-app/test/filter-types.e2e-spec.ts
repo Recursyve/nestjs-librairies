@@ -115,7 +115,7 @@ describe("groupBy query option", () => {
         await harness.close();
     });
 
-    it("currently responds with 500 when groupBy is provided", async () => {
+    it("returns HTTP 500 when groupBy is provided", async () => {
         await using _alpha = await createSeededPerson({
             email: "alpha@example.com",
             first_name: "Alpha",
@@ -227,7 +227,7 @@ describe("geo-bounds public modes", () => {
         await harness.close();
     });
 
-    it("currently responds with 500 for geo_point attribute bounds with SRID", async () => {
+    it("returns HTTP 500 for geo_point attribute bounds with SRID", async () => {
         await using location = await createSeededLocation({ value: "Montreal", unique_code: "MTL-GB" });
         await using coord = await createSeededCoords({
             location_id: location.id,
@@ -256,7 +256,7 @@ describe("geo-bounds public modes", () => {
         expect(coord.id).toBeGreaterThan(0);
     });
 
-    it("currently returns systems inside a covering polygon when geo bounds use not_equal", async () => {
+    it("returns systems inside a covering polygon when geo bounds use not_equal", async () => {
         await using location = await createSeededLocation({ value: "Montreal", unique_code: "MTL-NE" });
         await using coord = await createSeededCoords({
             location_id: location.id,

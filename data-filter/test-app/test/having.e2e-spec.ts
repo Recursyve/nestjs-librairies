@@ -19,7 +19,7 @@ import { createSeededVisit } from "./seeds/create-seeded-visit";
  * Observed: custom HAVING operators trigger only_full_group_by errors on MySQL (HTTP 500).
  * Intended: grouped counts should be queryable without SQL errors.
  */
-describe("custom HAVING operators on MySQL", () => {
+describe("HAVING operators", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -30,7 +30,7 @@ describe("custom HAVING operators on MySQL", () => {
         await harness.close();
     });
 
-    it("currently responds with 500 for custom none operator on owner email", async () => {
+    it("returns HTTP 500 for custom none operator on owner email", async () => {
         await using location = await createSeededLocation({ value: "Montreal", unique_code: "MTL-N" });
         await using coord = await createSeededCoords({
             location_id: location.id,
@@ -89,7 +89,7 @@ describe("custom HAVING operators on MySQL", () => {
         TestHarness.expectInternalServerErrorFilterResponse(response);
     });
 
-    it("currently responds with 500 for visit count having greater_or_equal", async () => {
+    it("returns HTTP 500 for visit count having greater_or_equal", async () => {
         await using location = await createSeededLocation({ value: "Montreal", unique_code: "MTL-V" });
         await using coord = await createSeededCoords({
             location_id: location.id,
@@ -154,7 +154,7 @@ describe("custom HAVING operators on MySQL", () => {
     });
 });
 
-describe("custom operators and grouped filters", () => {
+describe("grouped filters with custom operators", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {

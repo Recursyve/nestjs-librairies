@@ -64,7 +64,7 @@ describe("default filter behavior", () => {
     });
 });
 
-describe("default and JSON order rules on MySQL", () => {
+describe("default and JSON order rules", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -127,7 +127,7 @@ describe("default and JSON order rules on MySQL", () => {
     });
 });
 
-describe("direct CoordinateFilter", () => {
+describe("coordinate filter", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -142,7 +142,7 @@ describe("direct CoordinateFilter", () => {
      * @p0 suspected-defect
      * Observed: CoordinateFilter generates latitude/longitude column paths on GEOMETRY geo_point.
      */
-    it("currently responds with 500 when filtering coords by direct CoordinateFilter equal operator", async () => {
+    it("returns HTTP 500 when filtering coords by CoordinateFilter equal operator", async () => {
         await using montrealLoc = await createSeededLocation({ value: "Montreal", unique_code: "MTL-COORD" });
         await using _montreal = await createSeededCoords({
             location_id: montrealLoc.id,
@@ -170,7 +170,7 @@ describe("direct CoordinateFilter", () => {
     });
 });
 
-describe("OptionsFilter complex conditions", () => {
+describe("OptionsFilter conditions", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -221,7 +221,7 @@ describe("OptionsFilter complex conditions", () => {
     });
 });
 
-describe("GroupFilter lazy value filter", () => {
+describe("GroupFilter lazy value resolution", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -281,7 +281,7 @@ describe("GroupFilter lazy value filter", () => {
     });
 });
 
-describe("@IgnoreInSearch metadata", () => {
+describe("IgnoreInSearch metadata", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -296,7 +296,7 @@ describe("@IgnoreInSearch metadata", () => {
      * @p0 suspected-defect
      * Observed: global search with nested address marked @IgnoreInSearch currently fails with HTTP 500.
      */
-    it("currently responds with 500 when search targets nested resident address fields ignored in search", async () => {
+    it("returns HTTP 500 when search targets nested resident address fields ignored in search", async () => {
         await using location = await createSeededLocation({ value: "Quebec", unique_code: "QC-IGN" });
         await using address = await createSeededResidentAddress({
             location_id: location.id,
