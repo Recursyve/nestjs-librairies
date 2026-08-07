@@ -2,7 +2,8 @@ import { Controller, Get, HttpCode, HttpStatus, Param, Post, Query, Req } from "
 import { DataFilterService, ExportTypes } from "@recursyve/nestjs-data-filter";
 import { Request } from "express";
 import { Op } from "sequelize";
-import { MuseumsPlainData, MuseumsWithArtifactsData } from "../../museums/filters";
+import { MuseumsPlainData } from "../../museums/filters/museums-plain.data";
+import { MuseumsWithArtifactsData } from "../../museums/filters/museums-with-artifacts.data";
 import { TestAccessControlUser } from "../../test-access-control/test-access-control-user.model";
 
 /**
