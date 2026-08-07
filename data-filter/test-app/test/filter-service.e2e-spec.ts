@@ -754,7 +754,7 @@ describe("order lab default order rule deduplication", () => {
     });
 });
 
-describe("contract systems condition includes and having characterization", () => {
+describe("contract systems condition includes and having", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
