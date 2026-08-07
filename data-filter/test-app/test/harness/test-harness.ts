@@ -14,9 +14,12 @@ export class TestHarness {
 
     private constructor(public readonly app: INestApplication<App>) {}
 
-    public static async create(options?: { validateData?: boolean }): Promise<TestHarness> {
+    public static async create(options?: {
+        validateData?: boolean;
+        imports?: Parameters<typeof Test.createTestingModule>[0]["imports"];
+    }): Promise<TestHarness> {
         let moduleBuilder = Test.createTestingModule({
-            imports: [AppModule]
+            imports: [AppModule, ...(options?.imports ?? [])]
         });
 
         if (options?.validateData) {
