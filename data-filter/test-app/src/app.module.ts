@@ -6,7 +6,10 @@ import {
     TranslateAdapter,
     UserDeserializer
 } from "@recursyve/nestjs-data-filter";
+import { NextFunction, Request, Response } from "express";
 import { ArchiveItemsModule } from "./archive-items/archive-items.module";
+import { ArtifactsModule } from "./artifacts/artifacts.module";
+import { CargoBillsModule } from "./cargo-bills/cargo-bills.module";
 import { CatalogItemsModule } from "./catalog-items/catalog-items.module";
 import { ConfigLabItemsModule } from "./config-lab/config-lab-items.module";
 import { ContractSystemsModule } from "./contract-systems/contract-systems.module";
@@ -17,11 +20,14 @@ import { EditionsModule } from "./editions/editions.module";
 import { ExportLabModule } from "./export-lab/export-lab.module";
 import { FilterLabModule } from "./filter-lab/filter-lab.module";
 import { GroupLabModule } from "./group-lab/group-lab.module";
+import { GuildChartersModule } from "./guild-charters/guild-charters.module";
+import { HarborNoticesModule } from "./harbor-notices/harbor-notices.module";
 import { InvoicesModule } from "./invoices/invoices.module";
 import { LocationsModule } from "./locations/locations.module";
 import { MaintenanceVisitsModule } from "./maintenance-visits/maintenance-visits.module";
 import { MarketListingsModule } from "./market-listings/market-listings.module";
 import { MemberTiersModule } from "./member-tiers/member-tiers.module";
+import { MuseumsModule } from "./museums/museums.module";
 import { OrderLabModule } from "./order-lab/order-lab.module";
 import { OwnersModule } from "./owners/owners.module";
 import { PersonsModule } from "./persons/persons.module";
@@ -31,8 +37,11 @@ import { PriorityLanesModule } from "./priority-lanes/priority-lanes.module";
 import { ProductsModule } from "./products/products.module";
 import { ProfileCaptionsModule } from "./profile-captions/profile-captions.module";
 import { RawEventsModule } from "./raw-events/raw-events.module";
+import { RepositoryProbesModule } from "./repository-probes/repository-probes.module";
 import { ResidentAddressesModule } from "./resident-addresses/resident-addresses.module";
 import { ResidentsModule } from "./residents/residents.module";
+import { SpellScrollsModule } from "./spell-scrolls/spell-scrolls.module";
+import { StockLinesModule } from "./stock-lines/stock-lines.module";
 import { StoryArcsModule } from "./story-arcs/story-arcs.module";
 import { SubscribersModule } from "./subscribers/subscribers.module";
 import { SystemsModule } from "./systems/systems.module";
@@ -42,6 +51,8 @@ import { TestUserDeserializer } from "./test-access-control/test-user.deserializ
 import { TestTranslateAdapter } from "./test-translate/test-translate.adapter";
 import { TicketTypesModule } from "./ticket-types/ticket-types.module";
 import { VisitsModule } from "./visits/visits.module";
+import { VoyageManifestsModule } from "./voyage-manifests/voyage-manifests.module";
+import { WarehousesModule } from "./warehouses/warehouses.module";
 
 @Module({
     imports: [
@@ -85,6 +96,8 @@ import { VisitsModule } from "./visits/visits.module";
             }
         }),
         ArchiveItemsModule,
+        ArtifactsModule,
+        CargoBillsModule,
         CatalogItemsModule,
         ConfigLabItemsModule,
         ContractSystemsModule,
@@ -95,11 +108,14 @@ import { VisitsModule } from "./visits/visits.module";
         ExportLabModule,
         FilterLabModule,
         GroupLabModule,
+        GuildChartersModule,
+        HarborNoticesModule,
         InvoicesModule,
         LocationsModule,
         MaintenanceVisitsModule,
         MarketListingsModule,
         MemberTiersModule,
+        MuseumsModule,
         OrderLabModule,
         OwnersModule,
         PersonsModule,
@@ -109,14 +125,19 @@ import { VisitsModule } from "./visits/visits.module";
         ProductsModule,
         ProfileCaptionsModule,
         RawEventsModule,
+        RepositoryProbesModule,
         ResidentAddressesModule,
         ResidentsModule,
+        SpellScrollsModule,
+        StockLinesModule,
         StoryArcsModule,
         SubscribersModule,
         SystemsModule,
         TenantScopesModule,
         TicketTypesModule,
-        VisitsModule
+        VisitsModule,
+        VoyageManifestsModule,
+        WarehousesModule
     ],
     controllers: [],
     providers: []
@@ -124,11 +145,12 @@ import { VisitsModule } from "./visits/visits.module";
 export class AppModule implements NestModule {
     public configure(consumer: MiddlewareConsumer): void {
         consumer
-            .apply((req, _res, next) => {
-                const tenantHeader = req.headers["x-tenant-id"];
+            .apply((req: Request, _: Response, next: NextFunction) => {
+                const tenantHeader = req.header("x-tenant-id");
                 if (tenantHeader !== undefined) {
-                    (req as { tenantId?: number }).tenantId = Number(tenantHeader);
+                    req.tenantId = Number(tenantHeader);
                 }
+
                 next();
             })
             .forRoutes("*");

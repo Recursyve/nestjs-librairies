@@ -4,5 +4,5 @@
         "noEmit": true,
         "rootDir": "."
     },
-    "include": ["src/**/*.ts", "test/**/*.ts", "vitest.*.ts"]
+    "include": ["src/**/*.ts", "test/**/*.ts", "types/**/*.d.ts", "vitest.*.ts"]
 }
