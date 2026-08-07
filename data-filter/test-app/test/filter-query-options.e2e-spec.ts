@@ -46,7 +46,7 @@ function literalValue(entry: unknown): string | undefined {
     return typeof candidate.val === "string" ? candidate.val : undefined;
 }
 
-describe("filter query options from getFindOptions", () => {
+describe("getFindOptions query building", () => {
     let harness: TestHarness;
     let contractSystemsService: FilterService<unknown>;
 
@@ -186,7 +186,7 @@ describe("filter query options from getFindOptions", () => {
         });
     });
 
-    it("builds having options for count-lab child totals", async () => {
+    it("builds having options for child count totals", async () => {
         const countLabService = harness.app.get<FilterService<unknown>>(FilterUtils.getProviderToken(CountLabFilter));
 
         const options = await countLabService.getFindOptions(
@@ -273,7 +273,7 @@ describe("filter query options from getFindOptions", () => {
     });
 });
 
-describe("filter order and default filter helpers", () => {
+describe("order and default filter helpers", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {

@@ -10,7 +10,7 @@ import { createSeededPerson } from "./seeds/create-seeded-person";
 import { createSeededPlace } from "./seeds/create-seeded-place";
 import { createSeededSystem } from "./seeds/create-seeded-system";
 
-describe("controller / decorator integration", () => {
+describe("filter controller decorators", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {

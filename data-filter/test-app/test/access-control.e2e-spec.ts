@@ -9,7 +9,7 @@ function aclUser(allowedPersonIds: number[]) {
     return { id: "test-user", allowedPersonIds };
 }
 
-describe("access control integration", () => {
+describe("access control on filter requests", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -76,7 +76,7 @@ describe("access control integration", () => {
      * FilterService skips ACL WHERE merging and returns the unscoped dataset.
      * Frozen for Phase 1 unless changed via an explicit behavior amendment.
      */
-    it("currently returns all rows when the request has no deserialized user", async () => {
+    it("returns all rows when the request has no deserialized user", async () => {
         await using first = await createSeededPerson({
             email: "first@example.com",
             first_name: "First",

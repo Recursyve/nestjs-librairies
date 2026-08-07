@@ -131,7 +131,7 @@ describe("pagination", () => {
     });
 });
 
-describe("pagination with attribute ordering on MySQL", () => {
+describe("pagination with attribute ordering", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {

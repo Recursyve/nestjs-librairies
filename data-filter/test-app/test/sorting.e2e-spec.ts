@@ -3,7 +3,7 @@ import { TestHarness } from "./harness/test-harness";
 import { createSeededPerson } from "./seeds/create-seeded-person";
 import { createSeededProduct } from "./seeds/create-seeded-product";
 
-describe("sorting on MySQL", () => {
+describe("sorting by column", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -43,7 +43,7 @@ describe("sorting on MySQL", () => {
     });
 });
 
-describe("sorting and order rules on MySQL", () => {
+describe("order rules", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {

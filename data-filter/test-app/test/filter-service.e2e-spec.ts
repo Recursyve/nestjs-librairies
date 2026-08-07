@@ -24,7 +24,7 @@ import { createSeededSystem } from "./seeds/create-seeded-system";
 import { createSeededTenantScope } from "./seeds/create-seeded-tenant-scope";
 import { createSeededTicketType } from "./seeds/create-seeded-ticket-type";
 
-describe("filter service getConfig translation and visibility", () => {
+describe("getConfig translation and visibility", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -69,7 +69,7 @@ describe("filter service getConfig translation and visibility", () => {
     });
 });
 
-describe("filter service forData", () => {
+describe("forData attribute switching", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -103,7 +103,7 @@ describe("filter service forData", () => {
     });
 });
 
-describe("filter service default filter wrapping", () => {
+describe("default filter query wrapping", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -157,7 +157,7 @@ describe("filter service default filter wrapping", () => {
     });
 });
 
-describe("filter service search and download language branches", () => {
+describe("search, count, and download language", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -235,7 +235,7 @@ describe("filter service search and download language branches", () => {
         ]);
     });
 
-    it("downloads through the order and search branches on export-mapped resources", async () => {
+    it("downloads with order and search on export-mapped resources", async () => {
         await using _match = await createSeededPerson({
             email: "signup.user@example.com",
             first_name: "Signup",
@@ -267,7 +267,7 @@ describe("filter service search and download language branches", () => {
     });
 });
 
-describe("filter service select config pagination edge cases", () => {
+describe("select config pagination", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -350,7 +350,7 @@ describe("filter service select config pagination edge cases", () => {
     });
 });
 
-describe("filter service normalizeOrder defaults", () => {
+describe("normalizeOrder fallbacks", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -396,7 +396,7 @@ describe("filter service normalizeOrder defaults", () => {
     });
 });
 
-describe("filter service group filter include branches", () => {
+describe("group filter includes on products", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -495,7 +495,7 @@ describe("filter service group filter include branches", () => {
     });
 });
 
-describe("filter service nested query branches", () => {
+describe("nested query groups", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -529,7 +529,7 @@ describe("filter service nested query branches", () => {
     });
 });
 
-describe("export lab localized download mapping", () => {
+describe("localized export download", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -540,7 +540,7 @@ describe("export lab localized download mapping", () => {
         await harness.close();
     });
 
-    it("downloads localized export rows using the fr language branch", async () => {
+    it("downloads localized export rows in fr", async () => {
         await using _row = await createSeededExportLabRow({
             code: "EXP-FR",
             label_fr: "Libellé FR",
@@ -561,7 +561,7 @@ describe("export lab localized download mapping", () => {
         expect(TestHarness.parseCsv(response.text)[1]).toEqual(["Libellé FR"]);
     });
 
-    it("downloads localized export rows using the en language branch", async () => {
+    it("downloads localized export rows in en", async () => {
         await using _row = await createSeededExportLabRow({
             code: "EXP-EN",
             label_fr: "Libellé FR",
@@ -583,7 +583,7 @@ describe("export lab localized download mapping", () => {
     });
 });
 
-describe("archive items paranoid false filter", () => {
+describe("paranoid false filters", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -611,7 +611,7 @@ describe("archive items paranoid false filter", () => {
     });
 });
 
-describe("tenant scope where callback and condition includes", () => {
+describe("tenant scopes where and conditions", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -659,7 +659,7 @@ describe("tenant scope where callback and condition includes", () => {
     });
 });
 
-describe("group lab eager and lazy include branches", () => {
+describe("eager and lazy group filter includes", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -725,7 +725,7 @@ describe("group lab eager and lazy include branches", () => {
     });
 });
 
-describe("order lab default order rule deduplication", () => {
+describe("default order rule deduplication", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -754,7 +754,7 @@ describe("order lab default order rule deduplication", () => {
     });
 });
 
-describe("contract systems condition includes and having", () => {
+describe("contract systems conditions and having", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -859,7 +859,7 @@ describe("contract systems condition includes and having", () => {
         expect(ids).toEqual([csAlice.id]);
     });
 
-    it("routes visit count filters through the having branch with a stable MySQL error", async () => {
+    it("returns HTTP 500 for visit count filters through HAVING", async () => {
         await using location = await createSeededLocation({ value: "Montreal", unique_code: "MTL-HV" });
         await using coord = await createSeededCoords({
             location_id: location.id,
@@ -914,7 +914,7 @@ describe("contract systems condition includes and having", () => {
     });
 });
 
-describe("filter service search count language branch", () => {
+describe("search count language", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -971,7 +971,7 @@ describe("filter service search count language branch", () => {
     });
 });
 
-describe("filter lab config without user", () => {
+describe("getConfig without user", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -991,7 +991,7 @@ describe("filter lab config without user", () => {
     });
 });
 
-describe("required default filter with empty top-level query", () => {
+describe("required default filter with empty query", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {

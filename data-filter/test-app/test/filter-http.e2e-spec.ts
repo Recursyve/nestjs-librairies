@@ -8,7 +8,7 @@ import { createSeededRawEvent } from "./seeds/create-seeded-raw-event";
 import { createSeededStoryArc } from "./seeds/create-seeded-story-arc";
 import { createSeededTicketType } from "./seeds/create-seeded-ticket-type";
 
-describe("optional defaultFilter on market listings", () => {
+describe("optional default filter on market listings", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -67,7 +67,7 @@ describe("optional defaultFilter on market listings", () => {
     });
 });
 
-describe("profile caption filter conditions", () => {
+describe("implicit filter conditions on profile captions", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -129,7 +129,7 @@ describe("enum order rule on priority lanes", () => {
  * @p0 suspected-defect
  * Observed: nested filter.condition groups currently respond with 500.
  */
-describe("nested filter condition groups on story arcs", () => {
+describe("nested condition groups", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -140,7 +140,7 @@ describe("nested filter condition groups on story arcs", () => {
         await harness.close();
     });
 
-    it("currently responds with 500 when filtering through nested condition groups", async () => {
+    it("returns HTTP 500 when filtering through nested condition groups", async () => {
         await using _sciFi = await createSeededStoryArc({ title: "Nebula", genre: "sci-fi" });
 
         const response = await harness.postFilter("story-arcs", {
@@ -155,7 +155,7 @@ describe("nested filter condition groups on story arcs", () => {
     });
 });
 
-describe("top-level OR queries on ticket types", () => {
+describe("top-level OR queries", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -204,7 +204,7 @@ describe("top-level OR queries on ticket types", () => {
     });
 });
 
-describe("raw events download without export field mapping", () => {
+describe("download without export field mapping", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -267,7 +267,7 @@ describe("raw events download without export field mapping", () => {
     });
 });
 
-describe("lazy select config pagination on member tiers", () => {
+describe("lazy select config pagination", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
@@ -319,7 +319,7 @@ describe("lazy select config pagination on member tiers", () => {
     });
 });
 
-describe("filter service config and download branches", () => {
+describe("config and download", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {

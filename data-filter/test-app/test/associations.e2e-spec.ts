@@ -12,7 +12,7 @@ import { createSeededPlace } from "./seeds/create-seeded-place";
 import { createSeededPlaceOwner } from "./seeds/create-seeded-place-owner";
 import { createSeededSystem } from "./seeds/create-seeded-system";
 
-describe("nested includes / associations", () => {
+describe("nested associations", () => {
     let harness: TestHarness;
 
     beforeAll(async () => {
