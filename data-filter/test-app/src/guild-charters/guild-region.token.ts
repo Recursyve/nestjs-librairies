@@ -1,0 +1,1 @@
+export const GUILD_REGION_TOKEN = "GUILD_REGION_TOKEN";
