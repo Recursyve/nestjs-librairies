@@ -2,6 +2,7 @@ import { FilterOperatorTypes, FilterQueryModel } from "@recursyve/nestjs-data-fi
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
 import { createSeededMarketListing } from "./seeds/create-seeded-market-listing";
+import { createSeededPriorityLane } from "./seeds/create-seeded-priority-lane";
 import { createSeededProfileCaption } from "./seeds/create-seeded-profile-caption";
 import { createSeededRawEvent } from "./seeds/create-seeded-raw-event";
 import { createSeededStoryArc } from "./seeds/create-seeded-story-arc";
@@ -105,14 +106,22 @@ describe("enum order rule on priority lanes", () => {
         await harness.close();
     });
 
-    it("responds with 500 when ordering by enum priority rule on MySQL DISTINCT queries", async () => {
+    it("orders priority lanes by enum priority rule", async () => {
+        await using low = await createSeededPriorityLane({ code: "LOW", priority_level: "low" });
+        await using high = await createSeededPriorityLane({ code: "HIGH", priority_level: "high" });
+        await using medium = await createSeededPriorityLane({ code: "MED", priority_level: "medium" });
+
         const response = await harness.postFilter("priority-lanes", {
             page: TestHarness.defaultPage,
             order: [{ column: "lanePriorityOrder", direction: "asc" }],
             query: { condition: "and", rules: [] }
         });
 
-        TestHarness.expectInternalServerErrorFilterResponse(response);
+        expect(response.status).toBe(200);
+        const ids = TestHarness.mapFilterRowIds(TestHarness.parseFilterBody<{ id: number }>(response)).filter((id) =>
+            [high.id, medium.id, low.id].includes(id)
+        );
+        expect(ids).toEqual([low.id, medium.id, high.id]);
     });
 });
 
