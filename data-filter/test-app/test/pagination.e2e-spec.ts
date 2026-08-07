@@ -131,11 +131,6 @@ describe("pagination", () => {
     });
 });
 
-/**
- * @p0 suspected-defect
- * Observed: pagination combined with ORDER BY on a scalar column fails on MySQL (ER_FIELD_IN_ORDER_NOT_SELECT).
- * Intended: paginated responses should support stable ordering.
- */
 describe("pagination with attribute ordering on MySQL", () => {
     let harness: TestHarness;
 
@@ -147,26 +142,52 @@ describe("pagination with attribute ordering on MySQL", () => {
         await harness.close();
     });
 
-    it("currently responds with 500 when ordering by first_name during pagination", async () => {
-        await using _person = await createSeededPerson({
-            email: "alice@example.com",
+    it("paginates with stable first_name ordering", async () => {
+        await using charlie = await createSeededPerson({
+            email: "charlie.page@example.com",
+            first_name: "Charlie",
+            last_name: "C"
+        });
+        await using alice = await createSeededPerson({
+            email: "alice.page@example.com",
             first_name: "Alice",
-            last_name: "Alpha"
+            last_name: "A"
+        });
+        await using bob = await createSeededPerson({
+            email: "bob.page@example.com",
+            first_name: "Bob",
+            last_name: "B"
+        });
+        await using diana = await createSeededPerson({
+            email: "diana.page@example.com",
+            first_name: "Diana",
+            last_name: "D"
         });
 
-        const control = await harness.postFilter("persons", {
-            page: { number: 10, size: 5 },
-            order: [{ column: "id", direction: "asc" }],
+        const firstPage = await harness.postFilter("persons", {
+            page: { number: 0, size: 2 },
+            order: [{ column: "first_name", direction: "asc" }],
             query: { condition: "and", rules: [] }
         });
-        expect(control.status).toBe(200);
-
-        const response = await harness.postFilter("persons", {
-            page: { number: 10, size: 5 },
+        const secondPage = await harness.postFilter("persons", {
+            page: { number: 1, size: 2 },
             order: [{ column: "first_name", direction: "asc" }],
             query: { condition: "and", rules: [] }
         });
 
-        TestHarness.expectInternalServerErrorFilterResponse(response);
+        expect(firstPage.status).toBe(200);
+        expect(secondPage.status).toBe(200);
+
+        const seededIds = [alice.id, bob.id, charlie.id, diana.id];
+        const firstIds = TestHarness.mapFilterRowIds(TestHarness.parseFilterBody<{ id: number }>(firstPage)).filter((id) =>
+            seededIds.includes(id)
+        );
+        const secondIds = TestHarness.mapFilterRowIds(TestHarness.parseFilterBody<{ id: number }>(secondPage)).filter((id) =>
+            seededIds.includes(id)
+        );
+
+        expect(firstIds).toEqual([alice.id, bob.id]);
+        expect(secondIds).toEqual([charlie.id, diana.id]);
+        expect(firstIds.every((id) => !secondIds.includes(id))).toBe(true);
     });
 });
