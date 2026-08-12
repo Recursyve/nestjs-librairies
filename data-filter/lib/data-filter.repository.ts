@@ -104,12 +104,12 @@ export class DataFilterRepository<Data> {
     }
 
     public async count(where?: WhereOptions, conditions?: object): Promise<number> {
-        const options = this.generateFindOptions({ where }, conditions);
+        const { group, ...options } = this.generateFindOptions({ where }, conditions);
         return this.model.count(options);
     }
 
     public async countFromUser(user: DataFilterUserModel, where?: WhereOptions, conditions?: object): Promise<number> {
-        const options = this.generateFindOptions({ where }, conditions);
+        const { group, ...options } = this.generateFindOptions({ where }, conditions);
         options.where = await this.mergeAccessControlCondition(options.where, user);
         return this.model.count(options);
     }
@@ -155,7 +155,7 @@ export class DataFilterRepository<Data> {
                 paranoid: x.paranoid,
                 subQuery: x.subQuery,
                 where: x.where ? SequelizeUtils.generateWhereConditions(x.where, conditions) : undefined
-            }, [], x.attributes))
+            }, [], x.attributes, x.ignoreAttributes))
         ];
         if (options.include) {
             nestedIncludes.push(options.include as IncludeOptions | IncludeOptions[]);
@@ -170,6 +170,11 @@ export class DataFilterRepository<Data> {
             } else {
                 options.attributes = generatedAttributes;
             }
+        }
+
+        const group = this.getCustomAttributeGroupBy();
+        if (group.length && !options.group) {
+            options.group = group;
         }
 
         return options;
@@ -216,7 +221,7 @@ export class DataFilterRepository<Data> {
                     paranoid: x.paranoid,
                     subQuery: x.subQuery,
                     where: x.where ? SequelizeUtils.generateWhereConditions(x.where, conditions) : undefined
-                }, [], x.attributes);
+                }, [], x.attributes, x.ignoreAttributes);
             })
         ];
 

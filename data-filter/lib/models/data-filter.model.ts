@@ -4,6 +4,14 @@ import { CustomAttributesConfig, CustomAttributesModel } from "./custom-attribut
 import { IncludeConfig } from "./include.model";
 import { M, SequelizeUtils } from "../sequelize.utils";
 
+/**
+ * Aggregates that require a GROUP BY cannot let their join project the child
+ * columns, otherwise MySQL only_full_group_by rejects the query.
+ */
+export interface CustomAttributeIncludeConfig extends IncludeConfig {
+    ignoreAttributes: boolean;
+}
+
 export interface DataFilterConfigModel {
     model: typeof Model;
     attributes?: FindAttributeOptions;
@@ -91,14 +99,15 @@ export class DataFilterConfig implements DataFilterConfigModel {
             .filter(x => x.attribute);
     }
 
-    public getCustomAttributesIncludes(): IncludeConfig[] {
+    public getCustomAttributesIncludes(): CustomAttributeIncludeConfig[] {
         return this.customAttributes
             .filter(x => x.config?.path)
             .map(x => ({
                 attributes: { include: [] },
                 path: x.config?.path ?? "",
                 where: x.config?.where,
-                paranoid: true
+                paranoid: true,
+                ignoreAttributes: x.shouldGroupBy()
             }));
     }
 
