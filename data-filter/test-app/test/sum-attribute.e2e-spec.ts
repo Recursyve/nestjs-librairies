@@ -85,4 +85,30 @@ describe("@Sum custom attribute", () => {
         expect(rows[0].totalQuantity).toBe("12");
         expect(rows[0].lines).toBeUndefined();
     });
+
+    /**
+     * A @Sum declared on an included property is scoped to that include's path
+     * and lifted onto the parent row, since the GROUP BY collapses the children.
+     */
+    it("lifts a @Sum declared on an included property onto the parent row", async () => {
+        await using alpha = await createSeededWarehouse({ code: "WH-INCLUDED-SUM" });
+        await using _l1 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "IS1", quantity: 6 });
+        await using _l2 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "IS2", quantity: 8 });
+
+        const { WarehousesIncludedSumData } = await import("../src/warehouses/filters/warehouses-included-sum.data");
+        const repo = harness.app.get(DataFilterService).for(WarehousesIncludedSumData);
+
+        const options = repo.generateFindOptions({ where: { id: alpha.id } });
+        expect(options.group).toEqual(["id"]);
+
+        const rows = (await repo.findAll({ where: { id: alpha.id } })) as unknown as {
+            id: number;
+            code?: string;
+            totalQuantity?: string;
+        }[];
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0].totalQuantity).toBe("14");
+        expect(rows[0].code).toBe("WH-INCLUDED-SUM");
+    });
 });
