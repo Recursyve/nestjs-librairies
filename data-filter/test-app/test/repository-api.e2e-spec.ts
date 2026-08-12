@@ -85,6 +85,78 @@ describe("DataFilterService.for / DataFilterRepository public API", () => {
         expect(download.status).toBe(200);
         expect(download.body.byteLength).toBeGreaterThan(0);
         expect(String(download.body.preview)).toContain("exports.name");
+
+        const headersDownload = await request(harness.app.getHttpServer()).post(
+            "/repository-probes/download-csv-headers"
+        );
+        expect(headersDownload.status).toBe(200);
+        expect(String(headersDownload.body.preview)).toContain("exports.name");
+        expect(String(headersDownload.body.preview)).toContain("Alpha");
+
+        const typedCsv = await request(harness.app.getHttpServer()).post("/repository-probes/download-typed/csv");
+        expect(typedCsv.status).toBe(200);
+        expect(typedCsv.body.ok).toBe(true);
+        expect(String(typedCsv.body.preview)).toContain("Probe");
+
+        const typedXlsx = await request(harness.app.getHttpServer()).post("/repository-probes/download-typed/xlsx");
+        expect(typedXlsx.status).toBe(200);
+        expect(typedXlsx.body.ok).toBe(true);
+
+        const typedHtml = await request(harness.app.getHttpServer()).post("/repository-probes/download-typed/html");
+        expect(typedHtml.status).toBe(200);
+        expect(typedHtml.body.ok).toBe(false);
+        expect(String(typedHtml.body.message)).toMatch(/custom ExportAdapter/i);
+
+        const typedPdf = await request(harness.app.getHttpServer()).post("/repository-probes/download-typed/pdf");
+        expect(typedPdf.status).toBe(200);
+        expect(typedPdf.body.ok).toBe(false);
+
+        const typedZip = await request(harness.app.getHttpServer()).post("/repository-probes/download-typed/zip");
+        expect(typedZip.status).toBe(200);
+        expect(typedZip.body.ok).toBe(false);
+
+        const searchCondition = await request(harness.app.getHttpServer())
+            .post("/repository-probes/add-search-condition")
+            .query({ q: "Repo", nested: "1" });
+        expect(searchCondition.status).toBe(200);
+        expect(searchCondition.body.hasInclude).toBe(true);
+        expect(searchCondition.body.wrappedInAnd).toBe(true);
+
+        const plainSearchCondition = await request(harness.app.getHttpServer())
+            .post("/repository-probes/add-search-condition")
+            .query({ q: "Repo" });
+        expect(plainSearchCondition.status).toBe(200);
+        expect(plainSearchCondition.body.hasInclude).toBe(false);
+        expect(plainSearchCondition.body.wrappedInAnd).toBe(true);
+
+        const emptySearch = await request(harness.app.getHttpServer())
+            .post("/repository-probes/add-search-condition")
+            .query({ q: "" });
+        expect(emptySearch.status).toBe(200);
+        expect(emptySearch.body.hasInclude).toBe(false);
+        expect(emptySearch.body.wrappedInAnd).toBe(false);
+
+        const plainAttr = await request(harness.app.getHttpServer()).get("/repository-probes/custom-attribute/name");
+        expect(plainAttr.status).toBe(200);
+        expect(plainAttr.body).toMatchObject({ has: false, attribute: null });
+
+        const sumAttr = await request(harness.app.getHttpServer())
+            .get("/repository-probes/custom-attribute/totalQuantity")
+            .query({ source: "sum" });
+        expect(sumAttr.status).toBe(200);
+        expect(sumAttr.body).toMatchObject({ has: true, attribute: "sum" });
+        expect(Array.isArray(sumAttr.body.groupBy)).toBe(true);
+        expect(sumAttr.body.groupBy.length).toBeGreaterThan(0);
+
+        const countAttr = await request(harness.app.getHttpServer())
+            .get("/repository-probes/custom-attribute/lineCount")
+            .query({ source: "count" });
+        expect(countAttr.status).toBe(200);
+        expect(countAttr.body).toMatchObject({ has: true, attribute: "count" });
+
+        const translations = await request(harness.app.getHttpServer()).get("/repository-probes/search-attributes");
+        expect(translations.status).toBe(200);
+        expect(Array.isArray(translations.body.translations)).toBe(true);
     });
 
     /**

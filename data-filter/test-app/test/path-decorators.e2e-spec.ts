@@ -363,6 +363,37 @@ describe("Include(path, separate: boolean) overload", () => {
     });
 });
 
+describe("Include({ path }) object-first overload", () => {
+    let harness: TestHarness;
+
+    beforeAll(async () => {
+        harness = await TestHarness.create();
+    });
+
+    afterAll(async () => {
+        await harness.close();
+    });
+
+    it("loads nested museum under artifacts via Include({ path, separate: false })", async () => {
+        await using museum = await createSeededMuseum({ name: "Include Config Museum" });
+        await using _artifact = await createSeededArtifact({
+            museum_id: museum.id,
+            title: "ConfigMuseumProbe",
+            status: "on_display",
+            display_rank: 1
+        });
+
+        const response = await harness.postFilter("museums-include-config", {
+            page: TestHarness.defaultPage,
+            query: { condition: "and", rules: [] }
+        });
+        expect(response.status).toBe(200);
+        const row = TestHarness.parseFilterBody<MuseumRow>(response).values.find((value) => value.id === museum.id);
+        expect(row?.artifacts?.[0]?.title).toBe("ConfigMuseumProbe");
+        expect(row?.artifacts?.[0]?.museum?.name).toBe("Include Config Museum");
+    });
+});
+
 /**
  * @p0 suspected-defect
  * Include(path, true) on BelongsTo throws at query time.

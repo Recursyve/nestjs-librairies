@@ -16,13 +16,16 @@ export class SpellScrollsData {}
 
 /**
  * Characterizes Filter.addOperators / removeOperators / setOperators on the
- * public filter configuration surface.
+ * public filter configuration surface, plus pathCondition / usePathCondition.
  */
 @Injectable()
 export class SpellScrollsFilter extends BaseFilter<SpellScrollsData> {
     public readonly dataDefinition = SpellScrollsData;
 
-    public readonly title = new TextFilter({ attribute: "title" })
+    public readonly title = new TextFilter({
+        attribute: "title",
+        pathCondition: { manaCost: 3 }
+    })
         .removeOperators(FilterOperatorTypes.EndsWith, FilterOperatorTypes.NotEndsWith)
         .addOperators({ name: "exact_title", operator: FilterOperatorTypes.Equal });
 

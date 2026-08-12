@@ -1,10 +1,12 @@
 import { Controller, Get, HttpCode, HttpStatus, Param, Post, Query, Req } from "@nestjs/common";
 import { DataFilterService, ExportTypes } from "@recursyve/nestjs-data-filter";
 import { Request } from "express";
-import { Op } from "sequelize";
+import { FindOptions, Op } from "sequelize";
 import { MuseumsPlainData } from "../../museums/filters/museums-plain.data";
 import { MuseumsWithArtifactsData } from "../../museums/filters/museums-with-artifacts.data";
 import { TestAccessControlUser } from "../../test-access-control/test-access-control-user.model";
+import { WarehousesCountData } from "../../warehouses/filters/warehouses-count.data";
+import { WarehousesSumData } from "../../warehouses/filters/warehouses-sum.data";
 
 /**
  * Characterizes the public DataFilterService.for → DataFilterRepository API
@@ -150,18 +152,6 @@ export class RepositoryProbesController {
         };
     }
 
-    @Get("custom-attribute/:name")
-    @HttpCode(HttpStatus.OK)
-    public hasCustomAttribute(@Param("name") name: string) {
-        const repository = this.plainRepo();
-
-        return {
-            has: repository.hasCustomAttribute(name),
-            attribute: repository.getCustomAttribute(name)?.type ?? null,
-            groupBy: repository.getCustomAttributeGroupBy()
-        };
-    }
-
     @Get("search-attributes")
     @HttpCode(HttpStatus.OK)
     public searchAttributes() {
@@ -182,6 +172,93 @@ export class RepositoryProbesController {
         return {
             byteLength: Buffer.isBuffer(buffer) ? buffer.byteLength : Buffer.byteLength(String(buffer)),
             preview: Buffer.isBuffer(buffer) ? buffer.toString("utf8").slice(0, 200) : String(buffer).slice(0, 200)
+        };
+    }
+
+    @Post("download-csv-headers")
+    @HttpCode(HttpStatus.OK)
+    public async downloadCsvWithHeaders() {
+        const result = await this.plainRepo().downloadData(
+            ["name"],
+            [["Alpha"], ["Beta"]],
+            ExportTypes.CSV,
+            "fr"
+        );
+
+        return {
+            preview: Buffer.isBuffer(result) ? result.toString("utf8") : String(result)
+        };
+    }
+
+    @Post("download-typed/:type")
+    @HttpCode(HttpStatus.OK)
+    public async downloadTyped(@Param("type") type: "xlsx" | "html" | "pdf" | "zip" | "csv") {
+        const headers = ["name"];
+        const data = [["Probe"]];
+        const repository = this.plainRepo();
+
+        try {
+            let result: Buffer | string;
+            switch (type) {
+                case "xlsx":
+                    result = await repository.downloadXlsx(headers, data);
+                    break;
+                case "csv":
+                    result = await repository.downloadCsv(headers, data);
+                    break;
+                case "html":
+                    result = await repository.downloadHtml(headers, data, "fr", { stamp: "repo" });
+                    break;
+                case "pdf":
+                    result = await repository.downloadPdf(headers, data, "fr", { stamp: "repo" });
+                    break;
+                case "zip":
+                    result = await repository.downloadZip(headers, data, "fr", { stamp: "repo" });
+                    break;
+                default:
+                    return { ok: false, message: `unknown type ${String(type)}` };
+            }
+
+            return {
+                ok: true,
+                preview: Buffer.isBuffer(result) ? result.toString("utf8").slice(0, 200) : String(result).slice(0, 200)
+            };
+        } catch (error) {
+            return {
+                ok: false,
+                message: error instanceof Error ? error.message : String(error)
+            };
+        }
+    }
+
+    @Post("add-search-condition")
+    @HttpCode(HttpStatus.OK)
+    public addSearchCondition(@Query("q") q: string, @Query("nested") nested?: string) {
+        const repository = nested === "1" ? this.nestedRepo() : this.plainRepo();
+        const options: FindOptions = { where: { id: { [Op.gt]: 0 } } };
+        repository.addSearchCondition(q ?? "", options, "fr");
+        const where = options.where as { [key: symbol]: unknown } | undefined;
+
+        return {
+            hasInclude: Array.isArray(options.include) ? options.include.length > 0 : !!options.include,
+            wrappedInAnd: !!(where && where[Op.and])
+        };
+    }
+
+    @Get("custom-attribute/:name")
+    @HttpCode(HttpStatus.OK)
+    public hasCustomAttribute(@Param("name") name: string, @Query("source") source?: string) {
+        const repository =
+            source === "count"
+                ? this.dataFilterService.for(WarehousesCountData)
+                : source === "sum"
+                  ? this.dataFilterService.for(WarehousesSumData)
+                  : this.plainRepo();
+
+        return {
+            has: repository.hasCustomAttribute(name),
+            attribute: repository.getCustomAttribute(name)?.type ?? null,
+            groupBy: repository.getCustomAttributeGroupBy()
         };
     }
 

@@ -49,5 +49,26 @@ describe("OpenApiFilterController + FilterResultModelMixin", () => {
         });
         expect(count.status).toBe(200);
         expect(harness.parseCountBody(count)).toBe(2);
+
+        const download = await harness.postDownload("harbor-notices", "csv", {
+            page: TestHarness.defaultPage,
+            query: { condition: "and", rules: [] }
+        });
+        expect(download.status).toBe(200);
+        expect(typeof download.text).toBe("string");
+
+        const configValue = await harness.getFilterConfigValue("harbor-notices", {
+            id: "missingSelect",
+            value: "x"
+        });
+        expect(configValue.status).toBe(200);
+        expect(configValue.body).toEqual([]);
+
+        const configId = await harness.getFilterConfigId("harbor-notices", {
+            id: "missingSelect",
+            resourceId: "1"
+        });
+        expect(configId.status).toBe(200);
+        expect(configId.body).toEqual({});
     });
 });
