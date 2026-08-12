@@ -1,5 +1,5 @@
 import { col, fn, literal, ProjectionAlias } from "sequelize";
-import { Fn, Literal } from "sequelize/types/utils";
+import { Col, Fn, Literal } from "sequelize/types/utils";
 import { SequelizeUtils } from "../sequelize.utils";
 import { CustomAttributesConfig, CustomAttributesOptionConfig } from "./custom-attributes.model";
 
@@ -61,7 +61,23 @@ export class DistanceAttributesConfig implements CustomAttributesConfig<Distance
 
         const lat = path ? literal(SequelizeUtils.getLiteralFullName((this.config as DistanceConfigWithLatLng).latAttribute, path)) : col((this.config as DistanceConfigWithLatLng).latAttribute);
         const lng = path ? literal(SequelizeUtils.getLiteralFullName((this.config as DistanceConfigWithLatLng).lngAttribute, path)) : col((this.config as DistanceConfigWithLatLng).lngAttribute);
-        const point = fn("Point", lat, lng);
-        return this.config.srid ? fn("ST_SRID", point, this.config.srid) : point;
+        return this.buildPoint(lat, lng);
+    }
+
+    /**
+     * MySQL stores the longitude in the first coordinate and applies the SRS axis order
+     * only when importing or exporting geometries. Point() writes that storage order
+     * directly, while the reference point goes through ST_GeometryFromText: a geographic
+     * SRID swaps its lat/lng pair into storage order, whereas SRID 0 has no SRS and writes
+     * the pair verbatim, leaving the latitude in the longitude. The projection follows the
+     * same convention so both points stay comparable.
+     */
+    private buildPoint(lat: Literal | Col, lng: Literal | Col): Fn {
+        const srid = this.config.srid;
+        if (!srid) {
+            return fn("Point", lat, lng);
+        }
+
+        return fn("ST_SRID", fn("Point", lng, lat), srid);
     }
 }
