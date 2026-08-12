@@ -70,6 +70,90 @@ describe("@Count custom attribute", () => {
         expect(rows[0].lines).toBeUndefined();
     });
 
+    /**
+     * A @Count declared on an included property is scoped to that include's path
+     * and lifted onto the parent row, since the GROUP BY collapses the children.
+     */
+    it("lifts a @Count declared on an included property onto the parent row", async () => {
+        await using alpha = await createSeededWarehouse({ code: "WH-INCLUDED-COUNT" });
+        await using _l1 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "I1", quantity: 3 });
+        await using _l2 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "I2", quantity: 4 });
+
+        const { WarehousesIncludedCountData } = await import(
+            "../src/warehouses/filters/warehouses-included-count.data"
+        );
+        const repo = harness.app.get(DataFilterService).for(WarehousesIncludedCountData);
+
+        const options = repo.generateFindOptions({ where: { id: alpha.id } });
+        expect(options.group).toEqual(["id"]);
+
+        const rows = (await repo.findAll({ where: { id: alpha.id } })) as unknown as {
+            id: number;
+            code?: string;
+            lineCount?: number;
+        }[];
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0].lineCount).toBe(2);
+        expect(rows[0].code).toBe("WH-INCLUDED-COUNT");
+    });
+
+    /**
+     * The path is relative to the property, so it must be composed with it
+     * rather than resolved from the root model.
+     */
+    it("resolves a path declared on an included property against the nested alias", async () => {
+        await using alpha = await createSeededWarehouse({ code: "WH-NESTED-COUNT" });
+        await using _l1 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "N1", quantity: 3 });
+        await using _l2 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "N2", quantity: 4 });
+
+        const { WarehousesNestedPathCountData } = await import(
+            "../src/warehouses/filters/warehouses-included-count.data"
+        );
+        const repo = harness.app.get(DataFilterService).for(WarehousesNestedPathCountData);
+        const rows = (await repo.findAll({ where: { id: alpha.id } })) as unknown as {
+            id: number;
+            ownerCount?: number;
+        }[];
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0].ownerCount).toBe(2);
+    });
+
+    it("counts distinct values of the targeted path", async () => {
+        await using alpha = await createSeededWarehouse({ code: "WH-DISTINCT" });
+        await using _l1 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "DUP", quantity: 1 });
+        await using _l2 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "DUP", quantity: 2 });
+        await using _l3 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "OTHER", quantity: 5 });
+
+        const { WarehousesDistinctCountData } = await import("../src/warehouses/filters/warehouses-count.data");
+        const repo = harness.app.get(DataFilterService).for(WarehousesDistinctCountData);
+        const rows = (await repo.findAll({ where: { id: alpha.id } })) as unknown as {
+            id: number;
+            skuCount?: number;
+        }[];
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0].skuCount).toBe(2);
+    });
+
+    it("counts only the rows matching the custom attribute where", async () => {
+        await using alpha = await createSeededWarehouse({ code: "WH-WHERE" });
+        await using _l1 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "W1", quantity: 1 });
+        await using _l2 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "W2", quantity: 6 });
+        await using _l3 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "W3", quantity: 9 });
+
+        const { WarehousesWhereCountData } = await import("../src/warehouses/filters/warehouses-count.data");
+        const repo = harness.app.get(DataFilterService).for(WarehousesWhereCountData);
+        const rows = (await repo.findAll({ where: { id: alpha.id } }, { minQuantity: 5 })) as unknown as {
+            id: number;
+            bigLineCount?: number;
+        }[];
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0].bigLineCount).toBe(2);
+    });
+
     it("counts through the repository count helper", async () => {
         await using alpha = await createSeededWarehouse({ code: "WH-COUNT-HELPER" });
         await using _line = await createSeededStockLine({ warehouse_id: alpha.id, sku: "H1", quantity: 1 });
