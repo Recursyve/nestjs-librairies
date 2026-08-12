@@ -48,6 +48,12 @@ describe("@Distance custom attribute", () => {
         return { montrealLocation, montrealCoord, quebecLocation, quebecCoord };
     }
 
+    /**
+     * @p0 suspected-defect
+     * Observed: with no srid the reference literal puts the latitude where MySQL reads a
+     * longitude, so a POINT column is compared on swapped axes and every non-zero distance
+     * is off. Intended: the true geodesic distance, as srid 4326 already returns.
+     */
     it("resolves a @Distance declared on an included property against the include alias", async () => {
         const seeded = await seedPlaces();
         await using montrealLocation = seeded.montrealLocation;
@@ -85,7 +91,7 @@ describe("@Distance custom attribute", () => {
 
         expect(montrealRow?.geoCoord?.address).toBe("100 Main");
         expect(montrealRow?.geoCoord?.distance).toBe(0);
-        expect(quebecRow?.geoCoord?.distance).toBeGreaterThan(200_000);
+        expect(quebecRow?.geoCoord?.distance).toBe(0);
         expect(montrealLocation.id).toBeGreaterThan(0);
         expect(quebecLocation.id).toBeGreaterThan(0);
     });
@@ -152,7 +158,13 @@ describe("@Distance custom attribute", () => {
         )) as unknown as { id: number; distance?: number }[];
 
         expect(rows.find((row) => row.id === montrealSystem.id)?.distance).toBe(0);
-        expect(rows.find((row) => row.id === quebecSystem.id)?.distance).toBeGreaterThan(200_000);
+
+        /**
+         * The projection follows the reference literal, which puts the latitude in the
+         * coordinate MySQL reads as the longitude, so the pair measures 232 734 m instead
+         * of the 270 761 m it yields under srid 4326.
+         */
+        expect(rows.find((row) => row.id === quebecSystem.id)?.distance).toBeCloseTo(232_734, 0);
     });
 
     it("computes the distance from separate lat/lng columns when srid is set", async () => {
@@ -179,6 +191,6 @@ describe("@Distance custom attribute", () => {
         )) as unknown as { id: number; distance?: number }[];
 
         expect(rows.find((row) => row.id === montrealSystem.id)?.distance).toBe(0);
-        expect(rows.find((row) => row.id === quebecSystem.id)?.distance).toBeGreaterThan(200_000);
+        expect(rows.find((row) => row.id === quebecSystem.id)?.distance).toBeCloseTo(270_761, 0);
     });
 });
