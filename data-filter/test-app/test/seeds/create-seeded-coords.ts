@@ -2,7 +2,7 @@ import { arePropertiesDefined } from "@recursyve/nice-ts-utils";
 import { Coords, GeoPoint } from "../../src/coords/models/coords.model";
 import { Seeded } from "./seeded.type";
 
-export type CreateSeededCoordsParams = {
+type CreateSeededCoordsParams = {
     address: string;
     cellphone?: string;
     geo_point?: GeoPoint;
@@ -11,7 +11,7 @@ export type CreateSeededCoordsParams = {
     street_number: number;
 };
 
-export type SeededCoords = Seeded<{
+type SeededCoords = Seeded<{
     id: number;
     address: string;
     cellphone: string | undefined;
