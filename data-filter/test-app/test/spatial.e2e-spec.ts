@@ -1,7 +1,7 @@
 import { FilterOperatorTypes } from "@recursyve/nestjs-data-filter";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TestHarness } from "./harness/test-harness";
-import { createSeededMirroredCoords } from "./seeds/create-seeded-mirrored-coords";
+import { createSeededCoords } from "./seeds/create-seeded-coords";
 import { createSeededLocation } from "./seeds/create-seeded-location";
 import { createSeededPlace } from "./seeds/create-seeded-place";
 import { createSeededSystem } from "./seeds/create-seeded-system";
@@ -24,7 +24,7 @@ describe("geo localization filters", () => {
 
     it("filters coords within a wide geo localization distance", async () => {
         await using montrealLoc = await createSeededLocation({ value: "Montreal", unique_code: "MTL" });
-        await using montreal = await createSeededMirroredCoords({
+        await using montreal = await createSeededCoords({
             location_id: montrealLoc.id,
             street_number: 100,
             address: "100 Main Street",
@@ -32,7 +32,7 @@ describe("geo localization filters", () => {
             geo_point: montrealCenter
         });
         await using nearbyLoc = await createSeededLocation({ value: "Montreal North", unique_code: "MTL-N" });
-        await using nearby = await createSeededMirroredCoords({
+        await using nearby = await createSeededCoords({
             location_id: nearbyLoc.id,
             street_number: 150,
             address: "150 North Street",
@@ -40,7 +40,7 @@ describe("geo localization filters", () => {
             geo_point: nearbyPoint
         });
         await using quebecLoc = await createSeededLocation({ value: "Quebec", unique_code: "QC" });
-        await using _quebec = await createSeededMirroredCoords({
+        await using _quebec = await createSeededCoords({
             location_id: quebecLoc.id,
             street_number: 200,
             address: "200 Rue Saint-Jean",
@@ -70,7 +70,7 @@ describe("geo localization filters", () => {
 
     it("filters coords within a tight geo localization distance", async () => {
         await using montrealLoc = await createSeededLocation({ value: "Montreal", unique_code: "MTL-T" });
-        await using montreal = await createSeededMirroredCoords({
+        await using montreal = await createSeededCoords({
             location_id: montrealLoc.id,
             street_number: 100,
             address: "100 Main Street",
@@ -78,7 +78,7 @@ describe("geo localization filters", () => {
             geo_point: montrealCenter
         });
         await using nearbyLoc = await createSeededLocation({ value: "Montreal North", unique_code: "MTL-TN" });
-        await using nearby = await createSeededMirroredCoords({
+        await using nearby = await createSeededCoords({
             location_id: nearbyLoc.id,
             street_number: 150,
             address: "150 North Street",
@@ -86,7 +86,7 @@ describe("geo localization filters", () => {
             geo_point: nearbyPoint
         });
         await using quebecLoc = await createSeededLocation({ value: "Quebec", unique_code: "QC-T" });
-        await using _quebec = await createSeededMirroredCoords({
+        await using _quebec = await createSeededCoords({
             location_id: quebecLoc.id,
             street_number: 200,
             address: "200 Rue Saint-Jean",
@@ -116,11 +116,6 @@ describe("geo localization filters", () => {
     });
 });
 
-/**
- * @p0 suspected-defect
- * Observed: geo-bounds filter returns no systems for a polygon covering all seeded coordinates.
- * Intended: systems inside the polygon should match.
- */
 describe("geo bounds", () => {
     let harness: TestHarness;
 
@@ -132,9 +127,9 @@ describe("geo bounds", () => {
         await harness.close();
     });
 
-    it("returns an empty result set for a covering polygon", async () => {
+    it("returns the systems sitting inside a covering polygon", async () => {
         await using location = await createSeededLocation({ value: "Montreal", unique_code: "MTL" });
-        await using coord = await createSeededMirroredCoords({
+        await using coord = await createSeededCoords({
             location_id: location.id,
             street_number: 100,
             address: "100 Main",
@@ -164,8 +159,7 @@ describe("geo bounds", () => {
             }
         });
 
-        expect(ids).toEqual([]);
-        expect(ids).not.toContain(system.id);
+        expect(ids).toEqual([system.id]);
     });
 });
 
@@ -186,7 +180,7 @@ describe("distance ordering on coords", () => {
 
     it("returns distance values with nearer coords first in response order", async () => {
         await using quebecLoc = await createSeededLocation({ value: "Quebec", unique_code: "QC" });
-        await using quebec = await createSeededMirroredCoords({
+        await using quebec = await createSeededCoords({
             location_id: quebecLoc.id,
             street_number: 200,
             address: "200 Rue Saint-Jean",
@@ -194,7 +188,7 @@ describe("distance ordering on coords", () => {
             geo_point: quebecPoint
         });
         await using montrealLoc = await createSeededLocation({ value: "Montreal", unique_code: "MTL" });
-        await using montreal = await createSeededMirroredCoords({
+        await using montreal = await createSeededCoords({
             location_id: montrealLoc.id,
             street_number: 100,
             address: "100 Main Street",
