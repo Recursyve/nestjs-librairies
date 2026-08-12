@@ -1,4 +1,4 @@
-import { fn, literal, where, WhereOptions } from "sequelize";
+import { col, fn, literal, where, WhereOptions } from "sequelize";
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
 import { FilterUtils } from "../filter.utils";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
@@ -121,8 +121,8 @@ describe("GeoBoundsFilter", () => {
                 where(
                     fn(
                         "ST_Contains",
-                        fn("ST_GeometryFromText", literal("'POLYGON((45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516))'"), 0),
-                        "test"
+                        fn("ST_GeometryFromText", literal("'POLYGON((-73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953))'"), 0),
+                        literal("test")
                     ),
                     literal("1")
                 )
@@ -144,8 +144,32 @@ describe("GeoBoundsFilter", () => {
                 where(
                     fn(
                         "ST_Contains",
+                        fn("ST_GeometryFromText", literal("'POLYGON((-73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953))'"), 0),
+                        fn("Point", col("longitude"), col("latitude"))
+                    ),
+                    literal("1")
+                )
+            );
+        });
+
+        it("with legacy axis order should write the polygon vertices latitude first", async () => {
+            const filter = new GeoBoundsFilter({
+                latAttribute: "latitude",
+                lngAttribute: "longitude",
+                legacyAxisOrder: true
+            });
+            const options = await filter.getWhereOptions({
+                id: "test",
+                value: [[45.8797953, -73.2815516], [45.8797953, -73.2815516], [45.8797953, -73.2815516], [45.8797953, -73.2815516]],
+                operation: FilterOperatorTypes.Equal
+            });
+            expect(options).toBeDefined();
+            expect(options).toStrictEqual<WhereOptions>(
+                where(
+                    fn(
+                        "ST_Contains",
                         fn("ST_GeometryFromText", literal("'POLYGON((45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516))'"), 0),
-                        fn("Point", "longitude", "latitude")
+                        fn("Point", col("longitude"), col("latitude"))
                     ),
                     literal("1")
                 )
@@ -166,8 +190,8 @@ describe("GeoBoundsFilter", () => {
                 where(
                     fn(
                         "ST_Contains",
-                        fn("ST_GeometryFromText", literal("'POLYGON((45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516))'"), 0),
-                        "test"
+                        fn("ST_GeometryFromText", literal("'POLYGON((-73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953))'"), 0),
+                        literal("test")
                     ),
                     literal("0")
                 )
