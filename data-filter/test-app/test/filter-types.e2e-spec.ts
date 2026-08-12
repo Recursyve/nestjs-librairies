@@ -212,10 +212,6 @@ describe("download without export columns", () => {
     });
 });
 
-/**
- * @p0 suspected-defect
- * Observed: geo-bounds on MySQL currently returns empty sets for covering polygons.
- */
 describe("geo-bounds public modes", () => {
     let harness: TestHarness;
 
@@ -227,7 +223,7 @@ describe("geo-bounds public modes", () => {
         await harness.close();
     });
 
-    it("returns HTTP 500 for geo_point attribute bounds with SRID", async () => {
+    it("matches a geo_point attribute against bounds declared with an SRID", async () => {
         await using location = await createSeededLocation({ value: "Montreal", unique_code: "MTL-GB" });
         await using coord = await createSeededCoords({
             location_id: location.id,
@@ -244,7 +240,7 @@ describe("geo-bounds public modes", () => {
             [47.0, -75.0]
         ];
 
-        const response = await harness.postFilter("coords", {
+        const ids = await harness.filterIds("coords", {
             page: TestHarness.defaultPage,
             query: {
                 condition: "and",
@@ -252,11 +248,10 @@ describe("geo-bounds public modes", () => {
             }
         });
 
-        TestHarness.expectInternalServerErrorFilterResponse(response);
-        expect(coord.id).toBeGreaterThan(0);
+        expect(ids).toEqual([coord.id]);
     });
 
-    it("returns systems inside a covering polygon when geo bounds use not_equal", async () => {
+    it("excludes systems inside a covering polygon when geo bounds use not_equal", async () => {
         await using location = await createSeededLocation({ value: "Montreal", unique_code: "MTL-NE" });
         await using coord = await createSeededCoords({
             location_id: location.id,
@@ -288,7 +283,8 @@ describe("geo-bounds public modes", () => {
             }
         });
 
-        expect(ids).toEqual([system.id]);
+        expect(ids).toEqual([]);
+        expect(system.id).toBeGreaterThan(0);
     });
 });
 
