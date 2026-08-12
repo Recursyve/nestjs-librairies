@@ -149,21 +149,33 @@ export class SequelizeModelScanner {
         return result;
     }
 
+    public getOrderColumnLiteral(model: typeof Model, orderObj: OrderModel): string | undefined {
+        if (!orderObj?.column) {
+            return;
+        }
+
+        const pathSegments = orderObj.column.split(".");
+        const column = pathSegments.pop() as string;
+        for (const segment of pathSegments) {
+            const association = this.findAssociation(model, segment);
+            model = association.getAssociatedClass() as unknown as typeof Model;
+        }
+
+        const col = SequelizeUtils.findColumnFieldName(model as typeof M, column);
+        return pathSegments.length
+            ? SequelizeUtils.getLiteralFullName(col, pathSegments)
+            : `\`${model.name}\`.\`${col}\``;
+    }
+
     public getOrder(model: typeof Model, orderObj: OrderModel): Order | undefined {
         if (!orderObj?.column || !orderObj.direction) {
             return;
         }
 
-        const values = orderObj.column.split(".");
-        const column = values.pop() as string;
-        for (const value of values) {
-            const association = this.findAssociation(model, value);
-            model = association.getAssociatedClass() as unknown as typeof Model;
+        let literalOrder = this.getOrderColumnLiteral(model, orderObj);
+        if (!literalOrder) {
+            return;
         }
-        const col = SequelizeUtils.findColumnFieldName(model as typeof M, column);
-        let literalOrder = values.length ?
-            SequelizeUtils.getLiteralFullName(col, values) :
-            `\`${model.name}\`.\`${col}\``;
 
         if (orderObj.nullLast) {
             literalOrder = `-${literalOrder}`;

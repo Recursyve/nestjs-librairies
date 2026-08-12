@@ -18,6 +18,7 @@ import { BaseFilter } from "./base-filter";
 import { FilterService } from "./filter.service";
 import { NumberFilter, TextFilter } from "./filters";
 import { DefaultFilter } from "./filters/default.filter";
+import { DefaultOrderRule } from "./order-rules/default.order-rule";
 import { FilterOperatorTypes } from "./operators";
 
 @Data(ContractSystems)
@@ -306,5 +307,54 @@ describe("FilterService", () => {
                 ]
             }
         });
+    });
+});
+
+@Injectable()
+export class OrderByDistinctTestFilter extends BaseFilter<ContractSystemsTest> {
+    public dataDefinition = ContractSystemsTest;
+
+    public defaultOrderRule = new DefaultOrderRule({ column: "active", direction: "desc" });
+}
+
+describe("FilterService resolveOrderColumns", () => {
+    let filterService: FilterService<ContractSystemsTest>;
+
+    beforeAll(() => {
+        filterService = new FilterService<ContractSystemsTest>(
+            new DefaultAccessControlAdapter(),
+            new DefaultTranslateAdapter(),
+            new OrderByDistinctTestFilter(),
+            new SequelizeModelScanner(),
+            new DataFilterService(
+                new DataFilterScanner(),
+                new SequelizeModelScanner(),
+                new DefaultAccessControlAdapter(),
+                new DefaultTranslateAdapter(),
+                new DefaultExportAdapter()
+            )
+        );
+    });
+
+    it("merges defaultOrderRule when client order is empty", () => {
+        const service = filterService as unknown as {
+            resolveOrderColumns: (
+                orders: Array<{ column: string; direction: string }>
+            ) => Array<{ column: string; direction: string }>;
+        };
+
+        expect(service.resolveOrderColumns([])).toEqual([{ column: "active", direction: "desc" }]);
+    });
+
+    it("prefers explicit client order over defaultOrderRule for the same column", () => {
+        const service = filterService as unknown as {
+            resolveOrderColumns: (
+                orders: Array<{ column: string; direction: string }>
+            ) => Array<{ column: string; direction: string }>;
+        };
+
+        expect(service.resolveOrderColumns([{ column: "active", direction: "asc" }])).toEqual([
+            { column: "active", direction: "asc" }
+        ]);
     });
 });
