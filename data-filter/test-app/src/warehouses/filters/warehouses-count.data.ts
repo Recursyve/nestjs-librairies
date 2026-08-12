@@ -2,7 +2,6 @@ import { Attributes, Count, Data } from "@recursyve/nestjs-data-filter";
 import { Warehouses } from "../models/warehouses.model";
 
 /**
- * @p0 suspected-defect
  * @Count with a nested path — kept out of AppModule so validateData stays quiet.
  * Exposed through WarehousesCountModule for characterization tests only.
  */
