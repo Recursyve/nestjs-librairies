@@ -18,7 +18,6 @@ type DistanceConditions = { coordinates?: [number, number] };
 export class SystemsLatLngDistanceData {}
 
 /**
- * @p0 suspected-defect
  * Same lat/lng source, projected through an explicit SRID.
  */
 @Data(Systems)

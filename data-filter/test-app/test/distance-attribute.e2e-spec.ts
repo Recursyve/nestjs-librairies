@@ -155,12 +155,7 @@ describe("@Distance custom attribute", () => {
         expect(rows.find((row) => row.id === quebecSystem.id)?.distance).toBeGreaterThan(200_000);
     });
 
-    /**
-     * @p0 suspected-defect
-     * With an explicit srid the projected point and the reference point no longer
-     * agree on the axis order, so an exact match does not collapse to zero.
-     */
-    it("returns a non-zero distance for an exact match when srid is set", async () => {
+    it("computes the distance from separate lat/lng columns when srid is set", async () => {
         const seeded = await seedSystemsPlace("MTL-SRID");
         await using _location = seeded.location;
         await using _coord = seeded.coord;
@@ -170,15 +165,20 @@ describe("@Distance custom attribute", () => {
             file_number: "SYS-MTL-SRID",
             ...montrealDegrees
         });
+        await using quebecSystem = await createSeededSystem({
+            place_id: place.id,
+            file_number: "SYS-QC-SRID",
+            ...quebecDegrees
+        });
 
         const { SystemsSridDistanceData } = await import("../src/systems/filters/systems-distance.data");
         const repo = harness.app.get(DataFilterService).for(SystemsSridDistanceData);
         const rows = (await repo.findAll(
-            { where: { id: montrealSystem.id } },
+            { where: { id: [montrealSystem.id, quebecSystem.id] } },
             { coordinates: [montrealDegrees.latitude, montrealDegrees.longitude] }
         )) as unknown as { id: number; distance?: number }[];
 
-        expect(rows).toHaveLength(1);
-        expect(rows[0].distance).toBeGreaterThan(1_000_000);
+        expect(rows.find((row) => row.id === montrealSystem.id)?.distance).toBe(0);
+        expect(rows.find((row) => row.id === quebecSystem.id)?.distance).toBeGreaterThan(200_000);
     });
 });
