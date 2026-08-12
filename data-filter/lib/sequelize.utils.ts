@@ -1,9 +1,12 @@
 import { ArrayUtils, TypeUtils } from "@recursyve/nestjs-common";
 import {
     AbstractDataTypeConstructor,
+    col,
+    fn,
     FindAttributeOptions,
     Includeable,
     IncludeOptions,
+    literal,
     Op,
     Order,
     OrderItem,
@@ -11,6 +14,7 @@ import {
 } from "sequelize";
 import { Model } from "sequelize-typescript";
 import { ProjectionAlias, WhereAttributeHashValue } from "sequelize/types/model";
+import { Col, Fn, Literal } from "sequelize/types/utils";
 import { RuleModel } from "./filter";
 import { IncludeWhereModel } from "./models/include.model";
 
@@ -18,6 +22,8 @@ export interface GeoPoint {
     type: "point",
     coordinates: number[];
 }
+
+export type PointCoordinate = Literal | Col | number;
 
 export class M extends Model {}
 
@@ -287,6 +293,14 @@ export class SequelizeUtils {
         return `\`${path.join("->")}\`.\`${attribute}\``;
     }
 
+    public static getAttributeName(attribute: string, path?: string | string[]): string {
+        return path?.length ? SequelizeUtils.getLiteralFullName(attribute, path) : attribute;
+    }
+
+    public static getAttributeColumn(attribute: string, path?: string | string[]): Literal | Col {
+        return path?.length ? literal(SequelizeUtils.getLiteralFullName(attribute, path)) : col(attribute);
+    }
+
     public static getOrderFullName(attribute: string, path: string[]) {
         return `${path.join("->")}.${attribute}`;
     }
@@ -378,6 +392,16 @@ export class SequelizeUtils {
         }
 
         return `\`${model.name}\`.\`${group}\``;
+    }
+
+    /**
+     * MySQL stores the longitude in the first coordinate whatever the SRS, and an SRS axis
+     * order only applies when importing or exporting WKT/WKB. Every point the library builds
+     * goes through here so references and compared columns stay in that single storage order.
+     */
+    public static getPoint(lat: PointCoordinate, lng: PointCoordinate, srid?: number): Fn {
+        const point = fn("Point", lng, lat);
+        return srid ? fn("ST_SRID", point, srid) : point;
     }
 
     public static generateWhereConditions(model: IncludeWhereModel, options?: object): WhereOptions {
