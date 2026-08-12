@@ -1,0 +1,38 @@
+name: Data filter dev CI
+
+on:
+  pull_request:
+    paths:
+      - "data-filter/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  data-filter:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        working-directory: data-filter
+        run: npm ci
+
+      - name: Build
+        working-directory: data-filter
+        run: npm run build:lib
+
+      - name: Run tests
+        working-directory: data-filter
+        env:
+          TZ: UTC
+        run: npm run test
