@@ -1,4 +1,4 @@
-import { fn, literal, ProjectionAlias } from "sequelize";
+import { col, fn, literal, ProjectionAlias } from "sequelize";
 import { Fn, Literal } from "sequelize/types/utils";
 import { SequelizeUtils } from "../sequelize.utils";
 import { CustomAttributesConfig, CustomAttributesOptionConfig } from "./custom-attributes.model";
@@ -59,9 +59,9 @@ export class DistanceAttributesConfig implements CustomAttributesConfig<Distance
             return literal(path ? SequelizeUtils.getLiteralFullName(att, path) : att);
         }
 
-        const lat = path ? literal(SequelizeUtils.getLiteralFullName((this.config as DistanceConfigWithLatLng).latAttribute, path)) : (this.config as DistanceConfigWithLatLng).latAttribute;
-        const lng = path ? literal(SequelizeUtils.getLiteralFullName((this.config as DistanceConfigWithLatLng).lngAttribute, path)) : (this.config as DistanceConfigWithLatLng).lngAttribute;
-        const point = fn("Point", lng, lat);
+        const lat = path ? literal(SequelizeUtils.getLiteralFullName((this.config as DistanceConfigWithLatLng).latAttribute, path)) : col((this.config as DistanceConfigWithLatLng).latAttribute);
+        const lng = path ? literal(SequelizeUtils.getLiteralFullName((this.config as DistanceConfigWithLatLng).lngAttribute, path)) : col((this.config as DistanceConfigWithLatLng).lngAttribute);
+        const point = fn("Point", lat, lng);
         return this.config.srid ? fn("ST_SRID", point, this.config.srid) : point;
     }
 }
