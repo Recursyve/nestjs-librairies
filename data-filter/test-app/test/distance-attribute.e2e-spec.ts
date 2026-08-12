@@ -50,9 +50,11 @@ describe("@Distance custom attribute", () => {
 
     /**
      * @p0 suspected-defect
-     * Observed: with no srid the reference literal puts the latitude where MySQL reads a
-     * longitude, so a POINT column is compared on swapped axes and every non-zero distance
-     * is off. Intended: the true geodesic distance, as srid 4326 already returns.
+     * Observed: the reference literal puts the latitude where MySQL reads a longitude, so a
+     * POINT stored in the usual longitude-first order is compared against a mirrored point.
+     * The row sitting exactly on the requested coordinates reports 15 712 km instead of 0,
+     * and the 233 km separating the two rows drowns in that offset.
+     * Intended: the true geodesic distance, as srid 4326 already returns.
      */
     it("resolves a @Distance declared on an included property against the include alias", async () => {
         const seeded = await seedPlaces();
@@ -90,8 +92,8 @@ describe("@Distance custom attribute", () => {
         const quebecRow = rows.find((row) => row.id === quebecPlace.id);
 
         expect(montrealRow?.geoCoord?.address).toBe("100 Main");
-        expect(montrealRow?.geoCoord?.distance).toBe(0);
-        expect(quebecRow?.geoCoord?.distance).toBe(0);
+        expect(montrealRow?.geoCoord?.distance).toBeCloseTo(15_712_209, 0);
+        expect(quebecRow?.geoCoord?.distance).toBeCloseTo(15_772_687, 0);
         expect(montrealLocation.id).toBeGreaterThan(0);
         expect(quebecLocation.id).toBeGreaterThan(0);
     });
