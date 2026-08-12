@@ -11,7 +11,7 @@
         "publish-package": "npm run build:lib && npm run copy:lib && npm publish ./dist --access public",
         "publish-package:beta": "npm run publish-package -- --tag beta --access public",
         "publish-package:dry-run": "npm run publish-package -- --dry-run",
-        "test": "jest",
+        "test": "TZ=UTC jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage"
     },

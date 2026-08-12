@@ -26,6 +26,7 @@ describe("SequelizeModelScanner", () => {
                 },
                 model: Systems,
                 required: false,
+                through: undefined,
                 include: [
                     {
                         as: "contracts",
@@ -34,6 +35,7 @@ describe("SequelizeModelScanner", () => {
                         },
                         model: ContractSystems,
                         required: false,
+                        through: undefined,
                         include: [
                             {
                                 as: "contract",
@@ -42,6 +44,7 @@ describe("SequelizeModelScanner", () => {
                                 },
                                 model: Contracts,
                                 required: false,
+                                through: undefined,
                                 include: [
                                     {
                                         as: "invoice",
@@ -53,6 +56,7 @@ describe("SequelizeModelScanner", () => {
                                         required: false,
                                         paranoid: false,
                                         separate: false,
+                                        through: undefined,
                                         include: []
                                     }
                                 ]
@@ -82,6 +86,7 @@ describe("SequelizeModelScanner", () => {
                 },
                 model: Systems,
                 required: false,
+                through: undefined,
                 include: [
                     {
                         as: "place",
@@ -90,6 +95,7 @@ describe("SequelizeModelScanner", () => {
                         },
                         model: Places,
                         required: false,
+                        through: undefined,
                         include: [
                             {
                                 as: "owners",
@@ -101,6 +107,9 @@ describe("SequelizeModelScanner", () => {
                                 required: false,
                                 paranoid: false,
                                 separate: false,
+                                through: {
+                                    attributes: []
+                                },
                                 include: [
                                     {
                                         as: "person",
@@ -110,6 +119,7 @@ describe("SequelizeModelScanner", () => {
                                         required: false,
                                         paranoid: false,
                                         separate: false,
+                                        through: undefined,
                                         include: [
                                             {
                                                 as: "coord",
@@ -121,6 +131,7 @@ describe("SequelizeModelScanner", () => {
                                                 required: false,
                                                 paranoid: false,
                                                 separate: false,
+                                                through: undefined,
                                                 include: []
                                             }
                                         ]

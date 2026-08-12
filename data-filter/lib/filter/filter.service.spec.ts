@@ -146,6 +146,7 @@ describe("FilterService", () => {
                     required: false,
                     paranoid: true,
                     attributes: [],
+                    through: undefined,
                     include: [
                         {
                             as: "place",
@@ -153,6 +154,7 @@ describe("FilterService", () => {
                             required: false,
                             paranoid: true,
                             attributes: [],
+                            through: undefined,
                             include: [
                                 {
                                     as: "owners",
@@ -160,6 +162,9 @@ describe("FilterService", () => {
                                     required: false,
                                     paranoid: true,
                                     attributes: [],
+                                    through: {
+                                        attributes: []
+                                    },
                                     include: [
                                         {
                                             as: "person",
@@ -169,6 +174,7 @@ describe("FilterService", () => {
                                             separate: false,
                                             paranoid: false,
                                             attributes: [],
+                                            through: undefined,
                                             include: []
                                         }
                                     ]
@@ -182,6 +188,7 @@ describe("FilterService", () => {
                     model: MaintenanceVisits,
                     required: false,
                     attributes: [],
+                    through: undefined,
                     include: [
                         {
                             as: "visit",
@@ -191,6 +198,7 @@ describe("FilterService", () => {
                             paranoid: true,
                             separate: false,
                             attributes: [],
+                            through: undefined,
                             include: []
                         }
                     ]
@@ -254,6 +262,7 @@ describe("FilterService", () => {
                     include: [],
                     order: undefined,
                     separate: false,
+                    through: undefined,
                     where: {
                         status: "active",
                         tenant_id: 123
@@ -264,18 +273,23 @@ describe("FilterService", () => {
                     model: Systems,
                     required: false,
                     attributes: [],
+                    through: undefined,
                     include: [
                         {
                             as: "place",
                             model: Places,
                             required: false,
                             attributes: [],
+                            through: undefined,
                             include: [
                                 {
                                     as: "owners",
                                     model: Owners,
                                     required: false,
                                     attributes: [],
+                                    through: {
+                                        attributes: []
+                                    },
                                     include: [
                                         {
                                             as: "person",
@@ -285,6 +299,7 @@ describe("FilterService", () => {
                                             separate: false,
                                             paranoid: true,
                                             attributes: [],
+                                            through: undefined,
                                             include: []
                                         }
                                     ]

@@ -74,6 +74,7 @@ describe("DataFilterRepository", () => {
                         required: true,
                         paranoid: true,
                         separate: false,
+                        through: undefined,
                         include: [
                             {
                                 as: "location",
@@ -83,7 +84,8 @@ describe("DataFilterRepository", () => {
                                 include: [],
                                 paranoid: true,
                                 required: false,
-                                separate: true
+                                separate: true,
+                                through: undefined
                             }
                         ]
                     }
@@ -105,6 +107,7 @@ describe("DataFilterRepository", () => {
                         required: true,
                         paranoid: true,
                         separate: false,
+                        through: undefined,
                         where: {
                             [Op.or]: [
                                 {
@@ -123,6 +126,7 @@ describe("DataFilterRepository", () => {
                                 paranoid: true,
                                 required: false,
                                 separate: true,
+                                through: undefined,
                                 include: [],
                                 where: {
                                     value: "Montreal"
@@ -201,25 +205,29 @@ describe("DataFilterRepository", () => {
                     literalKey: "`coord`.`address`",
                     key: "$coord.address$",
                     name: "address",
-                    isJson: false
+                    isJson: false,
+                    isTranslationAttribute: false
                 },
                 {
                     literalKey: "`coord`.`postal_code`",
                     key: "$coord.postal_code$",
                     name: "postal_code",
-                    isJson: false
+                    isJson: false,
+                    isTranslationAttribute: false
                 },
                 {
                     literalKey: "`coord->location`.`value`",
                     key: "$coord.location.value$",
                     name: "value",
-                    isJson: false
+                    isJson: false,
+                    isTranslationAttribute: false
                 },
                 {
                     literalKey: "`coord->location`.`unique_code`",
                     key: "$coord.location.unique_code$",
                     name: "unique_code",
-                    isJson: false
+                    isJson: false,
+                    isTranslationAttribute: false
                 }
             ])
         });
@@ -246,7 +254,7 @@ describe("DataFilterRepository", () => {
                 attributes: [
                     "first_name",
                     "last_name",
-                    [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"), fn("ST_GeometryFromText", literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), "distance"],
+                    [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"), fn("Point", -73.2815516, 45.8797953)), "distance"],
                     "id"
                 ],
                 include: [
@@ -258,6 +266,7 @@ describe("DataFilterRepository", () => {
                         paranoid: true,
                         required: false,
                         separate: false,
+                        through: undefined,
                         include: []
                     }
                 ]
@@ -294,13 +303,14 @@ describe("DataFilterRepository", () => {
                         model: Coords,
                         attributes: [
                             "cellphone",
-                            [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"),  fn("ST_GeometryFromText", literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), "distance"],
+                            [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"),  fn("Point", -73.2815516, 45.8797953)), "distance"],
                             "id"
                         ],
                         order: undefined,
                         paranoid: true,
                         required: false,
                         separate: false,
+                        through: undefined,
                         include: [
                             {
                                 as: "location",
@@ -310,6 +320,7 @@ describe("DataFilterRepository", () => {
                                 paranoid: true,
                                 required: false,
                                 separate: false,
+                                through: undefined,
                                 include: [],
                                 where: {
                                     value: "Montreal"
