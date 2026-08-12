@@ -65,19 +65,24 @@ describe("@Sum custom attribute", () => {
     });
 
     /**
-     * @p0 suspected-defect
-     * @Sum with a nested path triggers GROUP BY + joined child columns under MySQL
-     * only_full_group_by. WarehousesSumData is imported only here (not AppModule).
+     * MySQL returns SUM as a DECIMAL, which the driver hands back as a string.
      */
-    it("rejects findAll on WarehousesSumData under only_full_group_by", async () => {
+    it("sums the targeted path through findAll", async () => {
         await using alpha = await createSeededWarehouse({ code: "WH-SUM" });
-        await using _line = await createSeededStockLine({ warehouse_id: alpha.id, sku: "S1", quantity: 3 });
+        await using _l1 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "S1", quantity: 3 });
+        await using _l2 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "S2", quantity: 9 });
 
         // Dynamic import keeps @Sum @Data out of AppModule / validateData workers.
         const { WarehousesSumData } = await import("../src/warehouses/filters/warehouses-sum.data");
         const repo = harness.app.get(DataFilterService).for(WarehousesSumData);
-        await expect(repo.findAll({ where: { id: alpha.id } })).rejects.toThrow(
-            /only_full_group_by|ER_WRONG_FIELD_WITH_GROUP|not in GROUP BY/i
-        );
+        const rows = (await repo.findAll({ where: { id: alpha.id } })) as unknown as {
+            id: number;
+            totalQuantity?: string;
+            lines?: unknown;
+        }[];
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0].totalQuantity).toBe("12");
+        expect(rows[0].lines).toBeUndefined();
     });
 });
