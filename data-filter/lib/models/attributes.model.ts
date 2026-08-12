@@ -139,9 +139,27 @@ export class AttributesConfig implements AttributesConfigModel {
             });
     }
 
+    public hasGroupedCustomAttributes(): boolean {
+        return this.customAttributes.some(x => x.shouldGroupBy());
+    }
+
+    /**
+     * Aggregates needing a GROUP BY collapse the included rows, so they are
+     * projected on the root query instead of on this include.
+     */
+    public getGroupedCustomAttributes(options?: object): CustomAttributesModel[] {
+        return this.customAttributes
+            .filter(x => x.shouldGroupBy())
+            .map(x => ({
+                key: x.key,
+                attribute: x.transform(options, this.path.path)
+            } as CustomAttributesModel))
+            .filter(x => x.attribute);
+    }
+
     public getCustomAttributes(options?: object, path?: string): CustomAttributesModel[] {
         return this.customAttributes
-            .filter(x => x.config?.path === path)
+            .filter(x => !x.shouldGroupBy() && x.config?.path === path)
             .map(x => ({
                 key: x.key,
                 attribute: x.transform(options, this.path.path),

@@ -148,7 +148,13 @@ export class DataFilterRepository<Data> {
                 const path = x.path.transformPathConfig(conditions);
                 const attributes = x.transformAttributesConfig(conditions);
                 const additionalIncludes = x.transformIncludesConfig(conditions);
-                return this.sequelizeModelScanner.getIncludes(this.model, path, additionalIncludes, attributes);
+                return this.sequelizeModelScanner.getIncludes(
+                    this.model,
+                    path,
+                    additionalIncludes,
+                    attributes,
+                    x.hasGroupedCustomAttributes()
+                );
             }),
             ...this._config.getCustomAttributesIncludes().map(x => this.sequelizeModelScanner.getIncludes(this.model, {
                 path: x.path,
@@ -170,6 +176,13 @@ export class DataFilterRepository<Data> {
             } else {
                 options.attributes = generatedAttributes;
             }
+        }
+
+        const includedAggregates = this._definitions.flatMap(x => x.getGroupedCustomAttributes(conditions));
+        if (includedAggregates.length) {
+            options.attributes = SequelizeUtils.mergeAttributes(options.attributes, {
+                include: includedAggregates.map(x => x.attribute)
+            });
         }
 
         const group = this.getCustomAttributeGroupBy();
@@ -209,7 +222,13 @@ export class DataFilterRepository<Data> {
                 const path = x.path.transformPathConfig(conditions);
                 const attributes = x.transformAttributesConfig(conditions);
                 const additionalIncludes = x.transformIncludesConfig(conditions);
-                return this.sequelizeModelScanner.getIncludes(this.model, path, additionalIncludes, attributes);
+                return this.sequelizeModelScanner.getIncludes(
+                    this.model,
+                    path,
+                    additionalIncludes,
+                    attributes,
+                    x.hasGroupedCustomAttributes()
+                );
             }),
             ...this._config.getCustomAttributesIncludes().map(x => {
                 if (!x.path || x.separate || x.ignoreInSearch) {
@@ -327,7 +346,9 @@ export class DataFilterRepository<Data> {
     public getCustomAttributeGroupBy(): (string | Fn | Col)[] {
         const group: GroupOption = [];
 
-        const shouldGroupBy = this._config.customAttributes.some((attribute) => attribute.shouldGroupBy());
+        const shouldGroupBy =
+            this._config.customAttributes.some((attribute) => attribute.shouldGroupBy()) ||
+            this._definitions.some((definition) => definition.hasGroupedCustomAttributes());
         if (shouldGroupBy) {
             group.push("id");
         }
