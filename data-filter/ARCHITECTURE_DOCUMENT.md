@@ -781,3 +781,40 @@ Quand un comportement caractérisé en Phase 0 doit changer (y compris corriger 
 3. Communiquer le breaking (même soft) aux consommateurs Recursyve.
 
 Sans amendement écrit, le corpus P0 **gagne** — y compris quand il encode un comportement « laid » ou suspect.
+
+---
+
+### Amendement 1 — Ordre des axes des géométries (2026-08-12)
+
+**Portée** : `@Distance` (`distance.model.ts`), `GeoLocalizationFilter`, `GeoBoundsFilter`.
+
+**Observé avant**
+
+Les géométries de référence étaient construites en WKT avec la latitude en première coordonnée — `POINT(lat lng)`, `POLYGON((lat lng, …))`. Or MySQL stocke la longitude en première coordonnée quel que soit le SRS, et n’applique l’ordre d’axes d’un SRS qu’à l’import/export de WKT/WKB. La référence et la donnée comparée ne suivaient donc pas la même convention. Mesuré sur MySQL :
+
+- `@Distance` sur une colonne POINT stockée normalement (GeoJSON, longitude d’abord) : une ligne située exactement aux coordonnées demandées retournait 15 712 209 m au lieu de 0, et les deux villes séparées de 233 km sortaient à 15 712 km et 15 773 km.
+- `@Distance` à partir de colonnes lat/lng séparées : 232 734 m entre deux points réellement distants de 270 760 m.
+- `GeoBoundsFilter` comparait un polygone latitude-d’abord à un point longitude-d’abord, donc `ST_Contains` était toujours faux : `equal` ne retournait jamais rien, `not_equal` retournait tout.
+- `GeoBoundsFilter` passait `attribute`, `latAttribute` et `lngAttribute` comme chaînes nues à `fn()`, donc liées comme valeurs et non comme colonnes ; avec un `srid`, `ST_SRID('geo_point', 4326)` échouait et la route répondait 500.
+
+**Souhaité après**
+
+Les points de référence sont construits avec `Point(lng, lat)`, donc directement en ordre de stockage, puis étiquetés par `ST_SRID` uniquement si un `srid` est configuré. Les sommets de polygone restent en WKT mais sont émis dans l’ordre attendu par le SRS cible : longitude d’abord sans `srid`, latitude d’abord avec un SRID géographique. Les noms de colonnes passent par `col()` ou `literal()`.
+
+**Raison**
+
+Toute la surface spatiale était silencieusement fausse. L’erreur ne remontait aucune exception et restait plausible en magnitude, donc indétectable sans comparer deux variantes entre elles.
+
+**Impact consommateurs**
+
+- Les distances changent pour tout le monde. Un consommateur qui stocke nativement passe de valeurs absurdes à des valeurs justes : 0 sur une correspondance exacte, 233 028 m entre Montréal et Québec. Tout seuil, tri ou valeur persistée calibré sur les anciennes valeurs doit être revu.
+- Un consommateur qui avait plié son stockage à l’ancienne convention, latitude d’abord, voit maintenant ses points lus à l’envers. Sa donnée doit être corrigée avec `ST_SwapXY`.
+- `geoBounds` avec `equal` retourne désormais les lignes intérieures au polygone et `not_equal` les exclut. Les filtres sauvegardés changent de résultat.
+- La variante `attribute` de `geoBounds` combinée à un `srid` ne répond plus 500.
+
+**Scénarios P0 retaggés**
+
+- `spatial.e2e-spec.ts` — « geo bounds » : `suspected-defect` retiré, le test attend maintenant la ligne intérieure au polygone.
+- `filter-types.e2e-spec.ts` — « geo-bounds public modes » : `suspected-defect` retiré, les deux scénarios attendent le comportement corrigé.
+- `distance-attribute.e2e-spec.ts` — le `suspected-defect` sur la variante colonne POINT est retiré et les distances attendues sont les vraies.
+- `test/seeds/create-seeded-coords.ts` — l’écrasement qui stockait la latitude d’abord est supprimé ; les fixtures reflètent maintenant ce qu’un consommateur stocke.
