@@ -58,4 +58,52 @@ describe("DynamicFilterController.transformQuery", () => {
             autumn.id
         ]);
     });
+
+    it("exposes filter-count, download, and config routes on Dynamic and OpenApiDynamic controllers", async () => {
+        await using spring = await createSeededVoyageManifest({
+            vessel_name: "Ceres",
+            season: "spring",
+            cargo_code: "SP-2"
+        });
+
+        for (const route of ["voyage-manifests", "voyage-manifests-openapi"] as const) {
+            const count = await request(harness.app.getHttpServer())
+                .post(`/${route}/filter-count`)
+                .set("x-voyage-season", "spring")
+                .send({
+                    page: TestHarness.defaultPage,
+                    query: { condition: "and", rules: [] }
+                });
+            expect(count.status).toBe(200);
+            expect(Number(count.text)).toBe(1);
+
+            const download = await request(harness.app.getHttpServer())
+                .post(`/${route}/download/csv`)
+                .set("x-voyage-season", "spring")
+                .send({
+                    page: TestHarness.defaultPage,
+                    query: { condition: "and", rules: [] }
+                });
+            expect(download.status).toBe(200);
+            expect(typeof download.text).toBe("string");
+
+            const config = await request(harness.app.getHttpServer()).get(`/${route}/filter/config`);
+            expect(config.status).toBe(200);
+            expect(TestHarness.parseFilterConfig(config).some((entry) => entry.id === "season")).toBe(true);
+
+            const configValue = await request(harness.app.getHttpServer())
+                .get(`/${route}/filter/config/value`)
+                .query({ id: "missingSelect", value: "x" });
+            expect(configValue.status).toBe(200);
+            expect(configValue.body).toEqual([]);
+
+            const configId = await request(harness.app.getHttpServer())
+                .get(`/${route}/filter/config/id`)
+                .query({ id: "missingSelect", resourceId: "1" });
+            expect(configId.status).toBe(200);
+            expect(configId.body).toEqual({});
+        }
+
+        expect(spring.id).toBeGreaterThan(0);
+    });
 });
