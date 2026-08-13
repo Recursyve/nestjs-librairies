@@ -44,3 +44,21 @@ export class WarehousesDistinctCountData {}
     }
 })
 export class WarehousesWhereCountData {}
+
+/**
+ * Two @Count on the same path with different where clauses. The predicates belong
+ * in the COUNT expressions so they can share one join.
+ */
+@Data(Warehouses)
+@Attributes(["code"])
+@Count("bigLineCount", {
+    attribute: "id",
+    path: "lines",
+    where: { quantity: () => ({ [Op.gte]: 5 }) }
+})
+@Count("smallLineCount", {
+    attribute: "id",
+    path: "lines",
+    where: { quantity: () => ({ [Op.lt]: 5 }) }
+})
+export class WarehousesDualWhereCountData {}
