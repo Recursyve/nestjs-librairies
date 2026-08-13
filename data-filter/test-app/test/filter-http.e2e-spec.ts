@@ -126,8 +126,7 @@ describe("enum order rule on priority lanes", () => {
 });
 
 /**
- * @p0 suspected-defect
- * Observed: nested filter.condition groups currently respond with 500.
+ * Nested groups in filter.condition must walk the child node, not the parent.
  */
 describe("nested condition groups", () => {
     let harness: TestHarness;
@@ -140,10 +139,11 @@ describe("nested condition groups", () => {
         await harness.close();
     });
 
-    it("returns HTTP 500 when filtering through nested condition groups", async () => {
-        await using _sciFi = await createSeededStoryArc({ title: "Nebula", genre: "sci-fi" });
+    it("applies nested filter.condition groups when filtering", async () => {
+        await using sciFi = await createSeededStoryArc({ title: "Nebula", genre: "sci-fi" });
+        await using fantasy = await createSeededStoryArc({ title: "Nebula", genre: "fantasy" });
 
-        const response = await harness.postFilter("story-arcs", {
+        const ids = await harness.filterIds("story-arcs", {
             page: TestHarness.defaultPage,
             query: {
                 condition: "and",
@@ -151,7 +151,8 @@ describe("nested condition groups", () => {
             }
         });
 
-        TestHarness.expectInternalServerErrorFilterResponse(response);
+        expect(ids).toEqual([sciFi.id]);
+        expect(ids).not.toContain(fantasy.id);
     });
 });
 
