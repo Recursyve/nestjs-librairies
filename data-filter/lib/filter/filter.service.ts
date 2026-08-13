@@ -733,7 +733,7 @@ export class FilterService<Data> {
 
         const groupBy = this.repository.getCustomAttributeGroupBy();
         if (!groupBy.length) {
-            return group;
+            return group.length ? group : undefined;
         }
 
         group.push(...groupBy);

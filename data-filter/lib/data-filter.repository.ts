@@ -167,7 +167,16 @@ export class DataFilterRepository<Data> {
             nestedIncludes.push(options.include as IncludeOptions | IncludeOptions[]);
         }
 
-        options.include = SequelizeUtils.reduceIncludes(nestedIncludes);
+        const group = this.getCustomAttributeGroupBy();
+        if (group.length && !SequelizeUtils.hasGroupOption(options.group)) {
+            options.group = group;
+        }
+
+        const grouped = SequelizeUtils.hasGroupOption(options.group);
+        options.include = SequelizeUtils.reduceIncludes(nestedIncludes, grouped);
+        if (grouped) {
+            options.include = SequelizeUtils.stripIncludeAttributes(options.include as IncludeOptions[]);
+        }
 
         const generatedAttributes = this._config.transformAttributesConfig(conditions);
         if (generatedAttributes) {
@@ -178,16 +187,11 @@ export class DataFilterRepository<Data> {
             }
         }
 
-        const includedAggregates = this._definitions.flatMap(x => x.getGroupedCustomAttributes(conditions));
+        const includedAggregates = this._definitions.flatMap(x => x.getGroupedCustomAttributes(conditions, this.model));
         if (includedAggregates.length) {
             options.attributes = SequelizeUtils.mergeAttributes(options.attributes, {
                 include: includedAggregates.map(x => x.attribute)
             });
-        }
-
-        const group = this.getCustomAttributeGroupBy();
-        if (group.length && !options.group) {
-            options.group = group;
         }
 
         return options;
@@ -206,7 +210,9 @@ export class DataFilterRepository<Data> {
 
             return this.sequelizeModelScanner.getIncludes(this.model, {
                 path: customAttr.config.path,
-                where: customAttr.config.where ? SequelizeUtils.generateWhereConditions(customAttr.config.where, conditions) : undefined
+                where: customAttr.type !== "count" && customAttr.config.where
+                    ? SequelizeUtils.generateWhereConditions(customAttr.config.where, conditions)
+                    : undefined
             }, []);
         }
 
@@ -244,7 +250,7 @@ export class DataFilterRepository<Data> {
             })
         ];
 
-        return SequelizeUtils.reduceIncludes(nestedIncludes);
+        return SequelizeUtils.reduceIncludes(nestedIncludes, this.getCustomAttributeGroupBy().length > 0);
     }
 
     public reduceObject(result: any): Data {
@@ -444,10 +450,15 @@ export class DataFilterRepository<Data> {
         }
 
         const searchInclude = this.generateSearchInclude({});
+        const grouped = SequelizeUtils.hasGroupOption(options.group);
         options.include = SequelizeUtils.mergeIncludes(
             options.include as IncludeOptions | IncludeOptions[],
-            searchInclude as IncludeOptions[]
+            searchInclude as IncludeOptions[],
+            grouped
         );
+        if (grouped) {
+            options.include = SequelizeUtils.stripIncludeAttributes(options.include as IncludeOptions[]);
+        }
 
         if (!options.where) {
             options.where = { [Op.and]: [] };

@@ -1,4 +1,5 @@
 import { FindAttributeOptions, Order } from "sequelize";
+import { Model } from "sequelize-typescript";
 import { SequelizeUtils } from "../sequelize.utils";
 import { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
 import { IncludeConfig, IncludeModel } from "./include.model";
@@ -147,12 +148,12 @@ export class AttributesConfig implements AttributesConfigModel {
      * Aggregates needing a GROUP BY collapse the included rows, so they are
      * projected on the root query instead of on this include.
      */
-    public getGroupedCustomAttributes(options?: object): CustomAttributesModel[] {
+    public getGroupedCustomAttributes(options?: object, model?: typeof Model): CustomAttributesModel[] {
         return this.customAttributes
             .filter(x => x.shouldGroupBy())
             .map(x => ({
                 key: x.key,
-                attribute: x.transform(options, this.path.path)
+                attribute: x.transform(options, this.path.path, model)
             } as CustomAttributesModel))
             .filter(x => x.attribute);
     }

@@ -43,12 +43,28 @@ export class SequelizeUtils {
             return [];
         }
 
-        return arr.map((include) => ({
-            ...include,
-            ...(include.through != null ? { through: { ...include.through, attributes: [] } } : {}),
-            attributes: [],
-            include: include.include ? this.stripIncludeAttributes(include.include as IncludeOptions[]) : [],
-        }));
+        return arr.map((include) => {
+            if (include.separate) {
+                return include;
+            }
+
+            return {
+                ...include,
+                ...(include.through != null ? { through: { ...include.through, attributes: [] } } : {}),
+                attributes: [],
+                include: include.include ? this.stripIncludeAttributes(include.include as IncludeOptions[]) : []
+            };
+        });
+    }
+
+    public static hasGroupOption(group: unknown): boolean {
+        if (group == null) {
+            return false;
+        }
+        if (Array.isArray(group)) {
+            return group.length > 0;
+        }
+        return true;
     }
 
     public static mergeIncludes(a: IncludeOptions | IncludeOptions[] = [], b: IncludeOptions | IncludeOptions[] = [], ignoreAttributes = false) {
@@ -104,6 +120,9 @@ export class SequelizeUtils {
         type Attr = { exclude?: string[]; include?: (string | ProjectionAlias)[]; };
 
         if (a instanceof Array && b instanceof Array) {
+            if (!a.length && !b.length) {
+                return [];
+            }
             return ArrayUtils.uniqueValues([...a, ...b, "id"], x => x);
         } else if (a || b) {
             const aAttributes = (a ?? {}) as Attr;
@@ -422,5 +441,158 @@ export class SequelizeUtils {
         }
 
         return where;
+    }
+
+    public static hasWhereConditions(where: WhereOptions | undefined): where is WhereOptions {
+        if (!where) {
+            return false;
+        }
+        return Object.keys(where).length > 0 || Object.getOwnPropertySymbols(where).length > 0;
+    }
+
+    public static getAssociatedModel(model: typeof M, path?: string): typeof M {
+        if (!path) {
+            return model;
+        }
+
+        let current = model;
+        for (const segment of path.split(".")) {
+            const association = current.associations?.[segment];
+            if (!association) {
+                return current;
+            }
+            current = association.target as typeof M;
+        }
+        return current;
+    }
+
+    /**
+     * Qualify a where hash against an include alias so it can be inlined in
+     * COUNT(CASE WHEN ...). Prefer Sequelize's query generator when the model
+     * is initialized so field mapping and escaping stay dialect-correct.
+     */
+    public static whereToSqlCondition(where: WhereOptions, path?: string, model?: typeof M): string {
+        if (model?.sequelize) {
+            const queryGenerator = (model.sequelize as any).dialect.queryGenerator;
+            const associated = this.getAssociatedModel(model, path);
+            const alias = path?.length ? path.split(".").join("->") : model.name;
+            const prefix = model.sequelize.literal(queryGenerator.quoteIdentifier(alias));
+            return queryGenerator.getWhereConditions(where, prefix, associated) ?? "";
+        }
+
+        return this.whereToSqlConditionLiteral(where, path, model);
+    }
+
+    private static whereToSqlConditionLiteral(where: WhereOptions, path?: string, model?: typeof M): string {
+        const keys = [...Object.keys(where as object), ...Object.getOwnPropertySymbols(where as object)];
+        const parts: string[] = [];
+        for (const key of keys) {
+            const value = (where as any)[key];
+            const operator = this.getOperatorKey(key);
+            if (operator === "and") {
+                const items = Array.isArray(value) ? value : [value];
+                parts.push(`(${items.map((item: WhereOptions) => this.whereToSqlConditionLiteral(item, path, model)).filter(Boolean).join(" AND ")})`);
+                continue;
+            }
+            if (operator === "or") {
+                const items = Array.isArray(value) ? value : [value];
+                parts.push(`(${items.map((item: WhereOptions) => this.whereToSqlConditionLiteral(item, path, model)).filter(Boolean).join(" OR ")})`);
+                continue;
+            }
+
+            const column = this.getQualifiedColumn(String(key), path, model);
+            parts.push(this.valueToSqlPredicate(column, value));
+        }
+        return parts.filter(Boolean).join(" AND ");
+    }
+
+    private static getQualifiedColumn(attribute: string, path?: string, model?: typeof M): string {
+        const field = model ? this.findColumnFieldName(this.getAssociatedModel(model, path), attribute) : attribute;
+        return path?.length ? this.getLiteralFullName(field, path) : `\`${field}\``;
+    }
+
+    private static getOperatorKey(op: string | symbol): string {
+        if (typeof op === "string") {
+            return op;
+        }
+        return Object.keys(Op).find((key) => (Op as any)[key] === op) ?? "";
+    }
+
+    private static valueToSqlPredicate(column: string, value: unknown): string {
+        if (value === null) {
+            return `${column} IS NULL`;
+        }
+        if (value instanceof Date || typeof value !== "object") {
+            return `${column} = ${this.escapeSqlLiteral(value)}`;
+        }
+        if (Array.isArray(value)) {
+            return `${column} IN (${value.map((item) => this.escapeSqlLiteral(item)).join(", ")})`;
+        }
+
+        const operators = [...Object.keys(value as object), ...Object.getOwnPropertySymbols(value as object)];
+        return operators
+            .map((operator) => this.operatorToSql(column, operator, (value as any)[operator]))
+            .filter(Boolean)
+            .join(" AND ");
+    }
+
+    private static operatorToSql(column: string, op: string | symbol, value: unknown): string {
+        switch (this.getOperatorKey(op)) {
+            case "eq":
+                return value === null ? `${column} IS NULL` : `${column} = ${this.escapeSqlLiteral(value)}`;
+            case "ne":
+                return value === null ? `${column} IS NOT NULL` : `${column} != ${this.escapeSqlLiteral(value)}`;
+            case "not":
+                if (value === null) {
+                    return `${column} IS NOT NULL`;
+                }
+                if (value && typeof value === "object" && !Array.isArray(value) && !(value instanceof Date)) {
+                    return `NOT (${this.valueToSqlPredicate(column, value)})`;
+                }
+                return `${column} != ${this.escapeSqlLiteral(value)}`;
+            case "is":
+                return value === null ? `${column} IS NULL` : `${column} IS ${this.escapeSqlLiteral(value)}`;
+            case "gt":
+                return `${column} > ${this.escapeSqlLiteral(value)}`;
+            case "gte":
+                return `${column} >= ${this.escapeSqlLiteral(value)}`;
+            case "lt":
+                return `${column} < ${this.escapeSqlLiteral(value)}`;
+            case "lte":
+                return `${column} <= ${this.escapeSqlLiteral(value)}`;
+            case "in":
+                return `${column} IN (${(value as unknown[]).map((item) => this.escapeSqlLiteral(item)).join(", ")})`;
+            case "notIn":
+                return `${column} NOT IN (${(value as unknown[]).map((item) => this.escapeSqlLiteral(item)).join(", ")})`;
+            case "like":
+                return `${column} LIKE ${this.escapeSqlLiteral(value)}`;
+            case "notLike":
+                return `${column} NOT LIKE ${this.escapeSqlLiteral(value)}`;
+            case "between":
+                return `${column} BETWEEN ${this.escapeSqlLiteral((value as unknown[])[0])} AND ${this.escapeSqlLiteral((value as unknown[])[1])}`;
+            case "notBetween":
+                return `${column} NOT BETWEEN ${this.escapeSqlLiteral((value as unknown[])[0])} AND ${this.escapeSqlLiteral((value as unknown[])[1])}`;
+            default:
+                return `${column} = ${this.escapeSqlLiteral(value)}`;
+        }
+    }
+
+    private static escapeSqlLiteral(value: unknown): string {
+        if (value === null || value === undefined) {
+            return "NULL";
+        }
+        if (typeof value === "number") {
+            return Number.isFinite(value) ? String(value) : "NULL";
+        }
+        if (typeof value === "boolean") {
+            return value ? "1" : "0";
+        }
+        if (typeof value === "bigint") {
+            return String(value);
+        }
+        if (value instanceof Date) {
+            return `'${value.toISOString().slice(0, 19).replace("T", " ")}'`;
+        }
+        return `'${String(value).replace(/\\/g, "\\\\").replace(/'/g, "''")}'`;
     }
 }

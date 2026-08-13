@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import { SequelizeUtils } from "./sequelize.utils";
 
 describe("SequelizeUtils", () => {
@@ -74,6 +75,70 @@ describe("SequelizeUtils", () => {
 
             const res2 = SequelizeUtils.mergeAttributes(a2, b2);
             expect(res2).toEqual(["id"]);
+        });
+
+        it("Merge two empty attribute arrays should stay empty", () => {
+            expect(SequelizeUtils.mergeAttributes([], [])).toEqual([]);
+        });
+    });
+
+    describe("whereToSqlCondition", () => {
+        it("renders null as IS NULL against the include alias", () => {
+            expect(SequelizeUtils.whereToSqlCondition({ exportedAt: null }, "jobApplications")).toBe(
+                "`jobApplications`.`exportedAt` IS NULL"
+            );
+        });
+
+        it("renders Op.not null as IS NOT NULL against the include alias", () => {
+            expect(SequelizeUtils.whereToSqlCondition({ exportedAt: { [Op.not]: null } }, "jobApplications")).toBe(
+                "`jobApplications`.`exportedAt` IS NOT NULL"
+            );
+        });
+
+        it("renders comparison operators", () => {
+            expect(SequelizeUtils.whereToSqlCondition({ quantity: { [Op.gte]: 5 } }, "lines")).toBe(
+                "`lines`.`quantity` >= 5"
+            );
+        });
+    });
+
+    describe("hasGroupOption", () => {
+        it("treats an empty array as no group", () => {
+            expect(SequelizeUtils.hasGroupOption([])).toBe(false);
+            expect(SequelizeUtils.hasGroupOption(undefined)).toBe(false);
+        });
+
+        it("treats a non-empty group as grouped", () => {
+            expect(SequelizeUtils.hasGroupOption(["id"])).toBe(true);
+            expect(SequelizeUtils.hasGroupOption("id")).toBe(true);
+        });
+    });
+
+    describe("stripIncludeAttributes", () => {
+        it("clears columns on joined includes", () => {
+            expect(
+                SequelizeUtils.stripIncludeAttributes({
+                    as: "lines",
+                    attributes: ["id", "sku"],
+                    include: [{ as: "warehouse", attributes: ["code"] }]
+                })
+            ).toEqual([
+                {
+                    as: "lines",
+                    attributes: [],
+                    include: [{ as: "warehouse", attributes: [], include: [] }]
+                }
+            ]);
+        });
+
+        it("keeps columns on separate includes", () => {
+            const separate = {
+                as: "artifacts",
+                attributes: ["id", "title"],
+                separate: true,
+                include: [{ as: "museum", attributes: ["name"] }]
+            };
+            expect(SequelizeUtils.stripIncludeAttributes(separate)).toEqual([separate]);
         });
     });
 });

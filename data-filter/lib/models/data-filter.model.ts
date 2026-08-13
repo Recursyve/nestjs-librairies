@@ -90,7 +90,7 @@ export class DataFilterConfig implements DataFilterConfigModel {
         return this.customAttributes
             .map(x => ({
                 key: x.key,
-                attribute: x.transform(options),
+                attribute: x.transform(options, undefined, this.model),
                 path: (x.config as any).path ? {
                     path: (x.config as any).path,
                     paranoid: true
@@ -105,7 +105,7 @@ export class DataFilterConfig implements DataFilterConfigModel {
             .map(x => ({
                 attributes: { include: [] },
                 path: x.config?.path ?? "",
-                where: x.config?.where,
+                where: x.type === "count" ? undefined : x.config?.where,
                 paranoid: true,
                 ignoreAttributes: x.shouldGroupBy()
             }));

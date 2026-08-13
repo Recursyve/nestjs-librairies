@@ -1,5 +1,6 @@
 import { fn, literal, ProjectionAlias } from "sequelize";
-import { SequelizeUtils } from "../sequelize.utils";
+import { Model } from "sequelize-typescript";
+import { M, SequelizeUtils } from "../sequelize.utils";
 import { CustomAttributesConfig, CustomAttributesOptionConfig } from "./custom-attributes.model";
 
 export interface CountConfig extends CustomAttributesOptionConfig {
@@ -12,19 +13,28 @@ export class CountAttributesConfig implements CustomAttributesConfig<CountConfig
 
     constructor(public key: string, public config: CountConfig) {}
 
-    public transform(options: object, path?: string): string | ProjectionAlias {
+    public transform(options: object, path?: string, model?: typeof Model): string | ProjectionAlias {
         const fullPath = [path, this.config.path].filter(x => x).join(".");
+        const where = this.config.where
+            ? SequelizeUtils.generateWhereConditions(this.config.where, options)
+            : undefined;
+        const condition = SequelizeUtils.hasWhereConditions(where)
+            ? SequelizeUtils.whereToSqlCondition(where, fullPath || undefined, model as typeof M | undefined)
+            : undefined;
+        const attribute = fullPath
+            ? SequelizeUtils.getLiteralFullName(this.config.attribute, fullPath)
+            : this.config.attribute;
+        const counted = condition ? `CASE WHEN ${condition} THEN ${attribute} END` : attribute;
+
         if (this.config.distinct) {
-            const attribute = fullPath
-                ? SequelizeUtils.getLiteralFullName(this.config.attribute, fullPath)
-                : this.config.attribute;
-            return [literal(`COUNT(DISTINCT ${attribute})`), this.key];
+            return [literal(`COUNT(DISTINCT ${counted})`), this.key];
         }
 
-        const attribute = fullPath
-            ? literal(SequelizeUtils.getLiteralFullName(this.config.attribute, fullPath))
-            : this.config.attribute;
-        return [fn("COUNT", attribute), this.key];
+        if (condition) {
+            return [literal(`COUNT(${counted})`), this.key];
+        }
+
+        return [fn("COUNT", fullPath ? literal(attribute) : attribute), this.key];
     }
 
     public shouldGroupBy(): boolean {
