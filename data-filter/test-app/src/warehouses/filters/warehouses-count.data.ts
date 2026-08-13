@@ -31,6 +31,11 @@ export class WarehousesDistinctCountData {}
  */
 @Data(Warehouses)
 @Attributes(["code"])
+@Count("smallLineCount", {
+    attribute: "id",
+    path: "lines",
+    where: { quantity: (options: { minQuantity: number }) => ({ [Op.lt]: options.minQuantity }) }
+})
 @Count("bigLineCount", {
     attribute: "id",
     path: "lines",
