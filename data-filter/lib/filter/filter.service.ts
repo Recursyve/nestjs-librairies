@@ -350,7 +350,8 @@ export class FilterService<Data> {
         for (const rule of condition.rules) {
             const c = rule as FilterCondition;
             if (c.condition) {
-                includes.push(...this.getConditionInclude(model, condition));
+                includes.push(...this.getConditionInclude(model, c));
+                continue;
             }
             const r = rule as FilterConditionRule;
             if (r.path) {
