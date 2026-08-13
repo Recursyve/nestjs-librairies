@@ -154,6 +154,46 @@ describe("@Count custom attribute", () => {
         expect(rows[0].bigLineCount).toBe(2);
     });
 
+    /**
+     * Two @Count on the same association must keep independent predicates and
+     * must not project the child id (MySQL only_full_group_by).
+     */
+    it("counts two filtered subsets of the same path as distinct aggregates", async () => {
+        await using alpha = await createSeededWarehouse({ code: "WH-DUAL-COUNT" });
+        await using _small = await createSeededStockLine({ warehouse_id: alpha.id, sku: "SMALL", quantity: 1 });
+        await using _big1 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "BIG1", quantity: 6 });
+        await using _big2 = await createSeededStockLine({ warehouse_id: alpha.id, sku: "BIG2", quantity: 9 });
+
+        const { WarehousesDualWhereCountData } = await import("../src/warehouses/filters/warehouses-count.data");
+        const repo = harness.app.get(DataFilterService).for(WarehousesDualWhereCountData);
+
+        const options = repo.generateFindOptions({ where: { id: alpha.id } });
+        expect(options.group).toEqual(["id"]);
+
+        const projections = (options.attributes as unknown[]).filter(Array.isArray) as [ { val?: string }, string ][];
+        expect(projections.map(([, alias]) => alias).sort()).toEqual(["bigLineCount", "smallLineCount"]);
+        const sql = projections.map(([expression]) => expression.val ?? "").join(" ");
+        expect(sql).toContain("COUNT(CASE WHEN");
+        expect(sql).toContain("`lines`.`quantity` >= 5");
+        expect(sql).toContain("`lines`.`quantity` < 5");
+
+        const lines = (options.include as { as?: string; attributes?: unknown; where?: unknown }[])
+            .find((include) => include.as === "lines");
+        expect(lines?.attributes).toEqual([]);
+        expect(lines?.where).toBeUndefined();
+
+        const rows = (await repo.findAll({ where: { id: alpha.id } })) as unknown as {
+            id: number;
+            bigLineCount?: number;
+            smallLineCount?: number;
+        }[];
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0].bigLineCount).toBe(2);
+        expect(rows[0].smallLineCount).toBe(1);
+        expect(rows[0].bigLineCount).not.toBe(rows[0].smallLineCount);
+    });
+
     it("counts through the repository count helper", async () => {
         await using alpha = await createSeededWarehouse({ code: "WH-COUNT-HELPER" });
         await using _line = await createSeededStockLine({ warehouse_id: alpha.id, sku: "H1", quantity: 1 });
