@@ -2,16 +2,8 @@ import { Injectable, Logger } from "@nestjs/common";
 import { CommandBus } from "@nestjs/cqrs";
 import { RedisService } from "@recursyve/nestjs-redis";
 import { ResourceAccessUpdatedCommand } from "../commands";
-import {
-    AccessActionType,
-    accessActionTypeValues,
-    AccessControlResources,
-    PolicyResources,
-    PolicyResourceTypes,
-    ResourceId,
-    UserResources,
-    Users
-} from "../models";
+import type { AccessControlResources, ResourceId, UserResources, Users } from "../models";
+import { AccessActionType, accessActionTypeValues, PolicyResources, PolicyResourceTypes } from "../models";
 import { RedisKeyUtils } from "../utils";
 
 @Injectable()
@@ -165,7 +157,7 @@ export class ResourceAccessService {
         for (const [index, [_, userResources]] of groupedUserResourcesEntries.entries()) {
             if (hasAccessControls[index] !== "1") {
                 this.logger.verbose(
-                    `User '${userResources[0].userId}' was filtered out from '${userResources[0].resourceName}' access changes, since his access control was not yet initialized.`
+                    `User '${userResources[0]?.userId}' was filtered out from '${userResources[0]?.resourceName}' access changes, since his access control was not yet initialized.`
                 );
                 continue;
             }

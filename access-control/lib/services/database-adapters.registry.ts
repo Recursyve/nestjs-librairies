@@ -1,8 +1,9 @@
-import { Injectable, Type } from "@nestjs/common";
+import type { Type } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
-import { IDatabaseAdapter } from "../adapters";
+import type { IDatabaseAdapter } from "../adapters";
 import { DATABASE_ADAPTER_METADATA } from "../decorators/constant";
-import { DatabaseAdapterConfig } from "../models/database-adapter-config.model";
+import type { DatabaseAdapterConfig } from "../models/database-adapter-config.model";
 
 @Injectable()
 export class DatabaseAdaptersRegistry {
