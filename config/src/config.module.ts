@@ -1,4 +1,5 @@
-import { DynamicModule, Global, Module, Provider, Type } from "@nestjs/common";
+import type { DynamicModule, Provider, Type } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { ConfigTransformerService } from "./services/config-transformer.service";
 import { ConfigUtils } from "./config.utils";
 import { EnvironmentConfigProvider } from "./providers/environment.config-provider";
@@ -6,7 +7,7 @@ import { ConfigProviderHandler } from "./handlers/config-provider.handler";
 import { ConfigHandler } from "./handlers/config.handler";
 import { OPTIONS } from "./constant";
 import { isPlainObject } from "@nestjs/common/utils/shared.utils";
-import { ConfigModuleOptions } from "./config.module.options";
+import type { ConfigModuleOptions } from "./config.module.options";
 
 @Global()
 @Module({

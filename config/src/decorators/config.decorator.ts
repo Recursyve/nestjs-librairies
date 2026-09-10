@@ -1,4 +1,4 @@
-import { ConfigConfig } from "../models/config-metadata.model";
+import type { ConfigConfig } from "../models/config-metadata.model";
 import { ConfigHandler } from "../handlers/config.handler";
 import { EnvironmentConfigProvider } from "../providers/environment.config-provider";
 
