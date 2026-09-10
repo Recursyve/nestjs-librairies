@@ -1,17 +1,18 @@
-import { Inject, Injectable, Type } from "@nestjs/common";
+import type { Type } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { ConfigHandler } from "../handlers/config.handler";
 import { ConfigModelNotFoundError } from "../errors/config-model-not-found.error";
 import { EnvironmentConfigProvider } from "../providers/environment.config-provider";
 import { ModuleRef } from "@nestjs/core";
 import { ConfigProviderHandler } from "../handlers/config-provider.handler";
-import { IConfigProvider } from "../providers/config.provider";
+import type { IConfigProvider } from "../providers/config.provider";
 import { ConfigProviderNotRegisteredError } from "../errors/config-provider-not-registered.error";
 import { ConfigProviderNotFoundInModuleError } from "../errors/config-provider-not-found-in-module.error";
 import { OPTIONS } from "../constant";
-import { ConfigModuleOptions } from "../config.module.options";
+import type { ConfigModuleOptions } from "../config.module.options";
 import { ConfigVariablesNotDefinedError } from "../errors/config-variables-not-defined.error";
 import { plainToInstance } from "class-transformer";
-import { ConfigMetadata } from "../models";
+import type { ConfigMetadata } from "../models";
 
 @Injectable()
 export class ConfigTransformerService {

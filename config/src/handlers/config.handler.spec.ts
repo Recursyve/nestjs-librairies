@@ -3,7 +3,7 @@ import { EnvironmentConfig } from "../decorators/config.decorator";
 import { Variable } from "../decorators/variable.decorator";
 import { ConfigHandler } from "./config.handler";
 import { EnvironmentConfigProvider } from "../providers/environment.config-provider";
-import { ConfigMetadata, VariableMetadata } from "../models";
+import type { ConfigMetadata, VariableMetadata } from "../models";
 
 @EnvironmentConfig()
 class EnvironmentConfigModel {

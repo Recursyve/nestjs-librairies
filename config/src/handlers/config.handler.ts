@@ -1,8 +1,8 @@
-import { ConfigMetadata } from "../models/config-metadata.model";
+import type { ConfigMetadata } from "../models/config-metadata.model";
 import "reflect-metadata";
 import { CONFIG } from "../constant";
-import { VariableMetadata } from "../models/variable-metadata.model";
-import { Type } from "@nestjs/common";
+import type { VariableMetadata } from "../models/variable-metadata.model";
+import type { Type } from "@nestjs/common";
 
 export class ConfigHandler {
     public static getVariable(target: Type, propertyKey: string): VariableMetadata | null {
