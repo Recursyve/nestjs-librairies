@@ -1,4 +1,5 @@
-import { add, differenceInDays, format, Locale } from "date-fns";
+import type { Locale } from "date-fns";
+import { add, differenceInDays, format } from "date-fns";
 import { frCA, enCA } from "date-fns/locale";
 
 export class DateUtils {
@@ -20,7 +21,7 @@ export class DateUtils {
 
     public static toUtcFromDateOnly(date: string): number {
         const dates = date.split("-");
-        return Date.UTC(+dates[0], +dates[1] - 1, +dates[2]);
+        return Date.UTC(+dates[0]!, +dates[1]! - 1, +dates[2]!);
     }
 
     public static toUtcFromString(date: string): Date | null {
@@ -31,7 +32,7 @@ export class DateUtils {
         return date !== null && date !== "Invalid date";
     }
 
-    public static getIsoDateOnly(date = new Date()): string {
+    public static getIsoDateOnly(date: Date = new Date()): string {
         return date
             .toISOString()
             .split("T")
@@ -51,7 +52,7 @@ export class DateUtils {
         return new Date(Date.UTC(year, month, date, 0, 0, 0, 0));
     }
 
-    public static getUtcTime(date = new Date()): string {
+    public static getUtcTime(date: Date = new Date()): string {
         return `${date.getUTCHours()}:${date.getUTCMinutes()}`;
     }
 
