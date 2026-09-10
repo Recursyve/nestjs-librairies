@@ -1,8 +1,8 @@
-import { Type } from "@nestjs/common";
-import { ConfigProviderMetadata } from "../models/config-provider-metadata.model";
+import type { Type } from "@nestjs/common";
+import type { ConfigProviderMetadata } from "../models/config-provider-metadata.model";
 import { CONFIG_PROVIDER } from "../constant";
 import "reflect-metadata";
-import { IConfigProvider } from "../providers/config.provider";
+import type { IConfigProvider } from "../providers/config.provider";
 
 export class ConfigProviderHandler {
     private static _configProviders: Record<string, Type<IConfigProvider>> = {};
@@ -12,7 +12,7 @@ export class ConfigProviderHandler {
     }
 
     public static getConfigProvider(type: string): Type<IConfigProvider> {
-        return this._configProviders[type];
+        return this._configProviders[type]!;
     }
 
     public static getConfig(target: Type): ConfigProviderMetadata {
