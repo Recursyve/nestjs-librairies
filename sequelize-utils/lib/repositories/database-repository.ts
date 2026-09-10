@@ -1,4 +1,4 @@
-import {
+import type {
     Attributes,
     BulkCreateOptions,
     CreateOptions,
@@ -8,7 +8,7 @@ import {
     Identifier,
     UpdateOptions
 } from "sequelize";
-import { SequelizeEntities } from "../models/sequelize-entities.model";
+import type { SequelizeEntities } from "../models/sequelize-entities.model";
 import { SequelizeReadRepository } from "./database-read-repository";
 
 /**
