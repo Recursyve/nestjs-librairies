@@ -1,7 +1,9 @@
 import { Inject } from "@nestjs/common";
-import { AccessControlService, ResourceAccessControlService, Resources, Users } from "@recursyve/nestjs-access-control";
+import type { Users } from "@recursyve/nestjs-access-control";
+import { AccessControlService, ResourceAccessControlService, Resources } from "@recursyve/nestjs-access-control";
 import { SequelizeEntities, SequelizeReadRepository, SequelizeRepository } from "@recursyve/nestjs-sequelize-utils";
-import { Attributes, FindOptions, Identifier, Op, WhereOptions } from "sequelize";
+import type { Attributes, FindOptions, Identifier, WhereOptions } from "sequelize";
+import { Op } from "sequelize";
 
 export class AccessControlRepository<T extends SequelizeEntities> extends ResourceAccessControlService {
     constructor(protected repository: typeof SequelizeEntities<any, any>) {

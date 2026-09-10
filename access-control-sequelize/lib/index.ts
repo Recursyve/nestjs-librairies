@@ -1,4 +1,5 @@
-import { DynamicModule, Module } from "@nestjs/common";
+import type { DynamicModule } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { SequelizeDatabaseAdapter } from "./adapters/database.adapter";
 import { SequelizeHooksAccessControlModule } from "./hooks/sequelize-hooks.module";
 import { SequelizeAccessControlFindOptionsGenerator } from "./providers/find-options.generator";

@@ -7,7 +7,7 @@ export class AccountDevices extends Model {
     @PrimaryKey
     @AutoIncrement
     @Column
-    id!: number;
+    declare public readonly id: number;
 
     @AllowNull(false)
     @Column

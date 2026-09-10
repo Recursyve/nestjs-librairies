@@ -1,4 +1,5 @@
-import { Module, OnModuleInit } from "@nestjs/common";
+import type { OnModuleInit } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { ResourceEventAccessControlService } from "@recursyve/nestjs-access-control";
 import { Model } from "sequelize";
 import { Sequelize } from "sequelize-typescript";
