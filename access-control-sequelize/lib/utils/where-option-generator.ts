@@ -1,5 +1,6 @@
-import { Resources } from "@recursyve/nestjs-access-control";
-import { Op, WhereOptions } from "sequelize";
+import type { Resources } from "@recursyve/nestjs-access-control";
+import type { WhereOptions } from "sequelize";
+import { Op } from "sequelize";
 import { Sequelize } from "sequelize-typescript";
 
 export const generateWhereOptionFromAccessControlResource = (resources: Resources, where?: WhereOptions): WhereOptions => {
