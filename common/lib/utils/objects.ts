@@ -3,7 +3,7 @@ export class ObjectUtils {
         object: { [key: string]: any },
         valueHandle: (value: any) => any,
         objectHandle?: ((object: Object) => void) | null
-    ) {
+    ): void {
         for (const property in object) {
             if (!object.hasOwnProperty || object.hasOwnProperty(property)) {
                 const value = object[property];
@@ -38,7 +38,7 @@ export class ObjectUtils {
         return properties;
     }
 
-    public static stringBoolsToBools(object: Object) {
+    public static stringBoolsToBools(object: Object): void {
         ObjectUtils.forEachProperty(
             object,
             (value: any) => {
