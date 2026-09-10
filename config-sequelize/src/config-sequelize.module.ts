@@ -1,4 +1,5 @@
-import { DynamicModule, Module } from "@nestjs/common";
+import type { DynamicModule } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { SequelizeModule } from "@nestjs/sequelize";
 import { SequelizeConfigProvider } from "./providers/sequelize.config-provider";
 import { createSequelizeModel } from "./models/config-sequelize.model";
