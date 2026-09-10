@@ -12,8 +12,9 @@ export class SumAttributesConfig implements CustomAttributesConfig<SumConfig> {
     constructor(public key: string, public config: SumConfig) {}
 
     public transform(options: object, path?: string): string | ProjectionAlias {
-        const attribute = this.config.path
-            ? literal(SequelizeUtils.getLiteralFullName(this.config.attribute, this.config.path))
+        const fullPath = [path, this.config.path].filter(x => x).join(".");
+        const attribute = fullPath
+            ? literal(SequelizeUtils.getLiteralFullName(this.config.attribute, fullPath))
             : this.config.attribute;
         return [fn("SUM", attribute), this.key];
     }

@@ -1,5 +1,5 @@
 import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdapter } from "./adapters";
-import { SearchableAttributes, Distance } from "./decorators";
+import { SearchableAttributes, Distance, Count } from "./decorators";
 import { databaseFactory } from "./test/database.factory";
 import { DataFilterRepository } from "./data-filter.repository";
 import { Attributes, Data, Include, Where } from "./decorators";
@@ -8,7 +8,8 @@ import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { Persons } from "./test/models/persons/persons.model";
 import { Coords } from "./test/models/coords/coords.model";
 import { Locations } from "./test/models/locations/locations.model";
-import { fn, literal, Op } from "sequelize";
+import { Places } from "./test/models/places/places.model";
+import { fn, literal, Op, IncludeOptions, ProjectionAlias } from "sequelize";
 
 @Data(Persons)
 @Attributes(["first_name", "last_name"])
@@ -40,6 +41,20 @@ class CustomCoordAttributesTest {
     @Include("location", { attributes: ["value"], where: { value: option => option.value } })
     coord?: Coords;
 }
+
+@Data(Places)
+@Attributes(["id"])
+@Count("withFileNumber", {
+    attribute: "id",
+    path: "systems",
+    where: { file_number: () => ({ [Op.not]: null }) }
+})
+@Count("withoutFileNumber", {
+    attribute: "id",
+    path: "systems",
+    where: { file_number: () => null }
+})
+class DualCountTest {}
 
 describe("DataFilterRepository", () => {
     beforeAll(async () => {
@@ -74,6 +89,7 @@ describe("DataFilterRepository", () => {
                         required: true,
                         paranoid: true,
                         separate: false,
+                        through: undefined,
                         include: [
                             {
                                 as: "location",
@@ -83,12 +99,23 @@ describe("DataFilterRepository", () => {
                                 include: [],
                                 paranoid: true,
                                 required: false,
-                                separate: true
+                                separate: true,
+                                through: undefined
                             }
                         ]
                     }
                 ]
             });
+        });
+
+        it("does not strip nested attributes when group is an empty array", () => {
+            const options = repository.generateFindOptions({ group: [] });
+            expect(options.group).toEqual([]);
+            expect((options.include as IncludeOptions[])[0].attributes).toEqual(["id", "cellphone"]);
+            expect(((options.include as IncludeOptions[])[0].include as IncludeOptions[])[0].attributes).toEqual([
+                "value",
+                "id"
+            ]);
         });
 
         it("generateFindOptions with conditions should return a valid Sequelize FindOptions object", () => {
@@ -105,6 +132,7 @@ describe("DataFilterRepository", () => {
                         required: true,
                         paranoid: true,
                         separate: false,
+                        through: undefined,
                         where: {
                             [Op.or]: [
                                 {
@@ -123,6 +151,7 @@ describe("DataFilterRepository", () => {
                                 paranoid: true,
                                 required: false,
                                 separate: true,
+                                through: undefined,
                                 include: [],
                                 where: {
                                     value: "Montreal"
@@ -201,25 +230,29 @@ describe("DataFilterRepository", () => {
                     literalKey: "`coord`.`address`",
                     key: "$coord.address$",
                     name: "address",
-                    isJson: false
+                    isJson: false,
+                    isTranslationAttribute: false
                 },
                 {
                     literalKey: "`coord`.`postal_code`",
                     key: "$coord.postal_code$",
                     name: "postal_code",
-                    isJson: false
+                    isJson: false,
+                    isTranslationAttribute: false
                 },
                 {
                     literalKey: "`coord->location`.`value`",
                     key: "$coord.location.value$",
                     name: "value",
-                    isJson: false
+                    isJson: false,
+                    isTranslationAttribute: false
                 },
                 {
                     literalKey: "`coord->location`.`unique_code`",
                     key: "$coord.location.unique_code$",
                     name: "unique_code",
-                    isJson: false
+                    isJson: false,
+                    isTranslationAttribute: false
                 }
             ])
         });
@@ -246,7 +279,7 @@ describe("DataFilterRepository", () => {
                 attributes: [
                     "first_name",
                     "last_name",
-                    [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"), fn("ST_GeometryFromText", literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), "distance"],
+                    [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"), fn("Point", -73.2815516, 45.8797953)), "distance"],
                     "id"
                 ],
                 include: [
@@ -258,6 +291,7 @@ describe("DataFilterRepository", () => {
                         paranoid: true,
                         required: false,
                         separate: false,
+                        through: undefined,
                         include: []
                     }
                 ]
@@ -294,13 +328,14 @@ describe("DataFilterRepository", () => {
                         model: Coords,
                         attributes: [
                             "cellphone",
-                            [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"),  fn("ST_GeometryFromText", literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), "distance"],
+                            [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"),  fn("Point", -73.2815516, 45.8797953)), "distance"],
                             "id"
                         ],
                         order: undefined,
                         paranoid: true,
                         required: false,
                         separate: false,
+                        through: undefined,
                         include: [
                             {
                                 as: "location",
@@ -310,6 +345,7 @@ describe("DataFilterRepository", () => {
                                 paranoid: true,
                                 required: false,
                                 separate: false,
+                                through: undefined,
                                 include: [],
                                 where: {
                                     value: "Montreal"
@@ -319,6 +355,40 @@ describe("DataFilterRepository", () => {
                     }
                 ]
             });
+        });
+    });
+
+    describe("DualCountTest", () => {
+        let repository: DataFilterRepository<DualCountTest>;
+
+        beforeAll(() => {
+            repository = new DataFilterRepository(
+                DualCountTest,
+                new DataFilterScanner(),
+                new SequelizeModelScanner(),
+                new DefaultAccessControlAdapter(),
+                new DefaultTranslateAdapter(),
+                new DefaultExportAdapter()
+            );
+        });
+
+        it("projects two filtered counts on the same path without merging their predicates or selecting child columns", () => {
+            const options = repository.generateFindOptions();
+            expect(options.group).toEqual(["id"]);
+
+            const projections = (options.attributes as Array<string | ProjectionAlias>)
+                .filter((attribute): attribute is ProjectionAlias => Array.isArray(attribute));
+            expect(projections.map(([, alias]) => alias).sort()).toEqual(["withFileNumber", "withoutFileNumber"]);
+
+            const sql = projections.map(([expression]) => (expression as { val?: string }).val ?? "").join(" ");
+            expect(sql).toContain("COUNT(CASE WHEN");
+            expect(sql).toContain("`systems`.`file_number` IS NOT NULL");
+            expect(sql).toContain("`systems`.`file_number` IS NULL");
+
+            const systems = (options.include as IncludeOptions[]).find((include) => include.as === "systems");
+            expect(systems).toBeDefined();
+            expect(systems?.attributes).toEqual([]);
+            expect(systems?.where).toBeUndefined();
         });
     });
 });

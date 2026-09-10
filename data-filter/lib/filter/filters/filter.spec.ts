@@ -81,12 +81,12 @@ describe("Filter", () => {
                 value: "test",
                 operation: "test"
             });
-            expect(options).toBeNull();
+            expect(options).toBeUndefined();
         });
     });
 
     describe("getHavingOptions", () => {
-        it("with no having defined should return null", async () => {
+        it("with no having defined should return undefined", async () => {
             const filter = new TextFilter({
                 attribute: "test"
             });
@@ -95,7 +95,7 @@ describe("Filter", () => {
                 value: "test",
                 operation: FilterOperatorTypes.Equal
             });
-            expect(options).toBeNull();
+            expect(options).toBeUndefined();
         });
 
         it("with having defined should return a valid filter config", async () => {

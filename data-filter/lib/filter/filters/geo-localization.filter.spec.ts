@@ -166,9 +166,44 @@ describe("GeoLocalizationFilter", () => {
             });
             expect(options).toBeDefined();
             expect(options).toStrictEqual<WhereOptions>(
-                where(fn("ST_Distance_Sphere", literal("test"), fn("ST_GeometryFromText", literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), {
+                where(fn("ST_Distance_Sphere", literal("test"), fn("Point", -73.2815516, 45.8797953)), {
                     [Op.lte]: 1000
                 })
+            );
+        });
+
+        it("with legacy axis order should build the reference point from latitude-first WKT", async () => {
+            const filter = new GeoLocalizationFilter({
+                rootFilter: new CoordinateFilter({
+                    attribute: "test"
+                }),
+                legacyAxisOrder: true
+            });
+            const options = await filter.getWhereOptions({
+                id: "test",
+                value: [
+                    {
+                        operation: FilterOperatorTypes.Equal,
+                        value: [45.8797953, -73.2815516]
+                    },
+                    {
+                        operation: FilterOperatorTypes.LessOrEqual,
+                        value: 1000
+                    }
+                ] as [RuleModel, RuleModel],
+                operation: FilterOperatorTypes.Equal
+            });
+            expect(options).toStrictEqual(
+                where(
+                    fn(
+                        "ST_Distance_Sphere",
+                        literal("test"),
+                        fn("ST_GeometryFromText", literal("'POINT(45.8797953 -73.2815516)'"), 0)
+                    ),
+                    {
+                        [Op.lte]: 1000
+                    }
+                )
             );
         });
     });
@@ -259,10 +294,10 @@ describe("GeoLocalizationTestFilter", () => {
             include: [],
             where: {
                 [Op.and]: [
-                    where(fn("ST_Distance_Sphere", literal("geo_point"), fn("ST_GeometryFromText", literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), {
+                    where(fn("ST_Distance_Sphere", literal("geo_point"), fn("Point", -73.2815516, 45.8797953)), {
                         [Op.lte]: 25000
                     }),
-                    where(fn("ST_Distance_Sphere", literal("geo_point"), fn("ST_GeometryFromText",  literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), {
+                    where(fn("ST_Distance_Sphere", literal("geo_point"), fn("Point", -73.2815516, 45.8797953)), {
                         [Op.lte]: 5000
                     }),
                 ]
@@ -305,6 +340,7 @@ describe("GeoLocalizationTestFilter", () => {
                     paranoid: true,
                     required: false,
                     separate: false,
+                    through: undefined,
                     where: {
                         status: "active",
                         user_id: 1,
@@ -313,7 +349,7 @@ describe("GeoLocalizationTestFilter", () => {
             ],
             where: {
                 [Op.and]: [
-                    where(fn("ST_Distance_Sphere", literal("`location`.`geo_point`"), fn("ST_GeometryFromText", literal(`'POINT(${45.8797953} ${-73.2815516})'`), 0)), {
+                    where(fn("ST_Distance_Sphere", literal("`location`.`geo_point`"), fn("Point", -73.2815516, 45.8797953)), {
                         [Op.lte]: 25000
                     })
                 ]

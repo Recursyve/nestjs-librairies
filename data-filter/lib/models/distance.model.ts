@@ -10,6 +10,12 @@ export interface BaseDistanceConfig extends CustomAttributesOptionConfig {
 
 export interface DistanceConfigWithPoint {
     attribute: string;
+    /**
+     * Set this when the column stores the latitude in its first coordinate, which is the order
+     * the reference point used to be built with. MySQL stores the longitude first, so this only
+     * exists to keep data written under the previous convention comparable until it is migrated.
+     */
+    legacyAxisOrder?: boolean;
 }
 
 export interface DistanceConfigWithLatLng {
@@ -45,7 +51,9 @@ export class DistanceAttributesConfig implements CustomAttributesConfig<Distance
             path = [path, this.config.path].filter(x => x).join(".");
         }
 
-        const location = fn("ST_GeometryFromText", literal(`'POINT(${latitude} ${longitude})'`), this.config.srid ?? 0);
+        const location = (this.config as DistanceConfigWithPoint).legacyAxisOrder
+            ? fn("ST_GeometryFromText", literal(`'POINT(${latitude} ${longitude})'`), this.config.srid ?? 0)
+            : SequelizeUtils.getPoint(latitude, longitude, this.config.srid);
         return [fn("ST_Distance_Sphere", this.getPointAttribute(path), location), this.config.name ?? this.key];
     }
 
@@ -54,14 +62,16 @@ export class DistanceAttributesConfig implements CustomAttributesConfig<Distance
     }
 
     private getPointAttribute(path?: string): Literal | Fn {
-        if ((this.config as DistanceConfigWithPoint).attribute) {
-            const att = (this.config as DistanceConfigWithPoint).attribute;
-            return literal(path ? SequelizeUtils.getLiteralFullName(att, path) : att);
+        const { attribute } = this.config as DistanceConfigWithPoint;
+        if (attribute) {
+            return literal(SequelizeUtils.getAttributeName(attribute, path));
         }
 
-        const lat = path ? literal(SequelizeUtils.getLiteralFullName((this.config as DistanceConfigWithLatLng).latAttribute, path)) : (this.config as DistanceConfigWithLatLng).latAttribute;
-        const lng = path ? literal(SequelizeUtils.getLiteralFullName((this.config as DistanceConfigWithLatLng).lngAttribute, path)) : (this.config as DistanceConfigWithLatLng).lngAttribute;
-        const point = fn("Point", lng, lat);
-        return this.config.srid ? fn("ST_SRID", point, this.config.srid) : point;
+        const { latAttribute, lngAttribute } = this.config as DistanceConfigWithLatLng;
+        return SequelizeUtils.getPoint(
+            SequelizeUtils.getAttributeColumn(latAttribute, path),
+            SequelizeUtils.getAttributeColumn(lngAttribute, path),
+            this.config.srid
+        );
     }
 }

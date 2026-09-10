@@ -350,7 +350,8 @@ export class FilterService<Data> {
         for (const rule of condition.rules) {
             const c = rule as FilterCondition;
             if (c.condition) {
-                includes.push(...this.getConditionInclude(model, condition));
+                includes.push(...this.getConditionInclude(model, c));
+                continue;
             }
             const r = rule as FilterConditionRule;
             if (r.path) {
@@ -733,7 +734,7 @@ export class FilterService<Data> {
 
         const groupBy = this.repository.getCustomAttributeGroupBy();
         if (!groupBy.length) {
-            return group;
+            return group.length ? group : undefined;
         }
 
         group.push(...groupBy);

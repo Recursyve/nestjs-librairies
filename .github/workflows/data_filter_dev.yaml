@@ -1,0 +1,40 @@
+name: Data filter dev CI
+
+on:
+  pull_request:
+    paths:
+      - "data-filter/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  data-filter:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.x, 24.x, 26.x]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: data-filter/package-lock.json
+
+      - name: Install dependencies
+        working-directory: data-filter
+        run: npm ci
+
+      - name: Build
+        working-directory: data-filter
+        run: npm run build:lib
+
+      - name: Run tests
+        working-directory: data-filter
+        env:
+          TZ: UTC
+        run: npm run test

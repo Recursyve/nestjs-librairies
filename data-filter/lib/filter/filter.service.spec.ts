@@ -76,6 +76,28 @@ export class TestFilter extends BaseFilter<ContractSystemsTest> {
         }
     });
 
+    public nestedName = new TextFilter({
+        attribute: "first_name",
+        path: "system.place.owners.person",
+        group: "owner",
+        condition: {
+            condition: "and",
+            rules: [
+                {
+                    condition: "and",
+                    rules: [
+                        {
+                            path: "system.place.owners.person",
+                            key: "last_name",
+                            value: "Doe",
+                            operation: FilterOperatorTypes.Equal
+                        }
+                    ]
+                }
+            ]
+        }
+    });
+
     public visitCount = new NumberFilter({
         attribute: "id",
         path: "visits.visit",
@@ -146,6 +168,7 @@ describe("FilterService", () => {
                     required: false,
                     paranoid: true,
                     attributes: [],
+                    through: undefined,
                     include: [
                         {
                             as: "place",
@@ -153,6 +176,7 @@ describe("FilterService", () => {
                             required: false,
                             paranoid: true,
                             attributes: [],
+                            through: undefined,
                             include: [
                                 {
                                     as: "owners",
@@ -160,6 +184,9 @@ describe("FilterService", () => {
                                     required: false,
                                     paranoid: true,
                                     attributes: [],
+                                    through: {
+                                        attributes: []
+                                    },
                                     include: [
                                         {
                                             as: "person",
@@ -169,6 +196,7 @@ describe("FilterService", () => {
                                             separate: false,
                                             paranoid: false,
                                             attributes: [],
+                                            through: undefined,
                                             include: []
                                         }
                                     ]
@@ -182,6 +210,7 @@ describe("FilterService", () => {
                     model: MaintenanceVisits,
                     required: false,
                     attributes: [],
+                    through: undefined,
                     include: [
                         {
                             as: "visit",
@@ -191,6 +220,7 @@ describe("FilterService", () => {
                             paranoid: true,
                             separate: false,
                             attributes: [],
+                            through: undefined,
                             include: []
                         }
                     ]
@@ -228,6 +258,47 @@ describe("FilterService", () => {
         } as FindOptions);
     });
 
+    it("getFindOptions should walk nested filter.condition groups without overflowing", async () => {
+        const options = await filterService.getFindOptions(ContractSystems, {
+            condition: "and",
+            rules: [
+                {
+                    id: "nestedName",
+                    value: "John",
+                    operation: FilterOperatorTypes.Equal
+                }
+            ]
+        }, {}, null);
+
+        expect(options.include).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    as: "system"
+                })
+            ])
+        );
+        expect(options.where).toEqual(
+            expect.objectContaining({
+                [Op.and]: expect.arrayContaining([
+                    {
+                        [Op.and]: [
+                            {
+                                "$system.place.owners.person.first_name$": "John"
+                            },
+                            {
+                                [Op.and]: [
+                                    {
+                                        "$system.place.owners.person.last_name$": "Doe"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ])
+            })
+        );
+    });
+
     it("getFindOptions should handle filter with where callback", async () => {
         const testRequest = { tenantId: 123 };
         const testUser = { id: 1, language: "en" } as any;
@@ -254,6 +325,7 @@ describe("FilterService", () => {
                     include: [],
                     order: undefined,
                     separate: false,
+                    through: undefined,
                     where: {
                         status: "active",
                         tenant_id: 123
@@ -264,18 +336,23 @@ describe("FilterService", () => {
                     model: Systems,
                     required: false,
                     attributes: [],
+                    through: undefined,
                     include: [
                         {
                             as: "place",
                             model: Places,
                             required: false,
                             attributes: [],
+                            through: undefined,
                             include: [
                                 {
                                     as: "owners",
                                     model: Owners,
                                     required: false,
                                     attributes: [],
+                                    through: {
+                                        attributes: []
+                                    },
                                     include: [
                                         {
                                             as: "person",
@@ -285,6 +362,7 @@ describe("FilterService", () => {
                                             separate: false,
                                             paranoid: true,
                                             attributes: [],
+                                            through: undefined,
                                             include: []
                                         }
                                     ]
