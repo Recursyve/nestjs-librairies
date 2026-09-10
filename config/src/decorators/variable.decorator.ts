@@ -1,6 +1,6 @@
-import { VariableConfig, VariableMetadata } from "../models/variable-metadata.model";
+import type { VariableConfig, VariableMetadata } from "../models/variable-metadata.model";
 import { ConfigHandler } from "../handlers/config.handler";
-import { Type } from "@nestjs/common";
+import type { Type } from "@nestjs/common";
 
 export function Variable(requiredOrVariableNameOrConfig: boolean | string | VariableConfig): PropertyDecorator;
 export function Variable(target: Object, propertyKey: string): void;
