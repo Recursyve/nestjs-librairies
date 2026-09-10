@@ -1,4 +1,5 @@
-import { Global, Module, OnModuleInit } from "@nestjs/common";
+import type { OnModuleInit } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { CqrsModule } from "@nestjs/cqrs";
 import { RedisModule } from "@recursyve/nestjs-redis";
 import {

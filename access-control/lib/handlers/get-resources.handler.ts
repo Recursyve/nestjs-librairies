@@ -1,5 +1,5 @@
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { GetResourcesCommand } from "../commands";
+import type { ICommandHandler } from "@nestjs/cqrs";
+import { CommandHandler } from "@nestjs/cqrs";import { GetResourcesCommand } from "../commands";
 import { PolicyResources } from "../models";
 import { AccessPoliciesService } from "../services";
 

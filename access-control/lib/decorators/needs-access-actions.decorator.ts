@@ -1,11 +1,13 @@
+import type { CustomDecorator } from "@nestjs/common";
 import { SetMetadata } from "@nestjs/common";
-import { AccessAction, AccessActionType, accessActionTypeValues } from "../models";
+import type { AccessAction, AccessActionType} from "../models";
+import { accessActionTypeValues } from "../models";
 import { NEEDS_ACCESS_ACTIONS } from "./constant";
 
 // AccessControl for a handler of a controller. You can either pass the type of access, in which case the parameter name
 // for the resource id used will default to ":id". Or you can pass and AccessAction in which you define the type and the
 // parameter name for the resource id.
-export const NeedsAccessActions = (...accessActions: (AccessActionType | AccessAction)[]) => {
+export const NeedsAccessActions = (...accessActions: (AccessActionType | AccessAction)[]): CustomDecorator => {
     const accessActionAsObjects: AccessAction[] = [];
 
     // Convert enums to interface with default values.

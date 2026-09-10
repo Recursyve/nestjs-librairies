@@ -1,5 +1,5 @@
-import { AccessRules } from "./access-rules.model";
-import { ResourceId } from "./resources.model";
+import type { AccessRules } from "./access-rules.model";
+import type { ResourceId } from "./resources.model";
 
 export interface UserResources {
     userId: string;

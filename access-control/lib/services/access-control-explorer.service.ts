@@ -1,8 +1,9 @@
-import { Injectable, Type } from "@nestjs/common";
+import type { Type } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InstanceWrapper } from "@nestjs/core/injector/instance-wrapper";
 import { Module } from "@nestjs/core/injector/module";
 import { ModulesContainer } from "@nestjs/core/injector/modules-container";
-import { IDatabaseAdapter } from "../adapters";
+import type { IDatabaseAdapter } from "../adapters";
 import {
     CREATED_POLICY_METADATA,
     DATABASE_ADAPTER_METADATA,
@@ -11,7 +12,7 @@ import {
     RESOURCE_ACCESS_UPDATED_METADATA,
     UPDATED_POLICY_METADATA
 } from "../decorators/constant";
-import { AccessControlObjects } from "../models";
+import type { AccessControlObjects } from "../models";
 import { AccessPolicy, ResourceCreatedPolicy, ResourceDeletedPolicy, ResourceUpdatedPolicy } from "../policies";
 import { ResourceAccessUpdatedPolicy } from "../policies/resource-access-updated-policy.service";
 

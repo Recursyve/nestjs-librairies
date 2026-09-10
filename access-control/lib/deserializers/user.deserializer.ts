@@ -1,4 +1,4 @@
-import { Users } from "../models";
+import type { Users } from "../models";
 
 export abstract class UserDeserializer {
     public abstract deserializeUser(req: unknown): Promise<Users | null>;

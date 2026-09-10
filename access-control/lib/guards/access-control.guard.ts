@@ -1,4 +1,5 @@
-import { CanActivate, ExecutionContext, Injectable, OnModuleInit, Type } from "@nestjs/common";
+import type { CanActivate, ExecutionContext, OnModuleInit, Type } from "@nestjs/common";
+import  { Injectable } from "@nestjs/common";
 import { ModuleRef, Reflector } from "@nestjs/core";
 import {
     ACCESS_CONTROL_RESOURCE,
@@ -7,8 +8,8 @@ import {
     NEEDS_ACCESS_ACTIONS
 } from "../decorators/constant";
 import { UserDeserializer } from "../deserializers";
-import { AccessAction } from "../models";
-import { AccessControlResourceConfig } from "../models/access-control-resource.model";
+import type { AccessAction } from "../models";
+import type { AccessControlResourceConfig } from "../models/access-control-resource.model";
 import { AccessControlService, DatabaseAdaptersRegistry } from "../services";
 
 @Injectable()
