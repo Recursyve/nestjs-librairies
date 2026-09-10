@@ -1,9 +1,9 @@
-import { ResourceEventAccessControlService } from "@recursyve/nestjs-access-control";
-import { Document, Schema } from "mongoose";
+import type { ResourceEventAccessControlService } from "@recursyve/nestjs-access-control";
+import type { Document, Schema } from "mongoose";
 
-export function accessControlPlugin(schema: Schema, { service }: { service: ResourceEventAccessControlService<any> }) {
+export function accessControlPlugin(schema: Schema, { service }: { service: ResourceEventAccessControlService<any> }): void {
     schema.pre("save", function() {
-        this.$wasCreated = this.$isNew;
+        this["$wasCreated"] = this["$isNew"];
     });
 
     schema.post(["save"], async (doc: Document, next) => {
