@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import Redis from "ioredis";
-import { ScanStreamOptions } from "ioredis/built/types";
+import type { ScanStreamOptions } from "ioredis/built/types";
 import { RedisArrayUtils } from "../utils/array.utils";
 import { RedisConfigService } from "./redis-config.service";
 

@@ -1,4 +1,5 @@
-import { Module, OnModuleDestroy } from "@nestjs/common";
+import type { OnModuleDestroy } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { RedisConfigService } from "./services/redis-config.service";
 import { RedisService } from "./services/redis.service";
 import { ModuleRef } from "@nestjs/core";
@@ -17,7 +18,7 @@ export class RedisModule implements OnModuleDestroy {
         /**
          * Disconnection causes some issues when running tests, for now we deactivate it
          */
-        if (!process.env.CI) {
+        if (!process.env["CI"]) {
             await service.disconnect();
         }
     }
