@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
-import { Attributes, CreateOptions, CreationAttributes } from "sequelize";
+import type { Attributes, CreateOptions, CreationAttributes } from "sequelize";
 import { SequelizeReadRepository } from "../../lib";
 import { Accounts } from "../models/accounts.model";
 

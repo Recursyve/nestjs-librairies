@@ -1,4 +1,5 @@
-import { Global, Module, OnModuleInit } from "@nestjs/common";
+import type { OnModuleInit } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { Sequelize } from "sequelize-typescript";
 import {
     AfterBulkCreateFormatDateOnlyHook,

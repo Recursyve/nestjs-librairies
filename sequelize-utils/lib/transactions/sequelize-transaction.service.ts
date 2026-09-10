@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { TransactionOptions } from "sequelize";
+import type { TransactionOptions } from "sequelize";
 import { Sequelize } from "sequelize-typescript";
 import { NiceTransaction } from "./transaction";
 
