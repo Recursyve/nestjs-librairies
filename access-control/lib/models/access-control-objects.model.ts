@@ -1,8 +1,8 @@
-import { Type } from "@nestjs/common";
-import { IDatabaseAdapter } from "../adapters";
-import { AccessPolicy, ResourceCreatedPolicy, ResourceUpdatedPolicy } from "../policies";
-import { ResourceDeletedPolicy } from "../policies/resource-deleted-policy.service";
-import { ResourceAccessUpdatedPolicy } from "../policies/resource-access-updated-policy.service";
+import type { Type } from "@nestjs/common";
+import type { IDatabaseAdapter } from "../adapters";
+import type { AccessPolicy, ResourceCreatedPolicy, ResourceUpdatedPolicy } from "../policies";
+import type { ResourceDeletedPolicy } from "../policies/resource-deleted-policy.service";
+import type { ResourceAccessUpdatedPolicy } from "../policies/resource-access-updated-policy.service";
 
 export interface AccessControlObjects {
     policies: Type<AccessPolicy>[];

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { catchError, finalize, from, map, Observable, of } from "rxjs";
-import { PolicyResourceTypes, Resources, Users } from "../models";
+import type { Users } from "../models";
+import { PolicyResourceTypes, Resources } from "../models";
 import { GetResourcesCommand } from "../commands";
 import { CommandBus } from "@nestjs/cqrs";
 import { ResourceAccessService } from "./resource-access.service";

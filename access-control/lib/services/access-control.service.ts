@@ -2,7 +2,8 @@ import { Inject, Injectable, Optional } from "@nestjs/common";
 import { CommandBus } from "@nestjs/cqrs";
 import { RedisService } from "@recursyve/nestjs-redis";
 import { ACCESS_CONTROL_DEFAULT_DATABASE } from "../constant";
-import { AccessActionType, Users } from "../models";
+import type { Users } from "../models";
+import { AccessActionType } from "../models";
 import { RedisKeyUtils } from "../utils";
 import { AccessControlResourceLoaderService } from "./access-control-resource-loader.service";
 import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
@@ -32,7 +33,7 @@ export class AccessControlService {
         return service;
     }
 
-    public async clearCacheForUser(user: Users) {
+    public async clearCacheForUser(user: Users): Promise<void> {
         await Promise.all([
             this.redisService.scanDel(RedisKeyUtils.userAccessControl(user, "*")),
             this.redisService.scanDel(RedisKeyUtils.userResourceActionKey(user, "*", "*" as AccessActionType)),

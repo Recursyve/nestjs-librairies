@@ -9,7 +9,7 @@ export type AccessAction = {
     resourceIdParameterName: string;
 };
 
-export const accessActionTypeValues = Object.values(AccessActionType);
+export const accessActionTypeValues: AccessActionType[] = Object.values(AccessActionType);
 
 export interface PermissionsOption {
     r: string;

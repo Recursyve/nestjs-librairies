@@ -1,4 +1,4 @@
-import { PolicyConfig } from "../models";
+import type { PolicyConfig } from "../models";
 import { FROM_POLICY_METADATA } from "./constant";
 
 export function FromPolicy(model: any, option?: Omit<PolicyConfig, "model">): ClassDecorator {

@@ -1,4 +1,4 @@
-import { AccessActionType, ResourceId, Users } from "../models";
+import type { AccessActionType, ResourceId, Users } from "../models";
 
 export class RedisKeyUtils {
     public static prefix = "access-control";
@@ -111,6 +111,6 @@ export class RedisKeyUtils {
         }
 
         const [id, role] = key.split(`-${this.rolePrefix}`);
-        return { id, role };
+        return { id: id!, role };
     }
 }
