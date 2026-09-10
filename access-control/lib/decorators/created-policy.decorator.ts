@@ -1,4 +1,4 @@
-import { PolicyConfig } from "../models/policy-config.model";
+import type { PolicyConfig } from "../models/policy-config.model";
 import { CREATED_POLICY_METADATA } from "./constant";
 
 export function CreatedPolicy(model: any, option?: Omit<PolicyConfig, "model">): ClassDecorator {

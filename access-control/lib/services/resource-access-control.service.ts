@@ -2,17 +2,10 @@ import { Inject, Injectable, Optional } from "@nestjs/common";
 import { CommandBus } from "@nestjs/cqrs";
 import { RedisService } from "@recursyve/nestjs-redis";
 import { lastValueFrom } from "rxjs";
-import { IDatabaseAdapter } from "../adapters";
-import {
-    AccessActionType,
-    AccessRules,
-    PolicyResourcesCondition,
-    PolicyResourceTypes,
-    ResourceId,
-    Resources,
-    Users
-} from "../models";
-import { PolicyConfig } from "../models/policy-config.model";
+import type { IDatabaseAdapter } from "../adapters";
+import type { PolicyResourcesCondition, ResourceId, Users } from "../models";
+import { AccessActionType, AccessRules, PolicyResourceTypes, Resources } from "../models";
+import type { PolicyConfig } from "../models/policy-config.model";
 import { RedisKeyUtils } from "../utils";
 import { AccessControlResourceLoaderService } from "./access-control-resource-loader.service";
 import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
@@ -187,7 +180,7 @@ export class ResourceAccessControlService {
             .filter(([accessControlString]) => options.action && AccessRules.fromString(accessControlString).has(options.action))
             .map(([_, index]) =>
                 RedisKeyUtils.extractUserFromUsersResourceActionWildcardPatternMatch(
-                    matchedKeys[index],
+                    matchedKeys[index]!,
                     this.resourceName
                 )
             )

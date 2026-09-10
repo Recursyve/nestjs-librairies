@@ -1,9 +1,11 @@
-import { Inject, Injectable, Logger, Optional, Type } from "@nestjs/common";
+import type { Type } from "@nestjs/common";
+import { Inject, Injectable, Logger, Optional } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
 import { ACCESS_CONTROL_DEFAULT_DATABASE } from "../constant";
 import { POLICY_METADATA } from "../decorators/constant";
-import { PolicyResources, Users } from "../models";
-import { PolicyConfig } from "../models/policy-config.model";
+import type { Users } from "../models";
+import { PolicyResources } from "../models";
+import type { PolicyConfig } from "../models/policy-config.model";
 import { AccessPolicy } from "../policies";
 import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
 

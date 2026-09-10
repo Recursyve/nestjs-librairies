@@ -1,4 +1,5 @@
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import type { ICommandHandler } from "@nestjs/cqrs";
+import { CommandHandler } from "@nestjs/cqrs";
 import { ResourceCreatedCommand } from "../commands";
 import { ResourceCreatedPoliciesService, ResourceAccessService } from "../services";
 

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { UserResources } from "../models";
+import type { UserResources } from "../models";
 
 @Injectable()
 export abstract class ResourceAccessUpdatedPolicy<T> {
