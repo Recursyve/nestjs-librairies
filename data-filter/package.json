@@ -11,6 +11,7 @@
         "publish-package": "npm run build:lib && npm run copy:lib && npm publish ./dist --access public",
         "publish-package:beta": "npm run publish-package -- --tag beta --access public",
         "publish-package:dry-run": "npm run publish-package -- --dry-run",
+        "lint": "eslint \"lib/**/*.ts\"",
         "test": "vitest run",
         "test:watch": "vitest",
         "test:coverage": "vitest --coverage"
@@ -36,6 +37,7 @@
         "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
     },
     "devDependencies": {
+        "@eslint/js": "^10.0.1",
         "@nestjs/cli": "^11.0.0",
         "@nestjs/common": "^11.0.12",
         "@nestjs/core": "^11.0.12",
@@ -44,10 +46,12 @@
         "@types/express": "^5.0.1",
         "@types/node": "^22.13.13",
         "@vitest/coverage-v8": "^5.0.0",
+        "@vitest/eslint-plugin": "^1.6.27",
         "class-transformer": "^0.5.1",
         "class-validator": "^0.14.1",
         "date-fns": "^4.1.0",
         "date-fns-tz": "^3.2.0",
+        "eslint": "^10.10.0",
         "express": "^5.0.1",
         "reflect-metadata": "^0.2.2",
         "rimraf": "^6.0.1",
@@ -57,6 +61,7 @@
         "sqlite3": "^6.0.1",
         "ts-node": "^10.9.2",
         "typescript": "^5.8.2",
+        "typescript-eslint": "^8.70.0",
         "vitest": "^5.0.0"
     }
 }
