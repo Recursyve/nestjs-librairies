@@ -1,8 +1,10 @@
 import type { ICommandHandler } from "@nestjs/cqrs";
-import { CommandHandler } from "@nestjs/cqrs";import { ResourceAccessUpdatedCommand } from "../commands";
-import { ResourceAccessUpdatedPoliciesService } from "../services/resource-access-updated-policies.service";
-import { ResourceAccessService } from "../services";
+import { CommandHandler } from "@nestjs/cqrs";
+
+import { ResourceAccessUpdatedCommand } from "../commands";
 import type { UserResources } from "../models";
+import { ResourceAccessService } from "../services";
+import { ResourceAccessUpdatedPoliciesService } from "../services/resource-access-updated-policies.service";
 
 @CommandHandler(ResourceAccessUpdatedCommand)
 export class AccessControlResourceAccessUpdatedHandler implements ICommandHandler<ResourceAccessUpdatedCommand> {
@@ -38,7 +40,7 @@ export class AccessControlResourceAccessUpdatedHandler implements ICommandHandle
                     firstUserResource.resourceName,
                     firstUserResource.resourceId,
                     userResources
-                )
+                );
             })
         );
         const flattenedUserResources: UserResources[] = [];

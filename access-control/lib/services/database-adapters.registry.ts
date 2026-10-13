@@ -1,6 +1,7 @@
 import type { Type } from "@nestjs/common";
 import { Injectable } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
+
 import type { IDatabaseAdapter } from "../adapters";
 import { DATABASE_ADAPTER_METADATA } from "../decorators/constant";
 import type { DatabaseAdapterConfig } from "../models/database-adapter-config.model";
@@ -12,7 +13,7 @@ export class DatabaseAdaptersRegistry {
     constructor(private readonly moduleRef: ModuleRef) {}
 
     public registerAdapters(...adapters: Type<IDatabaseAdapter>[]): void {
-        adapters.forEach(policy => this.registerAdapter(policy));
+        adapters.forEach((policy) => this.registerAdapter(policy));
     }
 
     private registerAdapter(adapter: Type<IDatabaseAdapter>): void {
@@ -34,7 +35,7 @@ export class DatabaseAdaptersRegistry {
             throw new Error(`You must provide a type`);
         }
 
-        const adapter =  this.registry.get(type);
+        const adapter = this.registry.get(type);
         if (!adapter) {
             throw new Error(`No database adapters found for type ${type}`);
         }

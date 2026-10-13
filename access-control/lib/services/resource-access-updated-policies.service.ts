@@ -1,12 +1,13 @@
 import type { Type } from "@nestjs/common";
 import { Inject, Injectable, Logger, Optional } from "@nestjs/common";
-import { ACCESS_CONTROL_DEFAULT_DATABASE } from "../constant";
 import { ModuleRef } from "@nestjs/core";
-import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
-import { ResourceAccessUpdatedPolicy } from "../policies/resource-access-updated-policy.service";
-import type { UserResources } from "../models";
+
+import { ACCESS_CONTROL_DEFAULT_DATABASE } from "../constant";
 import { RESOURCE_ACCESS_UPDATED_METADATA } from "../decorators";
+import type { UserResources } from "../models";
 import type { ResourceAccessUpdatedPolicyConfig } from "../models/resource-access-updated-policy-config.model";
+import { ResourceAccessUpdatedPolicy } from "../policies/resource-access-updated-policy.service";
+import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
 
 @Injectable()
 export class ResourceAccessUpdatedPoliciesService {

@@ -1,12 +1,14 @@
 import type { ICommandHandler } from "@nestjs/cqrs";
-import { CommandHandler } from "@nestjs/cqrs";import { ResourceDeletedCommand } from "../commands";
+import { CommandHandler } from "@nestjs/cqrs";
+
+import { ResourceDeletedCommand } from "../commands";
 import { ResourceDeletedPoliciesService, ResourceAccessService } from "../services";
 
 @CommandHandler(ResourceDeletedCommand)
 export class AccessControlResourceDeletedHandler implements ICommandHandler<ResourceDeletedCommand<any>> {
     constructor(
         private resourceDeletedPolicyService: ResourceDeletedPoliciesService,
-        private resourceAccessService: ResourceAccessService,
+        private resourceAccessService: ResourceAccessService
     ) {}
 
     public async execute(command: ResourceDeletedCommand<any>): Promise<void> {

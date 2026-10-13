@@ -1,6 +1,7 @@
 import type { CustomDecorator } from "@nestjs/common";
 import { SetMetadata } from "@nestjs/common";
-import type { AccessAction, AccessActionType} from "../models";
+
+import type { AccessAction, AccessActionType } from "../models";
 import { accessActionTypeValues } from "../models";
 import { NEEDS_ACCESS_ACTIONS } from "./constant";
 
