@@ -1,3 +1,4 @@
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Variable } from "../decorators/variable.decorator";
 import { ConfigTransformerService } from "./config-transformer.service";
 import { Test, TestingModule } from "@nestjs/testing";
