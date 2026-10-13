@@ -8,7 +8,7 @@ import { IConfigProvider } from "../providers/config.provider";
 import { ConfigProviderNotRegisteredError } from "../errors/config-provider-not-registered.error";
 import { ConfigProviderNotFoundInModuleError } from "../errors/config-provider-not-found-in-module.error";
 import { OPTIONS } from "../constant";
-import { ConfigModuleOptions } from "../config.module";
+import { ConfigModuleOptions } from "../config.module.options";
 import { ConfigVariablesNotDefinedError } from "../errors/config-variables-not-defined.error";
 import { plainToInstance } from "class-transformer";
 import { ConfigMetadata } from "../models";
