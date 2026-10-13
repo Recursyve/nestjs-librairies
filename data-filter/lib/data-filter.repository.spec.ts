@@ -10,7 +10,8 @@ import { Persons } from "./test/models/persons/persons.model";
 import { Coords } from "./test/models/coords/coords.model";
 import { Locations } from "./test/models/locations/locations.model";
 import { Places } from "./test/models/places/places.model";
-import { fn, literal, Op, IncludeOptions, ProjectionAlias } from "sequelize";
+import type { IncludeOptions, ProjectionAlias } from "sequelize";
+import { fn, literal, Op } from "sequelize";
 
 @Data(Persons)
 @Attributes(["first_name", "last_name"])
@@ -112,8 +113,8 @@ describe("DataFilterRepository", () => {
         it("does not strip nested attributes when group is an empty array", () => {
             const options = repository.generateFindOptions({ group: [] });
             expect(options.group).toEqual([]);
-            expect((options.include as IncludeOptions[])[0].attributes).toEqual(["id", "cellphone"]);
-            expect(((options.include as IncludeOptions[])[0].include as IncludeOptions[])[0].attributes).toEqual([
+            expect((options.include as IncludeOptions[])[0]?.attributes).toEqual(["id", "cellphone"]);
+            expect(((options.include as IncludeOptions[])[0]?.include as IncludeOptions[])[0]?.attributes).toEqual([
                 "value",
                 "id"
             ]);

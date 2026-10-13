@@ -1,4 +1,4 @@
-import { FindAttributeOptions } from "sequelize";
+import type { FindAttributeOptions } from "sequelize";
 import { AttributesHandler } from "../handlers/attributes.handler";
 import { DataFilterHandler } from "../handlers/data-filter.handler";
 

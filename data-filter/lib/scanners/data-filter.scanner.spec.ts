@@ -5,8 +5,10 @@ import { Attributes, Data, Include, Path } from "../decorators";
 import { Persons } from "../test/models/persons/persons.model";
 import { Coords } from "../test/models/coords/coords.model";
 import { Places } from "../test/models/places/places.model";
-import { DataFilterConfig, DataFilterConfigModel } from "../models/data-filter.model";
-import { AttributesConfig, AttributesConfigModel } from "../models/attributes.model";
+import type { DataFilterConfigModel } from "../models/data-filter.model";
+import { DataFilterConfig } from "../models/data-filter.model";
+import type { AttributesConfigModel } from "../models/attributes.model";
+import { AttributesConfig } from "../models/attributes.model";
 
 @Data(Persons)
 @Attributes(["first_name", "last_name"])
@@ -46,7 +48,7 @@ describe("DataFilterScanner", () => {
             new AttributesConfig("coord"),
             new AttributesConfig("places")
         ];
-        Object.assign<AttributesConfig, AttributesConfigModel>(expected[0], {
+        Object.assign<AttributesConfig, AttributesConfigModel>(expected[0]!, {
             key: "coord",
             attributes: ["cellphone"],
             path: new PathConfig({
@@ -56,7 +58,7 @@ describe("DataFilterScanner", () => {
             customAttributes: [],
             includes: []
         });
-        Object.assign<AttributesConfig, AttributesConfigModel>(expected[1], {
+        Object.assign<AttributesConfig, AttributesConfigModel>(expected[1]!, {
             key: "places",
             attributes: [],
             path: new PathConfig({

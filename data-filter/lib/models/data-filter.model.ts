@@ -1,7 +1,7 @@
-import { FindAttributeOptions } from "sequelize";
+import type { FindAttributeOptions } from "sequelize";
 import { Model } from "sequelize-typescript";
-import { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
-import { IncludeConfig } from "./include.model";
+import type { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
+import type { IncludeConfig } from "./include.model";
 import { M, SequelizeUtils } from "../sequelize.utils";
 
 /**
@@ -29,15 +29,15 @@ export class DataFilterConfig implements DataFilterConfigModel {
     public customAttributes: CustomAttributesConfig[] = [];
     public ignoreInSearch = false;
 
-    public setModel(model: typeof Model) {
+    public setModel(model: typeof Model): void {
         this.model = model;
     }
 
-    public setIgnoreInPath(ignore: boolean) {
+    public setIgnoreInPath(ignore: boolean): void {
         this.ignoreInSearch = ignore;
     }
 
-    public setAttributes(attributes?: FindAttributeOptions) {
+    public setAttributes(attributes?: FindAttributeOptions): void {
         this.attributes = attributes;
     }
 
@@ -45,7 +45,7 @@ export class DataFilterConfig implements DataFilterConfigModel {
         return this._searchableAttributes?.filter((attribute) => !this.searchableTranslationAttributes?.includes(attribute));
     }
 
-    public setSearchableAttributes(attributes: string[]) {
+    public setSearchableAttributes(attributes: string[]): void {
         this._searchableAttributes = attributes;
     }
 
@@ -53,11 +53,11 @@ export class DataFilterConfig implements DataFilterConfigModel {
         this.searchableTranslationAttributes = attributes;
     }
 
-    public setExportColumns(exportColumns: string[]) {
+    public setExportColumns(exportColumns: string[]): void {
         this.exportColumns = exportColumns;
     }
 
-    public addCustomAttribute(attribute: CustomAttributesConfig) {
+    public addCustomAttribute(attribute: CustomAttributesConfig): void {
         this.customAttributes.push(attribute);
     }
 

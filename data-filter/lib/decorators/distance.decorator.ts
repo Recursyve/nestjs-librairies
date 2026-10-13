@@ -1,4 +1,5 @@
-import { DistanceAttributesConfig, DistanceConfig } from "../models/distance.model";
+import type { DistanceConfig } from "../models/distance.model";
+import { DistanceAttributesConfig } from "../models/distance.model";
 import { DataFilterHandler } from "../handlers/data-filter.handler";
 import { AttributesHandler } from "../handlers/attributes.handler";
 

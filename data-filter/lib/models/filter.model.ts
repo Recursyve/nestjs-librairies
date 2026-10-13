@@ -1,4 +1,4 @@
-import { Type as _Type } from "@nestjs/common";
+import type { Type as _Type } from "@nestjs/common";
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsBoolean, IsDefined, IsIn, IsInt, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";

@@ -1,16 +1,20 @@
-import { fn, LogicType, Op, Sequelize, where, WhereOperators, WhereOptions } from "sequelize";
+import type { LogicType, WhereOperators, WhereOptions } from "sequelize";
+import { fn, Op, Sequelize, where } from "sequelize";
 import { TranslateAdapter } from "../../adapters/translate.adapter";
-import { IncludeWhereModel } from "../../models/include.model";
-import { PathModel } from "../../models/path.model";
-import { DataFilterUserModel } from "../../models/user.model";
+import type { IncludeWhereModel } from "../../models/include.model";
+import type { PathModel } from "../../models/path.model";
+import type { DataFilterUserModel } from "../../models/user.model";
 import { SequelizeUtils } from "../../sequelize.utils";
 import { FilterUtils } from "../filter.utils";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
-import { Condition, QueryModel, QueryRuleModel } from "../models/query.model";
-import { IRule, RuleModel } from "../models/rule.model";
-import { CustomOperator, FilterOperators, FilterOperatorTypes } from "../operators";
+import type { Condition } from "../models/query.model";
+import { QueryModel, QueryRuleModel } from "../models/query.model";
+import type { IRule } from "../models/rule.model";
+import { RuleModel } from "../models/rule.model";
+import type { CustomOperator, FilterOperators } from "../operators";
+import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
-import { OrderRuleContext } from "../order-rules/order-rule";
+import type { OrderRuleContext } from "../order-rules/order-rule";
 
 // TODO: Deprecate key to use attribute instead to be consistent with the BaseFilterDefinition
 export interface FilterConditionRule {
@@ -100,7 +104,7 @@ export abstract class Filter implements FilterDefinition {
     public enabled?: ({ user, request }: EnabledConfig) => Promise<boolean>;
     public paranoid = true;
 
-    public static validate(definition: IRule) {
+    public static validate(definition: IRule): boolean {
         return definition["_type"] === "filter";
     }
 
@@ -236,7 +240,7 @@ export abstract class Filter implements FilterDefinition {
         return option;
     }
 
-    protected generateRuleWhereOptions(filter: FilterCondition, options: WhereOptions[], parentRule: QueryRuleModel) {
+    protected generateRuleWhereOptions(filter: FilterCondition, options: WhereOptions[], parentRule: QueryRuleModel): void {
         for (const rule of filter.rules) {
             const c = rule as FilterCondition;
             if (c.condition) {

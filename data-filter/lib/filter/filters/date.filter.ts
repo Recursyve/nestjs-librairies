@@ -1,10 +1,12 @@
 import { addMilliseconds, endOfDay, parseISO, startOfDay } from "date-fns";
 import { getTimezoneOffset } from "date-fns-tz";
-import { Op, WhereOptions } from "sequelize";
+import type { WhereOptions } from "sequelize";
+import { Op } from "sequelize";
 import { QueryRuleModel } from "../models";
 import { DateOperators, FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
-import { BaseFilterDefinition, Filter } from "./filter";
+import type { BaseFilterDefinition } from "./filter";
+import { Filter } from "./filter";
 
 export interface DateFilterDefinition {
     skipTimezone?: boolean;
@@ -21,8 +23,8 @@ export interface DateFilterDefinition {
 // For Between and NotBetween operators, we always include the given first day and last day, so make sure to shrink your
 // timeframe by one day for each side you don't want to include.
 export class DateFilter extends Filter implements DateFilterDefinition {
-    public type = FilterType.Date;
-    public operators = [...DateOperators];
+    public override type: FilterType = FilterType.Date;
+    public override operators: FilterOperatorTypes[] = [...DateOperators];
 
     public readonly defaultTimezone: string;
     public readonly skipTimezone!: boolean;
@@ -33,7 +35,7 @@ export class DateFilter extends Filter implements DateFilterDefinition {
         this.defaultTimezone = definition.defaultTimezone ?? "America/Montreal";
     }
 
-    public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined> {
+    public override async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined> {
         if (rule.operation === FilterOperatorTypes.IsNull || rule.operation === FilterOperatorTypes.IsNotNull) {
             return super.getWhereOptions(rule);
         }

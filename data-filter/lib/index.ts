@@ -1,4 +1,5 @@
-import { DynamicModule, forwardRef, ForwardReference, Global, Module, Provider, Type } from "@nestjs/common";
+import type { DynamicModule, ForwardReference, Provider, Type } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { ExportAdapter } from "./adapters";
 import { AccessControlAdapter } from "./adapters/access-control.adapter";
 import { DefaultAccessControlAdapter } from "./adapters/default-access-control.adapter";
@@ -13,7 +14,8 @@ import { FilterFactory } from "./filter/filter.factory";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { createFilterProvider } from "./filter/filter.provider";
-import { defaultFilterOptionConfig, FilterOptionConfig } from "./filter/filter.config";
+import type { FilterOptionConfig } from "./filter/filter.config";
+import { defaultFilterOptionConfig } from "./filter/filter.config";
 import { FILTER_OPTION, VALIDATE_DATA } from "./constant";
 import { DataFilterValidationService } from "./services/data-filter-validation.service";
 

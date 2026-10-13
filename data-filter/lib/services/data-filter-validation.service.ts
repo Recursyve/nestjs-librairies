@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger, OnModuleInit, Type } from "@nestjs/common";
+import type { OnModuleInit, Type } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { DataFilterService } from "../data-filter.service";
 import { VALIDATE_DATA } from "../constant";
 import { DataFilterHandler } from "../handlers/data-filter.handler";

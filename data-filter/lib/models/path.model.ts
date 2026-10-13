@@ -1,6 +1,6 @@
-import { Order, WhereOptions } from "sequelize";
+import type { Order, WhereOptions } from "sequelize";
 import { SequelizeUtils } from "../sequelize.utils";
-import { IncludeWhereModel } from "./include.model";
+import type { IncludeWhereModel } from "./include.model";
 
 export interface PathModel {
     path: string;

@@ -1,7 +1,8 @@
-import { DataFilterUserModel } from "../..";
+import type { DataFilterUserModel, FilterOperatorTypes } from "../..";
 import { FilterType } from "../type";
 import { SelectOperators } from "../operators";
-import { BaseFilterDefinition, Filter } from "./filter";
+import type { BaseFilterDefinition } from "./filter";
+import { Filter } from "./filter";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { ApiProperty } from "@nestjs/swagger";
 
@@ -34,8 +35,8 @@ export interface SelectFilterDefinition<T> {
 }
 
 export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T> {
-    public type = FilterType.Select;
-    public operators = [...SelectOperators];
+    public override type: FilterType = FilterType.Select;
+    public override operators: FilterOperatorTypes[] = [...SelectOperators];
     public values!: ({ value, user, request }: SelectFilterGetValuesOptions) => Promise<SelectFilterValue[]>;
     public getResourceById!: ({ id, user, request }: SelectFilterGetResourceOptions) => Promise<SelectFilterValue | null>;
     public lazyLoading!: boolean;
@@ -48,7 +49,7 @@ export class SelectFilter<T> extends Filter implements SelectFilterDefinition<T>
         }
     }
 
-    public async getConfig<Request>(key: string, request: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel | null> {
+    public override async getConfig<Request>(key: string, request: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel | null> {
         const config = await super.getConfig(key, request, user);
         if (!config) {
             return null;

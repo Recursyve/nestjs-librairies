@@ -1,3 +1,4 @@
+import type { Type } from "@nestjs/common";
 import {
     applyDecorators,
     Body, Get,
@@ -7,19 +8,18 @@ import {
     Post,
     Query,
     Req,
-    Type,
     UseGuards,
     UseInterceptors
 } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiParam } from "@nestjs/swagger";
-import { ApiParamOptions } from "@nestjs/swagger/dist/decorators/api-param.decorator";
+import type { ApiParamOptions } from "@nestjs/swagger/dist/decorators/api-param.decorator";
+import type { FilterResultModel } from "../../models/filter.model";
 import {
     DynamicFilterController,
     ExportTypes,
     FilterConfigurationModel,
     FilterConfigurationSearchModel,
     FilterQueryModel,
-    FilterResultModel,
     FilterResultModelMixin,
     SelectFilterValue
 } from "../..";
@@ -44,7 +44,7 @@ export function OpenApiDynamicFilterController<T extends Type, D>(
         @UseGuards(FilterQueryGuard)
         @ApiOkResponse({ type: () => _FilterResultModel })
         @ApiOperation({ operationId: `filter${Base.name}` })
-        public async filter(@Body() query: FilterQueryModel, @Req() req: any): Promise<FilterResultModel<D>> {
+        public override async filter(@Body() query: FilterQueryModel, @Req() req: any): Promise<FilterResultModel<D>> {
             return super.filter(query, req);
         }
 
@@ -52,7 +52,7 @@ export function OpenApiDynamicFilterController<T extends Type, D>(
         @HttpCode(HttpStatus.OK)
         @ApiOkResponse({ schema: { type: "number" } })
         @ApiOperation({ operationId: `filter${Base.name}Count` })
-        public async filterCount(@Body() query: FilterQueryModel, @Req() req: any): Promise<number> {
+        public override async filterCount(@Body() query: FilterQueryModel, @Req() req: any): Promise<number> {
             return super.filterCount(query, req);
         }
 
@@ -74,7 +74,7 @@ export function OpenApiDynamicFilterController<T extends Type, D>(
         })
         @ApiParam({ name: "type", enum: ExportTypes, enumName: "ExportTypes" })
         @ApiOperation({ operationId: `download${Base.name}Data` })
-        public async downloadData(
+        public override async downloadData(
             @Body() query: FilterQueryModel,
             @Param("type") type: ExportTypes,
             @Req() req: any
@@ -85,14 +85,14 @@ export function OpenApiDynamicFilterController<T extends Type, D>(
         @Get("filter/config")
         @ApiOkResponse({ type: () => FilterConfigurationModel, isArray: true })
         @ApiOperation({ operationId: `get${Base.name}FilterConfig` })
-        public async getFilterConfig(@Req() req: any): Promise<FilterConfigurationModel[]> {
+        public override async getFilterConfig(@Req() req: any): Promise<FilterConfigurationModel[]> {
             return super.getFilterConfig(req);
         }
 
         @Get("filter/config/id")
         @ApiOkResponse({ type: () => SelectFilterValue })
         @ApiOperation({ operationId: `search${Base.name}FilterResourceValue` })
-        public async searchFilterResourceValue(
+        public override async searchFilterResourceValue(
             @Query() search: FilterResourceValueModel,
             @Req() req: any
         ): Promise<SelectFilterValue | null> {
@@ -102,7 +102,7 @@ export function OpenApiDynamicFilterController<T extends Type, D>(
         @Get("filter/config/value")
         @ApiOkResponse({ type: () => SelectFilterValue, isArray: true })
         @ApiOperation({ operationId: `search${Base.name}FilterConfigValues` })
-        public async searchFilterConfigValues(
+        public override async searchFilterConfigValues(
             @Query() search: FilterConfigurationSearchModel,
             @Req() req: any
         ): Promise<SelectFilterValue[]> {

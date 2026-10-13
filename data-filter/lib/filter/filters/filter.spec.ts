@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { Filter } from "./filter";
 import { TextFilter } from "./text.filter";
 import { FilterOperatorTypes } from "../operators";
-import { col, fn, Op, where, WhereOptions } from "sequelize";
+import type { WhereOptions } from "sequelize";
+import { col, fn, Op, where } from "sequelize";
 
 describe("Filter", () => {
     describe("getWhereOptions", () => {

@@ -1,6 +1,7 @@
-import { col, fn, literal } from "sequelize";
+import { literal } from "sequelize";
 import { M, SequelizeUtils } from "../../sequelize.utils";
-import { BaseOrderRuleDefinition, OrderItemColumn, OrderRule } from "./order-rule";
+import type { BaseOrderRuleDefinition, OrderItemColumn } from "./order-rule";
+import { OrderRule } from "./order-rule";
 
 export interface IfOrderRuleDefinition {
     valueEquals: any;

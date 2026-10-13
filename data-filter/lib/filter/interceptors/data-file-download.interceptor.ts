@@ -1,4 +1,5 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from "@nestjs/common";
+import type { CallHandler, ExecutionContext, NestInterceptor } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import * as express from "express";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
@@ -7,7 +8,7 @@ import { ExportTypes } from "../../models/export-types.model";
 @Injectable()
 export class DataFileDownloadInterceptor implements NestInterceptor {
     public intercept(context: ExecutionContext, next: CallHandler<Buffer | string>): Observable<void> {
-        const type = context.switchToHttp().getRequest<express.Request>().params.type as ExportTypes;
+        const type = context.switchToHttp().getRequest<express.Request>().params["type"] as ExportTypes;
         const res = context.switchToHttp().getResponse<express.Response>();
         return next.handle().pipe(
             map(value => {

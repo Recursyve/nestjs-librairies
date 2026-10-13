@@ -1,43 +1,40 @@
-import { Injectable, Type } from "@nestjs/common";
-import {
+import type { Type } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import type {
     CountOptions,
     FindOptions,
     GroupedCountResultItem,
     Includeable,
     IncludeOptions,
-    literal,
-    Op,
     Order,
     OrderItem,
     WhereOptions
 } from "sequelize";
+import { literal, Op } from "sequelize";
 import { Sequelize } from "sequelize-typescript";
-import { GroupOption, ProjectionAlias } from "sequelize/types/model";
-import { ExportTypes, FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../";
+import type { GroupOption, ProjectionAlias } from "sequelize/types/model";
+import type { FilterResultModel } from "../models/filter.model";
+import { ExportTypes, FilterQueryModel, FilterSearchModel, OrderModel } from "../";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
 import { DataFilterRepository } from "../data-filter.repository";
 import { DataFilterService } from "../data-filter.service";
-import { DataFilterUserModel } from "../models/user.model";
+import type { DataFilterUserModel } from "../models/user.model";
 import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";
 import { M, SequelizeUtils } from "../sequelize.utils";
 import { BaseFilter } from "./base-filter";
 import { FilterUtils } from "./filter.utils";
-import {
-    Filter,
-    FilterCondition,
-    FilterConditionRule,
-    FilterDefinition,
-    SelectFilter,
-    SelectFilterValue
-} from "./filters";
+import type { FilterCondition, FilterConditionRule, FilterDefinition } from "./filters";
+import { Filter, SelectFilter, SelectFilterValue } from "./filters";
 import { GeoLocalizationFilter } from "./filters/geo-localization.filter";
-import { GroupFilter, GroupFilterDefinition } from "./filters/group.filter";
+import type { GroupFilterDefinition } from "./filters/group.filter";
+import { GroupFilter } from "./filters/group.filter";
 import { QueryModel, QueryRuleModel } from "./models";
 import { FilterConfigurationSearchModel } from "./models/filter-configuration-search.model";
 import { FilterConfigurationModel } from "./models/filter-configuration.model";
 import { FilterResourceValueModel } from "./models/filter-resource-value.model";
-import { OrderRule, OrderRuleContext, OrderRuleDefinition } from "./order-rules/order-rule";
+import type { OrderRuleContext, OrderRuleDefinition } from "./order-rules/order-rule";
+import { OrderRule } from "./order-rules/order-rule";
 
 interface CountParams<Users extends DataFilterUserModel> {
     options: FilterQueryModel;
@@ -106,7 +103,7 @@ export class FilterService<Data> {
     public async getConfig(request: any, user?: DataFilterUserModel): Promise<FilterConfigurationModel[]> {
         const result: FilterConfigurationModel[] = [];
         for (const key in this.definitions) {
-            if (!this.definitions.hasOwnProperty(key) || OrderRule.validate(this.definitions[key])) {
+            if (!this.definitions.hasOwnProperty(key) || OrderRule.validate(this.definitions[key]!)) {
                 continue;
             }
 
@@ -375,7 +372,7 @@ export class FilterService<Data> {
                 const where = { [op]: conditions };
                 paranoid = paranoid && await this.generateWhereOptions(c, conditions);
 
-                if (where[op as any].length) {
+                if (where[op as any]?.length) {
                     options.push(where);
                 }
 
@@ -414,7 +411,7 @@ export class FilterService<Data> {
                 const having = { [op]: conditions };
                 await this.generateHavingOptions(c, conditions);
 
-                if (having[op as any].length) {
+                if (having[op as any]?.length) {
                     options.push(having);
                 }
 

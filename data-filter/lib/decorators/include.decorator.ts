@@ -1,4 +1,4 @@
-import { IncludeConfig } from "../models/include.model";
+import type { IncludeConfig } from "../models/include.model";
 import { AttributesHandler } from "../handlers/attributes.handler";
 
 /**

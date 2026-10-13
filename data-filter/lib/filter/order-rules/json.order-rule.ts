@@ -1,7 +1,8 @@
 import { literal } from "sequelize";
 import { M, SequelizeUtils } from "../../sequelize.utils";
-import { BaseOrderRuleDefinition, OrderItemColumn, OrderRule, OrderRuleContext } from "./order-rule";
-import { JsonConfig } from "../..";
+import type { BaseOrderRuleDefinition, OrderItemColumn, OrderRuleContext } from "./order-rule";
+import { OrderRule } from "./order-rule";
+import type { JsonConfig } from "../..";
 
 export interface JsonRuleDefinition {
     json: JsonConfig;

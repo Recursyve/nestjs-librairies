@@ -1,4 +1,5 @@
-import { IRule, QueryModel, QueryRuleModel } from "../..";
+import type { IRule } from "../..";
+import { QueryModel, QueryRuleModel } from "../..";
 
 export interface DefaultFilterDefinition {
     filter: QueryRuleModel | QueryModel;
@@ -10,7 +11,7 @@ export class DefaultFilter implements DefaultFilterDefinition, IRule {
 
     constructor(public filter: QueryRuleModel | QueryModel, public required = true) {}
 
-    public static validate(definition: IRule) {
+    public static validate(definition: IRule): boolean {
         return definition["_type"] === "default_filter";
     }
 }

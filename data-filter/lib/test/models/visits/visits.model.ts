@@ -20,7 +20,7 @@ export class Visits extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
-    id!: number;
+    declare id: number;
 
     @Column
     type?: string;

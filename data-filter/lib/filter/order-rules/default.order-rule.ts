@@ -1,4 +1,4 @@
-import { IRule } from "../models";
+import type { IRule } from "../models";
 
 export interface DefaultOrderRuleDefinition {
     column: string;
