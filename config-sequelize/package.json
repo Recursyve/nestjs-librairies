@@ -6,6 +6,7 @@
         "build:lib": "rimraf dist && nest build -p tsconfig.lib.json",
         "copy:lib": "cp package.json .npmignore dist",
         "pack:lib": "npm run build:lib && cd dist && npm pack",
+        "lint": "eslint \"src/**/*.ts\"",
         "test": "vitest run",
         "publish-package": "npm run build:lib && npm run copy:lib && npm publish ./dist --access public",
         "publish-package:beta": "npm run publish-package -- --tag beta --access public",
@@ -20,6 +21,7 @@
         "sequelize-typescript": "^2.1.6"
     },
     "devDependencies": {
+        "@eslint/js": "^10.0.1",
         "@nestjs/common": "^11.0.12",
         "@nestjs/core": "^11.0.12",
         "@nestjs/sequelize": "^11.0.0",
@@ -27,13 +29,16 @@
         "@recursyve/nestjs-config": "^11.0.0",
         "@types/node": "^22.13.13",
         "@vitest/coverage-v8": "^5.0.0",
+        "@vitest/eslint-plugin": "^1.6.27",
         "class-transformer": "^0.5.1",
+        "eslint": "^10.10.0",
         "rimraf": "^6.0.1",
         "rxjs": "^7.8.2",
         "sequelize": "^6.37.6",
         "sequelize-typescript": "^2.1.6",
         "sqlite3": "^5.1.7",
         "typescript": "^5.8.2",
+        "typescript-eslint": "^8.70.0",
         "vitest": "^5.0.0"
     }
 }
