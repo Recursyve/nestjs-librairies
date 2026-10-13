@@ -1,5 +1,6 @@
 import type { FindOptions, Model } from "sequelize";
 import type { HookReturn } from "sequelize/types/hooks";
+
 import { SequelizeUtils } from "../utils/sequelize.utils";
 
 export function AfterFindFormatDateOnlyHook<M extends Model>(instances: M[] | M, options: FindOptions): HookReturn {
