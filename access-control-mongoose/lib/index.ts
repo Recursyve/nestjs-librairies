@@ -1,5 +1,6 @@
 import type { DynamicModule } from "@nestjs/common";
 import { Module } from "@nestjs/common";
+
 import { MongooseDatabaseAdapter } from "./adapters/database.adapter";
 
 @Module({})
@@ -8,8 +9,8 @@ export class AccessControlMongooseModule {
         return {
             module: AccessControlMongooseModule,
             providers: [MongooseDatabaseAdapter]
-        }
-    };
+        };
+    }
 }
 
 export * from "./adapters/database.adapter";
