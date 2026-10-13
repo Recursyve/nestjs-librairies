@@ -1,4 +1,5 @@
 import eslint from "@eslint/js";
+import sheriff from "@softarc/eslint-plugin-sheriff";
 import vitest from "@vitest/eslint-plugin";
 import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
@@ -113,6 +114,10 @@ export default defineConfig(
             ],
             "preserve-caught-error": "error"
         }
+    },
+    {
+        files: ["**/*.ts"],
+        extends: [sheriff.configs.all]
     },
     {
         files: ["**/*.spec.ts"],
