@@ -5,14 +5,14 @@
         "target": "es2021",
         "moduleResolution": "node",
         "declaration": true,
+        "skipLibCheck": true,
         "strict": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "outDir": "dist"
     },
     "include": [
-        "src/**/*",
-        "index.ts"
+        "src/**/*"
     ],
     "exclude": [
         "node_modules",
