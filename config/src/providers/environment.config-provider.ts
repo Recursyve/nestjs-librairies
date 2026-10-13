@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import type { IConfigProvider } from "./config.provider";
+
 import { ConfigProvider } from "../decorators";
+import type { IConfigProvider } from "./config.provider";
 
 @Injectable()
 @ConfigProvider(EnvironmentConfigProvider.type)
