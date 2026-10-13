@@ -1,0 +1,52 @@
+name: Access control sequelize dev CI
+
+on:
+  pull_request:
+    paths:
+      - "access-control-sequelize/**"
+      - ".github/workflows/access_control_sequelize_dev.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  access-control-sequelize:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.x, 24.x, 26.x]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: access-control-sequelize/package-lock.json
+
+      - name: Build local @recursyve/nestjs-access-control
+        run: |
+          npm ci --prefix access-control
+          npm run build --prefix access-control
+
+      - name: Install dependencies
+        working-directory: access-control-sequelize
+        run: npm ci
+
+      - name: Check formatting
+        working-directory: access-control-sequelize
+        run: npm run format:check
+
+      - name: Build
+        working-directory: access-control-sequelize
+        run: npm run build
+
+      - name: Lint
+        working-directory: access-control-sequelize
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: access-control-sequelize
+        run: npm run test
