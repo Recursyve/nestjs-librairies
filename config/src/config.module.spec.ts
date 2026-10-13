@@ -1,4 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { beforeAll, describe, expect, it } from "vitest";
 import { ConfigModule } from "./config.module";
 import { ConfigUtils } from "./config.utils";
 import { Variable } from "./decorators/variable.decorator";
