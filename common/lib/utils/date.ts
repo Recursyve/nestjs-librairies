@@ -33,10 +33,7 @@ export class DateUtils {
     }
 
     public static getIsoDateOnly(date: Date = new Date()): string {
-        return date
-            .toISOString()
-            .split("T")
-            .shift() as string;
+        return date.toISOString().split("T").shift() as string;
     }
 
     public static getUtcDateOnly(date: Date | string): Date;
@@ -74,7 +71,7 @@ export class DateUtils {
     }
 
     public static format(lang: string, date: Date): string {
-        const locales: { [key: string]: Locale } = { fr: frCA, en: enCA }
+        const locales: { [key: string]: Locale } = { fr: frCA, en: enCA };
         return format(date, "LL", { locale: locales[lang] });
     }
 }
