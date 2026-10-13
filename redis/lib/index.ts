@@ -1,10 +1,11 @@
 import type { OnModuleDestroy } from "@nestjs/common";
 import { Module } from "@nestjs/common";
+import { ModuleRef } from "@nestjs/core";
 import { TerminusModule } from "@nestjs/terminus";
+
+import { RedisHealthIndicator } from "./health-indicators/redis-health.indicator";
 import { RedisConfigService } from "./services/redis-config.service";
 import { RedisService } from "./services/redis.service";
-import { ModuleRef } from "@nestjs/core";
-import {RedisHealthIndicator} from "./health-indicators/redis-health.indicator";
 
 @Module({
     imports: [TerminusModule],
