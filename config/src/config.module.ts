@@ -6,11 +6,7 @@ import { ConfigProviderHandler } from "./handlers/config-provider.handler";
 import { ConfigHandler } from "./handlers/config.handler";
 import { OPTIONS } from "./constant";
 import { isPlainObject } from "@nestjs/common/utils/shared.utils";
-
-export interface ConfigModuleOptions {
-    configs?: Type[];
-    skipRequiredFieldsCheck?: boolean;
-}
+import { ConfigModuleOptions } from "./config.module.options";
 
 @Global()
 @Module({
