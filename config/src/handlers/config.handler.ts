@@ -1,8 +1,10 @@
-import type { ConfigMetadata } from "../models/config-metadata.model";
 import "reflect-metadata";
-import { CONFIG } from "../constant";
-import type { VariableMetadata } from "../models/variable-metadata.model";
+
 import type { Type } from "@nestjs/common";
+
+import { CONFIG } from "../constant";
+import type { ConfigMetadata } from "../models/config-metadata.model";
+import type { VariableMetadata } from "../models/variable-metadata.model";
 
 export class ConfigHandler {
     public static getVariable(target: Type, propertyKey: string): VariableMetadata | null {
@@ -11,13 +13,15 @@ export class ConfigHandler {
             return null;
         }
 
-        return config.variables.find(variable => variable.propertyKey === propertyKey) ?? null;
+        return config.variables.find((variable) => variable.propertyKey === propertyKey) ?? null;
     }
 
     public static saveVariable(target: Type, variableConfig: VariableMetadata): void {
         const config = ConfigHandler.getConfig(target);
 
-        const variableIndex = config.variables.findIndex(variable => variable.propertyKey === variableConfig.propertyKey);
+        const variableIndex = config.variables.findIndex(
+            (variable) => variable.propertyKey === variableConfig.propertyKey
+        );
         if (variableIndex >= 0) {
             config.variables[variableIndex] = variableConfig;
         } else {

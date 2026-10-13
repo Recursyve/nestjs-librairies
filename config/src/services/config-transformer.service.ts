@@ -1,22 +1,26 @@
 import type { Type } from "@nestjs/common";
 import { Inject, Injectable } from "@nestjs/common";
-import { ConfigHandler } from "../handlers/config.handler";
-import { ConfigModelNotFoundError } from "../errors/config-model-not-found.error";
-import { EnvironmentConfigProvider } from "../providers/environment.config-provider";
 import { ModuleRef } from "@nestjs/core";
-import { ConfigProviderHandler } from "../handlers/config-provider.handler";
-import type { IConfigProvider } from "../providers/config.provider";
-import { ConfigProviderNotRegisteredError } from "../errors/config-provider-not-registered.error";
-import { ConfigProviderNotFoundInModuleError } from "../errors/config-provider-not-found-in-module.error";
-import { OPTIONS } from "../constant";
-import type { ConfigModuleOptions } from "../config.module.options";
-import { ConfigVariablesNotDefinedError } from "../errors/config-variables-not-defined.error";
 import { plainToInstance } from "class-transformer";
+
+import type { ConfigModuleOptions } from "../config.module.options";
+import { OPTIONS } from "../constant";
+import { ConfigModelNotFoundError } from "../errors/config-model-not-found.error";
+import { ConfigProviderNotFoundInModuleError } from "../errors/config-provider-not-found-in-module.error";
+import { ConfigProviderNotRegisteredError } from "../errors/config-provider-not-registered.error";
+import { ConfigVariablesNotDefinedError } from "../errors/config-variables-not-defined.error";
+import { ConfigProviderHandler } from "../handlers/config-provider.handler";
+import { ConfigHandler } from "../handlers/config.handler";
 import type { ConfigMetadata } from "../models";
+import type { IConfigProvider } from "../providers/config.provider";
+import { EnvironmentConfigProvider } from "../providers/environment.config-provider";
 
 @Injectable()
 export class ConfigTransformerService {
-    constructor(@Inject(OPTIONS) private options: ConfigModuleOptions, private moduleRef: ModuleRef) {}
+    constructor(
+        @Inject(OPTIONS) private options: ConfigModuleOptions,
+        private moduleRef: ModuleRef
+    ) {}
 
     public async transform<T>(configType: Type<T>): Promise<T | null> {
         const configMetadata = this.getConfigMetadata(configType);
@@ -109,9 +113,7 @@ export class ConfigTransformerService {
     }
 
     private async getConfigProvider(provider: string): Promise<IConfigProvider | never> {
-        const configProviderType = ConfigProviderHandler.getConfigProvider(
-            provider ?? EnvironmentConfigProvider.type
-        );
+        const configProviderType = ConfigProviderHandler.getConfigProvider(provider ?? EnvironmentConfigProvider.type);
         if (!configProviderType) {
             throw new ConfigProviderNotRegisteredError(provider ?? EnvironmentConfigProvider.type);
         }
