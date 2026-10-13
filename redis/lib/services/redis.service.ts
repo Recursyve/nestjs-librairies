@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import Redis from "ioredis";
 import type { ScanStreamOptions } from "ioredis/built/types";
+
 import { RedisArrayUtils } from "../utils/array.utils";
 import { RedisConfigService } from "./redis-config.service";
 
@@ -139,8 +140,8 @@ export class RedisService {
         return new Promise((resolve, reject) => {
             this.client.ping((error, response) => {
                 resolve([error, response]);
-            })
-        })
+            });
+        });
     }
 
     public scan(pattern: string, options: RedisScanOptions = { count: 1000 }): Promise<string[]> {
@@ -152,7 +153,7 @@ export class RedisService {
             });
 
             const keys: string[] = [];
-            stream.on("data", resultKeys => {
+            stream.on("data", (resultKeys) => {
                 for (const key of resultKeys) {
                     keys.push(key);
                 }
