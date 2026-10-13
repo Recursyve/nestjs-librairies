@@ -1,18 +1,7 @@
 import type { Type } from "@nestjs/common";
-import {
-    Body,
-    Get,
-    HttpCode,
-    HttpStatus,
-    Param,
-    Post,
-    Query,
-    Req,
-    UseGuards,
-    UseInterceptors
-} from "@nestjs/common";
+import { Body, Get, HttpCode, HttpStatus, Param, Post, Query, Req, UseGuards, UseInterceptors } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiParam } from "@nestjs/swagger";
-import type { FilterResultModel } from "../../models/filter.model";
+
 import {
     ExportTypes,
     FilterConfigurationModel,
@@ -22,6 +11,7 @@ import {
     FilterResultModelMixin,
     SelectFilterValue
 } from "../..";
+import type { FilterResultModel } from "../../models/filter.model";
 import { FilterService } from "../filter.service";
 import { FilterQueryGuard } from "../guards/filter-query.guard";
 import { DataFileDownloadInterceptor } from "../interceptors/data-file-download.interceptor";
@@ -54,18 +44,15 @@ export function OpenApiFilterController<T extends Type, D>(
         @HttpCode(HttpStatus.OK)
         @UseInterceptors(DataFileDownloadInterceptor)
         @ApiOkResponse({
-            description: 'Returns file data as binary (Buffer) or as text (string) depending on the export type.',
+            description: "Returns file data as binary (Buffer) or as text (string) depending on the export type.",
             content: {
-              'application/octet-stream': {
-                schema: {
-                  oneOf: [
-                    { type: 'string', format: 'binary' },
-                    { type: 'string' }
-                  ]
+                "application/octet-stream": {
+                    schema: {
+                        oneOf: [{ type: "string", format: "binary" }, { type: "string" }]
+                    }
                 }
-              }
             }
-          })
+        })
         @ApiParam({ name: "type", enum: ExportTypes, enumName: "ExportTypes" })
         @ApiOperation({ operationId: `download${Base.name}Data` })
         public override async downloadData(

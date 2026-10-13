@@ -1,7 +1,8 @@
 import { Col, Fn, Literal } from "sequelize/types/utils";
+
+import type { DataFilterUserModel } from "../../models/user.model";
 import { M } from "../../sequelize.utils";
 import type { IRule } from "../models";
-import type { DataFilterUserModel } from "../../models/user.model";
 
 export type OrderItemColumn = string | Col | Fn | Literal;
 

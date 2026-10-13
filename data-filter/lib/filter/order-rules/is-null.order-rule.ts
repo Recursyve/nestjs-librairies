@@ -1,4 +1,5 @@
 import { literal } from "sequelize";
+
 import { M, SequelizeUtils } from "../../sequelize.utils";
 import type { BaseOrderRuleDefinition, OrderItemColumn } from "./order-rule";
 import { OrderRule } from "./order-rule";

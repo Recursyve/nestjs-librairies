@@ -1,5 +1,6 @@
 import {
-    AutoIncrement, BelongsTo,
+    AutoIncrement,
+    BelongsTo,
     Column,
     CreatedAt,
     DeletedAt,
@@ -10,8 +11,9 @@ import {
     Table,
     UpdatedAt
 } from "sequelize-typescript";
-import { Places } from "../places/places.model";
+
 import { ContractSystems } from "../contracts/contract-systems.model";
+import { Places } from "../places/places.model";
 
 @Table({
     tableName: "systems",

@@ -21,13 +21,13 @@ All notable changes to the @recursyve/nestjs-data-filter project will be documen
 ## [8.1.2] - 2022-04-04
 
 ### Changed
- 
-- Condition in filter configuration now accept a function as a value to allow the runtime rule value to used instead of juste a *hardcoded* value
+
+- Condition in filter configuration now accept a function as a value to allow the runtime rule value to used instead of juste a _hardcoded_ value
 
 ## [8.1.3] - 2022-04-11
 
 ### Changed
- 
+
 - Update typings for SelectFilter getResourceById
 
 ## [8.2.0] - 2022-04-12
@@ -37,16 +37,17 @@ All notable changes to the @recursyve/nestjs-data-filter project will be documen
 - Filter config can now receive the Http Request in parameters
 
 ### Breaking changes
- 
+
 - Update SelectFilter `values` and `getResourceById` definition to accept request in parameters
 
 #### Before
+
 ```typescript
 SelectFilter({
     id: "test",
     values: (value, user) => Promise.resolve([]),
     getResourceById: (id, user) => Promise.resolve({ id: "test", name: "TEST!" })
-})
+});
 ```
 
 #### After
@@ -56,7 +57,7 @@ SelectFilter({
     id: "test",
     values: ({ value, user, req }) => Promise.resolve([]),
     getResourceById: ({ id, user, req }) => Promise.resolve({ id: "test", name: "TEST!" })
-})
+});
 ```
 
 ## [8.2.1] - 2022-04-12
@@ -87,7 +88,7 @@ SelectFilter({
 
 ### Bugfix
 
-- Fix an issue with the DataFilterRepository search when a where condition is passed, but without an `[Op.and]` as root condition  
+- Fix an issue with the DataFilterRepository search when a where condition is passed, but without an `[Op.and]` as root condition
 
 ## [8.3.4] - 2022-05-12
 
@@ -101,8 +102,7 @@ SelectFilter({
 ### Bugfix
 
 - Fix order by custom column with filters
-- Fix an issue with the GeoBoundsFilter when using the srid config 
-
+- Fix an issue with the GeoBoundsFilter when using the srid config
 
 ## [8.3.7] - 2022-05-25
 
@@ -122,7 +122,6 @@ SelectFilter({
 
 - Added DateOnlyFilter for `DATEONLY` columns
 
-
 ## [8.4.7] - 2022-07-26
 
 ### Bugfix
@@ -134,7 +133,6 @@ SelectFilter({
 ### Bugfix
 
 - Fix empty attributes array in `@Include` not adding the `id` by default
-
 
 ## [8.5.0] - 2022-08-23
 
@@ -148,7 +146,6 @@ SelectFilter({
 ### Bugfix
 
 - Fix `IfOrderRule` possible ambiguous column name
-
 
 ## [8.5.2] - 2022-10-5
 
@@ -168,13 +165,11 @@ SelectFilter({
 
 - Fix issues with OrderRules
 
-
 ## [8.5.5] - 2022-10-01
 
 ### Bugfix
 
 - Fix issues with RadioFilter conditions in options
-
 
 ## [8.5.6] - 2023-01-04
 
@@ -182,13 +177,11 @@ SelectFilter({
 
 - Fix for strict typings
 
-
 ## [8.7.0] - 2023-01-25
 
 ### Improvements
 
 - Fix include generations
-
 
 ## [8.8.0] - 2023-02-01
 
@@ -210,7 +203,6 @@ SelectFilter({
 
 - Fix issue where include for `RadioFilter` conditions in options would generate properly.
 
-
 ## [8.9.0] - 2023-06-19
 
 ### Added
@@ -223,13 +215,11 @@ SelectFilter({
 
 - Added more options for `@Count` and `@Sum` decorators.
 
-
 ## [8.9.2] - 2023-06-20
 
 ### Bugfix
 
 - Fix issue with the groupBy options of the FilterQueryModel.
-
 
 ## [9.0.0] - 2023-01-02
 
@@ -266,7 +256,6 @@ SelectFilter({
 
 - Fix issue with `IsNull` and `IsNotNull` operators for DateFilter.
 
-
 ## [9.1.2] - 2023-04-14
 
 ### Bugfix
@@ -276,7 +265,8 @@ SelectFilter({
 ## [9.2.0]
 
 ## Breaking changes
-- 
+
+-
 - Update typings of findByPk and findOne to match Sequelize Typings.
 
 ### Added
@@ -292,7 +282,6 @@ SelectFilter({
 ### Bugfix
 
 - Fix performance issues with the filter count feature.
-
 
 ## [9.2.2]
 
@@ -316,13 +305,13 @@ SelectFilter({
 
 ### Bugfix
 
--  Fix issues with filter group and count with joins
+- Fix issues with filter group and count with joins
 
 ## [9.3.2] - 2024-04-04
 
 ### Bugfix
 
--  Fix issues with date time filters with a path
+- Fix issues with date time filters with a path
 
 ## [9.4.0] - 2024-08-13
 
@@ -334,7 +323,7 @@ SelectFilter({
 
 ### Bugfix
 
--  Fix issues with json columns in Filters
+- Fix issues with json columns in Filters
 
 ## [10.0.0] - 2023-10-18
 
@@ -396,7 +385,7 @@ SelectFilter({
 
 - We added a JsonOrderRule
 - We added the concept of _SearchableTranslationAttribute_ to fix issues with JSON column containing transactions.
-  - ex: { "fr": "Bon matin!", "en": "Good morning!" }
+    - ex: { "fr": "Bon matin!", "en": "Good morning!" }
 
 ## [10.2.1] - 2025-04-23
 
@@ -420,7 +409,7 @@ SelectFilter({
 
 - We added a JsonOrderRule
 - We added the concept of _SearchableTranslationAttribute_ to fix issues with JSON column containing transactions.
-  - ex: { "fr": "Bon matin!", "en": "Good morning!" }
+    - ex: { "fr": "Bon matin!", "en": "Good morning!" }
 - We added support for the OpenApi spec with `@nestjs/swagger` (OpenApiFilterController)
 
 ## [11.2.0] - 2025-08-11

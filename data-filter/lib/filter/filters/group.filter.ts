@@ -1,5 +1,6 @@
 import type { WhereOptions } from "sequelize";
 import { Op } from "sequelize";
+
 import type { DataFilterUserModel, IRule } from "../..";
 import { TranslateAdapter } from "../../adapters/translate.adapter";
 import { FilterUtils } from "../filter.utils";
@@ -81,7 +82,7 @@ export class GroupFilter implements GroupFilterDefinition {
         }
 
         const rootWhere = await this.rootFilter.getWhereOptions(root as QueryRuleModel);
-        const valueFilter = this.valueFilter ?? await this.getValueFilter?.(root as QueryRuleModel);
+        const valueFilter = this.valueFilter ?? (await this.getValueFilter?.(root as QueryRuleModel));
         if (!valueFilter) {
             return rootWhere;
         }
@@ -102,7 +103,7 @@ export class GroupFilter implements GroupFilterDefinition {
             return {};
         }
 
-        const valueFilter = this.valueFilter ?? await this.getValueFilter?.(root as QueryRuleModel);
+        const valueFilter = this.valueFilter ?? (await this.getValueFilter?.(root as QueryRuleModel));
         const rootHaving = await this.rootFilter.getHavingOptions(rule);
         const valueHaving = await valueFilter?.getHavingOptions(rule);
         if (!rootHaving || !valueHaving) {
@@ -110,10 +111,7 @@ export class GroupFilter implements GroupFilterDefinition {
         }
 
         return {
-            [Op.and]: [
-                rootHaving,
-                valueHaving
-            ]
+            [Op.and]: [rootHaving, valueHaving]
         };
     }
 

@@ -1,5 +1,6 @@
 import type { ProjectionAlias } from "sequelize";
 import { Model } from "sequelize-typescript";
+
 import type { IncludeWhereModel } from "./include.model";
 import type { PathModel } from "./path.model";
 

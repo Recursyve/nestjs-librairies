@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import type { FindOptions } from "sequelize";
 import { col, fn, Op, where } from "sequelize";
 import { beforeAll, describe, expect, it } from "vitest";
+
 import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdapter } from "../adapters";
 import { DataFilterService } from "../data-filter.service";
 import { Attributes, Data, Include, Path } from "../decorators";
@@ -20,8 +21,8 @@ import { BaseFilter } from "./base-filter";
 import { FilterService } from "./filter.service";
 import { Filter, NumberFilter, TextFilter } from "./filters";
 import { DefaultFilter } from "./filters/default.filter";
-import { DefaultOrderRule } from "./order-rules/default.order-rule";
 import { FilterOperatorTypes } from "./operators";
+import { DefaultOrderRule } from "./order-rules/default.order-rule";
 
 @Data(ContractSystems)
 @Attributes(["active"])
@@ -141,26 +142,31 @@ describe("FilterService", () => {
         const request = {};
         const user = null;
 
-        const options = await filterService.getFindOptions(ContractSystems, {
-            condition: "and",
-            rules: [
-                {
-                    id: "email",
-                    value: null,
-                    operation: "none"
-                },
-                {
-                    id: "name",
-                    value: "John",
-                    operation: FilterOperatorTypes.Equal
-                },
-                {
-                    id: "visitCount",
-                    value: 2,
-                    operation: FilterOperatorTypes.GreaterOrEqual
-                }
-            ]
-        }, request, user);
+        const options = await filterService.getFindOptions(
+            ContractSystems,
+            {
+                condition: "and",
+                rules: [
+                    {
+                        id: "email",
+                        value: null,
+                        operation: "none"
+                    },
+                    {
+                        id: "name",
+                        value: "John",
+                        operation: FilterOperatorTypes.Equal
+                    },
+                    {
+                        id: "visitCount",
+                        value: 2,
+                        operation: FilterOperatorTypes.GreaterOrEqual
+                    }
+                ]
+            },
+            request,
+            user
+        );
         expect(options).toBeDefined();
         expect(options).toStrictEqual({
             include: [
@@ -261,16 +267,21 @@ describe("FilterService", () => {
     });
 
     it("getFindOptions should walk nested filter.condition groups without overflowing", async () => {
-        const options = await filterService.getFindOptions(ContractSystems, {
-            condition: "and",
-            rules: [
-                {
-                    id: "nestedName",
-                    value: "John",
-                    operation: FilterOperatorTypes.Equal
-                }
-            ]
-        }, {}, null);
+        const options = await filterService.getFindOptions(
+            ContractSystems,
+            {
+                condition: "and",
+                rules: [
+                    {
+                        id: "nestedName",
+                        value: "John",
+                        operation: FilterOperatorTypes.Equal
+                    }
+                ]
+            },
+            {},
+            null
+        );
 
         expect(options.include).toEqual(
             expect.arrayContaining([
@@ -304,18 +315,23 @@ describe("FilterService", () => {
     it("getFindOptions should handle filter with where callback", async () => {
         const testRequest = { tenantId: 123 };
         const testUser = { id: 1, language: "en" } as any;
-        
-        const options = await filterService.getFindOptions(ContractSystems, {
-            condition: "and",
-            rules: [
-                {
-                    id: "contractWithCallback",
-                    value: "test",
-                    operation: FilterOperatorTypes.Equal
-                }
-            ]
-        }, testRequest, testUser);
-        
+
+        const options = await filterService.getFindOptions(
+            ContractSystems,
+            {
+                condition: "and",
+                rules: [
+                    {
+                        id: "contractWithCallback",
+                        value: "test",
+                        operation: FilterOperatorTypes.Equal
+                    }
+                ]
+            },
+            testRequest,
+            testUser
+        );
+
         expect(options).toStrictEqual<FindOptions>({
             include: [
                 {

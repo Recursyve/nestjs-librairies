@@ -7,7 +7,11 @@ export function SearchableTranslationAttributes(attributes: string[]): PropertyD
     };
 }
 
-function defineSearchableTranslationAttributesMetadata(target: Object, propertyKey: string | symbol | undefined, attributes: string[]) {
+function defineSearchableTranslationAttributesMetadata(
+    target: Object,
+    propertyKey: string | symbol | undefined,
+    attributes: string[]
+) {
     if (!propertyKey) {
         const dataFilter = DataFilterHandler.getDataFilter(target);
         dataFilter.setSearchableTranslationAttributes(attributes);

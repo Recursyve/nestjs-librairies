@@ -1,8 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { TextFilter } from "./text.filter";
-import { FilterOperatorTypes } from "../operators";
 import type { WhereOptions } from "sequelize";
 import { col, fn, Op, where } from "sequelize";
+import { describe, expect, it } from "vitest";
+
+import { FilterOperatorTypes } from "../operators";
+import { TextFilter } from "./text.filter";
 
 describe("Filter", () => {
     describe("getWhereOptions", () => {
@@ -25,11 +26,14 @@ describe("Filter", () => {
             const filter = new TextFilter({
                 attribute: "test"
             });
-            const options = await filter.getWhereOptions({
-                id: "test",
-                value: "test",
-                operation: FilterOperatorTypes.Equal
-            }, "customName");
+            const options = await filter.getWhereOptions(
+                {
+                    id: "test",
+                    value: "test",
+                    operation: FilterOperatorTypes.Equal
+                },
+                "customName"
+            );
             expect(options).toBeDefined();
             expect(options).toStrictEqual<WhereOptions>({
                 customName: "test"
@@ -75,7 +79,7 @@ describe("Filter", () => {
         it("with having defined should return null", async () => {
             const filter = new TextFilter({
                 attribute: "test",
-                having:fn("count", col("test.email"))
+                having: fn("count", col("test.email"))
             });
             const options = await filter.getWhereOptions({
                 id: "test",
@@ -128,9 +132,11 @@ describe("Filter", () => {
                 operation: "none"
             });
             expect(options).toBeDefined();
-            expect(options).toStrictEqual(where(fn("count", col("system.place.owners.person.email")), {
-                [Op.lte]: 0
-            }));
+            expect(options).toStrictEqual(
+                where(fn("count", col("system.place.owners.person.email")), {
+                    [Op.lte]: 0
+                })
+            );
         });
     });
 
@@ -143,8 +149,8 @@ describe("Filter", () => {
             });
             filter.translateService = translationService;
             const config = await filter.getConfig("", null, {});
-            expect(config).toBeDefined()
-        })
+            expect(config).toBeDefined();
+        });
 
         it("with enabled returning true it should return the config", async () => {
             const filter = new TextFilter({
@@ -153,8 +159,8 @@ describe("Filter", () => {
             });
             filter.translateService = translationService;
             const config = await filter.getConfig("", null, {});
-            expect(config).toBeDefined()
-        })
+            expect(config).toBeDefined();
+        });
 
         it("with enabled returning false it should return null", async () => {
             const filter = new TextFilter({
@@ -163,7 +169,7 @@ describe("Filter", () => {
             });
             filter.translateService = translationService;
             const config = await filter.getConfig("", null, {});
-            expect(config).toBeNull()
-        })
-    })
+            expect(config).toBeNull();
+        });
+    });
 });

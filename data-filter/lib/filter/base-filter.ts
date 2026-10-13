@@ -1,10 +1,11 @@
 import type { Type } from "@nestjs/common";
+
 import { TranslateAdapter } from "../adapters/translate.adapter";
+import { ExportTypes } from "../models/export-types.model";
 import type { FilterDefinition, GroupFilterDefinition } from "./filters";
 import { Filter, GroupFilter } from "./filters";
 import type { DefaultFilterDefinition } from "./filters/default.filter";
 import type { FilterConfig, FilterModel } from "./models";
-import { ExportTypes } from "../models/export-types.model";
 import { DefaultOrderRule } from "./order-rules/default.order-rule";
 
 export abstract class BaseFilter<T> implements FilterModel<T> {

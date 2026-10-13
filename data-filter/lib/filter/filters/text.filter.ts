@@ -1,7 +1,7 @@
-import type { DataFilterUserModel } from "../../models/user.model";
 import { FilterBaseConfigurationModel } from "../..";
-import { FilterType } from "../type";
+import type { DataFilterUserModel } from "../../models/user.model";
 import { FilterOperatorTypes, StringOperators } from "../operators";
+import { FilterType } from "../type";
 import type { BaseFilterDefinition } from "./filter";
 import { Filter } from "./filter";
 
@@ -18,7 +18,11 @@ export class TextFilter extends Filter {
         super(definition);
     }
 
-    public override async getConfig<Request>(key: string, request: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel | null> {
+    public override async getConfig<Request>(
+        key: string,
+        request: Request,
+        user?: DataFilterUserModel
+    ): Promise<FilterBaseConfigurationModel | null> {
         if (!this.mask) {
             return super.getConfig(key, request, user);
         }
@@ -31,7 +35,7 @@ export class TextFilter extends Filter {
 
         return {
             ...config,
-           mask: this.mask
+            mask: this.mask
         };
     }
 }

@@ -1,5 +1,7 @@
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import type { WhereOptions } from "sequelize";
 import { Op } from "sequelize";
+
 import type { PathModel } from "../../models/path.model";
 import type { DataFilterUserModel } from "../../models/user.model";
 import { FilterUtils } from "../filter.utils";
@@ -9,7 +11,6 @@ import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
 import type { BaseFilterDefinition, FilterCondition, FilterConditionRule } from "./filter";
 import { Filter } from "./filter";
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export interface OptionsFilterOption {
     key: string;
@@ -49,7 +50,11 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
         super(definition);
     }
 
-    public override async getConfig<Request>(key: string, request: Request, user?: DataFilterUserModel): Promise<OptionsFilterConfigurationModel | null> {
+    public override async getConfig<Request>(
+        key: string,
+        request: Request,
+        user?: DataFilterUserModel
+    ): Promise<OptionsFilterConfigurationModel | null> {
         const config = await super.getConfig(key, request, user);
 
         if (!config) {
@@ -59,18 +64,25 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
         return {
             ...config,
             selectionMode: this.selectionMode,
-            options: await Promise.all(this.options.map(async x => ({
-                key: x.key,
-                name: await this._translateService.getTranslation(
-                    user?.language ?? "",
-                    FilterUtils.getRadioOptionTranslationKey(key, x.key)
-                )
-            })))
+            options: await Promise.all(
+                this.options.map(async (x) => ({
+                    key: x.key,
+                    name: await this._translateService.getTranslation(
+                        user?.language ?? "",
+                        FilterUtils.getRadioOptionTranslationKey(key, x.key)
+                    )
+                }))
+            )
         };
     }
 
-    public override getIncludePaths<Request>(rule: QueryRuleModel, request: Request, user: DataFilterUserModel | null, data?: object): PathModel[] {
-        const option = this.options.find(x => x.key === rule.value);
+    public override getIncludePaths<Request>(
+        rule: QueryRuleModel,
+        request: Request,
+        user: DataFilterUserModel | null,
+        data?: object
+    ): PathModel[] {
+        const option = this.options.find((x) => x.key === rule.value);
         const condition = option?.condition;
         if (!condition) {
             return super.getIncludePaths(rule, request, user);
@@ -80,7 +92,7 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
     }
 
     public override async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined> {
-        const option = this.options.find(x => x.key === rule.value);
+        const option = this.options.find((x) => x.key === rule.value);
         if (!option) {
             return super.getWhereOptions(rule);
         }
@@ -107,7 +119,7 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
     }
 
     public override async getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined> {
-        const option = this.options.find(x => x.key === rule.value);
+        const option = this.options.find((x) => x.key === rule.value);
         if (!option) {
             return super.getHavingOptions(rule);
         }
@@ -119,7 +131,12 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
         });
     }
 
-    private getRulePaths<Request>(rules: (FilterConditionRule | FilterCondition)[], request: Request, user: DataFilterUserModel | null, data?: object): PathModel[] {
+    private getRulePaths<Request>(
+        rules: (FilterConditionRule | FilterCondition)[],
+        request: Request,
+        user: DataFilterUserModel | null,
+        data?: object
+    ): PathModel[] {
         const paths: PathModel[] = [];
 
         for (const rule of rules) {
@@ -131,7 +148,6 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
                     if (!r.path) {
                         continue;
                     }
-
 
                     if (typeof r.where === "function") {
                         r.where = r.where({ request, user });

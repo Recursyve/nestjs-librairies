@@ -1,4 +1,5 @@
 import type { Order, WhereOptions } from "sequelize";
+
 import { SequelizeUtils } from "../sequelize.utils";
 import type { IncludeWhereModel } from "./include.model";
 

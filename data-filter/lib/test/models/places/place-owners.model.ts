@@ -10,6 +10,7 @@ import {
     Table,
     UpdatedAt
 } from "sequelize-typescript";
+
 import { Owners } from "./owners.model";
 import { Places } from "./places.model";
 

@@ -1,5 +1,6 @@
 import { format, parseISO } from "date-fns";
 import type { WhereOptions } from "sequelize";
+
 import { QueryRuleModel } from "../models";
 import { DateOperators, FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";

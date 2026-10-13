@@ -1,10 +1,10 @@
-import { AttributesConfig } from "../models/attributes.model";
 import { ATTRIBUTES } from "../constant";
+import { AttributesConfig } from "../models/attributes.model";
 
 export class AttributesHandler {
     public static getAttribute(target: Object, propertyKey: string | symbol): AttributesConfig {
         const attributes: AttributesConfig[] = Reflect.getMetadata(ATTRIBUTES, target) || [];
-        const attribute = attributes.find(x => x.key === propertyKey);
+        const attribute = attributes.find((x) => x.key === propertyKey);
         if (!attribute) {
             return new AttributesConfig(propertyKey);
         }
@@ -13,7 +13,7 @@ export class AttributesHandler {
 
     public static saveAttribute(target: Object, config: AttributesConfig): void {
         const attributes: AttributesConfig[] = Reflect.getMetadata(ATTRIBUTES, target) || [];
-        const attribute = attributes.find(x => x.key === config.key);
+        const attribute = attributes.find((x) => x.key === config.key);
         if (attribute) {
             return;
         }

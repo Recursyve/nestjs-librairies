@@ -2,6 +2,7 @@ import { addMilliseconds, endOfDay, parseISO, startOfDay } from "date-fns";
 import { getTimezoneOffset } from "date-fns-tz";
 import type { WhereOptions } from "sequelize";
 import { Op } from "sequelize";
+
 import { QueryRuleModel } from "../models";
 import { DateOperators, FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
@@ -50,11 +51,10 @@ export class DateFilter extends Filter implements DateFilterDefinition {
 
             const values = this.skipTimezone
                 ? rule.value
-                :
-                [
-                    addMilliseconds(startOfDay(parseISO(rule.value[0])), offsetMilliseconds).toISOString(),
-                    addMilliseconds(endOfDay(parseISO(rule.value[1])), offsetMilliseconds).toISOString()
-                ];
+                : [
+                      addMilliseconds(startOfDay(parseISO(rule.value[0])), offsetMilliseconds).toISOString(),
+                      addMilliseconds(endOfDay(parseISO(rule.value[1])), offsetMilliseconds).toISOString()
+                  ];
             return super.getWhereOptions({
                 ...rule,
                 value: values
@@ -62,8 +62,12 @@ export class DateFilter extends Filter implements DateFilterDefinition {
         }
 
         const parsedValue = parseISO(rule.value as any);
-        const start = this.skipTimezone ? startOfDay(parsedValue).toISOString() : addMilliseconds(startOfDay(parsedValue), offsetMilliseconds).toISOString();
-        const end = this.skipTimezone ? endOfDay(parsedValue).toISOString() : addMilliseconds(endOfDay(parsedValue), offsetMilliseconds).toISOString();
+        const start = this.skipTimezone
+            ? startOfDay(parsedValue).toISOString()
+            : addMilliseconds(startOfDay(parsedValue), offsetMilliseconds).toISOString();
+        const end = this.skipTimezone
+            ? endOfDay(parsedValue).toISOString()
+            : addMilliseconds(endOfDay(parsedValue), offsetMilliseconds).toISOString();
 
         switch (rule.operation) {
             case FilterOperatorTypes.Equal:
@@ -83,7 +87,11 @@ export class DateFilter extends Filter implements DateFilterDefinition {
         }
     }
 
-    private async getEqualWhereOptions(rule: QueryRuleModel, start: string, end: string): Promise<WhereOptions | undefined> {
+    private async getEqualWhereOptions(
+        rule: QueryRuleModel,
+        start: string,
+        end: string
+    ): Promise<WhereOptions | undefined> {
         return super.getWhereOptions({
             operation: FilterOperatorTypes.Between,
             value: [start, end],
@@ -91,7 +99,11 @@ export class DateFilter extends Filter implements DateFilterDefinition {
         });
     }
 
-    private async getNotEqualWhereOptions(rule: QueryRuleModel, start: string, end: string): Promise<WhereOptions | undefined> {
+    private async getNotEqualWhereOptions(
+        rule: QueryRuleModel,
+        start: string,
+        end: string
+    ): Promise<WhereOptions | undefined> {
         const first = await super.getWhereOptions({
             operation: FilterOperatorTypes.Less,
             value: start,
@@ -135,7 +147,10 @@ export class DateFilter extends Filter implements DateFilterDefinition {
         });
     }
 
-    private async getGreaterOrEqualWhereOptions(rule: QueryRuleModel, start: string): Promise<WhereOptions | undefined> {
+    private async getGreaterOrEqualWhereOptions(
+        rule: QueryRuleModel,
+        start: string
+    ): Promise<WhereOptions | undefined> {
         return super.getWhereOptions({
             operation: FilterOperatorTypes.GreaterOrEqual,
             value: start,

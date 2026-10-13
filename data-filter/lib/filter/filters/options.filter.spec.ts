@@ -1,13 +1,14 @@
 import type { WhereOptions } from "sequelize";
 import { Op } from "sequelize";
 import { describe, expect, it, vi } from "vitest";
+
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
+import type { PathModel } from "../../models/path.model";
 import { FilterUtils } from "../filter.utils";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
 import { OptionsFilter, RadioFilter } from "./options.filter";
-import type { PathModel } from "../../models/path.model";
 
 describe("RadioFilter", () => {
     describe("getConfig", () => {
@@ -234,7 +235,7 @@ describe("RadioFilter", () => {
                         ]
                     },
                     {
-                        "test": {
+                        test: {
                             [Op.ne]: null
                         }
                     }
@@ -246,7 +247,7 @@ describe("RadioFilter", () => {
     describe("getIncludePaths", () => {
         const request = {};
         const user = null;
-        
+
         it("with conditions containing path should returns the paths", async () => {
             const filter = new RadioFilter({
                 attribute: "test",
@@ -280,11 +281,15 @@ describe("RadioFilter", () => {
                     }
                 ]
             });
-            const paths = filter.getIncludePaths({
-                id: "test",
-                value: "no",
-                operation: FilterOperatorTypes.Equal
-            }, request, user);
+            const paths = filter.getIncludePaths(
+                {
+                    id: "test",
+                    value: "no",
+                    operation: FilterOperatorTypes.Equal
+                },
+                request,
+                user
+            );
             expect(paths).toBeDefined();
             expect(paths).toStrictEqual([
                 {
@@ -301,7 +306,7 @@ describe("RadioFilter", () => {
                 status: () => "active",
                 tenant_id: () => (request as any).tenantId
             }));
-            
+
             const filter = new OptionsFilter({
                 attribute: "test",
                 selectionMode: "select",
@@ -326,12 +331,16 @@ describe("RadioFilter", () => {
                 ]
             });
 
-            const paths = filter.getIncludePaths({
-                id: "test",
-                value: "no",
-                operation: FilterOperatorTypes.Equal
-            }, testRequest, testUser);
-            
+            const paths = filter.getIncludePaths(
+                {
+                    id: "test",
+                    value: "no",
+                    operation: FilterOperatorTypes.Equal
+                },
+                testRequest,
+                testUser
+            );
+
             expect(paths).toStrictEqual<PathModel[]>([
                 {
                     path: "test_2",
@@ -575,7 +584,7 @@ describe("OptionsFilter", () => {
                         ]
                     },
                     {
-                        "test": {
+                        test: {
                             [Op.ne]: null
                         }
                     }
@@ -622,11 +631,15 @@ describe("OptionsFilter", () => {
                     }
                 ]
             });
-            const paths = filter.getIncludePaths({
-                id: "test",
-                value: "no",
-                operation: FilterOperatorTypes.Equal
-            }, request, user);
+            const paths = filter.getIncludePaths(
+                {
+                    id: "test",
+                    value: "no",
+                    operation: FilterOperatorTypes.Equal
+                },
+                request,
+                user
+            );
             expect(paths).toBeDefined();
             expect(paths).toStrictEqual([
                 {

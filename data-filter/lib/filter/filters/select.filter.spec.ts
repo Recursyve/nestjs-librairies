@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
+
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
 import { FilterUtils } from "../filter.utils";
-import { SelectFilter } from "./select.filter";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
-import { FilterType } from "../type";
 import { FilterOperatorTypes } from "../operators";
+import { FilterType } from "../type";
+import { SelectFilter } from "./select.filter";
 
 describe("SelectFilter", () => {
     describe("getConfig", () => {

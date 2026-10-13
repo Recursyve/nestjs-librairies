@@ -1,5 +1,5 @@
-import { FilterType } from "../type";
 import { FilterOperatorTypes, NumberOperators } from "../operators";
+import { FilterType } from "../type";
 import type { BaseFilterDefinition } from "./filter";
 import { Filter } from "./filter";
 

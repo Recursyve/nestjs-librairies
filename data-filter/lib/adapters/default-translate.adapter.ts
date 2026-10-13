@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+
 import { TranslateAdapter } from "./translate.adapter";
 
 @Injectable()

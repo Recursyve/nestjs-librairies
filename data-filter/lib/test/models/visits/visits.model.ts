@@ -10,6 +10,7 @@ import {
     Table,
     UpdatedAt
 } from "sequelize-typescript";
+
 import { MaintenanceVisits } from "../maintenance-visits/maintenance-visits.model";
 
 @Table({

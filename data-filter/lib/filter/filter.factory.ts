@@ -1,4 +1,5 @@
 import type { Type } from "@nestjs/common";
+
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
 import { DataFilterService } from "../data-filter.service";
@@ -14,8 +15,15 @@ export function FilterServiceFactory<T>(options?: { disableAccessControl?: boole
         sequelizeModelScanner: SequelizeModelScanner,
         dataFilterService: DataFilterService
     ): FilterService<T> => {
-        return new FilterService(accessControlAdapter, translateAdapter, filter, sequelizeModelScanner, dataFilterService, options);
-    }
+        return new FilterService(
+            accessControlAdapter,
+            translateAdapter,
+            filter,
+            sequelizeModelScanner,
+            dataFilterService,
+            options
+        );
+    };
 }
 
 export function FilterFactory<T>(filter: Type<T>) {
@@ -24,7 +32,9 @@ export function FilterFactory<T>(filter: Type<T>) {
          * Check if all dependencies are injected
          */
         if (filter.prototype.constructor.length !== args.length) {
-            throw new Error(`Not enough dependencies were provided for ${filter.name}: expected ${filter.prototype.constructor.length}, received ${args.length}`)
+            throw new Error(
+                `Not enough dependencies were provided for ${filter.name}: expected ${filter.prototype.constructor.length}, received ${args.length}`
+            );
         }
 
         return new filter(...args);

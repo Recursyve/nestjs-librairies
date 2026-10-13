@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsDefined, IsIn } from "class-validator";
+
 import { FilterOperatorTypes } from "../operators";
 
 export class RuleModel {
@@ -9,7 +10,7 @@ export class RuleModel {
 
     @IsDefined()
     @ApiProperty({
-        oneOf: [{ type: "object" }, { type: "array", items: { type: "object" } }],
+        oneOf: [{ type: "object" }, { type: "array", items: { type: "object" } }]
     })
     value: unknown | unknown[];
 }

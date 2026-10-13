@@ -1,7 +1,8 @@
 import type { Type } from "@nestjs/common";
 import {
     applyDecorators,
-    Body, Get,
+    Body,
+    Get,
     HttpCode,
     HttpStatus,
     Param,
@@ -13,7 +14,7 @@ import {
 } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiParam } from "@nestjs/swagger";
 import type { ApiParamOptions } from "@nestjs/swagger/dist/decorators/api-param.decorator";
-import type { FilterResultModel } from "../../models/filter.model";
+
 import {
     DynamicFilterController,
     ExportTypes,
@@ -23,6 +24,7 @@ import {
     FilterResultModelMixin,
     SelectFilterValue
 } from "../..";
+import type { FilterResultModel } from "../../models/filter.model";
 import { FilterService } from "../filter.service";
 import { FilterQueryGuard } from "../guards/filter-query.guard";
 import { DataFileDownloadInterceptor } from "../interceptors/data-file-download.interceptor";
@@ -64,10 +66,7 @@ export function OpenApiDynamicFilterController<T extends Type, D>(
             content: {
                 "application/octet-stream": {
                     schema: {
-                        oneOf: [
-                            { type: "string", format: "binary" },
-                            { type: "string" }
-                        ]
+                        oneOf: [{ type: "string", format: "binary" }, { type: "string" }]
                     }
                 }
             }
