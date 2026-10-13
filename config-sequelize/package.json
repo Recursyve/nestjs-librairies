@@ -39,6 +39,8 @@
         "@nestjs/sequelize": "^11.0.0",
         "@nestjs/testing": "^11.0.12",
         "@recursyve/nestjs-config": "^11.0.0",
+        "@softarc/eslint-plugin-sheriff": "^0.20.0",
+        "@softarc/sheriff-core": "^0.20.0",
         "@types/node": "^22.13.13",
         "@vitest/coverage-v8": "^5.0.0",
         "@vitest/eslint-plugin": "^1.6.27",
