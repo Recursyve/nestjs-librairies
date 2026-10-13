@@ -77,8 +77,8 @@ export class AccessRules {
         const opt = options
             ? options
             : typeof suffixOrOptions === "string"
-            ? defaultPermissionsOption
-            : suffixOrOptions ?? defaultPermissionsOption;
+              ? defaultPermissionsOption
+              : (suffixOrOptions ?? defaultPermissionsOption);
         const suffix = typeof suffixOrOptions === "string" ? `-${suffixOrOptions}` : "";
         return new AccessRules({
             [AccessActionType.Read]: permissions.some((x) => x === opt.r + suffix),

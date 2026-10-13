@@ -1,6 +1,7 @@
 import type { Type } from "@nestjs/common";
 import { Inject, Injectable, Logger, Optional } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
+
 import { ACCESS_CONTROL_DEFAULT_DATABASE } from "../constant";
 import { CREATED_POLICY_METADATA, FROM_POLICY_METADATA } from "../decorators/constant";
 import type { UserResources } from "../models";
@@ -25,46 +26,51 @@ export class ResourceCreatedPoliciesService {
     }
 
     public exists(resourceName: string): boolean {
-        return this._policies.some(x => x.resourceName === resourceName) || this._policies.some(x => x.parentResourceName === resourceName);
+        return (
+            this._policies.some((x) => x.resourceName === resourceName) ||
+            this._policies.some((x) => x.parentResourceName === resourceName)
+        );
     }
 
     public async execute(resourceName: string, resource: any): Promise<UserResources[]> {
-        const policies = this._policies.filter(x => x.resourceName === resourceName && !x.parentResourceName);
+        const policies = this._policies.filter((x) => x.resourceName === resourceName && !x.parentResourceName);
 
-        const policiesRes = await Promise.all(policies.map(async policy => {
-            try {
-                this.logger.verbose(`Getting users for resource ${resource.id}`, policy.name);
-                const users = await policy.handle(resource);
-                this.logger.verbose(`${users.length} users found for resource ${resource.id}`, policy.name);
-                return users;
-            } catch (e) {
-                this.logger.error("", e, policy.name);
-                return [];
-            }
-        }))
-            .then(res => res.flat().map(x => ({ ...x, resourceId: resource.id })));
+        const policiesRes = await Promise.all(
+            policies.map(async (policy) => {
+                try {
+                    this.logger.verbose(`Getting users for resource ${resource.id}`, policy.name);
+                    const users = await policy.handle(resource);
+                    this.logger.verbose(`${users.length} users found for resource ${resource.id}`, policy.name);
+                    return users;
+                } catch (e) {
+                    this.logger.error("", e, policy.name);
+                    return [];
+                }
+            })
+        ).then((res) => res.flat().map((x) => ({ ...x, resourceId: resource.id })));
 
-        const parentPolicies = this._policies.filter(x => x.parentResourceName && x.parentResourceName === resourceName);
-        const parentPoliciesRes = await Promise.all(parentPolicies.map(async policy => {
-            try {
-                this.logger.verbose(`Getting users for resource ${resource.id}`, policy.name);
-                const users = await policy.handle(resource);
-                this.logger.verbose(`${users.length} users found for resource ${resource.id}`, policy.name);
-                return users;
-            } catch (e) {
-                this.logger.error("", e, policy.name);
-                return [];
-            }
-        }));
+        const parentPolicies = this._policies.filter(
+            (x) => x.parentResourceName && x.parentResourceName === resourceName
+        );
+        const parentPoliciesRes = await Promise.all(
+            parentPolicies.map(async (policy) => {
+                try {
+                    this.logger.verbose(`Getting users for resource ${resource.id}`, policy.name);
+                    const users = await policy.handle(resource);
+                    this.logger.verbose(`${users.length} users found for resource ${resource.id}`, policy.name);
+                    return users;
+                } catch (e) {
+                    this.logger.error("", e, policy.name);
+                    return [];
+                }
+            })
+        );
 
-        return [
-            ...policiesRes,
-            ...parentPoliciesRes.flat()
-        ];
+        return [...policiesRes, ...parentPoliciesRes.flat()];
     }
 
     public registerPolicies(...policies: Type<ResourceCreatedPolicy<any>>[]): void {
-        policies.forEach(policy => this.registerPolicy(policy));
+        policies.forEach((policy) => this.registerPolicy(policy));
     }
 
     private registerPolicy(policy: Type<ResourceCreatedPolicy<any>>): void {
@@ -76,12 +82,12 @@ export class ResourceCreatedPoliciesService {
         const config = this.reflectModel(policy);
         instance.type = config.type ?? this.type;
 
-        const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.type ?? this.type)
+        const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.type ?? this.type);
         instance.resourceName = databaseAdapter.getResourceName(config.model);
 
         const parent = this.reflectParentModel(policy);
         if (parent) {
-            const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(parent.type ?? this.type)
+            const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(parent.type ?? this.type);
             instance.parentResourceName = databaseAdapter.getResourceName(parent.model);
         }
 

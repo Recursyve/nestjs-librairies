@@ -1,6 +1,7 @@
 import type { Type } from "@nestjs/common";
 import { Inject, Injectable, Logger, Optional } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
+
 import { ACCESS_CONTROL_DEFAULT_DATABASE } from "../constant";
 import { POLICY_METADATA } from "../decorators/constant";
 import type { Users } from "../models";
@@ -26,7 +27,7 @@ export class AccessPoliciesService {
     }
 
     public async execute(resourceName: string, user: Users): Promise<PolicyResources> {
-        const policy = this._policies.find(x => x.resourceName === resourceName);
+        const policy = this._policies.find((x) => x.resourceName === resourceName);
         if (!policy) {
             return PolicyResources.resources([]);
         }
@@ -46,11 +47,10 @@ export class AccessPoliciesService {
 
             return PolicyResources.resources([]);
         }
-
     }
 
     public registerPolicies(...policies: Type<AccessPolicy>[]): void {
-        policies.forEach(policy => this.registerPolicy(policy));
+        policies.forEach((policy) => this.registerPolicy(policy));
     }
 
     private registerPolicy(policy: Type<AccessPolicy>): void {
@@ -62,7 +62,7 @@ export class AccessPoliciesService {
         const config = this.reflectModel(policy);
         instance.type = config.type ?? this.type;
 
-        const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.type ?? this.type)
+        const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.type ?? this.type);
         instance.resourceName = databaseAdapter.getResourceName(config.model);
         this._policies.push(instance);
     }

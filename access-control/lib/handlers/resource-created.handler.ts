@@ -1,5 +1,6 @@
 import type { ICommandHandler } from "@nestjs/cqrs";
 import { CommandHandler } from "@nestjs/cqrs";
+
 import { ResourceCreatedCommand } from "../commands";
 import { ResourceCreatedPoliciesService, ResourceAccessService } from "../services";
 
@@ -7,7 +8,7 @@ import { ResourceCreatedPoliciesService, ResourceAccessService } from "../servic
 export class AccessControlResourceCreatedHandler implements ICommandHandler<ResourceCreatedCommand<any>> {
     constructor(
         private resourceCreatedPolicyService: ResourceCreatedPoliciesService,
-        private resourceAccessService: ResourceAccessService,
+        private resourceAccessService: ResourceAccessService
     ) {}
 
     public async execute(command: ResourceCreatedCommand<any>): Promise<void> {
