@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
+
 import { EnvironmentConfig } from "../decorators/config.decorator";
 import { Variable } from "../decorators/variable.decorator";
-import { ConfigHandler } from "./config.handler";
-import { EnvironmentConfigProvider } from "../providers/environment.config-provider";
 import type { ConfigMetadata, VariableMetadata } from "../models";
+import { EnvironmentConfigProvider } from "../providers/environment.config-provider";
+import { ConfigHandler } from "./config.handler";
 
 @EnvironmentConfig()
 class EnvironmentConfigModel {
