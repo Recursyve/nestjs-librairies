@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { RedisArrayUtils } from "./array.utils";
 
 describe("RedisArrayUtils", () => {
