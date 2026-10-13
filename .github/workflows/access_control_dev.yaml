@@ -1,0 +1,47 @@
+name: Access control dev CI
+
+on:
+  pull_request:
+    paths:
+      - "access-control/**"
+      - ".github/workflows/access_control_dev.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  access-control:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.x, 24.x, 26.x]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: access-control/package-lock.json
+
+      - name: Install dependencies
+        working-directory: access-control
+        run: npm ci
+
+      - name: Check formatting
+        working-directory: access-control
+        run: npm run format:check
+
+      - name: Build
+        working-directory: access-control
+        run: npm run build
+
+      - name: Lint
+        working-directory: access-control
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: access-control
+        run: npm run test
