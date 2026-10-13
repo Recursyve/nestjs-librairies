@@ -3,6 +3,7 @@ import { Test } from "@nestjs/testing";
 import { ResourceEventAccessControlService } from "@recursyve/nestjs-access-control";
 import { Sequelize } from "sequelize-typescript";
 import { beforeAll, describe, expect, it, vi } from "vitest";
+
 import { SequelizeHooksAccessControlModule } from "../lib/hooks/sequelize-hooks.module";
 import { AccountDevices } from "./models/account-devices";
 import { Accounts } from "./models/accounts";
@@ -19,7 +20,7 @@ describe("SequelizeHooksModule", () => {
             hasDeletedPolicies: vi.fn(() => true),
             onResourceCreated: vi.fn(),
             onResourceUpdated: vi.fn(),
-            onResourceDeleted: vi.fn(),
+            onResourceDeleted: vi.fn()
         };
 
         const moduleRef = await Test.createTestingModule({
@@ -43,19 +44,17 @@ describe("SequelizeHooksModule", () => {
                             }
                         }
                     },
-                    models: [
-                        Accounts,
-                        AccountDevices,
-                        Devices
-                    ]
+                    models: [Accounts, AccountDevices, Devices]
                 }),
                 SequelizeHooksAccessControlModule
             ]
-        }).useMocker((token) => {
-            if (token === ResourceEventAccessControlService) {
-                return resourceEventAccessControlService;
-            }
-        }).compile();
+        })
+            .useMocker((token) => {
+                if (token === ResourceEventAccessControlService) {
+                    return resourceEventAccessControlService;
+                }
+            })
+            .compile();
 
         await moduleRef.init();
 
@@ -83,22 +82,28 @@ describe("SequelizeHooksModule", () => {
             name: "User updated"
         });
 
-        await Accounts.update({
-            name: "User updated from bulk"
-        }, {
-            where: {
-                userId: "user_to_update"
+        await Accounts.update(
+            {
+                name: "User updated from bulk"
+            },
+            {
+                where: {
+                    userId: "user_to_update"
+                }
             }
-        });
+        );
 
         expect(resourceEventAccessControlService.onResourceUpdated).toBeCalledTimes(2);
     });
 
     it("Deleting an account should call the onResourceDeleted function", async () => {
-        const account = await Accounts.create({
-            userId: "user_to_delete",
-            name: "User to deleted"
-        }, { hooks: false });
+        const account = await Accounts.create(
+            {
+                userId: "user_to_delete",
+                name: "User to deleted"
+            },
+            { hooks: false }
+        );
         expect(account).toBeDefined();
 
         await Accounts.destroy({

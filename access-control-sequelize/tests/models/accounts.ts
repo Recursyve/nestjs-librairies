@@ -1,5 +1,6 @@
 import { SequelizeEntities } from "@recursyve/nestjs-sequelize-utils";
 import { AllowNull, BelongsToMany, Column, Table } from "sequelize-typescript";
+
 import { AccountDevices } from "./account-devices";
 import { Devices } from "./devices";
 
