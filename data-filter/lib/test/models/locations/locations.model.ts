@@ -9,6 +9,7 @@ import {
     Table,
     UpdatedAt
 } from "sequelize-typescript";
+
 import { Coords } from "../coords/coords.model";
 
 @Table({

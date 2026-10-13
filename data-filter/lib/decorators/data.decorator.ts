@@ -1,4 +1,5 @@
 import { Model } from "sequelize-typescript";
+
 import { DataFilterHandler } from "../handlers/data-filter.handler";
 
 export function Data(model: typeof Model<any, any>): ClassDecorator {

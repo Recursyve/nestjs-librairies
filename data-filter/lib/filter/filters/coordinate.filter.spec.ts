@@ -1,12 +1,13 @@
-import { describe, expect, it } from "vitest";
-import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
-import { FilterUtils } from "../filter.utils";
-import { CoordinateFilter } from "./coordinate.filter";
-import { FilterOperatorTypes } from "../operators";
 import type { WhereOptions } from "sequelize";
 import { Op } from "sequelize";
+import { describe, expect, it } from "vitest";
+
+import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
+import { FilterUtils } from "../filter.utils";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
+import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
+import { CoordinateFilter } from "./coordinate.filter";
 
 describe("CoordinateFilter", () => {
     describe("getConfig", () => {

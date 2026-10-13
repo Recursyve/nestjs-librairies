@@ -1,17 +1,18 @@
+import type { IncludeOptions, ProjectionAlias } from "sequelize";
+import { fn, literal, Op } from "sequelize";
 import { beforeAll, describe, expect, it } from "vitest";
+
 import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdapter } from "./adapters";
-import { SearchableAttributes, Distance, Count } from "./decorators";
-import { databaseFactory } from "./test/database.factory";
 import { DataFilterRepository } from "./data-filter.repository";
+import { SearchableAttributes, Distance, Count } from "./decorators";
 import { Attributes, Data, Include, Where } from "./decorators";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
-import { Persons } from "./test/models/persons/persons.model";
+import { databaseFactory } from "./test/database.factory";
 import { Coords } from "./test/models/coords/coords.model";
 import { Locations } from "./test/models/locations/locations.model";
+import { Persons } from "./test/models/persons/persons.model";
 import { Places } from "./test/models/places/places.model";
-import type { IncludeOptions, ProjectionAlias } from "sequelize";
-import { fn, literal, Op } from "sequelize";
 
 @Data(Persons)
 @Attributes(["first_name", "last_name"])
@@ -22,25 +23,24 @@ class PersonsTest {
     @Include("location", {
         attributes: ["value"],
         searchableAttributes: ["value", "unique_code"],
-        where: { value: option => option.value },
+        where: { value: (option) => option.value },
         separate: true
     })
-    @Where({ [Op.or]: () => [ { id: { [Op.ne]: null } } ] }, true)
+    @Where({ [Op.or]: () => [{ id: { [Op.ne]: null } }] }, true)
     coord?: Coords;
-
 }
 
 @Data(Persons)
 @Attributes(["first_name", "last_name"])
-@Distance({ name: "distance", attribute: "geo_point", coordinates: option => option.coordinates, path: "coord" })
+@Distance({ name: "distance", attribute: "geo_point", coordinates: (option) => option.coordinates, path: "coord" })
 class CustomAttributesTest {}
 
 @Data(Persons)
 @Attributes(["first_name", "last_name"])
 class CustomCoordAttributesTest {
     @Attributes(["cellphone"])
-    @Distance({ name: "distance", attribute: "geo_point", coordinates: option => option.coordinates })
-    @Include("location", { attributes: ["value"], where: { value: option => option.value } })
+    @Distance({ name: "distance", attribute: "geo_point", coordinates: (option) => option.coordinates })
+    @Include("location", { attributes: ["value"], where: { value: (option) => option.value } })
     coord?: Coords;
 }
 
@@ -256,7 +256,7 @@ describe("DataFilterRepository", () => {
                     isJson: false,
                     isTranslationAttribute: false
                 }
-            ])
+            ]);
         });
     });
 
@@ -281,7 +281,10 @@ describe("DataFilterRepository", () => {
                 attributes: [
                     "first_name",
                     "last_name",
-                    [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"), fn("Point", -73.2815516, 45.8797953)), "distance"],
+                    [
+                        fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"), fn("Point", -73.2815516, 45.8797953)),
+                        "distance"
+                    ],
                     "id"
                 ],
                 include: [
@@ -316,21 +319,27 @@ describe("DataFilterRepository", () => {
         });
 
         it("generateFindOptions with conditions should return a valid Sequelize FindOptions object", () => {
-            const options = repository.generateFindOptions({}, { value: "Montreal", coordinates: [45.8797953, -73.2815516] });
+            const options = repository.generateFindOptions(
+                {},
+                { value: "Montreal", coordinates: [45.8797953, -73.2815516] }
+            );
             expect(options).toBeDefined();
             expect(options).toStrictEqual({
-                attributes: [
-                    "id",
-                    "first_name",
-                    "last_name"
-                ],
+                attributes: ["id", "first_name", "last_name"],
                 include: [
                     {
                         as: "coord",
                         model: Coords,
                         attributes: [
                             "cellphone",
-                            [fn("ST_Distance_Sphere", literal("`coord`.`geo_point`"),  fn("Point", -73.2815516, 45.8797953)), "distance"],
+                            [
+                                fn(
+                                    "ST_Distance_Sphere",
+                                    literal("`coord`.`geo_point`"),
+                                    fn("Point", -73.2815516, 45.8797953)
+                                ),
+                                "distance"
+                            ],
                             "id"
                         ],
                         order: undefined,
@@ -378,8 +387,9 @@ describe("DataFilterRepository", () => {
             const options = repository.generateFindOptions();
             expect(options.group).toEqual(["id"]);
 
-            const projections = (options.attributes as Array<string | ProjectionAlias>)
-                .filter((attribute): attribute is ProjectionAlias => Array.isArray(attribute));
+            const projections = (options.attributes as Array<string | ProjectionAlias>).filter(
+                (attribute): attribute is ProjectionAlias => Array.isArray(attribute)
+            );
             expect(projections.map(([, alias]) => alias).sort()).toEqual(["withFileNumber", "withoutFileNumber"]);
 
             const sql = projections.map(([expression]) => (expression as { val?: string }).val ?? "").join(" ");

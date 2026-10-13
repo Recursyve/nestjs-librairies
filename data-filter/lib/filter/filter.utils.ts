@@ -1,5 +1,6 @@
 import type { Type } from "@nestjs/common";
 import type { WhereOptions } from "sequelize";
+
 import type { IncludeWhereModel } from "../models/include.model";
 import { BaseFilter } from "./base-filter";
 
@@ -28,7 +29,10 @@ export class FilterUtils {
         return `filter.${key}.options.${option}`;
     }
 
-    public static generateWhereConditions(model: IncludeWhereModel | undefined, data?: object): WhereOptions | undefined {
+    public static generateWhereConditions(
+        model: IncludeWhereModel | undefined,
+        data?: object
+    ): WhereOptions | undefined {
         if (!model) {
             return;
         }

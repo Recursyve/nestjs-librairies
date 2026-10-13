@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 import * as express from "express";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
+
 import { ExportTypes } from "../../models/export-types.model";
 
 @Injectable()
@@ -11,7 +12,7 @@ export class DataFileDownloadInterceptor implements NestInterceptor {
         const type = context.switchToHttp().getRequest<express.Request>().params["type"] as ExportTypes;
         const res = context.switchToHttp().getResponse<express.Response>();
         return next.handle().pipe(
-            map(value => {
+            map((value) => {
                 if (type === ExportTypes.XLSX) {
                     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
                     res.setHeader("Content-Length", value.length);

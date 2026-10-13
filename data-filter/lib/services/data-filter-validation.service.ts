@@ -1,16 +1,19 @@
 import type { OnModuleInit, Type } from "@nestjs/common";
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { DataFilterService } from "../data-filter.service";
-import { VALIDATE_DATA } from "../constant";
-import { DataFilterHandler } from "../handlers/data-filter.handler";
 import { DatabaseError, ValidationErrorItem } from "sequelize";
+
+import { VALIDATE_DATA } from "../constant";
+import { DataFilterService } from "../data-filter.service";
+import { DataFilterHandler } from "../handlers/data-filter.handler";
 
 @Injectable()
 export class DataFilterValidationService implements OnModuleInit {
     private logger = new Logger(DataFilterValidationService.name);
 
-    constructor(@Inject(VALIDATE_DATA) private validateData: boolean, private dataFilterService: DataFilterService) {
-    }
+    constructor(
+        @Inject(VALIDATE_DATA) private validateData: boolean,
+        private dataFilterService: DataFilterService
+    ) {}
 
     public async onModuleInit(): Promise<void> {
         if (!this.validateData) {
@@ -24,7 +27,7 @@ export class DataFilterValidationService implements OnModuleInit {
     private async validateDataTargets(): Promise<void> {
         this.logger.log("Starting data validation");
 
-        await Promise.all(DataFilterHandler.dataTargets.map(dataTarget => this.validateDataTarget(dataTarget)));
+        await Promise.all(DataFilterHandler.dataTargets.map((dataTarget) => this.validateDataTarget(dataTarget)));
 
         this.logger.log("Completed data validation");
     }

@@ -12,7 +12,12 @@ export function Count(name: string, options: Omit<CountConfig, "name">): Propert
     };
 }
 
-function defineCustomAttributesMetadata(target: Object, propertyKey: string | symbol | undefined, name: string, options: CountConfig) {
+function defineCustomAttributesMetadata(
+    target: Object,
+    propertyKey: string | symbol | undefined,
+    name: string,
+    options: CountConfig
+) {
     if (!propertyKey) {
         const dataFilter = DataFilterHandler.getDataFilter(target);
         dataFilter.addCustomAttribute(new CountAttributesConfig(name, options));

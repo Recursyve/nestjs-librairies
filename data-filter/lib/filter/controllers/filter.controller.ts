@@ -12,10 +12,11 @@ import {
     UseGuards,
     UseInterceptors
 } from "@nestjs/common";
-import type { FilterResultModel } from "../../models/filter.model";
+
 import { ExportTypes, FilterQueryModel, SelectFilterValue } from "../..";
 import { FILTER_OPTION } from "../../constant";
 import { UserDeserializer } from "../../deserializers";
+import type { FilterResultModel } from "../../models/filter.model";
 import type { DataFilterUserModel } from "../../models/user.model";
 import type { FilterOptionConfig } from "../filter.config";
 import { FilterService } from "../filter.service";
@@ -64,7 +65,10 @@ export class FilterController<Data> {
 
     @Get("filter/config")
     public async getFilterConfig(@Req() request: any): Promise<FilterConfigurationModel[]> {
-        return await this.filterService.getConfig(request, await this.getUser(request) ?? {} as DataFilterUserModel);
+        return await this.filterService.getConfig(
+            request,
+            (await this.getUser(request)) ?? ({} as DataFilterUserModel)
+        );
     }
 
     @Get("filter/config/id")
@@ -72,7 +76,11 @@ export class FilterController<Data> {
         @Query() search: FilterResourceValueModel,
         @Req() request: any
     ): Promise<SelectFilterValue | null> {
-        return await this.filterService.findResourceValueById(request, search, await this.getUser(request) ?? {} as DataFilterUserModel);
+        return await this.filterService.findResourceValueById(
+            request,
+            search,
+            (await this.getUser(request)) ?? ({} as DataFilterUserModel)
+        );
     }
 
     @Get("filter/config/value")
@@ -80,7 +88,11 @@ export class FilterController<Data> {
         @Query() search: FilterConfigurationSearchModel,
         @Req() request: any
     ): Promise<SelectFilterValue[]> {
-        return await this.filterService.searchConfigValues(request, search, await this.getUser(request) ?? {} as DataFilterUserModel);
+        return await this.filterService.searchConfigValues(
+            request,
+            search,
+            (await this.getUser(request)) ?? ({} as DataFilterUserModel)
+        );
     }
 
     protected async getUser(request: any): Promise<DataFilterUserModel | null> {

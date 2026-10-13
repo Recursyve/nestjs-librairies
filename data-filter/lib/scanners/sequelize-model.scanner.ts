@@ -3,6 +3,7 @@ import { TypeUtils } from "@recursyve/nestjs-common";
 import type { FindAttributeOptions, IncludeOptions, Order } from "sequelize";
 import { literal } from "sequelize";
 import { Association, BaseAssociation, getAssociations, Model } from "sequelize-typescript";
+
 import { OrderModel } from "..";
 import type { IncludeModel } from "..";
 import type { PathModel } from "../models/path.model";
@@ -44,7 +45,9 @@ export class SequelizeModelScanner {
         }
 
         if (attributes) {
-            includes[0]!.attributes = ignoreAttributes ? [] : SequelizeUtils.mergeAttributes(includes[0]?.attributes, attributes);
+            includes[0]!.attributes = ignoreAttributes
+                ? []
+                : SequelizeUtils.mergeAttributes(includes[0]?.attributes, attributes);
         }
         if (path.where) {
             includes[0]!.where = SequelizeUtils.mergeWhere(includes[0]?.where, path.where);
@@ -109,11 +112,11 @@ export class SequelizeModelScanner {
             const association = this.findAssociation(model, obj);
             model = association.getAssociatedClass() as unknown as typeof Model;
         }
-        attributes = attributes ?
-            SequelizeUtils.getModelSearchableFieldAttributes(model as typeof M, attributes as string[]) :
-            SequelizeUtils.getModelSearchableAttributes(model as typeof M);
+        attributes = attributes
+            ? SequelizeUtils.getModelSearchableFieldAttributes(model as typeof M, attributes as string[])
+            : SequelizeUtils.getModelSearchableAttributes(model as typeof M);
         result.push(
-            ...(attributes as string[]).map(a => ({
+            ...(attributes as string[]).map((a) => ({
                 name: a,
                 key: SequelizeUtils.getAttributeFullName(a, path.path),
                 literalKey: SequelizeUtils.getLiteralFullName(a, path.path),
@@ -127,7 +130,7 @@ export class SequelizeModelScanner {
                 if (include.ignoreInSearch) {
                     continue;
                 }
-    
+
                 result.push(
                     ...this.getAttributes(
                         model as typeof Model,
@@ -136,7 +139,7 @@ export class SequelizeModelScanner {
                         },
                         [],
                         include.searchableAttributes ?? include.attributes
-                    ).map(a => ({
+                    ).map((a) => ({
                         name: a.name,
                         key: SequelizeUtils.getAttributeFullName(a.name, [path.path, include.path].join(".")),
                         literalKey: SequelizeUtils.getLiteralFullName(a.name, [path.path, include.path].join(".")),
@@ -230,9 +233,12 @@ export class SequelizeModelScanner {
                 attributes: [],
                 include: [],
                 required: false,
-                through: association.getAssociation() === Association.BelongsToMany ? {
-                    attributes: []
-                } : undefined
+                through:
+                    association.getAssociation() === Association.BelongsToMany
+                        ? {
+                              attributes: []
+                          }
+                        : undefined
             });
 
             if (i++ < values.length - 1) {
@@ -248,7 +254,7 @@ export class SequelizeModelScanner {
     private findAssociation(model: typeof Model, obj: string): BaseAssociation<any, any> {
         const associations = getAssociations(model.prototype) ?? [];
 
-        const association = associations.find(a => a.getAs() === obj);
+        const association = associations.find((a) => a.getAs() === obj);
         if (!association) {
             throw new Error(`Unable to load association for ${obj}`);
         }

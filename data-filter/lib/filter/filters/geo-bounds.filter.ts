@@ -1,6 +1,7 @@
 import type { WhereOptions } from "sequelize";
 import { fn, literal, where } from "sequelize";
 import { Fn, Literal } from "sequelize/types/utils";
+
 import { SequelizeUtils } from "../../sequelize.utils";
 import { QueryRuleModel } from "../models";
 import { FilterOperatorTypes, SelectOperators } from "../operators";
@@ -17,7 +18,7 @@ export interface GeoBoundsFilterDefinitionWithLatLng {
     lngAttribute: string;
 }
 
-export interface BaseGeoBoundsFilterDefinition  extends Omit<BaseFilterDefinition, "attribute"> {
+export interface BaseGeoBoundsFilterDefinition extends Omit<BaseFilterDefinition, "attribute"> {
     srid?: number;
     /**
      * Set this when the incoming bounds are already expressed in the order the polygon used to
@@ -27,9 +28,13 @@ export interface BaseGeoBoundsFilterDefinition  extends Omit<BaseFilterDefinitio
     legacyAxisOrder?: boolean;
 }
 
-export type GeoBoundsFilterDefinition = BaseGeoBoundsFilterDefinition & (GeoBoundsFilterDefinitionWithPoint | GeoBoundsFilterDefinitionWithLatLng);
+export type GeoBoundsFilterDefinition = BaseGeoBoundsFilterDefinition &
+    (GeoBoundsFilterDefinitionWithPoint | GeoBoundsFilterDefinitionWithLatLng);
 
-export class GeoBoundsFilter extends Filter implements BaseGeoBoundsFilterDefinition, GeoBoundsFilterDefinitionWithPoint, GeoBoundsFilterDefinitionWithLatLng  {
+export class GeoBoundsFilter
+    extends Filter
+    implements BaseGeoBoundsFilterDefinition, GeoBoundsFilterDefinitionWithPoint, GeoBoundsFilterDefinitionWithLatLng
+{
     public override type: FilterType = FilterType.GeoBounds;
     public override operators: FilterOperatorTypes[] = [...SelectOperators];
     public latAttribute!: string;
@@ -60,7 +65,7 @@ export class GeoBoundsFilter extends Filter implements BaseGeoBoundsFilterDefini
     private formatPoints(points: [number, number][]): string {
         return points
             .map(([latitude, longitude]) =>
-                (this.srid || this.legacyAxisOrder) ? `${latitude} ${longitude}` : `${longitude} ${latitude}`
+                this.srid || this.legacyAxisOrder ? `${latitude} ${longitude}` : `${longitude} ${latitude}`
             )
             .join(", ");
     }

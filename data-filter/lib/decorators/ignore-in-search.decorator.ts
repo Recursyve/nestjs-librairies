@@ -4,7 +4,7 @@ import { DataFilterHandler } from "../handlers/data-filter.handler";
 export function IgnoreInSearch(): PropertyDecorator & ClassDecorator {
     return (target: Object, propertyKey?: string | symbol) => {
         defineInSearchMetadata(target, propertyKey);
-    }
+    };
 }
 
 function defineInSearchMetadata(target: Object, propertyKey: string | symbol | undefined) {

@@ -7,7 +7,11 @@ export function SearchableAttributes(attributes: string[]): PropertyDecorator & 
     };
 }
 
-function defineSearchableAttributesMetadata(target: Object, propertyKey: string | symbol | undefined, attributes: string[]) {
+function defineSearchableAttributesMetadata(
+    target: Object,
+    propertyKey: string | symbol | undefined,
+    attributes: string[]
+) {
     if (!propertyKey) {
         const dataFilter = DataFilterHandler.getDataFilter(target);
         dataFilter.setSearchableAttributes(attributes);

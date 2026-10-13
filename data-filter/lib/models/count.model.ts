@@ -1,6 +1,7 @@
 import type { ProjectionAlias } from "sequelize";
 import { fn, literal } from "sequelize";
 import { Model } from "sequelize-typescript";
+
 import { M, SequelizeUtils } from "../sequelize.utils";
 import type { CustomAttributesConfig, CustomAttributesOptionConfig } from "./custom-attributes.model";
 
@@ -12,10 +13,13 @@ export interface CountConfig extends CustomAttributesOptionConfig {
 export class CountAttributesConfig implements CustomAttributesConfig<CountConfig> {
     public type = "count";
 
-    constructor(public key: string, public config: CountConfig) {}
+    constructor(
+        public key: string,
+        public config: CountConfig
+    ) {}
 
     public transform(options: object, path?: string, model?: typeof Model): string | ProjectionAlias {
-        const fullPath = [path, this.config.path].filter(x => x).join(".");
+        const fullPath = [path, this.config.path].filter((x) => x).join(".");
         const where = this.config.where
             ? SequelizeUtils.generateWhereConditions(this.config.where, options)
             : undefined;

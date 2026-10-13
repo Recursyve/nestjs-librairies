@@ -1,5 +1,6 @@
 import type { LogicType, WhereOperators, WhereOptions } from "sequelize";
 import { fn, Op, Sequelize, where } from "sequelize";
+
 import { TranslateAdapter } from "../../adapters/translate.adapter";
 import type { IncludeWhereModel } from "../../models/include.model";
 import type { PathModel } from "../../models/path.model";
@@ -13,8 +14,8 @@ import type { IRule } from "../models/rule.model";
 import { RuleModel } from "../models/rule.model";
 import type { CustomOperator, FilterOperators } from "../operators";
 import { FilterOperatorTypes } from "../operators";
-import { FilterType } from "../type";
 import type { OrderRuleContext } from "../order-rules/order-rule";
+import { FilterType } from "../type";
 
 // TODO: Deprecate key to use attribute instead to be consistent with the BaseFilterDefinition
 export interface FilterConditionRule {
@@ -44,13 +45,15 @@ export interface JsonConfig {
     path?: JsonCallback | string;
 }
 
-export type PathCondition = boolean | {
-    [filter: string]: any;
-}
+export type PathCondition =
+    | boolean
+    | {
+          [filter: string]: any;
+      };
 
 export interface EnabledConfig<User = any, Request = any> {
     user?: User;
-    request?: Request
+    request?: Request;
 }
 
 export interface BaseFilterDefinition {
@@ -75,8 +78,17 @@ export interface FilterDefinition extends BaseFilterDefinition, IRule {
     type: FilterType;
     operators: (FilterOperatorTypes | CustomOperator)[];
 
-    getConfig<Request>(key: string, req: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel | null>;
-    getIncludePaths<Request>(rule: QueryRuleModel, request: Request, user: DataFilterUserModel | null, data?: object): PathModel[];
+    getConfig<Request>(
+        key: string,
+        req: Request,
+        user?: DataFilterUserModel
+    ): Promise<FilterBaseConfigurationModel | null>;
+    getIncludePaths<Request>(
+        rule: QueryRuleModel,
+        request: Request,
+        user: DataFilterUserModel | null,
+        data?: object
+    ): PathModel[];
     getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined>;
     getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined>;
     usePathCondition(query: QueryModel): boolean;
@@ -120,7 +132,7 @@ export abstract class Filter implements FilterDefinition {
     }
 
     public removeOperators(...operator: (FilterOperatorTypes | CustomOperator)[]): Filter {
-        this.operators = this.operators.filter(x => !operator.some(op => op === x));
+        this.operators = this.operators.filter((x) => !operator.some((op) => op === x));
         return this;
     }
 
@@ -129,7 +141,11 @@ export abstract class Filter implements FilterDefinition {
         return this;
     }
 
-    public async getConfig<Request = any>(key: string, request: Request, user?: DataFilterUserModel): Promise<FilterBaseConfigurationModel | null> {
+    public async getConfig<Request = any>(
+        key: string,
+        request: Request,
+        user?: DataFilterUserModel
+    ): Promise<FilterBaseConfigurationModel | null> {
         if (this.private) {
             return null;
         }
@@ -140,37 +156,47 @@ export abstract class Filter implements FilterDefinition {
 
         const config = {
             type: this.type,
-            operators: await Promise.all(this.operators.map(async x => {
-                if (typeof x === "string") {
+            operators: await Promise.all(
+                this.operators.map(async (x) => {
+                    if (typeof x === "string") {
+                        return {
+                            id: x,
+                            name: await this._translateService.getTranslation(
+                                user?.language ?? "",
+                                FilterUtils.getOperatorTranslationKey(x)
+                            )
+                        };
+                    }
+
                     return {
-                        id: x,
+                        id: x.name,
                         name: await this._translateService.getTranslation(
                             user?.language ?? "",
-                            FilterUtils.getOperatorTranslationKey(x)
+                            FilterUtils.getCustomOperatorTranslationKey(key, x.name)
                         )
                     };
-                }
-
-                return {
-                    id: x.name,
-                    name: await this._translateService.getTranslation(
-                        user?.language ?? "",
-                        FilterUtils.getCustomOperatorTranslationKey(key, x.name)
-                    )
-                };
-            }))
+                })
+            )
         } as FilterBaseConfigurationModel;
 
         if (this.group) {
             config.group = {
                 key: this.group,
-                name: await this._translateService.getTranslation(user?.language ?? "", FilterUtils.getGroupTranslationKey(this.group))
-            }
+                name: await this._translateService.getTranslation(
+                    user?.language ?? "",
+                    FilterUtils.getGroupTranslationKey(this.group)
+                )
+            };
         }
         return config;
     }
 
-    public getIncludePaths<Request>(rule: QueryRuleModel, request: Request, user: DataFilterUserModel | null, data?: object): PathModel[] {
+    public getIncludePaths<Request>(
+        rule: QueryRuleModel,
+        request: Request,
+        user: DataFilterUserModel | null,
+        data?: object
+    ): PathModel[] {
         return [];
     }
 
@@ -179,7 +205,7 @@ export abstract class Filter implements FilterDefinition {
             name = this.path ? SequelizeUtils.getAttributeFullName(this.attribute, this.path) : this.attribute;
         }
 
-        const op = this.operators.find(x => {
+        const op = this.operators.find((x) => {
             if (typeof x === "string") {
                 return false;
             }
@@ -190,9 +216,10 @@ export abstract class Filter implements FilterDefinition {
             rule.operation = op.operator;
         }
 
-        const where = (rule?.value === undefined || this.having) ?
-            this.getConditionWhereOptions(undefined, rule) :
-            this.getConditionWhereOptions(this.transformCondition(rule, name), rule);
+        const where =
+            rule?.value === undefined || this.having
+                ? this.getConditionWhereOptions(undefined, rule)
+                : this.getConditionWhereOptions(this.transformCondition(rule, name), rule);
 
         return this.getOperatorWhereOptions(rule.operation, where, rule.value);
     }
@@ -226,10 +253,13 @@ export abstract class Filter implements FilterDefinition {
             return false;
         }
 
-        return rules.every(x => (this.pathCondition as any)[x.id] === x.value);
+        return rules.every((x) => (this.pathCondition as any)[x.id] === x.value);
     }
 
-    protected getConditionWhereOptions(where: WhereOptions | undefined, rule: QueryRuleModel): WhereOptions | undefined {
+    protected getConditionWhereOptions(
+        where: WhereOptions | undefined,
+        rule: QueryRuleModel
+    ): WhereOptions | undefined {
         if (!this.condition) {
             return where;
         }
@@ -240,7 +270,11 @@ export abstract class Filter implements FilterDefinition {
         return option;
     }
 
-    protected generateRuleWhereOptions(filter: FilterCondition, options: WhereOptions[], parentRule: QueryRuleModel): void {
+    protected generateRuleWhereOptions(
+        filter: FilterCondition,
+        options: WhereOptions[],
+        parentRule: QueryRuleModel
+    ): void {
         for (const rule of filter.rules) {
             const c = rule as FilterCondition;
             if (c.condition) {
@@ -256,7 +290,7 @@ export abstract class Filter implements FilterDefinition {
                 r = {
                     ...r,
                     value: r.value(parentRule.value)
-                }
+                };
             }
             options.push({
                 [name]: SequelizeUtils.generateWhereValue(r as RuleModel)
@@ -265,7 +299,7 @@ export abstract class Filter implements FilterDefinition {
     }
 
     protected getOperatorHavingOptions(operator: FilterOperators, where?: WhereOptions): WhereOptions | undefined {
-        const op = this.operators.find(x => {
+        const op = this.operators.find((x) => {
             if (typeof x === "string") {
                 return false;
             }
@@ -287,8 +321,12 @@ export abstract class Filter implements FilterDefinition {
             : op.having;
     }
 
-    protected getOperatorWhereOptions(operator: FilterOperators, where: WhereOptions | undefined, value: any): WhereOptions | undefined {
-        const op = this.operators.find(x => {
+    protected getOperatorWhereOptions(
+        operator: FilterOperators,
+        where: WhereOptions | undefined,
+        value: any
+    ): WhereOptions | undefined {
+        const op = this.operators.find((x) => {
             if (typeof x === "string") {
                 return false;
             }
@@ -320,7 +358,7 @@ export abstract class Filter implements FilterDefinition {
         for (const rule of query.rules) {
             if ((rule as QueryModel).condition) {
                 rules.push(...this.getRuleFromKeys(rule as QueryModel, keys));
-            } else if (keys.some(x => (rule as QueryRuleModel).id === x)) {
+            } else if (keys.some((x) => (rule as QueryRuleModel).id === x)) {
                 rules.push(rule as QueryRuleModel);
             }
         }
@@ -343,9 +381,14 @@ export abstract class Filter implements FilterDefinition {
     }
 
     private transformForJsonArray(rule: QueryRuleModel): WhereOptions | undefined {
-        const colName = this.path ? Sequelize.literal(SequelizeUtils.getLiteralFullName(this.attribute, this.path)) : Sequelize.col(this.attribute);
+        const colName = this.path
+            ? Sequelize.literal(SequelizeUtils.getLiteralFullName(this.attribute, this.path))
+            : Sequelize.col(this.attribute);
         if (rule.operation === FilterOperatorTypes.Contains || rule.operation === FilterOperatorTypes.NotContains) {
-            rule.operation = rule.operation === FilterOperatorTypes.Contains ? FilterOperatorTypes.Equal : FilterOperatorTypes.NotEqual;
+            rule.operation =
+                rule.operation === FilterOperatorTypes.Contains
+                    ? FilterOperatorTypes.Equal
+                    : FilterOperatorTypes.NotEqual;
         }
 
         if (rule.operation !== FilterOperatorTypes.Equal && rule.operation !== FilterOperatorTypes.NotEqual) {
@@ -358,21 +401,32 @@ export abstract class Filter implements FilterDefinition {
         const newRule = {
             operation: rule.operation,
             value: true
-        }
+        };
 
         const value = typeof rule.value === "string" ? `"${rule.value}"` : rule.value;
         if (this.json?.path) {
             const col = Sequelize.fn("JSON_EXTRACT", colName, Sequelize.literal(`'$[*].${this.json.path}'`));
-            return where(fn("JSON_CONTAINS", col, value), SequelizeUtils.generateWhereValue(newRule as RuleModel) as LogicType)
+            return where(
+                fn("JSON_CONTAINS", col, value),
+                SequelizeUtils.generateWhereValue(newRule as RuleModel) as LogicType
+            );
         }
-        return where(fn("JSON_CONTAINS", colName, value), SequelizeUtils.generateWhereValue(newRule as RuleModel) as LogicType)
+        return where(
+            fn("JSON_CONTAINS", colName, value),
+            SequelizeUtils.generateWhereValue(newRule as RuleModel) as LogicType
+        );
     }
 
     private transformForJsonObject(rule: QueryRuleModel): WhereOptions {
-        const colName = this.path ? Sequelize.literal(SequelizeUtils.getLiteralFullName(this.attribute, this.path)) : Sequelize.col(this.attribute);
+        const colName = this.path
+            ? Sequelize.literal(SequelizeUtils.getLiteralFullName(this.attribute, this.path))
+            : Sequelize.col(this.attribute);
         const value = SequelizeUtils.generateWhereValue(rule);
         if (this.json?.path) {
-            return Sequelize.where(Sequelize.fn("JSON_EXTRACT", colName, Sequelize.literal(`'$.${this.json.path}'`)), value as LogicType);
+            return Sequelize.where(
+                Sequelize.fn("JSON_EXTRACT", colName, Sequelize.literal(`'$.${this.json.path}'`)),
+                value as LogicType
+            );
         }
 
         return Sequelize.where(Sequelize.fn("JSON_EXTRACT", colName), value as LogicType);

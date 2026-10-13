@@ -1,7 +1,7 @@
 export enum ExportTypes {
-    XLSX= "xlsx",
-    HTML= "html",
-    CSV= "csv",
-    PDF= "pdf",
-    ZIP= "zip",
+    XLSX = "xlsx",
+    HTML = "html",
+    CSV = "csv",
+    PDF = "pdf",
+    ZIP = "zip"
 }

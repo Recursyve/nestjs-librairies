@@ -1,6 +1,7 @@
 import type { ProjectionAlias } from "sequelize";
 import { fn, literal } from "sequelize";
 import { describe, expect, it } from "vitest";
+
 import { DistanceAttributesConfig } from "./distance.model";
 
 describe("DistanceAttributesConfig", () => {
