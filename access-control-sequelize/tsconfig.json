@@ -8,6 +8,7 @@
         "emitDecoratorMetadata": true,
         "lib": ["es2018"],
         "sourceMap": true,
+        "skipLibCheck": true,
         "strict": true,
         "outDir": "build"
     },
