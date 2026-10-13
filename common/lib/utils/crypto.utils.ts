@@ -1,8 +1,8 @@
+import { InternalServerErrorException } from "@nestjs/common";
 // src: https://stackoverflow.com/a/53573115
 // We just added typescript typing
 import type { CipherGCM, CipherGCMOptions, DecipherGCM } from "crypto";
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "crypto";
-import { InternalServerErrorException } from "@nestjs/common";
 
 export namespace CryptoUtils {
     const ALGORITHM = {
@@ -99,7 +99,10 @@ export namespace CryptoUtils {
         return Buffer.concat([iv, encryptedMessage, cipher.getAuthTag()]);
     }
 
-    export function encryptToHexString(messagetext: string, key: Buffer<ArrayBuffer> = CryptoUtils.getCryptoKey()): string {
+    export function encryptToHexString(
+        messagetext: string,
+        key: Buffer<ArrayBuffer> = CryptoUtils.getCryptoKey()
+    ): string {
         const encrypted = encrypt(Buffer.from(messagetext, "utf8"), key);
         return `\\x${encrypted.toString("hex")}`;
     }
@@ -124,7 +127,10 @@ export namespace CryptoUtils {
         return Buffer.concat([messagetext, decipher.final()]);
     }
 
-    export function decryptFromHexString(cipherText: string, key: Buffer<ArrayBuffer> = CryptoUtils.getCryptoKey()): string {
+    export function decryptFromHexString(
+        cipherText: string,
+        key: Buffer<ArrayBuffer> = CryptoUtils.getCryptoKey()
+    ): string {
         if (cipherText.slice(0, 2) !== "\\x") {
             return cipherText;
         }
