@@ -2,6 +2,7 @@ import { SequelizeModule } from "@nestjs/sequelize";
 import { Test } from "@nestjs/testing";
 import { ResourceEventAccessControlService } from "@recursyve/nestjs-access-control";
 import { Sequelize } from "sequelize-typescript";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { SequelizeHooksAccessControlModule } from "../lib/hooks/sequelize-hooks.module";
 import { AccountDevices } from "./models/account-devices";
 import { Accounts } from "./models/accounts";
@@ -13,9 +14,12 @@ describe("SequelizeHooksModule", () => {
     beforeAll(async () => {
         resourceEventAccessControlService = {
             commandBus: null,
-            onResourceCreated: jest.fn(),
-            onResourceUpdated: jest.fn(),
-            onResourceDeleted: jest.fn(),
+            hasCreatedPolicies: vi.fn(() => true),
+            hasUpdatedPolicies: vi.fn(() => true),
+            hasDeletedPolicies: vi.fn(() => true),
+            onResourceCreated: vi.fn(),
+            onResourceUpdated: vi.fn(),
+            onResourceDeleted: vi.fn(),
         };
 
         const moduleRef = await Test.createTestingModule({
