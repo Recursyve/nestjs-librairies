@@ -9,6 +9,7 @@
     "lib": [
       "es2019"
     ],
+    "skipLibCheck": true,
     "strict": true,
     "sourceMap": true,
     "outDir": "build"
