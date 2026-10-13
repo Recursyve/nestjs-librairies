@@ -1,5 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { SequelizeModule } from "@nestjs/sequelize";
+import { describe, beforeAll, it, expect } from "vitest";
 import { ConfigSequelizeModule } from "./config-sequelize.module";
 import { SequelizeConfig } from "./decorators";
 import { ConfigSequelizeModel, ConfigSequelizeModelInjectionToken } from "./models";
