@@ -9,6 +9,7 @@ import { ConfigHandler } from "@recursyve/nestjs-config/handlers/config.handler"
 import { SequelizeConfigProvider } from "./sequelize.config-provider";
 import { VariableMetadata } from "@recursyve/nestjs-config/models/variable-metadata.model";
 import { Type } from "class-transformer";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 @SequelizeConfig()
 class SequelizeConfigModel1 {
