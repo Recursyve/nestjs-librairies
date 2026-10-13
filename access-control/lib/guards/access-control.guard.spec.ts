@@ -1,5 +1,7 @@
+import { beforeAll, describe, expect, it } from "vitest";
 import { AccessControlModelRoutes } from "../decorators";
 import { AccessActionType } from "../models";
+import type { DatabaseAdaptersRegistry } from "../services";
 import { AccessControlGuard } from "./access-control.guard";
 
 @AccessControlModelRoutes("account")
@@ -15,7 +17,19 @@ describe("AccessControlGuard", () => {
     let guard: AccessControlGuard;
 
     beforeAll(() => {
-        guard = new AccessControlGuard(null as any, null as any, null as any, null as any, null as any);
+        const databaseAdaptersRegistry = {
+            getModels: () => [ModelTest1, ModelTest2, ModelTest3]
+        } satisfies Pick<DatabaseAdaptersRegistry, "getModels">;
+
+        guard = new AccessControlGuard(
+            null as any,
+            null as any,
+            databaseAdaptersRegistry as DatabaseAdaptersRegistry,
+            null as any,
+            null as any
+        );
+
+        guard.onModuleInit();
     });
 
     it("getModels should return appropriated models", () => {
