@@ -1,5 +1,6 @@
 import type { CountOptions, FindOptions, Identifier } from "sequelize";
 import type { Attributes } from "sequelize/types/model";
+
 import type { SequelizeEntities } from "../models/sequelize-entities.model";
 
 export abstract class SequelizeReadRepository<T extends SequelizeEntities> {

@@ -19,7 +19,11 @@ export class SequelizeUtils {
 
             if (key in instance.rawAttributes) {
                 const designType = Reflect.getMetadata("design:type", instance, key);
-                if (instance.rawAttributes[key].type.key === "DATEONLY" && designType === Date && instance.dataValues[key]) {
+                if (
+                    instance.rawAttributes[key].type.key === "DATEONLY" &&
+                    designType === Date &&
+                    instance.dataValues[key]
+                ) {
                     instance.dataValues[key] = new Date(instance.dataValues[key]);
                 }
             } else if (Array.isArray(instance.dataValues[key])) {

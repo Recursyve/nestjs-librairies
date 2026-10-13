@@ -24,7 +24,7 @@ export class SequelizeEntities<
 
     @UpdatedAt
     @Column({ field: "updated_at" })
-    declare public readonly  updatedAt?: Date;
+    declare public readonly updatedAt?: Date;
 
     @DeletedAt
     @Column({ field: "deleted_at" })
