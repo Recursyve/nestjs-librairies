@@ -25,13 +25,13 @@ export class ObjectUtils {
         const properties: any[] = [];
         ObjectUtils.forEachProperty(
             object,
-            value => {
+            (value) => {
                 properties.push(value);
                 return value;
             },
             !deep
                 ? null
-                : deepObject => {
+                : (deepObject) => {
                       properties.push(ObjectUtils.objectToArrayOfProperties(deepObject));
                   }
         );
