@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { EnvironmentConfig } from "../decorators/config.decorator";
 import { Variable } from "../decorators/variable.decorator";
 import { ConfigHandler } from "./config.handler";
