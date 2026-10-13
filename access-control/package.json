@@ -45,6 +45,8 @@
         "@nestjs/cqrs": "^11.0.3",
         "@nestjs/testing": "^11.0.12",
         "@recursyve/nestjs-redis": "^11.0.0",
+        "@softarc/eslint-plugin-sheriff": "^0.20.0",
+        "@softarc/sheriff-core": "^0.20.0",
         "@vitest/coverage-v8": "^5.0.0",
         "@vitest/eslint-plugin": "^1.6.27",
         "eslint": "^10.10.0",
