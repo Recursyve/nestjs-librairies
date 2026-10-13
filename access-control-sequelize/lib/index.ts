@@ -1,5 +1,6 @@
 import type { DynamicModule } from "@nestjs/common";
 import { Module } from "@nestjs/common";
+
 import { SequelizeDatabaseAdapter } from "./adapters/database.adapter";
 import { SequelizeHooksAccessControlModule } from "./hooks/sequelize-hooks.module";
 import { SequelizeAccessControlFindOptionsGenerator } from "./providers/find-options.generator";
@@ -15,7 +16,7 @@ export class AccessControlSequelizeModule {
             providers: [SequelizeDatabaseAdapter, SequelizeAccessControlFindOptionsGenerator],
             exports: [SequelizeAccessControlFindOptionsGenerator]
         };
-    };
+    }
 }
 
 export * from "./adapters/database.adapter";

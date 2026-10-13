@@ -1,4 +1,5 @@
 import { AllowNull, AutoIncrement, Column, ForeignKey, Model, PrimaryKey, Table } from "sequelize-typescript";
+
 import { Accounts } from "./accounts";
 import { Devices } from "./devices";
 
