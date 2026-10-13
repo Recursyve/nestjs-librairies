@@ -1,4 +1,5 @@
 import { Op, WhereOptions } from "sequelize";
+import { describe, expect, it, vi } from "vitest";
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
 import { FilterUtils } from "../filter.utils";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
@@ -295,7 +296,7 @@ describe("RadioFilter", () => {
         it("with conditions containing path and where callback should returns the paths with resolved where", async () => {
             const testRequest = { tenantId: 123 };
             const testUser = { id: 1, language: "en" } as any;
-            const callbackSpy = jest.fn(({ request, user }) => ({
+            const callbackSpy = vi.fn(({ request, user }) => ({
                 status: () => "active",
                 tenant_id: () => (request as any).tenantId
             }));

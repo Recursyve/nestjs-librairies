@@ -1,4 +1,5 @@
 import { fn, literal, ProjectionAlias } from "sequelize";
+import { describe, expect, it } from "vitest";
 import { DistanceAttributesConfig } from "./distance.model";
 
 describe("DistanceAttributesConfig", () => {

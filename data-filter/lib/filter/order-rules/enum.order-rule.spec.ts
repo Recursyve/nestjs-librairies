@@ -1,4 +1,5 @@
 import { Literal } from "sequelize/types/utils";
+import { describe, expect, it } from "vitest";
 import { M } from "../../sequelize.utils";
 import { EnumOrderRule } from "./enum.order-rule";
 

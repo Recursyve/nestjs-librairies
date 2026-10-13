@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { Filter } from "./filter";
 import { TextFilter } from "./text.filter";
 import { FilterOperatorTypes } from "../operators";
