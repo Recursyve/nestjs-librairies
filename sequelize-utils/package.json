@@ -8,6 +8,7 @@
         "build:lib": "rimraf dist && nest build -p tsconfig.lib.json",
         "copy:lib": "cp package.json .npmignore dist",
         "pack:lib": "npm run build:lib && npm run copy:lib && cd dist && npm pack",
+        "lint": "eslint \"{lib,tests,examples}/**/*.ts\"",
         "test": "vitest run",
         "publish-package": "npm run build:lib && npm run copy:lib && npm publish ./dist --access public",
         "publish-package:beta": "npm run publish-package -- --tag beta --access public",
@@ -27,19 +28,16 @@
         "sequelize-typescript": ">=2.1.0"
     },
     "devDependencies": {
+        "@eslint/js": "^10.0.1",
         "@nestjs/cli": "^12.0.11",
         "@nestjs/common": "^12.3.2",
         "@nestjs/core": "^12.3.2",
         "@nestjs/schematics": "^12.0.12",
         "@nestjs/sequelize": "^12.0.0",
         "@nestjs/testing": "^12.3.2",
-        "@recursyve/eslint-config-node": "^1.0.1",
-        "@typescript-eslint/eslint-plugin": "^5.45.0",
-        "@typescript-eslint/parser": "^5.45.0",
         "@vitest/coverage-v8": "^5.0.0",
-        "eslint": "^8.29.0",
-        "eslint-config-prettier": "^8.5.0",
-        "eslint-plugin-prettier": "^4.2.1",
+        "@vitest/eslint-plugin": "^1.6.27",
+        "eslint": "^10.10.0",
         "reflect-metadata": "^0.2.2",
         "rxjs": "^7.8.2",
         "sequelize": "^6.37.7",
@@ -47,6 +45,7 @@
         "sqlite3": "^5.1.7",
         "ts-node": "^10.9.2",
         "typescript": "^6.0.3",
+        "typescript-eslint": "^8.70.0",
         "vitest": "^5.0.0"
     }
 }
