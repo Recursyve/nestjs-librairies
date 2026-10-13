@@ -15,7 +15,7 @@ import { Visits } from "./models/visits/visits.model";
 let sync = false;
 let sequelize: Sequelize;
 
-export async function databaseFactory() {
+export async function databaseFactory(): Promise<Sequelize> {
     if (sync) {
         return sequelize;
     }

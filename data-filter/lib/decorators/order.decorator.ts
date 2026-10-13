@@ -1,4 +1,4 @@
-import { Order } from "sequelize";
+import type { Order } from "sequelize";
 import { AttributesHandler } from "../handlers/attributes.handler";
 
 export function Order(order: Order): PropertyDecorator {

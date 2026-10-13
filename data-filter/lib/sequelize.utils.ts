@@ -1,22 +1,19 @@
 import { ArrayUtils, TypeUtils } from "@recursyve/nestjs-common";
-import {
+import type {
     AbstractDataTypeConstructor,
-    col,
-    fn,
     FindAttributeOptions,
     Includeable,
     IncludeOptions,
-    literal,
-    Op,
     Order,
     OrderItem,
     WhereOptions
 } from "sequelize";
+import { col, fn, literal, Op } from "sequelize";
 import { Model } from "sequelize-typescript";
-import { ProjectionAlias, WhereAttributeHashValue } from "sequelize/types/model";
+import type { ProjectionAlias, WhereAttributeHashValue } from "sequelize/types/model";
 import { Col, Fn, Literal } from "sequelize/types/utils";
 import { RuleModel } from "./filter";
-import { IncludeWhereModel } from "./models/include.model";
+import type { IncludeWhereModel } from "./models/include.model";
 
 export interface GeoPoint {
     type: "point",
@@ -67,7 +64,7 @@ export class SequelizeUtils {
         return true;
     }
 
-    public static mergeIncludes(a: IncludeOptions | IncludeOptions[] = [], b: IncludeOptions | IncludeOptions[] = [], ignoreAttributes = false) {
+    public static mergeIncludes(a: IncludeOptions | IncludeOptions[] = [], b: IncludeOptions | IncludeOptions[] = [], ignoreAttributes = false): IncludeOptions[] {
         if (!Array.isArray(a)) {
             a = [a];
         }
@@ -326,7 +323,7 @@ export class SequelizeUtils {
 
     public static getModelSearchableAttributes(model: typeof M): string[] {
         return Object.keys(model.rawAttributes).filter(
-            a => !["DATE", "DATEONLY", "VIRTUAL"].some(t => t === (model.rawAttributes[a].type as AbstractDataTypeConstructor).key)
+            a => !["DATE", "DATEONLY", "VIRTUAL"].some(t => t === (model.rawAttributes[a]?.type as AbstractDataTypeConstructor).key)
         ).map(x => {
             const attr = model.rawAttributes[x];
             if (!attr) {
@@ -407,7 +404,7 @@ export class SequelizeUtils {
         const items = group.split(".");
         if (items.length > 1) {
             const column = items[items.length - 1];
-            return SequelizeUtils.getLiteralFullName(column, items.slice(0, items.length - 1));
+            return SequelizeUtils.getLiteralFullName(column!, items.slice(0, items.length - 1));
         }
 
         return `\`${model.name}\`.\`${group}\``;
@@ -434,7 +431,7 @@ export class SequelizeUtils {
                 continue;
             }
 
-            const value = model[key as any](options);
+            const value = model[key as any]?.(options);
             if (typeof value !== "undefined") {
                 (where as any)[key] = value;
             }

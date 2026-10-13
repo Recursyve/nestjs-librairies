@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { ExportAdapter, ExportData } from "./export.adapter";
+import type { ExportData } from "./export.adapter";
+import { ExportAdapter } from "./export.adapter";
 
 @Injectable()
 export class DefaultExportAdapter extends ExportAdapter {

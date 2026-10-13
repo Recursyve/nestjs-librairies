@@ -19,7 +19,7 @@ export class Locations extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
-    id!: number;
+    declare id: number;
 
     @Column
     value?: string;

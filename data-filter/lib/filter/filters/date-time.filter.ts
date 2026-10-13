@@ -1,20 +1,21 @@
 import { format, parseISO } from "date-fns";
-import { WhereOptions } from "sequelize";
+import type { WhereOptions } from "sequelize";
 import { QueryRuleModel } from "../models";
 import { DateOperators, FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
-import { BaseFilterDefinition, Filter } from "./filter";
+import type { BaseFilterDefinition } from "./filter";
+import { Filter } from "./filter";
 
 // Filters a row by exact date and time given in the rules.
 export class DateTimeFilter extends Filter {
-    public type = FilterType.DateTime;
-    public operators = [...DateOperators];
+    public override type: FilterType = FilterType.DateTime;
+    public override operators: FilterOperatorTypes[] = [...DateOperators];
 
     constructor(definition: BaseFilterDefinition) {
         super(definition);
     }
 
-    public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined> {
+    public override async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined> {
         if (rule.operation === FilterOperatorTypes.Between || rule.operation === FilterOperatorTypes.NotBetween) {
             if (!Array.isArray(rule.value)) {
                 return undefined;

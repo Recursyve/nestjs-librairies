@@ -13,9 +13,9 @@ class ContractSystemsTest {}
 
 @Injectable()
 export class TestFilter extends BaseFilter<ContractSystemsTest> {
-    public dataDefinition = ContractSystemsTest;
+    public dataDefinition: typeof ContractSystemsTest = ContractSystemsTest;
 
-    public visitCount = new NumberFilter({
+    public visitCount: NumberFilter = new NumberFilter({
         attribute: "id",
         path: "visits.visit",
         group: "visit",

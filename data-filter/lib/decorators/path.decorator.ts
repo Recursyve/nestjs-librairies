@@ -1,4 +1,4 @@
-import { IncludeWhereModel } from "../models/include.model";
+import type { IncludeWhereModel } from "../models/include.model";
 import { AttributesHandler } from "../handlers/attributes.handler";
 import { PathConfig } from "../models/path.model";
 

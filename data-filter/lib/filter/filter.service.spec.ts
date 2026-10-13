@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { col, FindOptions, fn, Op, where } from "sequelize";
+import type { FindOptions } from "sequelize";
+import { col, fn, Op, where } from "sequelize";
 import { beforeAll, describe, expect, it } from "vitest";
 import { DefaultAccessControlAdapter, DefaultExportAdapter, DefaultTranslateAdapter } from "../adapters";
 import { DataFilterService } from "../data-filter.service";
@@ -17,7 +18,7 @@ import { Systems } from "../test/models/systems/systems.model";
 import { Visits } from "../test/models/visits/visits.model";
 import { BaseFilter } from "./base-filter";
 import { FilterService } from "./filter.service";
-import { NumberFilter, TextFilter } from "./filters";
+import { Filter, NumberFilter, TextFilter } from "./filters";
 import { DefaultFilter } from "./filters/default.filter";
 import { DefaultOrderRule } from "./order-rules/default.order-rule";
 import { FilterOperatorTypes } from "./operators";
@@ -41,15 +42,15 @@ class ContractSystemsTest {
 
 @Injectable()
 export class TestFilter extends BaseFilter<ContractSystemsTest> {
-    public dataDefinition = ContractSystemsTest;
+    public dataDefinition: typeof ContractSystemsTest = ContractSystemsTest;
 
-    public defaultFilter = new DefaultFilter({
+    public override defaultFilter: DefaultFilter = new DefaultFilter({
         id: "email",
         operation: FilterOperatorTypes.Contains,
         value: "@"
     });
 
-    public email = new TextFilter({
+    public email: Filter = new TextFilter({
         attribute: "email",
         path: "system.place.owners.person",
         group: "owner"
@@ -60,7 +61,7 @@ export class TestFilter extends BaseFilter<ContractSystemsTest> {
         })
     });
 
-    public name = new TextFilter({
+    public name: TextFilter = new TextFilter({
         attribute: "first_name",
         path: "system.place.owners.person",
         group: "owner",
@@ -77,7 +78,7 @@ export class TestFilter extends BaseFilter<ContractSystemsTest> {
         }
     });
 
-    public nestedName = new TextFilter({
+    public nestedName: TextFilter = new TextFilter({
         attribute: "first_name",
         path: "system.place.owners.person",
         group: "owner",
@@ -99,14 +100,14 @@ export class TestFilter extends BaseFilter<ContractSystemsTest> {
         }
     });
 
-    public visitCount = new NumberFilter({
+    public visitCount: NumberFilter = new NumberFilter({
         attribute: "id",
         path: "visits.visit",
         group: "visit",
         having: fn("count", col("visits.visit.id"))
     });
 
-    public contractWithCallback = new TextFilter({
+    public contractWithCallback: TextFilter = new TextFilter({
         attribute: "id",
         path: "contract",
         group: "contract",
@@ -391,9 +392,9 @@ describe("FilterService", () => {
 
 @Injectable()
 export class OrderByDistinctTestFilter extends BaseFilter<ContractSystemsTest> {
-    public dataDefinition = ContractSystemsTest;
+    public dataDefinition: typeof ContractSystemsTest = ContractSystemsTest;
 
-    public defaultOrderRule = new DefaultOrderRule({ column: "active", direction: "desc" });
+    public override defaultOrderRule: DefaultOrderRule = new DefaultOrderRule({ column: "active", direction: "desc" });
 }
 
 describe("FilterService resolveOrderColumns", () => {

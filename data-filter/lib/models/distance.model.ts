@@ -1,7 +1,8 @@
-import { fn, literal, ProjectionAlias } from "sequelize";
+import type { ProjectionAlias } from "sequelize";
+import { fn, literal } from "sequelize";
 import { Fn, Literal } from "sequelize/types/utils";
 import { SequelizeUtils } from "../sequelize.utils";
-import { CustomAttributesConfig, CustomAttributesOptionConfig } from "./custom-attributes.model";
+import type { CustomAttributesConfig, CustomAttributesOptionConfig } from "./custom-attributes.model";
 
 export interface BaseDistanceConfig extends CustomAttributesOptionConfig {
     coordinates: (option?: any) => [number, number];

@@ -1,4 +1,4 @@
-import { Type } from "@nestjs/common";
+import type { Type } from "@nestjs/common";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
 import { DataFilterService } from "../data-filter.service";
@@ -13,13 +13,13 @@ export function FilterServiceFactory<T>(options?: { disableAccessControl?: boole
         filter: BaseFilter<T>,
         sequelizeModelScanner: SequelizeModelScanner,
         dataFilterService: DataFilterService
-    ) => {
+    ): FilterService<T> => {
         return new FilterService(accessControlAdapter, translateAdapter, filter, sequelizeModelScanner, dataFilterService, options);
     }
 }
 
 export function FilterFactory<T>(filter: Type<T>) {
-    return (...args: any[]) => {
+    return (...args: any[]): T => {
         /**
          * Check if all dependencies are injected
          */

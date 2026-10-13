@@ -1,7 +1,9 @@
-import { fn, literal, LogicType, where, WhereOptions } from "sequelize";
+import type { LogicType, WhereOptions } from "sequelize";
+import { fn, literal, where } from "sequelize";
 import { QueryRuleModel } from "../models";
 import { SequelizeUtils } from "../../sequelize.utils";
-import { GroupFilter, GroupFilterDefinition } from "./group.filter";
+import type { GroupFilterDefinition } from "./group.filter";
+import { GroupFilter } from "./group.filter";
 import { CoordinateFilter } from "./coordinate.filter";
 import { NumberFilter } from "./number.filter";
 import { FilterType } from "../type";
@@ -23,9 +25,9 @@ export class GeoLocalizationFilter extends GroupFilter implements GroupFilterDef
     private static attributesCounter = 0;
     private static whereCounter = 0;
 
-    public type = FilterType.GeoLocalization;
-    public rootFilter!: CoordinateFilter;
-    public valueFilter = new NumberFilter();
+    public override type: FilterType = FilterType.GeoLocalization;
+    declare public rootFilter: CoordinateFilter;
+    public override valueFilter: NumberFilter = new NumberFilter();
     public srid?: number;
     public legacyAxisOrder?: boolean;
 
@@ -33,7 +35,7 @@ export class GeoLocalizationFilter extends GroupFilter implements GroupFilterDef
         super(definition);
     }
 
-    public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined> {
+    public override async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined> {
         const [root, value] = this.getRules(rule);
         if (!root || !value) {
             return;

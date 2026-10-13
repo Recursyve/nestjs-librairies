@@ -1,8 +1,8 @@
-import { FindAttributeOptions, Order } from "sequelize";
+import type { FindAttributeOptions, Order } from "sequelize";
 import { Model } from "sequelize-typescript";
 import { SequelizeUtils } from "../sequelize.utils";
-import { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
-import { IncludeConfig, IncludeModel } from "./include.model";
+import type { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
+import type { IncludeConfig, IncludeModel } from "./include.model";
 import { PathConfig } from "./path.model";
 
 export interface AttributesConfigModel {
@@ -36,11 +36,11 @@ export class AttributesConfig implements AttributesConfigModel {
         return this._searchableAttributes?.filter(attribute => !this.searchableTranslationAttributes?.includes(attribute));
     }
 
-    public setAttributes(attributes?: FindAttributeOptions) {
+    public setAttributes(attributes?: FindAttributeOptions): void {
         this.attributes = attributes;
     }
 
-    public setSearchableAttributes(attributes: string[]) {
+    public setSearchableAttributes(attributes: string[]): void {
         this._searchableAttributes = attributes;
     }
 
@@ -48,15 +48,15 @@ export class AttributesConfig implements AttributesConfigModel {
         this.searchableTranslationAttributes = attributes;
     }
 
-    public setPath(path: PathConfig) {
+    public setPath(path: PathConfig): void {
         this.path = path;
     }
 
-    public containsPath(path: string) {
+    public containsPath(path: string): boolean {
         return this.path?.path.startsWith(path);
     }
 
-    public setIgnoreInPath(ignore: boolean) {
+    public setIgnoreInPath(ignore: boolean): void {
         this.ignoreInSearch = ignore;
     }
 
@@ -68,11 +68,11 @@ export class AttributesConfig implements AttributesConfigModel {
         this.path.order = order;
     }
 
-    public addInclude(include: IncludeConfig) {
+    public addInclude(include: IncludeConfig): void {
         this.includes.push(include);
     }
 
-    public addCustomAttribute(attribute: CustomAttributesConfig) {
+    public addCustomAttribute(attribute: CustomAttributesConfig): void {
         this.customAttributes.push(attribute);
     }
 

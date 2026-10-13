@@ -1,6 +1,7 @@
 import { AttributesHandler } from "../handlers/attributes.handler";
-import { DataFilterHandler } from "../handlers/data-filter.handler";
-import { SumAttributesConfig, SumConfig } from "../models/sum.model";
+import { DataFilterHandler } from "../handlers/data-filter.handler"
+import type { SumConfig } from "../models/sum.model";
+import { SumAttributesConfig } from "../models/sum.model";
 
 export function Sum(name: string, options: Omit<SumConfig, "name">): PropertyDecorator & ClassDecorator {
     return (target: Object, propertyKey?: string | symbol) => {

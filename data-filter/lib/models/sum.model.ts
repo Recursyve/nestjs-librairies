@@ -1,6 +1,7 @@
-import { fn, literal, ProjectionAlias } from "sequelize";
+import type { ProjectionAlias } from "sequelize";
+import { fn, literal } from "sequelize";
 import { SequelizeUtils } from "../sequelize.utils";
-import { CustomAttributesConfig, CustomAttributesOptionConfig } from "./custom-attributes.model";
+import type { CustomAttributesConfig, CustomAttributesOptionConfig } from "./custom-attributes.model";
 
 export interface SumConfig extends CustomAttributesOptionConfig {
     attribute: string;

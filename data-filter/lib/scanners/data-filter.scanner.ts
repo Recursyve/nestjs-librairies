@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ATTRIBUTES, DATA_FILTER, } from "../constant";
+import { ATTRIBUTES, DATA_FILTER } from "../constant";
 import { DataFilterConfig } from "../models/data-filter.model";
 import { AttributesConfig } from "../models/attributes.model";
 

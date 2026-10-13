@@ -1,4 +1,4 @@
-import { FindAttributeOptions, Order, WhereOptions } from "sequelize";
+import type { FindAttributeOptions, Order, WhereOptions } from "sequelize";
 
 export interface IncludeWhereModel {
     [key: string]: (option?: any) => unknown;

@@ -1,4 +1,4 @@
-import { WhereOptions } from "sequelize";
+import type { WhereOptions } from "sequelize";
 import { Where } from "sequelize/types/utils";
 
 export enum FilterOperatorTypes {

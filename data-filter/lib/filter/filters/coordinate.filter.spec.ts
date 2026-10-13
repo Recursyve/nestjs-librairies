@@ -3,7 +3,8 @@ import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapte
 import { FilterUtils } from "../filter.utils";
 import { CoordinateFilter } from "./coordinate.filter";
 import { FilterOperatorTypes } from "../operators";
-import { Op, WhereOptions } from "sequelize";
+import type { WhereOptions } from "sequelize";
+import { Op } from "sequelize";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { FilterType } from "../type";
 

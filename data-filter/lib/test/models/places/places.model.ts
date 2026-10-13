@@ -25,7 +25,7 @@ export class Places extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
-    id!: number;
+    declare id: number;
 
     @Column
     @ForeignKey(() => Coords)

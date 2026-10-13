@@ -21,7 +21,7 @@ export class Systems extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
-    id!: number;
+    declare id: number;
 
     @Column
     @ForeignKey(() => Places)

@@ -1,5 +1,6 @@
 import { FilterType } from "../type";
-import { OptionsFilterOptionConfiguration, OptionsFilterSelectionMode, optionsFilterSelectionModes } from "../filters";
+import type { OptionsFilterSelectionMode } from "../filters";
+import { OptionsFilterOptionConfiguration, optionsFilterSelectionModes } from "../filters";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class FilterOperatorsConfiguration {

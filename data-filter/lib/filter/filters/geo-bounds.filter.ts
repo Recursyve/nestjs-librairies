@@ -1,10 +1,12 @@
-import { fn, literal, where, WhereOptions } from "sequelize";
+import type { WhereOptions } from "sequelize";
+import { fn, literal, where } from "sequelize";
 import { Fn, Literal } from "sequelize/types/utils";
 import { SequelizeUtils } from "../../sequelize.utils";
 import { QueryRuleModel } from "../models";
 import { FilterOperatorTypes, SelectOperators } from "../operators";
 import { FilterType } from "../type";
-import { BaseFilterDefinition, Filter } from "./filter";
+import type { BaseFilterDefinition } from "./filter";
+import { Filter } from "./filter";
 
 export interface GeoBoundsFilterDefinitionWithPoint {
     attribute: string;
@@ -28,8 +30,8 @@ export interface BaseGeoBoundsFilterDefinition  extends Omit<BaseFilterDefinitio
 export type GeoBoundsFilterDefinition = BaseGeoBoundsFilterDefinition & (GeoBoundsFilterDefinitionWithPoint | GeoBoundsFilterDefinitionWithLatLng);
 
 export class GeoBoundsFilter extends Filter implements BaseGeoBoundsFilterDefinition, GeoBoundsFilterDefinitionWithPoint, GeoBoundsFilterDefinitionWithLatLng  {
-    public type = FilterType.GeoBounds;
-    public operators = [...SelectOperators];
+    public override type: FilterType = FilterType.GeoBounds;
+    public override operators: FilterOperatorTypes[] = [...SelectOperators];
     public latAttribute!: string;
     public lngAttribute!: string;
     public srid?: number;
@@ -39,9 +41,9 @@ export class GeoBoundsFilter extends Filter implements BaseGeoBoundsFilterDefini
         super(definition as BaseFilterDefinition);
     }
 
-    public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions> {
+    public override async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions> {
         const points = rule.value as [number, number][];
-        points.push(points[0]);
+        points.push(points[0]!);
         const polygon = fn("ST_GeometryFromText", literal(`'POLYGON((${this.formatPoints(points)}))'`), this.srid ?? 0);
         return where(
             fn("ST_Contains", polygon, this.buildPoint()),

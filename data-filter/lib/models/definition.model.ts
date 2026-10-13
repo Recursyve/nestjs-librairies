@@ -1,5 +1,5 @@
-import { FindAttributeOptions } from "sequelize";
-import { PathModel } from "./path.model";
+import type { FindAttributeOptions } from "sequelize";
+import type { PathModel } from "./path.model";
 
 export interface DefinitionModel {
     key: string;

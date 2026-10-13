@@ -1,4 +1,5 @@
-import { Op, WhereOptions } from "sequelize";
+import type { WhereOptions } from "sequelize";
+import { Op } from "sequelize";
 import { describe, expect, it, vi } from "vitest";
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
 import { FilterUtils } from "../filter.utils";
@@ -6,7 +7,7 @@ import { FilterBaseConfigurationModel } from "../models/filter-configuration.mod
 import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
 import { OptionsFilter, RadioFilter } from "./options.filter";
-import { PathModel } from "../../models/path.model";
+import type { PathModel } from "../../models/path.model";
 
 describe("RadioFilter", () => {
     describe("getConfig", () => {
