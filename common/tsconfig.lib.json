@@ -8,6 +8,7 @@
         "declaration": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
+        "skipLibCheck": true,
         "strict": true,
         "types": [
             "node",
@@ -17,8 +18,7 @@
         "outDir": "dist"
     },
     "include": [
-        "lib/**/*",
-        "index.ts"
+        "lib/**/*"
     ],
     "exclude": [
         "node_modules"
