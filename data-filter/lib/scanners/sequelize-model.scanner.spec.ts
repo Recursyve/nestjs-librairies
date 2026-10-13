@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from "vitest";
 import { SequelizeModelScanner } from "./sequelize-model.scanner";
 import { Systems } from "../test/models/systems/systems.model";
 import { Places } from "../test/models/places/places.model";

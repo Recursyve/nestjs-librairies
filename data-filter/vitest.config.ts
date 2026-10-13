@@ -1,0 +1,18 @@
+
+import type { ViteUserConfig } from "vitest/config";
+import { defineConfig } from "vitest/config";
+
+process.env.TZ = "UTC";
+
+const config: ViteUserConfig = defineConfig({
+	test: {
+		environment: "node",
+		globals: false,
+		include: ["lib/**/*.spec.ts"],
+		isolate: false,
+		passWithNoTests: true,
+		pool: "threads"
+	}
+});
+
+export default config;

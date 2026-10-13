@@ -1,4 +1,5 @@
 import { col, fn, literal, where, WhereOptions } from "sequelize";
+import { describe, expect, it } from "vitest";
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
 import { FilterUtils } from "../filter.utils";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";

@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { col, fn } from "sequelize";
+import { describe, expect, it } from "vitest";
 import { Attributes, BaseFilter, Data, DataFilterModule, NumberFilter } from "../index";
 import { DataFilterScanner } from "../scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";

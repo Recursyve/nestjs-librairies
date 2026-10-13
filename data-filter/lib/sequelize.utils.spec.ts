@@ -1,4 +1,5 @@
 import { Op } from "sequelize";
+import { describe, expect, it } from "vitest";
 import { SequelizeUtils } from "./sequelize.utils";
 
 describe("SequelizeUtils", () => {
