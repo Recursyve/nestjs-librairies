@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { AccessRules } from "./access-rules.model";
 
 describe("AccessRules", () => {
