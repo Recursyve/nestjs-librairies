@@ -1,0 +1,47 @@
+name: Sequelize utils dev CI
+
+on:
+  pull_request:
+    paths:
+      - "sequelize-utils/**"
+      - ".github/workflows/sequelize_utils_dev.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sequelize-utils:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.x, 24.x, 26.x]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: sequelize-utils/package-lock.json
+
+      - name: Install dependencies
+        working-directory: sequelize-utils
+        run: npm ci
+
+      - name: Check formatting
+        working-directory: sequelize-utils
+        run: npm run format:check
+
+      - name: Build
+        working-directory: sequelize-utils
+        run: npm run build
+
+      - name: Lint
+        working-directory: sequelize-utils
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: sequelize-utils
+        run: npm run test
