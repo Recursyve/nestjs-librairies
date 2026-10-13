@@ -2,13 +2,27 @@
     "name": "@recursyve/nestjs-data-filter",
     "version": "11.5.2",
     "description": "NestJs DataFilter library",
-    "main": "index.js",
+    "type": "module",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.cts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
+        }
+    },
     "scripts": {
-        "build": "rimraf dist && nest build",
-        "build:lib": "rimraf dist && nest build -p tsconfig.lib.json",
+        "build": "tsdown",
         "copy:lib": "cp package.json .npmignore dist",
-        "pack:lib": "npm run build:lib && cd dist && npm pack",
-        "publish-package": "npm run build:lib && npm run copy:lib && npm publish ./dist --access public",
+        "pack:lib": "npm run build && cd dist && npm pack",
+        "publish-package": "npm run build && npm run copy:lib && npm publish ./dist --access public",
         "publish-package:beta": "npm run publish-package -- --tag beta --access public",
         "publish-package:dry-run": "npm run publish-package -- --dry-run",
         "format": "oxfmt",
@@ -16,7 +30,8 @@
         "lint": "eslint \"lib/**/*.ts\"",
         "test": "vitest run",
         "test:watch": "vitest",
-        "test:coverage": "vitest --coverage"
+        "test:coverage": "vitest --coverage",
+        "typecheck": "tsc --noEmit"
     },
     "repository": {
         "type": "git",
@@ -57,13 +72,13 @@
         "express": "^5.0.1",
         "oxfmt": "^0.67.0",
         "reflect-metadata": "^0.2.2",
-        "rimraf": "^6.0.1",
         "rxjs": "^7.8.2",
         "sequelize": "^6.37.6",
         "sequelize-typescript": "^2.1.6",
         "sqlite3": "^6.0.1",
         "ts-node": "^10.9.2",
-        "typescript": "^5.8.2",
+        "tsdown": "^0.23.0",
+        "typescript": "^6.0.3",
         "typescript-eslint": "^8.70.0",
         "vitest": "^5.0.0"
     }
