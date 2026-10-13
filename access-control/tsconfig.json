@@ -9,6 +9,7 @@
     "lib": [
       "es2018"
     ],
+    "skipLibCheck": true,
     "strict": true,
     "sourceMap": true,
     "outDir": "build",
