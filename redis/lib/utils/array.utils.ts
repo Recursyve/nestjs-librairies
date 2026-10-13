@@ -5,7 +5,7 @@ export class RedisArrayUtils {
         do {
             res.push(items.slice(start, start + size));
             start += size;
-        } while (start < items.length)
+        } while (start < items.length);
         return res;
     }
 }
