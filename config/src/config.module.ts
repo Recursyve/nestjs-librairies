@@ -1,13 +1,14 @@
 import type { DynamicModule, Provider, Type } from "@nestjs/common";
 import { Global, Module } from "@nestjs/common";
-import { ConfigTransformerService } from "./services/config-transformer.service";
+import { isPlainObject } from "@nestjs/common/utils/shared.utils";
+
+import type { ConfigModuleOptions } from "./config.module.options";
 import { ConfigUtils } from "./config.utils";
-import { EnvironmentConfigProvider } from "./providers/environment.config-provider";
+import { OPTIONS } from "./constant";
 import { ConfigProviderHandler } from "./handlers/config-provider.handler";
 import { ConfigHandler } from "./handlers/config.handler";
-import { OPTIONS } from "./constant";
-import { isPlainObject } from "@nestjs/common/utils/shared.utils";
-import type { ConfigModuleOptions } from "./config.module.options";
+import { EnvironmentConfigProvider } from "./providers/environment.config-provider";
+import { ConfigTransformerService } from "./services/config-transformer.service";
 
 @Global()
 @Module({

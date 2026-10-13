@@ -1,5 +1,5 @@
-import type { ConfigConfig } from "../models/config-metadata.model";
 import { ConfigHandler } from "../handlers/config.handler";
+import type { ConfigConfig } from "../models/config-metadata.model";
 import { EnvironmentConfigProvider } from "../providers/environment.config-provider";
 
 export const Config = (config: ConfigConfig = {}): ClassDecorator => {
