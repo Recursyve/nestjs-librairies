@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "config/**"
+      - ".github/workflows/config_dev.yaml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,17 +15,33 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [22.x, 24.x, 26.x]
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: config/package-lock.json
+
       - name: Install dependencies
         working-directory: config
         run: npm ci
+
+      - name: Check formatting
+        working-directory: config
+        run: npm run format:check
+
       - name: Build
         working-directory: config
-        run: npm run build:lib
+        run: npm run build
+
+      - name: Lint
+        working-directory: config
+        run: npm run lint
+
       - name: Run tests
         working-directory: config
         run: npm run test
