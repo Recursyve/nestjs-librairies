@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
+
 import { AccessControlModelRoutes } from "../decorators";
 import { AccessActionType } from "../models";
 import type { DatabaseAdaptersRegistry } from "../services";
@@ -43,7 +44,9 @@ describe("AccessControlGuard", () => {
         expect(res2).toHaveLength(1);
         expect(res2[0]).toBe(ModelTest2);
 
-        const res3 = guard.getModels("/test/coord/:id", [{ type: AccessActionType.Read, resourceIdParameterName: "id" }]);
+        const res3 = guard.getModels("/test/coord/:id", [
+            { type: AccessActionType.Read, resourceIdParameterName: "id" }
+        ]);
         expect(res3).toBeDefined();
         expect(res3).toHaveLength(1);
         expect(res3[0]).toBe(ModelTest3);
