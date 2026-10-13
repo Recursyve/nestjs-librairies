@@ -2,14 +2,15 @@ import { Inject, Injectable, Optional } from "@nestjs/common";
 import { CommandBus } from "@nestjs/cqrs";
 import { RedisService } from "@recursyve/nestjs-redis";
 import { lastValueFrom } from "rxjs";
+
 import type { IDatabaseAdapter } from "../adapters";
 import type { PolicyResourcesCondition, ResourceId, Users } from "../models";
 import { AccessActionType, AccessRules, PolicyResourceTypes, Resources } from "../models";
 import type { PolicyConfig } from "../models/policy-config.model";
 import { RedisKeyUtils } from "../utils";
+import { arrayUnique } from "../utils/array.utils";
 import { AccessControlResourceLoaderService } from "./access-control-resource-loader.service";
 import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
-import { arrayUnique } from "../utils/array.utils";
 
 @Injectable()
 export class ResourceAccessControlService {
@@ -150,7 +151,10 @@ export class ResourceAccessControlService {
             .map(([user, _], index) => [user, accessControlStrings[index]] as [Users, string])
             .filter(
                 ([_, accessControlStr]) =>
-                    options.action && accessControlStr && options.action && AccessRules.fromString(accessControlStr).has(options.action)
+                    options.action &&
+                    accessControlStr &&
+                    options.action &&
+                    AccessRules.fromString(accessControlStr).has(options.action)
             )
             .map(([user, _]) => user);
         return arrayUnique([...users, ...usersFromWildcard], (user) => `${user.id}:${user.role}`);
@@ -177,7 +181,10 @@ export class ResourceAccessControlService {
         return accessControlStrings
             .filter((accessControlString): accessControlString is string => !!accessControlString)
             .map((accessControlString, index): [string, number] => [accessControlString, index])
-            .filter(([accessControlString]) => options.action && AccessRules.fromString(accessControlString).has(options.action))
+            .filter(
+                ([accessControlString]) =>
+                    options.action && AccessRules.fromString(accessControlString).has(options.action)
+            )
             .map(([_, index]) =>
                 RedisKeyUtils.extractUserFromUsersResourceActionWildcardPatternMatch(
                     matchedKeys[index]!,
@@ -263,7 +270,7 @@ export class ResourceAccessControlService {
 
     private async getResourceCondition(user: Users): Promise<PolicyResourcesCondition<any> | null> {
         const res = await this.redisService.get(RedisKeyUtils.userResourceActionConditionKey(user, this.resourceName));
-        return res !== null ? JSON.parse(res) as PolicyResourcesCondition<any> : null;
+        return res !== null ? (JSON.parse(res) as PolicyResourcesCondition<any>) : null;
     }
 
     private async fetchResourceRule(user: Users, resourceId: ResourceId): Promise<AccessRules> {

@@ -2,12 +2,14 @@ import type { OnModuleInit } from "@nestjs/common";
 import { Global, Module } from "@nestjs/common";
 import { CqrsModule } from "@nestjs/cqrs";
 import { RedisModule } from "@recursyve/nestjs-redis";
+
 import {
     AccessControlGetResourcesHandler,
     AccessControlResourceCreatedHandler,
     AccessControlResourceDeletedHandler,
     AccessControlResourceUpdatedHandler
 } from "./handlers";
+import { AccessControlResourceAccessUpdatedHandler } from "./handlers/resource-access-updated.handler";
 import {
     AccessControlExplorerService,
     AccessControlService,
@@ -21,7 +23,6 @@ import {
 } from "./services";
 import { AccessControlResourceLoaderService } from "./services/access-control-resource-loader.service";
 import { ResourceAccessUpdatedPoliciesService } from "./services/resource-access-updated-policies.service";
-import { AccessControlResourceAccessUpdatedHandler } from "./handlers/resource-access-updated.handler";
 
 @Global()
 @Module({
