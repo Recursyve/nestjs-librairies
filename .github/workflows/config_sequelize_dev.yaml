@@ -1,0 +1,47 @@
+name: Config sequelize dev CI
+
+on:
+  pull_request:
+    paths:
+      - "config-sequelize/**"
+      - ".github/workflows/config_sequelize_dev.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  config-sequelize:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.x, 24.x, 26.x]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: config-sequelize/package-lock.json
+
+      - name: Install dependencies
+        working-directory: config-sequelize
+        run: npm ci
+
+      - name: Check formatting
+        working-directory: config-sequelize
+        run: npm run format:check
+
+      - name: Build
+        working-directory: config-sequelize
+        run: npm run build
+
+      - name: Lint
+        working-directory: config-sequelize
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: config-sequelize
+        run: npm run test
