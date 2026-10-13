@@ -6,15 +6,16 @@ variables from a database.
 ## Getting started
 
 ### Install
+
 ```
 npm i --save @recursyve/nestjs-config-sequelize
 ```
 
 ### example
-``` ts
+
+```ts
 @SequelizeConfig()
 class VariableEnvTest {
-
     @Variable(false)
     DB_HOST: string;
 
@@ -28,7 +29,8 @@ class VariableEnvTest {
     DB_PORT: string;
 }
 ```
-``` ts
+
+```ts
 @Module({
     imports: [
         SequelizeModule.forRoot({ ... }),
@@ -38,5 +40,3 @@ class VariableEnvTest {
 })
 export class AppModule {}
 ```
-
-
