@@ -2,6 +2,7 @@ import type { ArgumentMetadata, PipeTransform } from "@nestjs/common";
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { plainToClass } from "class-transformer";
 import { validate } from "class-validator";
+
 import { ObjectUtils } from "../utils/objects";
 
 @Injectable()
@@ -34,13 +35,15 @@ export class ValidationPipe implements PipeTransform<unknown> {
         // The problem comes from multer (which parses the form-data)
         // https://github.com/expressjs/multer/blob/master/lib/make-middleware.js#L28
         // Works when line 28 is: req.body = {}
-        const object = plainToClass(metatype, ValidationPipe.rebuildObjectIfBroken(value), { excludeExtraneousValues: true });
+        const object = plainToClass(metatype, ValidationPipe.rebuildObjectIfBroken(value), {
+            excludeExtraneousValues: true
+        });
         ObjectUtils.stringBoolsToBools(object);
 
         const errors = await validate(object);
         if (errors.length > 0) {
             throw new HttpException(
-                { message: "Validation failed", errors: errors.map(e => e.property) },
+                { message: "Validation failed", errors: errors.map((e) => e.property) },
                 HttpStatus.PRECONDITION_FAILED
             );
         }
@@ -50,6 +53,6 @@ export class ValidationPipe implements PipeTransform<unknown> {
 
     private toValidate(metatype: any): boolean {
         const types = [String, Boolean, Number, Array, Object];
-        return !types.find(type => metatype === type);
+        return !types.find((type) => metatype === type);
     }
 }
