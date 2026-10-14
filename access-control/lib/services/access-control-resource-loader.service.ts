@@ -1,8 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { catchError, finalize, from, map, Observable, of } from "rxjs";
-import { PolicyResourceTypes, Resources, Users } from "../models";
-import { GetResourcesCommand } from "../commands";
 import { CommandBus } from "@nestjs/cqrs";
+import { catchError, finalize, from, map, Observable, of } from "rxjs";
+
+import { GetResourcesCommand } from "../commands";
+import type { Users } from "../models";
+import { PolicyResourceTypes, Resources } from "../models";
 import { ResourceAccessService } from "./resource-access.service";
 
 @Injectable()
@@ -23,7 +25,7 @@ export class AccessControlResourceLoaderService {
         }
 
         const resources$ = from(this.fetchResources(user, resourceName)).pipe(
-            map((res) => res === null ? Resources.fromIds([]) : res),
+            map((res) => (res === null ? Resources.fromIds([]) : res))
         );
         this.fetchingResources.set(fetchKey, resources$);
 
@@ -32,7 +34,7 @@ export class AccessControlResourceLoaderService {
                 this.logger.error(`Error while loading resources for ${resourceName}`, error);
                 return of(Resources.fromIds([]));
             }),
-            map((res) => res === null ? Resources.fromIds([]) : res),
+            map((res) => (res === null ? Resources.fromIds([]) : res)),
             finalize(() => this.fetchingResources.delete(fetchKey))
         );
     }
@@ -42,7 +44,9 @@ export class AccessControlResourceLoaderService {
 
         await this.resourceAccessService.setUserAccessRules(user, resourceName, policyResources);
         if (policyResources.type === PolicyResourceTypes.Resources) {
-            return Resources.fromIds(policyResources.resources.filter((x: any) => x.rules.r).map((x: any) => x.resourceId));
+            return Resources.fromIds(
+                policyResources.resources.filter((x: any) => x.rules.r).map((x: any) => x.resourceId)
+            );
         }
         if (policyResources.type === PolicyResourceTypes.Wildcard) {
             return Resources.all();

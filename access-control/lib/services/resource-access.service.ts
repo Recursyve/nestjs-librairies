@@ -1,17 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { CommandBus } from "@nestjs/cqrs";
 import { RedisService } from "@recursyve/nestjs-redis";
+
 import { ResourceAccessUpdatedCommand } from "../commands";
-import {
-    AccessActionType,
-    accessActionTypeValues,
-    AccessControlResources,
-    PolicyResources,
-    PolicyResourceTypes,
-    ResourceId,
-    UserResources,
-    Users
-} from "../models";
+import type { AccessControlResources, ResourceId, UserResources, Users } from "../models";
+import { AccessActionType, accessActionTypeValues, PolicyResources, PolicyResourceTypes } from "../models";
 import { RedisKeyUtils } from "../utils";
 
 @Injectable()
@@ -21,8 +14,7 @@ export class ResourceAccessService {
     constructor(
         private redisService: RedisService,
         private commandBus: CommandBus
-    ) {
-    }
+    ) {}
 
     public async setUserAccessRules(
         user: Users,
@@ -86,14 +78,19 @@ export class ResourceAccessService {
 
         const delKeys = new Map(
             filteredUserResources
-                .filter((userResources): userResources is UserResources & { resourceName: string, resourceId: ResourceId } => !!userResources.resourceName && !!userResources.resourceId)
+                .filter(
+                    (
+                        userResources
+                    ): userResources is UserResources & { resourceName: string; resourceId: ResourceId } =>
+                        !!userResources.resourceName && !!userResources.resourceId
+                )
                 .map((userResource) => [
-                RedisKeyUtils.userResourceIdKey(userResource.resourceName, userResource.resourceId, {
-                    id: userResource.userId,
-                    role: userResource.userRole
-                }),
-                true
-            ])
+                    RedisKeyUtils.userResourceIdKey(userResource.resourceName, userResource.resourceId, {
+                        id: userResource.userId,
+                        role: userResource.userRole
+                    }),
+                    true
+                ])
         );
         if (delKeys.size) {
             await this.redisService.del(...delKeys.keys());
@@ -165,7 +162,7 @@ export class ResourceAccessService {
         for (const [index, [_, userResources]] of groupedUserResourcesEntries.entries()) {
             if (hasAccessControls[index] !== "1") {
                 this.logger.verbose(
-                    `User '${userResources[0].userId}' was filtered out from '${userResources[0].resourceName}' access changes, since his access control was not yet initialized.`
+                    `User '${userResources[0]?.userId}' was filtered out from '${userResources[0]?.resourceName}' access changes, since his access control was not yet initialized.`
                 );
                 continue;
             }

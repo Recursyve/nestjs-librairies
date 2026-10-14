@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { PolicyResources, Users } from "../models";
+
+import type { Users } from "../models";
+import { PolicyResources } from "../models";
 
 @Injectable()
 export abstract class AccessPolicy {

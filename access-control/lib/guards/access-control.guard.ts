@@ -1,5 +1,7 @@
-import { CanActivate, ExecutionContext, Injectable, OnModuleInit, Type } from "@nestjs/common";
+import type { CanActivate, ExecutionContext, OnModuleInit, Type } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ModuleRef, Reflector } from "@nestjs/core";
+
 import {
     ACCESS_CONTROL_RESOURCE,
     ACCESS_CONTROL_ROUTES,
@@ -7,8 +9,8 @@ import {
     NEEDS_ACCESS_ACTIONS
 } from "../decorators/constant";
 import { UserDeserializer } from "../deserializers";
-import { AccessAction } from "../models";
-import { AccessControlResourceConfig } from "../models/access-control-resource.model";
+import type { AccessAction } from "../models";
+import type { AccessControlResourceConfig } from "../models/access-control-resource.model";
 import { AccessControlService, DatabaseAdaptersRegistry } from "../services";
 
 @Injectable()
@@ -29,8 +31,7 @@ export class AccessControlGuard implements CanActivate, OnModuleInit {
     }
 
     public async canActivate(context: ExecutionContext): Promise<boolean> {
-        return (await this.validateAccessControl(context))
-            || await this.fallbackAccessControlGuards(context);
+        return (await this.validateAccessControl(context)) || (await this.fallbackAccessControlGuards(context));
     }
 
     private async validateAccessControl(context: ExecutionContext): Promise<boolean> {
@@ -45,8 +46,14 @@ export class AccessControlGuard implements CanActivate, OnModuleInit {
             return false;
         }
 
-        const controllerResource = this.reflector.get<AccessControlResourceConfig>(ACCESS_CONTROL_RESOURCE, context.getClass());
-        const methodResource = this.reflector.get<AccessControlResourceConfig>(ACCESS_CONTROL_RESOURCE, context.getHandler());
+        const controllerResource = this.reflector.get<AccessControlResourceConfig>(
+            ACCESS_CONTROL_RESOURCE,
+            context.getClass()
+        );
+        const methodResource = this.reflector.get<AccessControlResourceConfig>(
+            ACCESS_CONTROL_RESOURCE,
+            context.getHandler()
+        );
         if (!controllerResource && !methodResource) {
             request.resources = this.getModels(request.route.path, needsAccessActions);
         }
@@ -97,13 +104,14 @@ export class AccessControlGuard implements CanActivate, OnModuleInit {
     }
 
     private async fallbackAccessControlGuards(context: ExecutionContext): Promise<boolean> {
-        const guards = this.reflector.get<Type<CanActivate>[]>(FALLBACK_ACCESS_CONTROL_GUARDS, context.getHandler()) ?? [];
+        const guards =
+            this.reflector.get<Type<CanActivate>[]>(FALLBACK_ACCESS_CONTROL_GUARDS, context.getHandler()) ?? [];
         const shouldActivate = await Promise.all(
-            guards.map(async guard =>
-                (await this.moduleRef.get<CanActivate>(guard, { strict: false }))
-                    .canActivate(context))
+            guards.map(async (guard) =>
+                (await this.moduleRef.get<CanActivate>(guard, { strict: false })).canActivate(context)
+            )
         );
-        return !!shouldActivate.length && shouldActivate.every(activate => activate);
+        return !!shouldActivate.length && shouldActivate.every((activate) => activate);
     }
 
     public getModels(path: string, actions: AccessAction[]): any[] {

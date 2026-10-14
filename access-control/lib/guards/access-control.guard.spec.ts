@@ -1,5 +1,8 @@
+import { beforeAll, describe, expect, it } from "vitest";
+
 import { AccessControlModelRoutes } from "../decorators";
 import { AccessActionType } from "../models";
+import type { DatabaseAdaptersRegistry } from "../services";
 import { AccessControlGuard } from "./access-control.guard";
 
 @AccessControlModelRoutes("account")
@@ -15,7 +18,19 @@ describe("AccessControlGuard", () => {
     let guard: AccessControlGuard;
 
     beforeAll(() => {
-        guard = new AccessControlGuard(null as any, null as any, null as any, null as any, null as any);
+        const databaseAdaptersRegistry = {
+            getModels: () => [ModelTest1, ModelTest2, ModelTest3]
+        } satisfies Pick<DatabaseAdaptersRegistry, "getModels">;
+
+        guard = new AccessControlGuard(
+            null as any,
+            null as any,
+            databaseAdaptersRegistry as DatabaseAdaptersRegistry,
+            null as any,
+            null as any
+        );
+
+        guard.onModuleInit();
     });
 
     it("getModels should return appropriated models", () => {
@@ -29,7 +44,9 @@ describe("AccessControlGuard", () => {
         expect(res2).toHaveLength(1);
         expect(res2[0]).toBe(ModelTest2);
 
-        const res3 = guard.getModels("/test/coord/:id", [{ type: AccessActionType.Read, resourceIdParameterName: "id" }]);
+        const res3 = guard.getModels("/test/coord/:id", [
+            { type: AccessActionType.Read, resourceIdParameterName: "id" }
+        ]);
         expect(res3).toBeDefined();
         expect(res3).toHaveLength(1);
         expect(res3[0]).toBe(ModelTest3);

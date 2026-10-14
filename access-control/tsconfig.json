@@ -1,22 +1,29 @@
 {
-  "compileOnSave": false,
-  "compilerOptions": {
-    "module": "commonjs",
-    "target": "es2018",
-    "moduleResolution": "node",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "lib": [
-      "es2018"
-    ],
-    "strict": true,
-    "sourceMap": true,
-    "outDir": "build"
-  },
-  "include": [
-    "lib/**/*"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+    "compilerOptions": {
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "resolvePackageJsonExports": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "isolatedModules": true,
+        "isolatedDeclarations": true,
+        "declaration": true,
+        "removeComments": true,
+        "target": "ES2023",
+        "sourceMap": true,
+        "incremental": true,
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noUncheckedIndexedAccess": true,
+        "noUncheckedSideEffectImports": true,
+        "verbatimModuleSyntax": true,
+        "types": ["node"]
+    },
+    "exclude": ["node_modules", "dist"]
 }

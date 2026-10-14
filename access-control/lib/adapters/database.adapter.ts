@@ -1,4 +1,4 @@
-import { ResourceId } from "../models";
+import type { ResourceId } from "../models";
 
 export interface IDatabaseAdapter {
     getModels(): any[];

@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { UserResources } from "../models";
+
+import type { UserResources } from "../models";
 
 @Injectable()
 export abstract class ResourceDeletedPolicy<T> {
@@ -13,9 +14,7 @@ export abstract class ResourceDeletedPolicy<T> {
 
     public async handle(resource: T): Promise<UserResources[]> {
         const result = await this.getPolicies(resource);
-        return result
-            .filter(x => !!x)
-            .map(x => ({ ...x, resourceName: this.resourceName }));
+        return result.filter((x) => !!x).map((x) => ({ ...x, resourceName: this.resourceName }));
     }
 
     protected async getPolicies(resource: T): Promise<UserResources[]> {

@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { CommandBus } from "@nestjs/cqrs";
+
 import { ResourceCreatedCommand, ResourceDeletedCommand, ResourceUpdatedCommand } from "../commands";
 import { ResourceCreatedPoliciesService } from "./resource-created-policies.service";
 import { ResourceDeletedPoliciesService } from "./resource-deleted-policies.service";

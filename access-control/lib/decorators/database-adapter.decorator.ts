@@ -1,4 +1,4 @@
-import { DatabaseAdapterConfig } from "../models/database-adapter-config.model";
+import type { DatabaseAdapterConfig } from "../models/database-adapter-config.model";
 import { DATABASE_ADAPTER_METADATA } from "./constant";
 
 export function DatabaseAdapter(options: DatabaseAdapterConfig): ClassDecorator {

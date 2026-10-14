@@ -1,8 +1,10 @@
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import type { ICommandHandler } from "@nestjs/cqrs";
+import { CommandHandler } from "@nestjs/cqrs";
+
 import { ResourceAccessUpdatedCommand } from "../commands";
-import { ResourceAccessUpdatedPoliciesService } from "../services/resource-access-updated-policies.service";
+import type { UserResources } from "../models";
 import { ResourceAccessService } from "../services";
-import { UserResources } from "../models";
+import { ResourceAccessUpdatedPoliciesService } from "../services/resource-access-updated-policies.service";
 
 @CommandHandler(ResourceAccessUpdatedCommand)
 export class AccessControlResourceAccessUpdatedHandler implements ICommandHandler<ResourceAccessUpdatedCommand> {
@@ -29,7 +31,7 @@ export class AccessControlResourceAccessUpdatedHandler implements ICommandHandle
         const userResourcesByResource = [...userResourcesByResourceMap.values()];
         const nestedUserResources = await Promise.all(
             userResourcesByResource.map((userResources) => {
-                const firstUserResource = userResources[0];
+                const firstUserResource = userResources[0]!;
                 if (!firstUserResource.resourceName || !firstUserResource.resourceId) {
                     return [];
                 }
@@ -38,12 +40,12 @@ export class AccessControlResourceAccessUpdatedHandler implements ICommandHandle
                     firstUserResource.resourceName,
                     firstUserResource.resourceId,
                     userResources
-                )
+                );
             })
         );
         const flattenedUserResources: UserResources[] = [];
         for (const [index, userResources] of nestedUserResources.entries()) {
-            const sourceResourceName = userResourcesByResource[index][0].resourceName;
+            const sourceResourceName = userResourcesByResource[index]?.[0]?.resourceName;
 
             for (const userResource of userResources) {
                 if (userResource.resourceName === sourceResourceName) {
