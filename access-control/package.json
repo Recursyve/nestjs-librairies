@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-access-control",
-    "version": "11.1.1",
+    "version": "12.0.0",
     "description": "NestJs AccessControl library",
     "type": "module",
     "main": "./dist/index.cjs",
@@ -36,7 +36,7 @@
         "@nestjs/common": ">=12.0.0",
         "@nestjs/core": ">=12.0.0",
         "@nestjs/cqrs": ">=12.0.0",
-        "@recursyve/nestjs-redis": ">=11.0.0"
+        "@recursyve/nestjs-redis": ">=12.0.0"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
@@ -46,7 +46,7 @@
         "@nestjs/core": "^12.0.1",
         "@nestjs/cqrs": "^12.0.0",
         "@nestjs/testing": "^12.0.1",
-        "@recursyve/nestjs-redis": "^11.0.0",
+        "@recursyve/nestjs-redis": "file:../redis",
         "@vitest/coverage-v8": "^5.0.0",
         "@vitest/eslint-plugin": "^1.6.27",
         "eslint": "^10.10.0",
