@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
+import { isNotEmpty } from "@recursyve/nice-ts-utils";
 import Redis from "ioredis";
-import { RedisOptions } from "ioredis";
+import type { RedisOptions } from "ioredis";
 
 @Injectable()
 export class RedisConfigService {
@@ -13,13 +14,15 @@ export class RedisConfigService {
     public lpushBlockSize: number;
 
     constructor() {
-        this.connectionString = process.env.REDIS_CONNECTION_STRING;
-        this.host = process.env.REDIS_HOST ?? "127.0.0.1";
-        this.password = process.env.REDIS_PASSWORD;
-        this.port = process.env.REDIS_PORT !== undefined ? +process.env.REDIS_PORT : 6379;
-        this.database = process.env.REDIS_DATABASE ? +process.env.REDIS_DATABASE : 0;
-        this.useTLS = process.env.REDIS_USE_TLS === "true";
-        this.lpushBlockSize = process.env.REDIS_LPUSH_BLOCK_SIZE ? +process.env.REDIS_LPUSH_BLOCK_SIZE : 250;
+        this.connectionString = process.env["REDIS_CONNECTION_STRING"];
+        this.host = process.env["REDIS_HOST"] ?? "127.0.0.1";
+        this.password = process.env["REDIS_PASSWORD"];
+        this.port = isNotEmpty(process.env["REDIS_PORT"]) ? +process.env["REDIS_PORT"] : 6379;
+        this.database = isNotEmpty(process.env["REDIS_DATABASE"]) ? +process.env["REDIS_DATABASE"] : 0;
+        this.useTLS = process.env["REDIS_USE_TLS"] === "true";
+        this.lpushBlockSize = isNotEmpty(process.env["REDIS_LPUSH_BLOCK_SIZE"])
+            ? +process.env["REDIS_LPUSH_BLOCK_SIZE"]
+            : 250;
     }
 
     public getConfig(): RedisOptions {
@@ -29,7 +32,7 @@ export class RedisConfigService {
             db: this.database
         };
 
-        if (this.password) {
+        if (isNotEmpty(this.password)) {
             option.password = this.password;
         }
 
@@ -42,7 +45,7 @@ export class RedisConfigService {
 
     public getRedisInstance(): Redis {
         const options = this.getConfig();
-        if (this.connectionString) {
+        if (isNotEmpty(this.connectionString)) {
             return new Redis(this.connectionString, options);
         }
         return new Redis(options);
