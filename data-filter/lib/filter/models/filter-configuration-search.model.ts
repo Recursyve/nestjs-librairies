@@ -16,12 +16,12 @@ export class FilterConfigurationSearchModel {
     @IsOptional()
     @IsInt()
     @ApiPropertyOptional({ type: () => Number })
-    @Transform(({ value }) => typeof value === "string" ? parseInt(value) : value)
+    @Transform(({ value }) => (typeof value === "string" ? parseInt(value) : value))
     pageSize?: number;
 
     @IsOptional()
     @IsInt()
     @ApiPropertyOptional({ type: () => Number })
-    @Transform(({ value }) => typeof value === "string" ? parseInt(value) : value)
+    @Transform(({ value }) => (typeof value === "string" ? parseInt(value) : value))
     page?: number;
 }

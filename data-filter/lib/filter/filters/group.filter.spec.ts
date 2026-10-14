@@ -1,13 +1,16 @@
+import type { WhereOptions } from "sequelize";
+import { Op } from "sequelize";
+import { describe, expect, it } from "vitest";
+
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
 import { FilterUtils } from "../filter.utils";
-import { FilterOperatorTypes } from "../operators";
-import { Op, WhereOptions } from "sequelize";
-import { GroupFilter } from "./group.filter";
-import { SelectFilter } from "./select.filter";
-import { NumberFilter } from "./number.filter";
 import { RuleModel } from "../models";
 import { GroupFilterBaseConfigurationModel } from "../models/filter-configuration.model";
+import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
+import { GroupFilter } from "./group.filter";
+import { NumberFilter } from "./number.filter";
+import { SelectFilter } from "./select.filter";
 
 describe("GroupFilter", () => {
     describe("getConfig", () => {
@@ -67,7 +70,7 @@ describe("GroupFilter", () => {
                         },
                         {
                             id: "less_or_equal",
-                            name: FilterUtils.getOperatorTranslationKey( "less_or_equal")
+                            name: FilterUtils.getOperatorTranslationKey("less_or_equal")
                         }
                     ]
                 },
@@ -132,7 +135,7 @@ describe("GroupFilter", () => {
                         },
                         {
                             id: "less_or_equal",
-                            name: FilterUtils.getOperatorTranslationKey( "less_or_equal")
+                            name: FilterUtils.getOperatorTranslationKey("less_or_equal")
                         }
                     ]
                 },

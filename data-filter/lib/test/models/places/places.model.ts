@@ -12,10 +12,11 @@ import {
     Table,
     UpdatedAt
 } from "sequelize-typescript";
-import { Owners } from "./owners.model";
-import { PlaceOwners } from "./place-owners.model";
+
 import { Coords } from "../coords/coords.model";
 import { Systems } from "../systems/systems.model";
+import { Owners } from "./owners.model";
+import { PlaceOwners } from "./place-owners.model";
 
 @Table({
     tableName: "places",
@@ -25,7 +26,7 @@ export class Places extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
-    id!: number;
+    declare id: number;
 
     @Column
     @ForeignKey(() => Coords)

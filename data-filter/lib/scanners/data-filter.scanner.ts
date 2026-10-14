@@ -1,7 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import { ATTRIBUTES, DATA_FILTER, } from "../constant";
-import { DataFilterConfig } from "../models/data-filter.model";
+
+import { ATTRIBUTES, DATA_FILTER } from "../constant";
 import { AttributesConfig } from "../models/attributes.model";
+import { DataFilterConfig } from "../models/data-filter.model";
 
 @Injectable()
 export class DataFilterScanner {

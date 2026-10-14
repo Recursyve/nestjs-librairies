@@ -11,6 +11,7 @@ import {
     Table,
     UpdatedAt
 } from "sequelize-typescript";
+
 import { Invoices } from "../invoices/invoices.model";
 
 @Table({
@@ -21,7 +22,7 @@ export class Contracts extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
-    id!: number;
+    declare id: number;
 
     @Column(DataType.DATEONLY)
     start_date?: Date;

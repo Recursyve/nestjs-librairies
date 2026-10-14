@@ -1,5 +1,6 @@
 import { ApiExtraModels, ApiProperty, getSchemaPath } from "@nestjs/swagger";
 import { IsArray, IsIn, IsString } from "class-validator";
+
 import { RuleModel } from "./rule.model";
 
 const conditions = ["and", "or"] as const;
@@ -21,8 +22,8 @@ export class QueryModel {
     @ApiProperty({
         oneOf: [
             { type: "array", items: { $ref: getSchemaPath(QueryRuleModel) } },
-            { type: "array", items: { $ref: getSchemaPath(QueryModel) } },
-        ],
+            { type: "array", items: { $ref: getSchemaPath(QueryModel) } }
+        ]
     })
     rules!: (QueryRuleModel | QueryModel)[];
 }

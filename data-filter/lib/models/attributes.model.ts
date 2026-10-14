@@ -1,8 +1,9 @@
-import { FindAttributeOptions, Order } from "sequelize";
+import type { FindAttributeOptions, Order } from "sequelize";
 import { Model } from "sequelize-typescript";
+
 import { SequelizeUtils } from "../sequelize.utils";
-import { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
-import { IncludeConfig, IncludeModel } from "./include.model";
+import type { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
+import type { IncludeConfig, IncludeModel } from "./include.model";
 import { PathConfig } from "./path.model";
 
 export interface AttributesConfigModel {
@@ -33,14 +34,16 @@ export class AttributesConfig implements AttributesConfigModel {
     }
 
     public get searchableAttributes(): string[] | undefined {
-        return this._searchableAttributes?.filter(attribute => !this.searchableTranslationAttributes?.includes(attribute));
+        return this._searchableAttributes?.filter(
+            (attribute) => !this.searchableTranslationAttributes?.includes(attribute)
+        );
     }
 
-    public setAttributes(attributes?: FindAttributeOptions) {
+    public setAttributes(attributes?: FindAttributeOptions): void {
         this.attributes = attributes;
     }
 
-    public setSearchableAttributes(attributes: string[]) {
+    public setSearchableAttributes(attributes: string[]): void {
         this._searchableAttributes = attributes;
     }
 
@@ -48,15 +51,15 @@ export class AttributesConfig implements AttributesConfigModel {
         this.searchableTranslationAttributes = attributes;
     }
 
-    public setPath(path: PathConfig) {
+    public setPath(path: PathConfig): void {
         this.path = path;
     }
 
-    public containsPath(path: string) {
+    public containsPath(path: string): boolean {
         return this.path?.path.startsWith(path);
     }
 
-    public setIgnoreInPath(ignore: boolean) {
+    public setIgnoreInPath(ignore: boolean): void {
         this.ignoreInSearch = ignore;
     }
 
@@ -68,11 +71,11 @@ export class AttributesConfig implements AttributesConfigModel {
         this.path.order = order;
     }
 
-    public addInclude(include: IncludeConfig) {
+    public addInclude(include: IncludeConfig): void {
         this.includes.push(include);
     }
 
-    public addCustomAttribute(attribute: CustomAttributesConfig) {
+    public addCustomAttribute(attribute: CustomAttributesConfig): void {
         this.customAttributes.push(attribute);
     }
 
@@ -81,7 +84,7 @@ export class AttributesConfig implements AttributesConfigModel {
         if (this.attributes) {
             if (this.customAttributes.length) {
                 const attributes = SequelizeUtils.mergeAttributes(this.attributes, {
-                    include: customAttributes.map(x => x.attribute)
+                    include: customAttributes.map((x) => x.attribute)
                 });
                 if (!attributes) {
                     return null;
@@ -94,7 +97,7 @@ export class AttributesConfig implements AttributesConfigModel {
         }
         if (!this.attributes && customAttributes.length) {
             return {
-                include: customAttributes.map(x => x.attribute)
+                include: customAttributes.map((x) => x.attribute)
             };
         }
 
@@ -103,7 +106,7 @@ export class AttributesConfig implements AttributesConfigModel {
 
     public transformIncludesConfig(options?: object): IncludeModel[] {
         return this.includes
-            .map(x => {
+            .map((x) => {
                 const customAttributes = this.getCustomAttributes(options, x.path);
                 if (!customAttributes.length) {
                     return x;
@@ -112,18 +115,18 @@ export class AttributesConfig implements AttributesConfigModel {
                 if (x.attributes) {
                     return {
                         ...x,
-                        attributes: [...x.attributes as string[], ...customAttributes.map(a => a.attribute)]
+                        attributes: [...(x.attributes as string[]), ...customAttributes.map((a) => a.attribute)]
                     };
                 } else {
                     return {
                         ...x,
                         attributes: {
-                            include: customAttributes.map(a => a.attribute)
+                            include: customAttributes.map((a) => a.attribute)
                         }
                     };
                 }
             })
-            .map(x => {
+            .map((x) => {
                 if (!options) {
                     const { where, ...values } = x;
                     return values;
@@ -141,7 +144,7 @@ export class AttributesConfig implements AttributesConfigModel {
     }
 
     public hasGroupedCustomAttributes(): boolean {
-        return this.customAttributes.some(x => x.shouldGroupBy());
+        return this.customAttributes.some((x) => x.shouldGroupBy());
     }
 
     /**
@@ -150,25 +153,33 @@ export class AttributesConfig implements AttributesConfigModel {
      */
     public getGroupedCustomAttributes(options?: object, model?: typeof Model): CustomAttributesModel[] {
         return this.customAttributes
-            .filter(x => x.shouldGroupBy())
-            .map(x => ({
-                key: x.key,
-                attribute: x.transform(options, this.path.path, model)
-            } as CustomAttributesModel))
-            .filter(x => x.attribute);
+            .filter((x) => x.shouldGroupBy())
+            .map(
+                (x) =>
+                    ({
+                        key: x.key,
+                        attribute: x.transform(options, this.path.path, model)
+                    }) as CustomAttributesModel
+            )
+            .filter((x) => x.attribute);
     }
 
     public getCustomAttributes(options?: object, path?: string): CustomAttributesModel[] {
         return this.customAttributes
-            .filter(x => !x.shouldGroupBy() && x.config?.path === path)
-            .map(x => ({
-                key: x.key,
-                attribute: x.transform(options, this.path.path),
-                path: (x.config as any).path ? {
-                    path: (x.config as any).path,
-                    paranoid: true
-                } : null
-            } as CustomAttributesModel))
-            .filter(x => x.attribute);
+            .filter((x) => !x.shouldGroupBy() && x.config?.path === path)
+            .map(
+                (x) =>
+                    ({
+                        key: x.key,
+                        attribute: x.transform(options, this.path.path),
+                        path: (x.config as any).path
+                            ? {
+                                  path: (x.config as any).path,
+                                  paranoid: true
+                              }
+                            : null
+                    }) as CustomAttributesModel
+            )
+            .filter((x) => x.attribute);
     }
 }

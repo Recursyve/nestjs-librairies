@@ -1,20 +1,23 @@
-import { DynamicModule, forwardRef, ForwardReference, Global, Module, Provider, Type } from "@nestjs/common";
+import type { DynamicModule, ForwardReference, Provider, Type } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
+
 import { ExportAdapter } from "./adapters";
 import { AccessControlAdapter } from "./adapters/access-control.adapter";
 import { DefaultAccessControlAdapter } from "./adapters/default-access-control.adapter";
 import { DefaultExportAdapter } from "./adapters/default-export.adapter";
 import { DefaultTranslateAdapter } from "./adapters/default-translate.adapter";
 import { TranslateAdapter } from "./adapters/translate.adapter";
+import { FILTER_OPTION, VALIDATE_DATA } from "./constant";
 import { DataFilterService } from "./data-filter.service";
 import { DefaultDeserializer, UserDeserializer } from "./deserializers";
 import { FilterUtils } from "./filter";
 import { BaseFilter } from "./filter/base-filter";
+import type { FilterOptionConfig } from "./filter/filter.config";
+import { defaultFilterOptionConfig } from "./filter/filter.config";
 import { FilterFactory } from "./filter/filter.factory";
+import { createFilterProvider } from "./filter/filter.provider";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
-import { createFilterProvider } from "./filter/filter.provider";
-import { defaultFilterOptionConfig, FilterOptionConfig } from "./filter/filter.config";
-import { FILTER_OPTION, VALIDATE_DATA } from "./constant";
 import { DataFilterValidationService } from "./services/data-filter-validation.service";
 
 export interface DataFilterConfig {
@@ -28,7 +31,7 @@ export interface DataFilterConfig {
 }
 
 export interface DataFilterFeatureConfig extends DataFilterConfig {
-    filters: { filter: Type<BaseFilter<any>>; inject?: any[]; disableAccessControl?: boolean; }[];
+    filters: { filter: Type<BaseFilter<any>>; inject?: any[]; disableAccessControl?: boolean }[];
 }
 
 @Global()
@@ -71,40 +74,34 @@ export class DataFilterModule {
                 },
                 DataFilterValidationService
             ],
-            exports: [
-                FILTER_OPTION,
-                UserDeserializer,
-                AccessControlAdapter,
-                TranslateAdapter,
-                ExportAdapter
-            ]
+            exports: [FILTER_OPTION, UserDeserializer, AccessControlAdapter, TranslateAdapter, ExportAdapter]
         };
     }
 
     public static forFeature(option: DataFilterFeatureConfig): DynamicModule {
-        const providerOverride = Object.keys(option).map(x => {
-            if (x === "imports" || x === "filters") {
-                return;
-            }
-            return (option as any)[x];
-        }).filter(x => x);
+        const providerOverride = Object.keys(option)
+            .map((x) => {
+                if (x === "imports" || x === "filters") {
+                    return;
+                }
+                return (option as any)[x];
+            })
+            .filter((x) => x);
         return {
             module: DataFilterModule,
             imports: option.imports ?? [],
             providers: [
                 ...providerOverride,
-                ...option.filters.flatMap(x => ([
+                ...option.filters.flatMap((x) => [
                     {
                         provide: x.filter,
                         useFactory: FilterFactory(x.filter),
                         inject: x.inject ?? []
                     },
                     createFilterProvider(x.filter, x.disableAccessControl)
-                ]))
+                ])
             ],
-            exports: [
-                ...option.filters.map(x => FilterUtils.getProviderToken(x.filter))
-            ]
+            exports: [...option.filters.map((x) => FilterUtils.getProviderToken(x.filter))]
         };
     }
 }

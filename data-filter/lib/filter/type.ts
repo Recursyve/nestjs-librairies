@@ -9,5 +9,5 @@ export enum FilterType {
     Coordinate = "coordinate",
     Group = "group",
     GeoLocalization = "geo_localization",
-    GeoBounds = "geo_bounds",
+    GeoBounds = "geo_bounds"
 }

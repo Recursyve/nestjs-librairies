@@ -1,7 +1,8 @@
-import { Type as _Type } from "@nestjs/common";
+import type { Type as _Type } from "@nestjs/common";
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsBoolean, IsDefined, IsIn, IsInt, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
+
 import { QueryModel } from "../filter/models/query.model";
 
 export class FilterPageModel {
@@ -69,13 +70,13 @@ export class FilterQueryModel {
     @ApiPropertyOptional({
         oneOf: [
             {
-                $ref: getSchemaPath(OrderModel),
+                $ref: getSchemaPath(OrderModel)
             },
             {
                 type: "array",
-                items: { $ref: getSchemaPath(OrderModel) },
-            },
-        ],
+                items: { $ref: getSchemaPath(OrderModel) }
+            }
+        ]
     })
     order?: OrderModel | OrderModel[];
 

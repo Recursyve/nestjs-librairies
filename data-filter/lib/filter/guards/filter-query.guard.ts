@@ -1,7 +1,9 @@
-import { BadRequestException, CanActivate, ExecutionContext, Inject, Injectable } from "@nestjs/common";
-import { FILTER_OPTION } from "../../constant";
-import { FilterOptionConfig } from "../filter.config";
+import type { CanActivate, ExecutionContext } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+
 import { FilterQueryModel } from "../..";
+import { FILTER_OPTION } from "../../constant";
+import type { FilterOptionConfig } from "../filter.config";
 
 @Injectable()
 export class FilterQueryGuard implements CanActivate {

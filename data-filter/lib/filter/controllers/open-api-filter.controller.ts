@@ -1,27 +1,17 @@
-import {
-    Body,
-    Get,
-    HttpCode,
-    HttpStatus,
-    Param,
-    Post,
-    Query,
-    Req,
-    Type,
-    UseGuards,
-    UseInterceptors
-} from "@nestjs/common";
+import type { Type } from "@nestjs/common";
+import { Body, Get, HttpCode, HttpStatus, Param, Post, Query, Req, UseGuards, UseInterceptors } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiParam } from "@nestjs/swagger";
+
 import {
     ExportTypes,
     FilterConfigurationModel,
     FilterConfigurationSearchModel,
     FilterController,
     FilterQueryModel,
-    FilterResultModel,
     FilterResultModelMixin,
     SelectFilterValue
 } from "../..";
+import type { FilterResultModel } from "../../models/filter.model";
 import { FilterService } from "../filter.service";
 import { FilterQueryGuard } from "../guards/filter-query.guard";
 import { DataFileDownloadInterceptor } from "../interceptors/data-file-download.interceptor";
@@ -38,7 +28,7 @@ export function OpenApiFilterController<T extends Type, D>(
         @UseGuards(FilterQueryGuard)
         @ApiOkResponse({ type: () => _FilterResultModel })
         @ApiOperation({ operationId: `filter${Base.name}` })
-        public async filter(@Body() query: FilterQueryModel, @Req() req: any): Promise<FilterResultModel<D>> {
+        public override async filter(@Body() query: FilterQueryModel, @Req() req: any): Promise<FilterResultModel<D>> {
             return super.filter(query, req);
         }
 
@@ -46,7 +36,7 @@ export function OpenApiFilterController<T extends Type, D>(
         @HttpCode(HttpStatus.OK)
         @ApiOkResponse({ schema: { type: "number" } })
         @ApiOperation({ operationId: `filter${Base.name}Count` })
-        public async filterCount(@Body() query: FilterQueryModel, @Req() req: any): Promise<number> {
+        public override async filterCount(@Body() query: FilterQueryModel, @Req() req: any): Promise<number> {
             return super.filterCount(query, req);
         }
 
@@ -54,21 +44,18 @@ export function OpenApiFilterController<T extends Type, D>(
         @HttpCode(HttpStatus.OK)
         @UseInterceptors(DataFileDownloadInterceptor)
         @ApiOkResponse({
-            description: 'Returns file data as binary (Buffer) or as text (string) depending on the export type.',
+            description: "Returns file data as binary (Buffer) or as text (string) depending on the export type.",
             content: {
-              'application/octet-stream': {
-                schema: {
-                  oneOf: [
-                    { type: 'string', format: 'binary' },
-                    { type: 'string' }
-                  ]
+                "application/octet-stream": {
+                    schema: {
+                        oneOf: [{ type: "string", format: "binary" }, { type: "string" }]
+                    }
                 }
-              }
             }
-          })
+        })
         @ApiParam({ name: "type", enum: ExportTypes, enumName: "ExportTypes" })
         @ApiOperation({ operationId: `download${Base.name}Data` })
-        public async downloadData(
+        public override async downloadData(
             @Body() query: FilterQueryModel,
             @Param("type") type: ExportTypes,
             @Req() req: any
@@ -79,14 +66,14 @@ export function OpenApiFilterController<T extends Type, D>(
         @Get("filter/config")
         @ApiOkResponse({ type: () => FilterConfigurationModel, isArray: true })
         @ApiOperation({ operationId: `get${Base.name}FilterConfig` })
-        public async getFilterConfig(@Req() req: any): Promise<FilterConfigurationModel[]> {
+        public override async getFilterConfig(@Req() req: any): Promise<FilterConfigurationModel[]> {
             return super.getFilterConfig(req);
         }
 
         @Get("filter/config/id")
         @ApiOkResponse({ type: () => SelectFilterValue })
         @ApiOperation({ operationId: `search${Base.name}FilterResourceValue` })
-        public async searchFilterResourceValue(
+        public override async searchFilterResourceValue(
             @Query() search: FilterResourceValueModel,
             @Req() req: any
         ): Promise<SelectFilterValue | null> {
@@ -96,7 +83,7 @@ export function OpenApiFilterController<T extends Type, D>(
         @Get("filter/config/value")
         @ApiOkResponse({ type: () => SelectFilterValue, isArray: true })
         @ApiOperation({ operationId: `search${Base.name}FilterConfigValues` })
-        public async searchFilterConfigValues(
+        public override async searchFilterConfigValues(
             @Query() search: FilterConfigurationSearchModel,
             @Req() req: any
         ): Promise<SelectFilterValue[]> {

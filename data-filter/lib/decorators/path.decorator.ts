@@ -1,5 +1,5 @@
-import { IncludeWhereModel } from "../models/include.model";
 import { AttributesHandler } from "../handlers/attributes.handler";
+import type { IncludeWhereModel } from "../models/include.model";
 import { PathConfig } from "../models/path.model";
 
 export function Path(path: string, where?: IncludeWhereModel, required?: boolean): PropertyDecorator {

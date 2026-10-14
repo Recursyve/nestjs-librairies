@@ -1,4 +1,5 @@
-import { Provider, Type } from "@nestjs/common";
+import type { Provider, Type } from "@nestjs/common";
+
 import { AccessControlAdapter, TranslateAdapter } from "../adapters";
 import { DataFilterService } from "../data-filter.service";
 import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";

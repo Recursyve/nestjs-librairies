@@ -1,13 +1,16 @@
-import { Op, WhereOptions } from "sequelize";
-import { PathModel } from "../../models/path.model";
-import { DataFilterUserModel } from "../../models/user.model";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import type { WhereOptions } from "sequelize";
+import { Op } from "sequelize";
+
+import type { PathModel } from "../../models/path.model";
+import type { DataFilterUserModel } from "../../models/user.model";
 import { FilterUtils } from "../filter.utils";
 import { QueryRuleModel } from "../models";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
-import { BaseFilterDefinition, Filter, FilterCondition, FilterConditionRule } from "./filter";
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import type { BaseFilterDefinition, FilterCondition, FilterConditionRule } from "./filter";
+import { Filter } from "./filter";
 
 export interface OptionsFilterOption {
     key: string;
@@ -38,8 +41,8 @@ export interface OptionsFilterConfigurationModel extends FilterBaseConfiguration
 }
 
 export class OptionsFilter extends Filter implements OptionsFilterDefinition {
-    public type = FilterType.Options;
-    public operators = [FilterOperatorTypes.Equal];
+    public override type: FilterType = FilterType.Options;
+    public override operators: FilterOperatorTypes[] = [FilterOperatorTypes.Equal];
     public selectionMode!: OptionsFilterSelectionMode;
     public options!: OptionsFilterOption[];
 
@@ -47,7 +50,11 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
         super(definition);
     }
 
-    public async getConfig<Request>(key: string, request: Request, user?: DataFilterUserModel): Promise<OptionsFilterConfigurationModel | null> {
+    public override async getConfig<Request>(
+        key: string,
+        request: Request,
+        user?: DataFilterUserModel
+    ): Promise<OptionsFilterConfigurationModel | null> {
         const config = await super.getConfig(key, request, user);
 
         if (!config) {
@@ -57,18 +64,25 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
         return {
             ...config,
             selectionMode: this.selectionMode,
-            options: await Promise.all(this.options.map(async x => ({
-                key: x.key,
-                name: await this._translateService.getTranslation(
-                    user?.language ?? "",
-                    FilterUtils.getRadioOptionTranslationKey(key, x.key)
-                )
-            })))
+            options: await Promise.all(
+                this.options.map(async (x) => ({
+                    key: x.key,
+                    name: await this._translateService.getTranslation(
+                        user?.language ?? "",
+                        FilterUtils.getRadioOptionTranslationKey(key, x.key)
+                    )
+                }))
+            )
         };
     }
 
-    public getIncludePaths<Request>(rule: QueryRuleModel, request: Request, user: DataFilterUserModel | null, data?: object): PathModel[] {
-        const option = this.options.find(x => x.key === rule.value);
+    public override getIncludePaths<Request>(
+        rule: QueryRuleModel,
+        request: Request,
+        user: DataFilterUserModel | null,
+        data?: object
+    ): PathModel[] {
+        const option = this.options.find((x) => x.key === rule.value);
         const condition = option?.condition;
         if (!condition) {
             return super.getIncludePaths(rule, request, user);
@@ -77,8 +91,8 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
         return this.getRulePaths(condition.rules, request, user, data);
     }
 
-    public async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined> {
-        const option = this.options.find(x => x.key === rule.value);
+    public override async getWhereOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined> {
+        const option = this.options.find((x) => x.key === rule.value);
         if (!option) {
             return super.getWhereOptions(rule);
         }
@@ -104,8 +118,8 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
         return where;
     }
 
-    public async getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined> {
-        const option = this.options.find(x => x.key === rule.value);
+    public override async getHavingOptions(rule: QueryRuleModel): Promise<WhereOptions | undefined> {
+        const option = this.options.find((x) => x.key === rule.value);
         if (!option) {
             return super.getHavingOptions(rule);
         }
@@ -117,7 +131,12 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
         });
     }
 
-    private getRulePaths<Request>(rules: (FilterConditionRule | FilterCondition)[], request: Request, user: DataFilterUserModel | null, data?: object): PathModel[] {
+    private getRulePaths<Request>(
+        rules: (FilterConditionRule | FilterCondition)[],
+        request: Request,
+        user: DataFilterUserModel | null,
+        data?: object
+    ): PathModel[] {
         const paths: PathModel[] = [];
 
         for (const rule of rules) {
@@ -129,7 +148,6 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
                     if (!r.path) {
                         continue;
                     }
-
 
                     if (typeof r.where === "function") {
                         r.where = r.where({ request, user });
@@ -151,7 +169,7 @@ export class OptionsFilter extends Filter implements OptionsFilterDefinition {
  * @deprecated: Use OptionsFilter instead
  */
 export class RadioFilter extends OptionsFilter {
-    public type = FilterType.Radio;
+    public override type: FilterType = FilterType.Radio;
 
     constructor(definition: BaseFilterDefinition & Omit<OptionsFilterDefinition, "selectionMode">) {
         super({

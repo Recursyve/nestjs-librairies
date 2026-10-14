@@ -1,10 +1,11 @@
+import { FilterOperatorTypes, NumberOperators } from "../operators";
 import { FilterType } from "../type";
-import { NumberOperators } from "../operators";
-import { BaseFilterDefinition, Filter } from "./filter";
+import type { BaseFilterDefinition } from "./filter";
+import { Filter } from "./filter";
 
 export class NumberFilter extends Filter {
-    public type = FilterType.Number;
-    public operators = [...NumberOperators];
+    public override type: FilterType = FilterType.Number;
+    public override operators: FilterOperatorTypes[] = [...NumberOperators];
 
     constructor(definition?: BaseFilterDefinition) {
         super(definition);

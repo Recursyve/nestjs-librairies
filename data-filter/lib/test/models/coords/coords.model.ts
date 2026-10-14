@@ -2,7 +2,8 @@ import {
     AutoIncrement,
     BelongsTo,
     Column,
-    CreatedAt, DataType,
+    CreatedAt,
+    DataType,
     DeletedAt,
     ForeignKey,
     Model,
@@ -10,10 +11,11 @@ import {
     Table,
     UpdatedAt
 } from "sequelize-typescript";
+
 import { Locations } from "../locations/locations.model";
 
 export interface GeoPoint {
-    type: "Point",
+    type: "Point";
     coordinates: number[];
 }
 
@@ -24,7 +26,7 @@ export class Coords extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
-    id!: number;
+    declare id: number;
 
     @Column
     @ForeignKey(() => Locations)

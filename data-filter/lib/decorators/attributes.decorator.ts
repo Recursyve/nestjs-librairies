@@ -1,4 +1,5 @@
-import { FindAttributeOptions } from "sequelize";
+import type { FindAttributeOptions } from "sequelize";
+
 import { AttributesHandler } from "../handlers/attributes.handler";
 import { DataFilterHandler } from "../handlers/data-filter.handler";
 
@@ -8,7 +9,11 @@ export function Attributes(attributes?: FindAttributeOptions): PropertyDecorator
     };
 }
 
-function defineAttributesMetadata(target: Object, propertyKey: string | symbol | undefined, options?: FindAttributeOptions) {
+function defineAttributesMetadata(
+    target: Object,
+    propertyKey: string | symbol | undefined,
+    options?: FindAttributeOptions
+) {
     if (!propertyKey) {
         const dataFilter = DataFilterHandler.getDataFilter(target);
         dataFilter.setAttributes(options);

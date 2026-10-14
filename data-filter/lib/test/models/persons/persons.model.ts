@@ -10,6 +10,7 @@ import {
     Table,
     UpdatedAt
 } from "sequelize-typescript";
+
 import { Coords } from "../coords/coords.model";
 
 @Table({
@@ -20,7 +21,7 @@ export class Persons extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
-    id!: number;
+    declare id: number;
 
     @Column
     user_id?: string;

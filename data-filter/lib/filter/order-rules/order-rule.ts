@@ -1,7 +1,8 @@
 import { Col, Fn, Literal } from "sequelize/types/utils";
+
+import type { DataFilterUserModel } from "../../models/user.model";
 import { M } from "../../sequelize.utils";
-import { IRule } from "../models";
-import { DataFilterUserModel } from "../../models/user.model";
+import type { IRule } from "../models";
 
 export type OrderItemColumn = string | Col | Fn | Literal;
 
@@ -31,7 +32,7 @@ export abstract class OrderRule implements OrderRuleDefinition {
         }
     }
 
-    public static validate(definition: IRule) {
+    public static validate(definition: IRule): boolean {
         return definition["_type"] === "order_rule";
     }
 

@@ -1,4 +1,7 @@
-import { col, fn, literal, where, WhereOptions } from "sequelize";
+import type { WhereOptions } from "sequelize";
+import { col, fn, literal, where } from "sequelize";
+import { describe, expect, it } from "vitest";
+
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
 import { FilterUtils } from "../filter.utils";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
@@ -113,7 +116,12 @@ describe("GeoBoundsFilter", () => {
             });
             const options = await filter.getWhereOptions({
                 id: "test",
-                value: [[45.8797953, -73.2815516], [45.8797953, -73.2815516], [45.8797953, -73.2815516], [45.8797953, -73.2815516]],
+                value: [
+                    [45.8797953, -73.2815516],
+                    [45.8797953, -73.2815516],
+                    [45.8797953, -73.2815516],
+                    [45.8797953, -73.2815516]
+                ],
                 operation: FilterOperatorTypes.Equal
             });
             expect(options).toBeDefined();
@@ -121,7 +129,13 @@ describe("GeoBoundsFilter", () => {
                 where(
                     fn(
                         "ST_Contains",
-                        fn("ST_GeometryFromText", literal("'POLYGON((-73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953))'"), 0),
+                        fn(
+                            "ST_GeometryFromText",
+                            literal(
+                                "'POLYGON((-73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953))'"
+                            ),
+                            0
+                        ),
                         literal("test")
                     ),
                     literal("1")
@@ -132,11 +146,16 @@ describe("GeoBoundsFilter", () => {
         it("with equal operator and lat/lng attribytes should return a valid filter config", async () => {
             const filter = new GeoBoundsFilter({
                 latAttribute: "latitude",
-                lngAttribute: "longitude",
+                lngAttribute: "longitude"
             });
             const options = await filter.getWhereOptions({
                 id: "test",
-                value: [[45.8797953, -73.2815516], [45.8797953, -73.2815516], [45.8797953, -73.2815516], [45.8797953, -73.2815516]],
+                value: [
+                    [45.8797953, -73.2815516],
+                    [45.8797953, -73.2815516],
+                    [45.8797953, -73.2815516],
+                    [45.8797953, -73.2815516]
+                ],
                 operation: FilterOperatorTypes.Equal
             });
             expect(options).toBeDefined();
@@ -144,7 +163,13 @@ describe("GeoBoundsFilter", () => {
                 where(
                     fn(
                         "ST_Contains",
-                        fn("ST_GeometryFromText", literal("'POLYGON((-73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953))'"), 0),
+                        fn(
+                            "ST_GeometryFromText",
+                            literal(
+                                "'POLYGON((-73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953))'"
+                            ),
+                            0
+                        ),
                         fn("Point", col("longitude"), col("latitude"))
                     ),
                     literal("1")
@@ -160,7 +185,12 @@ describe("GeoBoundsFilter", () => {
             });
             const options = await filter.getWhereOptions({
                 id: "test",
-                value: [[45.8797953, -73.2815516], [45.8797953, -73.2815516], [45.8797953, -73.2815516], [45.8797953, -73.2815516]],
+                value: [
+                    [45.8797953, -73.2815516],
+                    [45.8797953, -73.2815516],
+                    [45.8797953, -73.2815516],
+                    [45.8797953, -73.2815516]
+                ],
                 operation: FilterOperatorTypes.Equal
             });
             expect(options).toBeDefined();
@@ -168,7 +198,13 @@ describe("GeoBoundsFilter", () => {
                 where(
                     fn(
                         "ST_Contains",
-                        fn("ST_GeometryFromText", literal("'POLYGON((45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516))'"), 0),
+                        fn(
+                            "ST_GeometryFromText",
+                            literal(
+                                "'POLYGON((45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516, 45.8797953 -73.2815516))'"
+                            ),
+                            0
+                        ),
                         fn("Point", col("longitude"), col("latitude"))
                     ),
                     literal("1")
@@ -182,7 +218,12 @@ describe("GeoBoundsFilter", () => {
             });
             const options = await filter.getWhereOptions({
                 id: "test",
-                value: [[45.8797953, -73.2815516], [45.8797953, -73.2815516], [45.8797953, -73.2815516], [45.8797953, -73.2815516]],
+                value: [
+                    [45.8797953, -73.2815516],
+                    [45.8797953, -73.2815516],
+                    [45.8797953, -73.2815516],
+                    [45.8797953, -73.2815516]
+                ],
                 operation: FilterOperatorTypes.NotEqual
             });
             expect(options).toBeDefined();
@@ -190,7 +231,13 @@ describe("GeoBoundsFilter", () => {
                 where(
                     fn(
                         "ST_Contains",
-                        fn("ST_GeometryFromText", literal("'POLYGON((-73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953))'"), 0),
+                        fn(
+                            "ST_GeometryFromText",
+                            literal(
+                                "'POLYGON((-73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953, -73.2815516 45.8797953))'"
+                            ),
+                            0
+                        ),
                         literal("test")
                     ),
                     literal("0")

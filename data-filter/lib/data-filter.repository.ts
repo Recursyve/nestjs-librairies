@@ -1,16 +1,18 @@
 import { Injectable } from "@nestjs/common";
-import { FindOptions, Identifier, Includeable, IncludeOptions, Model, Op, Utils, WhereOptions } from "sequelize";
-import { GroupOption } from "sequelize/types/model";
+import type { FindOptions, Identifier, Includeable, IncludeOptions, WhereOptions } from "sequelize";
+import { Model, Op, Utils } from "sequelize";
+import type { GroupOption } from "sequelize/types/model";
 import { Col, Fn } from "sequelize/types/utils";
+
 import { AccessControlAdapter, ExportAdapter, TranslateAdapter } from "./adapters";
 import { AttributesConfig } from "./models/attributes.model";
-import { CustomAttributesConfig } from "./models/custom-attributes.model";
+import type { CustomAttributesConfig } from "./models/custom-attributes.model";
 import { DataFilterConfig } from "./models/data-filter.model";
 import { ExportTypes } from "./models/export-types.model";
 import { OrderModel } from "./models/filter.model";
-import { PathModel } from "./models/path.model";
-import { SearchAttributesModel } from "./models/search-attributes.model";
-import { DataFilterUserModel } from "./models/user.model";
+import type { PathModel } from "./models/path.model";
+import type { SearchAttributesModel } from "./models/search-attributes.model";
+import type { DataFilterUserModel } from "./models/user.model";
 import { DataFilterScanner } from "./scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "./scanners/sequelize-model.scanner";
 import { M, SequelizeUtils } from "./sequelize.utils";
@@ -45,7 +47,11 @@ export class DataFilterRepository<Data> {
         return this.reduceObject(result);
     }
 
-    public async findByPkFromUser(user: DataFilterUserModel, identifier: Identifier, conditions?: object): Promise<Data | null> {
+    public async findByPkFromUser(
+        user: DataFilterUserModel,
+        identifier: Identifier,
+        conditions?: object
+    ): Promise<Data | null> {
         const resources = await this.accessControlAdapter.getResources(this._config.model as any, user);
         if (resources.ids?.includes(identifier as number) || resources.all) {
             return await this.findByPk(identifier, {}, conditions);
@@ -54,16 +60,19 @@ export class DataFilterRepository<Data> {
         if (resources.ids?.length) {
             return null;
         }
-        return await this.findOne({
-            where: {
-                [Op.and]: [
-                    {
-                        [this._config.model.primaryKeyAttribute]: identifier
-                    },
-                    resources.where ?? {}
-                ]
-            }
-        }, conditions);
+        return await this.findOne(
+            {
+                where: {
+                    [Op.and]: [
+                        {
+                            [this._config.model.primaryKeyAttribute]: identifier
+                        },
+                        resources.where ?? {}
+                    ]
+                }
+            },
+            conditions
+        );
     }
 
     public async findOne(options?: FindOptions, conditions?: object): Promise<Data | null> {
@@ -74,7 +83,11 @@ export class DataFilterRepository<Data> {
         return this.reduceObject(result);
     }
 
-    public async findOneFromUser(user: DataFilterUserModel, options: FindOptions = {}, conditions?: object): Promise<Data | null> {
+    public async findOneFromUser(
+        user: DataFilterUserModel,
+        options: FindOptions = {},
+        conditions?: object
+    ): Promise<Data | null> {
         return this.findOne(
             {
                 ...options,
@@ -89,10 +102,14 @@ export class DataFilterRepository<Data> {
         if (!result?.length) {
             return result as unknown as Data[];
         }
-        return result.map(x => this.reduceObject(x));
+        return result.map((x) => this.reduceObject(x));
     }
 
-    public async findAllFromUser(user: DataFilterUserModel, options?: FindOptions, conditions?: object): Promise<Data[]> {
+    public async findAllFromUser(
+        user: DataFilterUserModel,
+        options?: FindOptions,
+        conditions?: object
+    ): Promise<Data[]> {
         options = options ?? {};
         return await this.findAll(
             {
@@ -114,7 +131,12 @@ export class DataFilterRepository<Data> {
         return this.model.count(options);
     }
 
-    public async search(search: string, language: string | null = null, options?: FindOptions, conditions?: object): Promise<Data[]> {
+    public async search(
+        search: string,
+        language: string | null = null,
+        options?: FindOptions,
+        conditions?: object
+    ): Promise<Data[]> {
         const findOptions = this.generateFindOptions(options, conditions);
         this.addSearchCondition(search, findOptions, language);
 
@@ -122,10 +144,15 @@ export class DataFilterRepository<Data> {
         if (!result?.length) {
             return result as unknown as Data[];
         }
-        return result.map(x => this.reduceObject(x));
+        return result.map((x) => this.reduceObject(x));
     }
 
-    public async searchFromUser(user: DataFilterUserModel, search: string, options?: FindOptions, conditions?: object): Promise<Data[]> {
+    public async searchFromUser(
+        user: DataFilterUserModel,
+        search: string,
+        options?: FindOptions,
+        conditions?: object
+    ): Promise<Data[]> {
         const findOptions = this.generateFindOptions(options, conditions);
         this.addSearchCondition(search, findOptions, user.language);
 
@@ -134,14 +161,14 @@ export class DataFilterRepository<Data> {
         if (!result?.length) {
             return result as unknown as Data[];
         }
-        return result.map(x => this.reduceObject(x));
+        return result.map((x) => this.reduceObject(x));
     }
 
     public generateFindOptions(options?: FindOptions, conditions?: object): FindOptions {
         options ??= {};
 
         const nestedIncludes: Array<IncludeOptions | IncludeOptions[]> = [
-            ...this._definitions.map(x => {
+            ...this._definitions.map((x) => {
                 if (!x.path) {
                     return [];
                 }
@@ -156,12 +183,20 @@ export class DataFilterRepository<Data> {
                     x.hasGroupedCustomAttributes()
                 );
             }),
-            ...this._config.getCustomAttributesIncludes().map(x => this.sequelizeModelScanner.getIncludes(this.model, {
-                path: x.path,
-                paranoid: x.paranoid,
-                subQuery: x.subQuery,
-                where: x.where ? SequelizeUtils.generateWhereConditions(x.where, conditions) : undefined
-            }, [], x.attributes, x.ignoreAttributes))
+            ...this._config.getCustomAttributesIncludes().map((x) =>
+                this.sequelizeModelScanner.getIncludes(
+                    this.model,
+                    {
+                        path: x.path,
+                        paranoid: x.paranoid,
+                        subQuery: x.subQuery,
+                        where: x.where ? SequelizeUtils.generateWhereConditions(x.where, conditions) : undefined
+                    },
+                    [],
+                    x.attributes,
+                    x.ignoreAttributes
+                )
+            )
         ];
         if (options.include) {
             nestedIncludes.push(options.include as IncludeOptions | IncludeOptions[]);
@@ -187,10 +222,12 @@ export class DataFilterRepository<Data> {
             }
         }
 
-        const includedAggregates = this._definitions.flatMap(x => x.getGroupedCustomAttributes(conditions, this.model));
+        const includedAggregates = this._definitions.flatMap((x) =>
+            x.getGroupedCustomAttributes(conditions, this.model)
+        );
         if (includedAggregates.length) {
             options.attributes = SequelizeUtils.mergeAttributes(options.attributes, {
-                include: includedAggregates.map(x => x.attribute)
+                include: includedAggregates.map((x) => x.attribute)
             });
         }
 
@@ -208,12 +245,17 @@ export class DataFilterRepository<Data> {
                 return [];
             }
 
-            return this.sequelizeModelScanner.getIncludes(this.model, {
-                path: customAttr.config.path,
-                where: customAttr.type !== "count" && customAttr.config.where
-                    ? SequelizeUtils.generateWhereConditions(customAttr.config.where, conditions)
-                    : undefined
-            }, []);
+            return this.sequelizeModelScanner.getIncludes(
+                this.model,
+                {
+                    path: customAttr.config.path,
+                    where:
+                        customAttr.type !== "count" && customAttr.config.where
+                            ? SequelizeUtils.generateWhereConditions(customAttr.config.where, conditions)
+                            : undefined
+                },
+                []
+            );
         }
 
         return this.sequelizeModelScanner.getOrderIncludes(this.model, order);
@@ -221,7 +263,7 @@ export class DataFilterRepository<Data> {
 
     public generateSearchInclude(conditions?: object): Includeable[] {
         const nestedIncludes: Array<IncludeOptions | IncludeOptions[]> = [
-            ...this._definitions.map(x => {
+            ...this._definitions.map((x) => {
                 if (!x.path || x.path.separate || x.ignoreInSearch) {
                     return [];
                 }
@@ -236,17 +278,23 @@ export class DataFilterRepository<Data> {
                     x.hasGroupedCustomAttributes()
                 );
             }),
-            ...this._config.getCustomAttributesIncludes().map(x => {
+            ...this._config.getCustomAttributesIncludes().map((x) => {
                 if (!x.path || x.separate || x.ignoreInSearch) {
                     return [];
                 }
 
-                return this.sequelizeModelScanner.getIncludes(this.model, {
-                    path: x.path,
-                    paranoid: x.paranoid,
-                    subQuery: x.subQuery,
-                    where: x.where ? SequelizeUtils.generateWhereConditions(x.where, conditions) : undefined
-                }, [], x.attributes, x.ignoreAttributes);
+                return this.sequelizeModelScanner.getIncludes(
+                    this.model,
+                    {
+                        path: x.path,
+                        paranoid: x.paranoid,
+                        subQuery: x.subQuery,
+                        where: x.where ? SequelizeUtils.generateWhereConditions(x.where, conditions) : undefined
+                    },
+                    [],
+                    x.attributes,
+                    x.ignoreAttributes
+                );
             })
         ];
 
@@ -282,7 +330,7 @@ export class DataFilterRepository<Data> {
         const attributes: SearchAttributesModel[] = [];
         const modelAttr = this._config.getSearchableAttributes();
         attributes.push(
-            ...modelAttr.map(a => ({
+            ...modelAttr.map((a) => ({
                 name: a,
                 key: a,
                 isJson: SequelizeUtils.isColumnJson(this.model, a)
@@ -294,7 +342,11 @@ export class DataFilterRepository<Data> {
                 continue;
             }
 
-            const attr = (definition.ignoreInSearch || definition.searchableTranslationAttributes?.length && !definition.searchableAttributes?.length) ? [] : definition.searchableAttributes ?? definition.attributes;
+            const attr =
+                definition.ignoreInSearch ||
+                (definition.searchableTranslationAttributes?.length && !definition.searchableAttributes?.length)
+                    ? []
+                    : (definition.searchableAttributes ?? definition.attributes);
             const additionalIncludes = definition.transformIncludesConfig({});
             attributes.push(
                 ...this.sequelizeModelScanner.getAttributes(
@@ -313,7 +365,7 @@ export class DataFilterRepository<Data> {
         const attributes: SearchAttributesModel[] = [];
         const modelAttr = this._config.getSearchableTranslationAttributes();
         attributes.push(
-            ...modelAttr.map(attribute => ({
+            ...modelAttr.map((attribute) => ({
                 name: attribute,
                 key: attribute,
                 isJson: SequelizeUtils.isColumnJson(this.model, attribute),
@@ -363,7 +415,13 @@ export class DataFilterRepository<Data> {
     }
 
     public async downloadData(data: Data[], type: ExportTypes, lang: string, options?: any): Promise<Buffer | string>;
-    public async downloadData(headers: string[], data: any[], type: ExportTypes, lang: string, options?: any): Promise<Buffer | string>;
+    public async downloadData(
+        headers: string[],
+        data: any[],
+        type: ExportTypes,
+        lang: string,
+        options?: any
+    ): Promise<Buffer | string>;
     public async downloadData(
         dataOrHeaders: Data[] | string[],
         typeOrData: ExportTypes | any[],
@@ -404,19 +462,19 @@ export class DataFilterRepository<Data> {
     }
 
     public async downloadXlsx(headers: string[], data: any[]): Promise<Buffer> {
-        return XlsxUtils.arrayToXlsxBuffer(
-            data,
-            this._config.model.getTableName() as string,
-            headers
-        );
+        return XlsxUtils.arrayToXlsxBuffer(data, this._config.model.getTableName() as string, headers);
     }
 
     public async downloadHtml(headers: string[], data: any[], lang: string, options?: any): Promise<string> {
-        return this.exportAdapter.exportAsHtml(lang, {
-            title: this._config.model.getTableName() as string,
-            columns: headers,
-            data: data
-        }, options);
+        return this.exportAdapter.exportAsHtml(
+            lang,
+            {
+                title: this._config.model.getTableName() as string,
+                columns: headers,
+                data: data
+            },
+            options
+        );
     }
 
     public async downloadCsv(headers: string[], data: any[]): Promise<Buffer> {
@@ -424,19 +482,27 @@ export class DataFilterRepository<Data> {
     }
 
     public async downloadPdf(headers: string[], data: any[], lang: string, options?: any): Promise<Buffer> {
-        return this.exportAdapter.exportAsPdf(lang, {
-            title: this._config.model.getTableName() as string,
-            columns: headers,
-            data: data
-        }, options);
+        return this.exportAdapter.exportAsPdf(
+            lang,
+            {
+                title: this._config.model.getTableName() as string,
+                columns: headers,
+                data: data
+            },
+            options
+        );
     }
 
     public async downloadZip(headers: string[], data: any[], lang: string, options?: any): Promise<Buffer> {
-        return this.exportAdapter.exportAsZip(lang, {
-            title: this._config.model.getTableName() as string,
-            columns: headers,
-            data: data
-        }, options);
+        return this.exportAdapter.exportAsZip(
+            lang,
+            {
+                title: this._config.model.getTableName() as string,
+                columns: headers,
+                data: data
+            },
+            options
+        );
     }
 
     private init() {
@@ -468,11 +534,8 @@ export class DataFilterRepository<Data> {
 
         const where = options.where;
         const generateFieldsObject = (searchValue: string) =>
-            [
-                ...this.getSearchAttributes(), 
-                ...this.getSearchTranslationAttributes()
-            ]
-                .map(a => {
+            [...this.getSearchAttributes(), ...this.getSearchTranslationAttributes()]
+                .map((a) => {
                     if (a.isJson && !a.isTranslationAttribute) {
                         const field = a.literalKey ?? `\`${this.model.name}\`.\`${a.key}\``;
 
@@ -487,7 +550,9 @@ export class DataFilterRepository<Data> {
                     if (a.isJson && a.isTranslationAttribute) {
                         const field = a.literalKey ?? `\`${this.model.name}\`.\`${a.name}\``;
                         const value = this.model.sequelize?.escape(`%${searchValue.toUpperCase()}%`);
-                        return new Utils.Literal(`UPPER(JSON_UNQUOTE(JSON_EXTRACT(${field}, '$.${language}'))) LIKE ${value}`);
+                        return new Utils.Literal(
+                            `UPPER(JSON_UNQUOTE(JSON_EXTRACT(${field}, '$.${language}'))) LIKE ${value}`
+                        );
                     }
 
                     return {
@@ -495,11 +560,12 @@ export class DataFilterRepository<Data> {
                             [Op.like]: `%${searchValue}%`
                         }
                     };
-                }).filter(x => !!x);
+                })
+                .filter((x) => !!x);
 
         const tokens = search.split(" ");
         (where as any)[Op.and].push(
-            tokens.map(t => {
+            tokens.map((t) => {
                 return {
                     [Op.or]: generateFieldsObject(t)
                 };
@@ -507,12 +573,16 @@ export class DataFilterRepository<Data> {
         );
     }
 
-    private getExportsHeader(lang: string, headers: string[], translateService = this.translateService): Promise<string[]> {
-        return Promise.all(headers.map(x => translateService.getTranslation(lang, `exports.${x}`)));
+    private getExportsHeader(
+        lang: string,
+        headers: string[],
+        translateService = this.translateService
+    ): Promise<string[]> {
+        return Promise.all(headers.map((x) => translateService.getTranslation(lang, `exports.${x}`)));
     }
 
     private getExportData(data: Data[]): object[] {
-        return data.map(x => {
+        return data.map((x) => {
             const result: { [key: string]: any } = {};
             let i = 0;
             for (const key of this._config.exportColumns ?? []) {
@@ -541,16 +611,16 @@ export class DataFilterRepository<Data> {
         return [data, key];
     }
 
-    private async mergeAccessControlCondition(where: WhereOptions | undefined, user: DataFilterUserModel): Promise<WhereOptions | undefined> {
+    private async mergeAccessControlCondition(
+        where: WhereOptions | undefined,
+        user: DataFilterUserModel
+    ): Promise<WhereOptions | undefined> {
         const resources = await this.accessControlAdapter.getResources(this._config.model as any, user);
         if (resources.ids) {
             return SequelizeUtils.mergeWhere({ id: resources.ids }, where);
         } else if (resources.where) {
             return {
-                [Op.and]: [
-                    where,
-                    resources.where
-                ]
+                [Op.and]: [where, resources.where]
             } as WhereOptions;
         }
 

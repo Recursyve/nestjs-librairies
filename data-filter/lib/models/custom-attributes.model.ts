@@ -1,7 +1,8 @@
-import { ProjectionAlias } from "sequelize";
+import type { ProjectionAlias } from "sequelize";
 import { Model } from "sequelize-typescript";
-import { IncludeWhereModel } from "./include.model";
-import { PathModel } from "./path.model";
+
+import type { IncludeWhereModel } from "./include.model";
+import type { PathModel } from "./path.model";
 
 export interface CustomAttributesOptionConfig {
     name: string;

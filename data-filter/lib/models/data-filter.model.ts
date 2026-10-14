@@ -1,8 +1,9 @@
-import { FindAttributeOptions } from "sequelize";
+import type { FindAttributeOptions } from "sequelize";
 import { Model } from "sequelize-typescript";
-import { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
-import { IncludeConfig } from "./include.model";
+
 import { M, SequelizeUtils } from "../sequelize.utils";
+import type { CustomAttributesConfig, CustomAttributesModel } from "./custom-attributes.model";
+import type { IncludeConfig } from "./include.model";
 
 /**
  * Aggregates that require a GROUP BY cannot let their join project the child
@@ -29,23 +30,25 @@ export class DataFilterConfig implements DataFilterConfigModel {
     public customAttributes: CustomAttributesConfig[] = [];
     public ignoreInSearch = false;
 
-    public setModel(model: typeof Model) {
+    public setModel(model: typeof Model): void {
         this.model = model;
     }
 
-    public setIgnoreInPath(ignore: boolean) {
+    public setIgnoreInPath(ignore: boolean): void {
         this.ignoreInSearch = ignore;
     }
 
-    public setAttributes(attributes?: FindAttributeOptions) {
+    public setAttributes(attributes?: FindAttributeOptions): void {
         this.attributes = attributes;
     }
 
     public get searchableAttributes(): string[] | undefined {
-        return this._searchableAttributes?.filter((attribute) => !this.searchableTranslationAttributes?.includes(attribute));
+        return this._searchableAttributes?.filter(
+            (attribute) => !this.searchableTranslationAttributes?.includes(attribute)
+        );
     }
 
-    public setSearchableAttributes(attributes: string[]) {
+    public setSearchableAttributes(attributes: string[]): void {
         this._searchableAttributes = attributes;
     }
 
@@ -53,11 +56,11 @@ export class DataFilterConfig implements DataFilterConfigModel {
         this.searchableTranslationAttributes = attributes;
     }
 
-    public setExportColumns(exportColumns: string[]) {
+    public setExportColumns(exportColumns: string[]): void {
         this.exportColumns = exportColumns;
     }
 
-    public addCustomAttribute(attribute: CustomAttributesConfig) {
+    public addCustomAttribute(attribute: CustomAttributesConfig): void {
         this.customAttributes.push(attribute);
     }
 
@@ -66,7 +69,7 @@ export class DataFilterConfig implements DataFilterConfigModel {
         if (this.attributes) {
             if (this.customAttributes.length) {
                 const attributes = SequelizeUtils.mergeAttributes(this.attributes, {
-                    include: customAttributes.map(x => x.attribute)
+                    include: customAttributes.map((x) => x.attribute)
                 });
                 if (!attributes) {
                     return null;
@@ -79,7 +82,7 @@ export class DataFilterConfig implements DataFilterConfigModel {
         }
         if (!this.attributes && customAttributes.length) {
             return {
-                include: customAttributes.map(x => x.attribute)
+                include: customAttributes.map((x) => x.attribute)
             };
         }
 
@@ -88,21 +91,26 @@ export class DataFilterConfig implements DataFilterConfigModel {
 
     public getCustomAttributes(options?: object): CustomAttributesModel[] {
         return this.customAttributes
-            .map(x => ({
-                key: x.key,
-                attribute: x.transform(options, undefined, this.model),
-                path: (x.config as any).path ? {
-                    path: (x.config as any).path,
-                    paranoid: true
-                } : null
-            } as CustomAttributesModel))
-            .filter(x => x.attribute);
+            .map(
+                (x) =>
+                    ({
+                        key: x.key,
+                        attribute: x.transform(options, undefined, this.model),
+                        path: (x.config as any).path
+                            ? {
+                                  path: (x.config as any).path,
+                                  paranoid: true
+                              }
+                            : null
+                    }) as CustomAttributesModel
+            )
+            .filter((x) => x.attribute);
     }
 
     public getCustomAttributesIncludes(): CustomAttributeIncludeConfig[] {
         return this.customAttributes
-            .filter(x => x.config?.path)
-            .map(x => ({
+            .filter((x) => x.config?.path)
+            .map((x) => ({
                 attributes: { include: [] },
                 path: x.config?.path ?? "",
                 where: x.type === "count" ? undefined : x.config?.where,
@@ -120,15 +128,18 @@ export class DataFilterConfig implements DataFilterConfigModel {
             return [];
         }
 
-        if (this.searchableAttributes ) {
+        if (this.searchableAttributes) {
             return SequelizeUtils.getModelSearchableFieldAttributes(this.model as typeof M, this.searchableAttributes);
         }
 
         const searchableAttributes = SequelizeUtils.getModelSearchableAttributes(this.model as typeof M);
-        const attributes = SequelizeUtils.getModelSearchableFieldAttributes(this.model as typeof M, this.attributes as string[] ?? []);
-        return (attributes.length ?
-            attributes.filter(x => searchableAttributes.includes(x)) :
-            searchableAttributes).filter(attribute => !this.searchableTranslationAttributes?.includes(attribute)); 
+        const attributes = SequelizeUtils.getModelSearchableFieldAttributes(
+            this.model as typeof M,
+            (this.attributes as string[]) ?? []
+        );
+        return (
+            attributes.length ? attributes.filter((x) => searchableAttributes.includes(x)) : searchableAttributes
+        ).filter((attribute) => !this.searchableTranslationAttributes?.includes(attribute));
     }
 
     public getSearchableTranslationAttributes(): string[] {

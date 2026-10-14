@@ -1,4 +1,7 @@
-import { fn, literal, Op, ProjectionAlias } from "sequelize";
+import type { ProjectionAlias } from "sequelize";
+import { fn, literal, Op } from "sequelize";
+import { describe, expect, it } from "vitest";
+
 import { CountAttributesConfig } from "./count.model";
 
 describe("CountAttributesConfig", () => {

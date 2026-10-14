@@ -1,7 +1,9 @@
-import { fn, literal, ProjectionAlias } from "sequelize";
+import type { ProjectionAlias } from "sequelize";
+import { fn, literal } from "sequelize";
 import { Fn, Literal } from "sequelize/types/utils";
+
 import { SequelizeUtils } from "../sequelize.utils";
-import { CustomAttributesConfig, CustomAttributesOptionConfig } from "./custom-attributes.model";
+import type { CustomAttributesConfig, CustomAttributesOptionConfig } from "./custom-attributes.model";
 
 export interface BaseDistanceConfig extends CustomAttributesOptionConfig {
     coordinates: (option?: any) => [number, number];
@@ -29,7 +31,10 @@ export class DistanceAttributesConfig implements CustomAttributesConfig<Distance
     public readonly key: string;
     public type = "distance";
 
-    constructor(key: string | symbol, public config: DistanceConfig) {
+    constructor(
+        key: string | symbol,
+        public config: DistanceConfig
+    ) {
         this.key = typeof key === "string" ? key : key.toString();
     }
 
@@ -48,7 +53,7 @@ export class DistanceAttributesConfig implements CustomAttributesConfig<Distance
             return null;
         }
         if (path || this.config.path) {
-            path = [path, this.config.path].filter(x => x).join(".");
+            path = [path, this.config.path].filter((x) => x).join(".");
         }
 
         const location = (this.config as DistanceConfigWithPoint).legacyAxisOrder

@@ -10,6 +10,7 @@ import {
     Table,
     UpdatedAt
 } from "sequelize-typescript";
+
 import { MaintenanceVisits } from "../maintenance-visits/maintenance-visits.model";
 
 @Table({
@@ -20,7 +21,7 @@ export class Visits extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
-    id!: number;
+    declare id: number;
 
     @Column
     type?: string;

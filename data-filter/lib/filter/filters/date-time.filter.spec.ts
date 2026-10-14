@@ -1,8 +1,11 @@
+import type { WhereOptions } from "sequelize";
+import { Op } from "sequelize";
+import { describe, expect, it } from "vitest";
+
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
 import { FilterUtils } from "../filter.utils";
-import { FilterOperatorTypes } from "../operators";
-import { Op, WhereOptions } from "sequelize";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
+import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
 import { DateTimeFilter } from "./date-time.filter";
 
@@ -186,7 +189,6 @@ describe("DateTimeFilter", () => {
                 attribute: "test"
             });
 
-
             const dateOnly = await filter.getWhereOptions({
                 id: "test",
                 value: "2020-03-06",
@@ -320,10 +322,7 @@ describe("DateTimeFilter", () => {
             expect(options).toBeDefined();
             expect(options).toStrictEqual<WhereOptions>({
                 test: {
-                    [Op.between]: [
-                        "2020-03-06 00:55:12",
-                        "2020-06-06 00:55:12"
-                    ]
+                    [Op.between]: ["2020-03-06 00:55:12", "2020-06-06 00:55:12"]
                 }
             });
         });
@@ -340,10 +339,7 @@ describe("DateTimeFilter", () => {
             expect(options).toBeDefined();
             expect(options).toStrictEqual<WhereOptions>({
                 test: {
-                    [Op.notBetween]: [
-                        "2020-03-06 00:55:12",
-                        "2020-06-06 00:55:12"
-                    ]
+                    [Op.notBetween]: ["2020-03-06 00:55:12", "2020-06-06 00:55:12"]
                 }
             });
         });

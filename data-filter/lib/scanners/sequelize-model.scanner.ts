@@ -1,11 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { TypeUtils } from "@recursyve/nestjs-common";
-import { FindAttributeOptions, IncludeOptions, literal, Order } from "sequelize";
+import type { FindAttributeOptions, IncludeOptions, Order } from "sequelize";
+import { literal } from "sequelize";
 import { Association, BaseAssociation, getAssociations, Model } from "sequelize-typescript";
+
 import { OrderModel } from "..";
-import { IncludeModel } from "..";
-import { PathModel } from "../models/path.model";
-import { SearchAttributesModel } from "../models/search-attributes.model";
+import type { IncludeModel } from "..";
+import type { PathModel } from "../models/path.model";
+import type { SearchAttributesModel } from "../models/search-attributes.model";
 import { M, SequelizeUtils } from "../sequelize.utils";
 
 @Injectable()
@@ -37,38 +39,40 @@ export class SequelizeModelScanner {
             });
 
             if (i++ < objects.length - 1) {
-                model = includes[0].model as unknown as typeof Model;
-                includes = includes[0].include as IncludeOptions[];
+                model = includes[0]?.model as unknown as typeof Model;
+                includes = includes[0]?.include as IncludeOptions[];
             }
         }
 
         if (attributes) {
-            includes[0].attributes = ignoreAttributes ? [] : SequelizeUtils.mergeAttributes(includes[0].attributes, attributes);
+            includes[0]!.attributes = ignoreAttributes
+                ? []
+                : SequelizeUtils.mergeAttributes(includes[0]?.attributes, attributes);
         }
         if (path.where) {
-            includes[0].where = SequelizeUtils.mergeWhere(includes[0].where, path.where);
-            includes[0].required = !!path.required;
+            includes[0]!.where = SequelizeUtils.mergeWhere(includes[0]?.where, path.where);
+            includes[0]!.required = !!path.required;
         }
         if (path.required) {
-            includes[0].required = true;
+            includes[0]!.required = true;
         }
         if (path.limit) {
-            includes[0].limit = path.limit;
+            includes[0]!.limit = path.limit;
         }
 
-        includes[0].paranoid = !!path.paranoid;
-        includes[0].separate = !!path.separate;
-        includes[0].order = path.order;
+        includes[0]!.paranoid = !!path.paranoid;
+        includes[0]!.separate = !!path.separate;
+        includes[0]!.order = path.order;
 
         if (TypeUtils.isNotNullOrUndefined(path.subQuery)) {
-            includes[0].subQuery = path.subQuery;
+            includes[0]!.subQuery = path.subQuery;
         }
 
         const addIncludes: IncludeOptions[][] = [];
         for (const include of additionalIncludes) {
             addIncludes.push(
                 this.getIncludes(
-                    includes[0].model as unknown as typeof Model,
+                    includes[0]?.model as unknown as typeof Model,
                     {
                         path: include.path,
                         order: include.order,
@@ -86,7 +90,7 @@ export class SequelizeModelScanner {
             );
         }
 
-        includes[0].include?.push(...SequelizeUtils.reduceIncludes(addIncludes, ignoreAttributes));
+        includes[0]?.include?.push(...SequelizeUtils.reduceIncludes(addIncludes, ignoreAttributes));
 
         return result;
     }
@@ -108,11 +112,11 @@ export class SequelizeModelScanner {
             const association = this.findAssociation(model, obj);
             model = association.getAssociatedClass() as unknown as typeof Model;
         }
-        attributes = attributes ?
-            SequelizeUtils.getModelSearchableFieldAttributes(model as typeof M, attributes as string[]) :
-            SequelizeUtils.getModelSearchableAttributes(model as typeof M);
+        attributes = attributes
+            ? SequelizeUtils.getModelSearchableFieldAttributes(model as typeof M, attributes as string[])
+            : SequelizeUtils.getModelSearchableAttributes(model as typeof M);
         result.push(
-            ...(attributes as string[]).map(a => ({
+            ...(attributes as string[]).map((a) => ({
                 name: a,
                 key: SequelizeUtils.getAttributeFullName(a, path.path),
                 literalKey: SequelizeUtils.getLiteralFullName(a, path.path),
@@ -126,7 +130,7 @@ export class SequelizeModelScanner {
                 if (include.ignoreInSearch) {
                     continue;
                 }
-    
+
                 result.push(
                     ...this.getAttributes(
                         model as typeof Model,
@@ -135,7 +139,7 @@ export class SequelizeModelScanner {
                         },
                         [],
                         include.searchableAttributes ?? include.attributes
-                    ).map(a => ({
+                    ).map((a) => ({
                         name: a.name,
                         key: SequelizeUtils.getAttributeFullName(a.name, [path.path, include.path].join(".")),
                         literalKey: SequelizeUtils.getLiteralFullName(a.name, [path.path, include.path].join(".")),
@@ -229,25 +233,28 @@ export class SequelizeModelScanner {
                 attributes: [],
                 include: [],
                 required: false,
-                through: association.getAssociation() === Association.BelongsToMany ? {
-                    attributes: []
-                } : undefined
+                through:
+                    association.getAssociation() === Association.BelongsToMany
+                        ? {
+                              attributes: []
+                          }
+                        : undefined
             });
 
             if (i++ < values.length - 1) {
-                model = includes[0].model as unknown as typeof Model;
-                includes = includes[0].include as IncludeOptions[];
+                model = includes[0]?.model as unknown as typeof Model;
+                includes = includes[0]?.include as IncludeOptions[];
             }
         }
 
-        includes[0].attributes = [column];
+        includes[0]!.attributes = [column];
         return result;
     }
 
     private findAssociation(model: typeof Model, obj: string): BaseAssociation<any, any> {
         const associations = getAssociations(model.prototype) ?? [];
 
-        const association = associations.find(a => a.getAs() === obj);
+        const association = associations.find((a) => a.getAs() === obj);
         if (!association) {
             throw new Error(`Unable to load association for ${obj}`);
         }

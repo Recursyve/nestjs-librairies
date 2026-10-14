@@ -1,12 +1,14 @@
-import { SequelizeModelScanner } from "./sequelize-model.scanner";
-import { Systems } from "../test/models/systems/systems.model";
-import { Places } from "../test/models/places/places.model";
-import { Owners } from "../test/models/places/owners.model";
-import { Persons } from "../test/models/persons/persons.model";
-import { Coords } from "../test/models/coords/coords.model";
+import { beforeEach, describe, expect, it } from "vitest";
+
 import { ContractSystems } from "../test/models/contracts/contract-systems.model";
 import { Contracts } from "../test/models/contracts/contracts.model";
+import { Coords } from "../test/models/coords/coords.model";
 import { Invoices } from "../test/models/invoices/invoices.model";
+import { Persons } from "../test/models/persons/persons.model";
+import { Owners } from "../test/models/places/owners.model";
+import { Places } from "../test/models/places/places.model";
+import { Systems } from "../test/models/systems/systems.model";
+import { SequelizeModelScanner } from "./sequelize-model.scanner";
 
 describe("SequelizeModelScanner", () => {
     let scanner: SequelizeModelScanner;

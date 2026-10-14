@@ -1,4 +1,6 @@
 import { Literal } from "sequelize/types/utils";
+import { describe, expect, it } from "vitest";
+
 import { M } from "../../sequelize.utils";
 import { EnumOrderRule } from "./enum.order-rule";
 
@@ -13,7 +15,7 @@ describe("EnumOrderRule", () => {
             expect(order).toBeDefined();
             expect((order as Literal).val).toEqual(
                 "CASE `M`.`test` WHEN 'one' THEN 3 WHEN 'two' THEN 2 WHEN 'three' THEN 1 ELSE 0 END"
-            )
+            );
         });
     });
 });

@@ -8,7 +8,7 @@ export class Invoices extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
-    id!: number;
+    declare id: number;
 
     @Column
     invoice_number?: string;

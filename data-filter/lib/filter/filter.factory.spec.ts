@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { col, fn } from "sequelize";
+import { describe, expect, it } from "vitest";
+
 import { Attributes, BaseFilter, Data, DataFilterModule, NumberFilter } from "../index";
 import { DataFilterScanner } from "../scanners/data-filter.scanner";
 import { SequelizeModelScanner } from "../scanners/sequelize-model.scanner";
@@ -12,9 +14,9 @@ class ContractSystemsTest {}
 
 @Injectable()
 export class TestFilter extends BaseFilter<ContractSystemsTest> {
-    public dataDefinition = ContractSystemsTest;
+    public dataDefinition: typeof ContractSystemsTest = ContractSystemsTest;
 
-    public visitCount = new NumberFilter({
+    public visitCount: NumberFilter = new NumberFilter({
         attribute: "id",
         path: "visits.visit",
         group: "visit",
@@ -29,17 +31,19 @@ export class TestFilter extends BaseFilter<ContractSystemsTest> {
 describe("FilterFactory", () => {
     it("with missing dependencies should throw an error", async () => {
         expect.assertions(1);
-        await expect(Test.createTestingModule({
-            imports: [
-                DataFilterModule.forRoot(),
-                DataFilterModule.forFeature({
-                    filters: [
-                        {
-                            filter: TestFilter
-                        }
-                    ]
-                })
-            ]
-        }).compile()).rejects.toEqual(new Error("Not enough dependencies were provided for TestFilter: expected 2, received 0"));
+        await expect(
+            Test.createTestingModule({
+                imports: [
+                    DataFilterModule.forRoot(),
+                    DataFilterModule.forFeature({
+                        filters: [
+                            {
+                                filter: TestFilter
+                            }
+                        ]
+                    })
+                ]
+            }).compile()
+        ).rejects.toEqual(new Error("Not enough dependencies were provided for TestFilter: expected 2, received 0"));
     });
 });

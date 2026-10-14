@@ -1,10 +1,13 @@
+import type { WhereOptions } from "sequelize";
+import { Op } from "sequelize";
+import { describe, expect, it } from "vitest";
+
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
 import { FilterUtils } from "../filter.utils";
-import { DateFilter } from "./date.filter";
-import { FilterOperatorTypes } from "../operators";
-import { Op, WhereOptions } from "sequelize";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
+import { FilterOperatorTypes } from "../operators";
 import { FilterType } from "../type";
+import { DateFilter } from "./date.filter";
 
 describe("DateFilter", () => {
     describe("getConfig", () => {
@@ -193,10 +196,7 @@ describe("DateFilter", () => {
             expect(options).toBeDefined();
             expect(options).toStrictEqual<WhereOptions>({
                 test: {
-                    [Op.between]: [
-                        "2020-03-05T20:00:00.000Z",
-                        "2020-03-06T19:59:59.999Z"
-                    ]
+                    [Op.between]: ["2020-03-05T20:00:00.000Z", "2020-03-06T19:59:59.999Z"]
                 }
             });
         });
@@ -307,10 +307,7 @@ describe("DateFilter", () => {
             expect(options).toBeDefined();
             expect(options).toStrictEqual<WhereOptions>({
                 test: {
-                    [Op.between]: [
-                        "2020-03-05T20:00:00.000Z",
-                        "2020-06-06T19:59:59.999Z"
-                    ]
+                    [Op.between]: ["2020-03-05T20:00:00.000Z", "2020-06-06T19:59:59.999Z"]
                 }
             });
         });
@@ -327,10 +324,7 @@ describe("DateFilter", () => {
             expect(options).toBeDefined();
             expect(options).toStrictEqual<WhereOptions>({
                 test: {
-                    [Op.notBetween]: [
-                        "2020-03-05T20:00:00.000Z",
-                        "2020-06-06T19:59:59.999Z"
-                    ]
+                    [Op.notBetween]: ["2020-03-05T20:00:00.000Z", "2020-06-06T19:59:59.999Z"]
                 }
             });
         });

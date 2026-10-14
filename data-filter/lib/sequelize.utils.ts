@@ -1,25 +1,23 @@
 import { ArrayUtils, TypeUtils } from "@recursyve/nestjs-common";
-import {
+import type {
     AbstractDataTypeConstructor,
-    col,
-    fn,
     FindAttributeOptions,
     Includeable,
     IncludeOptions,
-    literal,
-    Op,
     Order,
     OrderItem,
     WhereOptions
 } from "sequelize";
+import { col, fn, literal, Op } from "sequelize";
 import { Model } from "sequelize-typescript";
-import { ProjectionAlias, WhereAttributeHashValue } from "sequelize/types/model";
+import type { ProjectionAlias, WhereAttributeHashValue } from "sequelize/types/model";
 import { Col, Fn, Literal } from "sequelize/types/utils";
+
 import { RuleModel } from "./filter";
-import { IncludeWhereModel } from "./models/include.model";
+import type { IncludeWhereModel } from "./models/include.model";
 
 export interface GeoPoint {
-    type: "point",
+    type: "point";
     coordinates: number[];
 }
 
@@ -28,7 +26,10 @@ export type PointCoordinate = Literal | Col | number;
 export class M extends Model {}
 
 export class SequelizeUtils {
-    public static reduceIncludes(includes: Array<IncludeOptions | IncludeOptions[]>, ignoreAttributes = false): Includeable[] {
+    public static reduceIncludes(
+        includes: Array<IncludeOptions | IncludeOptions[]>,
+        ignoreAttributes = false
+    ): Includeable[] {
         let include: IncludeOptions[] = [];
         for (const i of includes) {
             include = this.mergeIncludes(include, i, ignoreAttributes);
@@ -67,7 +68,11 @@ export class SequelizeUtils {
         return true;
     }
 
-    public static mergeIncludes(a: IncludeOptions | IncludeOptions[] = [], b: IncludeOptions | IncludeOptions[] = [], ignoreAttributes = false) {
+    public static mergeIncludes(
+        a: IncludeOptions | IncludeOptions[] = [],
+        b: IncludeOptions | IncludeOptions[] = [],
+        ignoreAttributes = false
+    ): IncludeOptions[] {
         if (!Array.isArray(a)) {
             a = [a];
         }
@@ -77,7 +82,7 @@ export class SequelizeUtils {
         }
 
         for (const bChild of b) {
-            const aChild = a.find(value => value.model === bChild.model && value.as === bChild.as);
+            const aChild = a.find((value) => value.model === bChild.model && value.as === bChild.as);
             if (aChild) {
                 aChild.include = this.mergeIncludes(
                     (aChild.include as IncludeOptions[]) ?? [],
@@ -105,7 +110,10 @@ export class SequelizeUtils {
                     aChild.limit ??= bChild.limit;
                 }
                 aChild.paranoid = !(aChild.paranoid === false || bChild.paranoid === false);
-                if (TypeUtils.isNotNullOrUndefined(aChild.subQuery) || TypeUtils.isNotNullOrUndefined(bChild.subQuery)) {
+                if (
+                    TypeUtils.isNotNullOrUndefined(aChild.subQuery) ||
+                    TypeUtils.isNotNullOrUndefined(bChild.subQuery)
+                ) {
                     aChild.subQuery = aChild.subQuery ?? bChild.subQuery;
                 }
             } else {
@@ -116,14 +124,17 @@ export class SequelizeUtils {
         return a;
     }
 
-    public static mergeAttributes(a: FindAttributeOptions | undefined, b: FindAttributeOptions | undefined): FindAttributeOptions | undefined {
-        type Attr = { exclude?: string[]; include?: (string | ProjectionAlias)[]; };
+    public static mergeAttributes(
+        a: FindAttributeOptions | undefined,
+        b: FindAttributeOptions | undefined
+    ): FindAttributeOptions | undefined {
+        type Attr = { exclude?: string[]; include?: (string | ProjectionAlias)[] };
 
         if (a instanceof Array && b instanceof Array) {
             if (!a.length && !b.length) {
                 return [];
             }
-            return ArrayUtils.uniqueValues([...a, ...b, "id"], x => x);
+            return ArrayUtils.uniqueValues([...a, ...b, "id"], (x) => x);
         } else if (a || b) {
             const aAttributes = (a ?? {}) as Attr;
             const bAttributes = (b ?? {}) as Attr;
@@ -139,19 +150,19 @@ export class SequelizeUtils {
             if (a instanceof Array) {
                 const bAttr = (b ?? {}) as Attr;
                 if (bAttr.include?.length) {
-                    return ArrayUtils.uniqueValues([...a, ...bAttr.include, "id"], x => x);
+                    return ArrayUtils.uniqueValues([...a, ...bAttr.include, "id"], (x) => x);
                 }
 
-                return b ? ArrayUtils.uniqueValues([...a, "id"], x => x) : b;
+                return b ? ArrayUtils.uniqueValues([...a, "id"], (x) => x) : b;
             }
 
             if (b instanceof Array) {
                 const aAttr = (a ?? {}) as Attr;
                 if (aAttr.include?.length) {
-                    return ArrayUtils.uniqueValues([...b, ...aAttr.include, "id"], x => x);
+                    return ArrayUtils.uniqueValues([...b, ...aAttr.include, "id"], (x) => x);
                 }
 
-                return a ? ArrayUtils.uniqueValues([...b, "id"], x => x) : a;
+                return a ? ArrayUtils.uniqueValues([...b, "id"], (x) => x) : a;
             }
 
             const result: Attr = {};
@@ -170,10 +181,10 @@ export class SequelizeUtils {
             }
 
             if (result.include) {
-                result.include = ArrayUtils.uniqueValues(result.include, x => x);
+                result.include = ArrayUtils.uniqueValues(result.include, (x) => x);
             }
             if (result.exclude) {
-                result.exclude = ArrayUtils.uniqueValues(result.exclude, x => x);
+                result.exclude = ArrayUtils.uniqueValues(result.exclude, (x) => x);
             }
 
             if (!result.include && !result.exclude) {
@@ -190,10 +201,7 @@ export class SequelizeUtils {
             if (attribute.find((x) => x === "id")) {
                 return attribute;
             }
-            return [
-                "id",
-                ...attribute
-            ];
+            return ["id", ...attribute];
         }
 
         if (attribute.exclude) {
@@ -325,28 +333,36 @@ export class SequelizeUtils {
     }
 
     public static getModelSearchableAttributes(model: typeof M): string[] {
-        return Object.keys(model.rawAttributes).filter(
-            a => !["DATE", "DATEONLY", "VIRTUAL"].some(t => t === (model.rawAttributes[a].type as AbstractDataTypeConstructor).key)
-        ).map(x => {
-            const attr = model.rawAttributes[x];
-            if (!attr) {
-                return x;
-            }
-            return attr.field ? attr.field : x;
-        });
+        return Object.keys(model.rawAttributes)
+            .filter(
+                (a) =>
+                    !["DATE", "DATEONLY", "VIRTUAL"].some(
+                        (t) => t === (model.rawAttributes[a]?.type as AbstractDataTypeConstructor).key
+                    )
+            )
+            .map((x) => {
+                const attr = model.rawAttributes[x];
+                if (!attr) {
+                    return x;
+                }
+                return attr.field ? attr.field : x;
+            });
     }
 
     public static getModelSearchableFieldAttributes(model: typeof M, fields: string[]): string[] {
         const attributes = model.rawAttributes;
         return fields
-            .filter(x => {
+            .filter((x) => {
                 const attr = attributes[x];
                 if (!attr) {
                     return false;
                 }
 
-                return !["DATE", "DATEONLY", "VIRTUAL"].some(t => t === (attr.type as AbstractDataTypeConstructor).key);
-            }).map(x => {
+                return !["DATE", "DATEONLY", "VIRTUAL"].some(
+                    (t) => t === (attr.type as AbstractDataTypeConstructor).key
+                );
+            })
+            .map((x) => {
                 const attr = attributes[x];
                 if (!attr) {
                     return x;
@@ -367,7 +383,7 @@ export class SequelizeUtils {
                 }
 
                 return ((model as any)[step] as Array<any>)
-                    .map(x => this.reduceModelFromPath(x, steps.join(".")))
+                    .map((x) => this.reduceModelFromPath(x, steps.join(".")))
                     .reduce((all: any, current) => {
                         if (current instanceof Array) {
                             return [...all, ...current];
@@ -407,7 +423,7 @@ export class SequelizeUtils {
         const items = group.split(".");
         if (items.length > 1) {
             const column = items[items.length - 1];
-            return SequelizeUtils.getLiteralFullName(column, items.slice(0, items.length - 1));
+            return SequelizeUtils.getLiteralFullName(column!, items.slice(0, items.length - 1));
         }
 
         return `\`${model.name}\`.\`${group}\``;
@@ -425,16 +441,13 @@ export class SequelizeUtils {
 
     public static generateWhereConditions(model: IncludeWhereModel, options?: object): WhereOptions {
         const where = {};
-        const keys = [
-            ...Object.keys(model),
-            ...Object.getOwnPropertySymbols(model)
-        ];
+        const keys = [...Object.keys(model), ...Object.getOwnPropertySymbols(model)];
         for (const key of keys) {
             if (!model.hasOwnProperty(key)) {
                 continue;
             }
 
-            const value = model[key as any](options);
+            const value = model[key as any]?.(options);
             if (typeof value !== "undefined") {
                 (where as any)[key] = value;
             }
@@ -491,12 +504,22 @@ export class SequelizeUtils {
             const operator = this.getOperatorKey(key);
             if (operator === "and") {
                 const items = Array.isArray(value) ? value : [value];
-                parts.push(`(${items.map((item: WhereOptions) => this.whereToSqlConditionLiteral(item, path, model)).filter(Boolean).join(" AND ")})`);
+                parts.push(
+                    `(${items
+                        .map((item: WhereOptions) => this.whereToSqlConditionLiteral(item, path, model))
+                        .filter(Boolean)
+                        .join(" AND ")})`
+                );
                 continue;
             }
             if (operator === "or") {
                 const items = Array.isArray(value) ? value : [value];
-                parts.push(`(${items.map((item: WhereOptions) => this.whereToSqlConditionLiteral(item, path, model)).filter(Boolean).join(" OR ")})`);
+                parts.push(
+                    `(${items
+                        .map((item: WhereOptions) => this.whereToSqlConditionLiteral(item, path, model))
+                        .filter(Boolean)
+                        .join(" OR ")})`
+                );
                 continue;
             }
 

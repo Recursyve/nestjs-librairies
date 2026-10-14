@@ -10,6 +10,7 @@ import {
     Table,
     UpdatedAt
 } from "sequelize-typescript";
+
 import { ContractSystems } from "../contracts/contract-systems.model";
 import { Visits } from "../visits/visits.model";
 
@@ -21,7 +22,7 @@ export class MaintenanceVisits extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
-    id!: number;
+    declare id: number;
 
     @Column
     @ForeignKey(() => Visits)

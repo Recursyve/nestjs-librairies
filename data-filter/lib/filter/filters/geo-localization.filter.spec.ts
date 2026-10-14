@@ -1,21 +1,24 @@
+import type { FindOptions, WhereOptions } from "sequelize";
+import { fn, literal, Op, where } from "sequelize";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+
 import { DefaultAccessControlAdapter, DefaultExportAdapter } from "../../adapters";
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
-import { FilterUtils } from "../filter.utils";
-import { GeoLocalizationFilter } from "./geo-localization.filter";
-import { CoordinateFilter } from "./coordinate.filter";
-import { FilterOperatorTypes } from "../operators";
-import { FindOptions, fn, literal, Op, where, WhereOptions } from "sequelize";
-import { GroupFilterBaseConfigurationModel } from "../models/filter-configuration.model";
-import { FilterType } from "../type";
-import { RuleModel } from "../models";
+import { DataFilterService } from "../../data-filter.service";
 import { Data } from "../../decorators";
+import { DataFilterScanner } from "../../scanners/data-filter.scanner";
+import { SequelizeModelScanner } from "../../scanners/sequelize-model.scanner";
 import { Coords } from "../../test/models/coords/coords.model";
+import { Locations } from "../../test/models/locations/locations.model";
 import { BaseFilter } from "../base-filter";
 import { FilterService } from "../filter.service";
-import { SequelizeModelScanner } from "../../scanners/sequelize-model.scanner";
-import { DataFilterService } from "../../data-filter.service";
-import { DataFilterScanner } from "../../scanners/data-filter.scanner";
-import { Locations } from "../../test/models/locations/locations.model";
+import { FilterUtils } from "../filter.utils";
+import { RuleModel } from "../models";
+import { GroupFilterBaseConfigurationModel } from "../models/filter-configuration.model";
+import { FilterOperatorTypes } from "../operators";
+import { FilterType } from "../type";
+import { CoordinateFilter } from "./coordinate.filter";
+import { GeoLocalizationFilter } from "./geo-localization.filter";
 
 describe("GeoLocalizationFilter", () => {
     describe("getConfig", () => {
@@ -256,39 +259,44 @@ describe("GeoLocalizationTestFilter", () => {
         const request = {};
         const user = null;
 
-        const options = await filter.getFindOptions(Coords, {
-            condition: "and",
-            rules: [
-                {
-                    id: "distance",
-                    operation: FilterOperatorTypes.Equal,
-                    value: [
-                        {
-                            value: [45.8797953, -73.2815516],
-                            operation: FilterOperatorTypes.Equal
-                        },
-                        {
-                            value: 25000,
-                            operation: FilterOperatorTypes.LessOrEqual
-                        }
-                    ] as [RuleModel, RuleModel]
-                },
-                {
-                    id: "distance",
-                    operation: FilterOperatorTypes.Equal,
-                    value: [
-                        {
-                            value: [45.8797953, -73.2815516],
-                            operation: FilterOperatorTypes.Equal
-                        },
-                        {
-                            value: 5000,
-                            operation: FilterOperatorTypes.LessOrEqual
-                        }
-                    ] as [RuleModel, RuleModel]
-                }
-            ]
-        }, request, user);
+        const options = await filter.getFindOptions(
+            Coords,
+            {
+                condition: "and",
+                rules: [
+                    {
+                        id: "distance",
+                        operation: FilterOperatorTypes.Equal,
+                        value: [
+                            {
+                                value: [45.8797953, -73.2815516],
+                                operation: FilterOperatorTypes.Equal
+                            },
+                            {
+                                value: 25000,
+                                operation: FilterOperatorTypes.LessOrEqual
+                            }
+                        ] as [RuleModel, RuleModel]
+                    },
+                    {
+                        id: "distance",
+                        operation: FilterOperatorTypes.Equal,
+                        value: [
+                            {
+                                value: [45.8797953, -73.2815516],
+                                operation: FilterOperatorTypes.Equal
+                            },
+                            {
+                                value: 5000,
+                                operation: FilterOperatorTypes.LessOrEqual
+                            }
+                        ] as [RuleModel, RuleModel]
+                    }
+                ]
+            },
+            request,
+            user
+        );
         expect(options).toBeDefined();
         expect(options).toStrictEqual<FindOptions>({
             include: [],
@@ -299,7 +307,7 @@ describe("GeoLocalizationTestFilter", () => {
                     }),
                     where(fn("ST_Distance_Sphere", literal("geo_point"), fn("Point", -73.2815516, 45.8797953)), {
                         [Op.lte]: 5000
-                    }),
+                    })
                 ]
             }
         });
@@ -308,27 +316,32 @@ describe("GeoLocalizationTestFilter", () => {
     it("getFindOptions should handle filter with where callback", async () => {
         const testRequest = { tenantId: 123 };
         const testUser = { id: 1, language: "en" } as any;
-        
-        const options = await filter.getFindOptions(Coords, {
-            condition: "and",
-            rules: [
-                {
-                    id: "distanceWithCallback",
-                    operation: FilterOperatorTypes.Equal,
-                    value: [
-                        {
-                            value: [45.8797953, -73.2815516],
-                            operation: FilterOperatorTypes.Equal
-                        },
-                        {
-                            value: 25000,
-                            operation: FilterOperatorTypes.LessOrEqual
-                        }
-                    ] as [RuleModel, RuleModel]
-                }
-            ]
-        }, testRequest, testUser);
-        
+
+        const options = await filter.getFindOptions(
+            Coords,
+            {
+                condition: "and",
+                rules: [
+                    {
+                        id: "distanceWithCallback",
+                        operation: FilterOperatorTypes.Equal,
+                        value: [
+                            {
+                                value: [45.8797953, -73.2815516],
+                                operation: FilterOperatorTypes.Equal
+                            },
+                            {
+                                value: 25000,
+                                operation: FilterOperatorTypes.LessOrEqual
+                            }
+                        ] as [RuleModel, RuleModel]
+                    }
+                ]
+            },
+            testRequest,
+            testUser
+        );
+
         expect(options).toStrictEqual<FindOptions>({
             include: [
                 {
@@ -343,15 +356,22 @@ describe("GeoLocalizationTestFilter", () => {
                     through: undefined,
                     where: {
                         status: "active",
-                        user_id: 1,
-                    },
-                },
+                        user_id: 1
+                    }
+                }
             ],
             where: {
                 [Op.and]: [
-                    where(fn("ST_Distance_Sphere", literal("`location`.`geo_point`"), fn("Point", -73.2815516, 45.8797953)), {
-                        [Op.lte]: 25000
-                    })
+                    where(
+                        fn(
+                            "ST_Distance_Sphere",
+                            literal("`location`.`geo_point`"),
+                            fn("Point", -73.2815516, 45.8797953)
+                        ),
+                        {
+                            [Op.lte]: 25000
+                        }
+                    )
                 ]
             }
         });

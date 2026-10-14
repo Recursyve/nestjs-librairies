@@ -1,6 +1,7 @@
 import { AttributesHandler } from "../handlers/attributes.handler";
 import { DataFilterHandler } from "../handlers/data-filter.handler";
-import { CountAttributesConfig, CountConfig } from "../models/count.model";
+import type { CountConfig } from "../models/count.model";
+import { CountAttributesConfig } from "../models/count.model";
 
 export function Count(name: string, options: Omit<CountConfig, "name">): PropertyDecorator & ClassDecorator {
     return (target: Object, propertyKey?: string | symbol) => {
@@ -11,7 +12,12 @@ export function Count(name: string, options: Omit<CountConfig, "name">): Propert
     };
 }
 
-function defineCustomAttributesMetadata(target: Object, propertyKey: string | symbol | undefined, name: string, options: CountConfig) {
+function defineCustomAttributesMetadata(
+    target: Object,
+    propertyKey: string | symbol | undefined,
+    name: string,
+    options: CountConfig
+) {
     if (!propertyKey) {
         const dataFilter = DataFilterHandler.getDataFilter(target);
         dataFilter.addCustomAttribute(new CountAttributesConfig(name, options));

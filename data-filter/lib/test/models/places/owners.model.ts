@@ -11,9 +11,10 @@ import {
     Table,
     UpdatedAt
 } from "sequelize-typescript";
-import { Places } from "./places.model";
-import { PlaceOwners } from "./place-owners.model";
+
 import { Persons } from "../persons/persons.model";
+import { PlaceOwners } from "./place-owners.model";
+import { Places } from "./places.model";
 
 @Table({
     tableName: "owners",
@@ -23,7 +24,7 @@ export class Owners extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
-    id!: number;
+    declare id: number;
 
     @Column
     @ForeignKey(() => Persons)

@@ -1,9 +1,11 @@
+import { describe, expect, it } from "vitest";
+
 import { DefaultTranslateAdapter } from "../../adapters/default-translate.adapter";
 import { FilterUtils } from "../filter.utils";
-import { TextFilter } from "./text.filter";
 import { FilterBaseConfigurationModel } from "../models/filter-configuration.model";
-import { FilterType } from "../type";
 import { FilterOperatorTypes } from "../operators";
+import { FilterType } from "../type";
+import { TextFilter } from "./text.filter";
 
 describe("TextFilter", () => {
     describe("getConfig", () => {

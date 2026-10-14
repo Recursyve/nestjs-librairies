@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "data-filter/**"
+      - ".github/workflows/data_filter_dev.yaml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -29,12 +30,18 @@ jobs:
         working-directory: data-filter
         run: npm ci
 
+      - name: Check formatting
+        working-directory: data-filter
+        run: npm run format:check
+
       - name: Build
         working-directory: data-filter
-        run: npm run build:lib
+        run: npm run build
+
+      - name: Lint
+        working-directory: data-filter
+        run: npm run lint
 
       - name: Run tests
         working-directory: data-filter
-        env:
-          TZ: UTC
         run: npm run test

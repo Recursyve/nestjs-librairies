@@ -1,12 +1,15 @@
-import { Op, WhereOptions } from "sequelize";
-import { DataFilterUserModel, IRule } from "../..";
+import type { WhereOptions } from "sequelize";
+import { Op } from "sequelize";
+
+import type { DataFilterUserModel, IRule } from "../..";
 import { TranslateAdapter } from "../../adapters/translate.adapter";
 import { FilterUtils } from "../filter.utils";
 import { GroupFilterBaseConfigurationModel } from "../models/filter-configuration.model";
 import { QueryRuleModel } from "../models/query.model";
 import { RuleModel } from "../models/rule.model";
 import { FilterType } from "../type";
-import { BaseFilterDefinition, Filter, FilterDefinition } from "./filter";
+import type { BaseFilterDefinition, FilterDefinition } from "./filter";
+import { Filter } from "./filter";
 
 export interface BaseGroupFilterDefinition {
     rootFilter: Filter;
@@ -35,7 +38,7 @@ export class GroupFilter implements GroupFilterDefinition {
         }
     }
 
-    public type = FilterType.Group;
+    public type: FilterType = FilterType.Group;
     public group!: string;
     public rootFilter!: Filter;
     public valueFilter?: Filter;
@@ -46,7 +49,7 @@ export class GroupFilter implements GroupFilterDefinition {
         Object.assign(this, definition);
     }
 
-    public static validate(definition: IRule) {
+    public static validate(definition: IRule): boolean {
         return definition["_type"] === "group_filter";
     }
 
@@ -79,7 +82,7 @@ export class GroupFilter implements GroupFilterDefinition {
         }
 
         const rootWhere = await this.rootFilter.getWhereOptions(root as QueryRuleModel);
-        const valueFilter = this.valueFilter ?? await this.getValueFilter?.(root as QueryRuleModel);
+        const valueFilter = this.valueFilter ?? (await this.getValueFilter?.(root as QueryRuleModel));
         if (!valueFilter) {
             return rootWhere;
         }
@@ -100,7 +103,7 @@ export class GroupFilter implements GroupFilterDefinition {
             return {};
         }
 
-        const valueFilter = this.valueFilter ?? await this.getValueFilter?.(root as QueryRuleModel);
+        const valueFilter = this.valueFilter ?? (await this.getValueFilter?.(root as QueryRuleModel));
         const rootHaving = await this.rootFilter.getHavingOptions(rule);
         const valueHaving = await valueFilter?.getHavingOptions(rule);
         if (!rootHaving || !valueHaving) {
@@ -108,10 +111,7 @@ export class GroupFilter implements GroupFilterDefinition {
         }
 
         return {
-            [Op.and]: [
-                rootHaving,
-                valueHaving
-            ]
+            [Op.and]: [rootHaving, valueHaving]
         };
     }
 

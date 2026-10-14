@@ -5,15 +5,17 @@ import {
     CreatedAt,
     DataType,
     DeletedAt,
-    ForeignKey, HasMany,
+    ForeignKey,
+    HasMany,
     Model,
     PrimaryKey,
     Table,
     UpdatedAt
 } from "sequelize-typescript";
-import { Contracts } from "./contracts.model";
-import { Systems } from "../systems/systems.model";
+
 import { MaintenanceVisits } from "../maintenance-visits/maintenance-visits.model";
+import { Systems } from "../systems/systems.model";
+import { Contracts } from "./contracts.model";
 
 @Table({
     tableName: "contract_systems",
@@ -23,7 +25,7 @@ export class ContractSystems extends Model {
     @AutoIncrement
     @PrimaryKey
     @Column
-    id!: number;
+    declare id: number;
 
     @Column
     @ForeignKey(() => Contracts)
