@@ -1,11 +1,13 @@
-import { Variable } from "../decorators/variable.decorator";
-import { ConfigTransformerService } from "./config-transformer.service";
 import { Test, TestingModule } from "@nestjs/testing";
+import { Transform } from "class-transformer";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+
 import { ConfigModule } from "../config.module";
 import { Config, EnvironmentConfig } from "../decorators/config.decorator";
+import { Variable } from "../decorators/variable.decorator";
 import { ConfigProviderNotRegisteredError } from "../errors/config-provider-not-registered.error";
 import { ConfigVariablesNotDefinedError } from "../errors/config-variables-not-defined.error";
-import { Transform } from "class-transformer";
+import { ConfigTransformerService } from "./config-transformer.service";
 
 @EnvironmentConfig()
 class EnvironmentConfigModel {

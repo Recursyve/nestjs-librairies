@@ -1,19 +1,21 @@
 # Config
 
 ## Features
+
 - access .env variable through decorator
 
 ## Getting started
 
 ### Install
+
 ```
 npm i --save @recursyve/nestjs-librairies
 ```
 
 ### example
-``` ts
-class VariableEnvTest {
 
+```ts
+class VariableEnvTest {
     @Variable(false)
     DB_HOST: string;
 
@@ -27,9 +29,8 @@ class VariableEnvTest {
     DB_PORT: string;
 }
 ```
-``` ts
-@Module({imports: [ConfigModule.forRoot(VariableEnvTest)]})
+
+```ts
+@Module({ imports: [ConfigModule.forRoot(VariableEnvTest)] })
 export class AppModule {}
 ```
-
-

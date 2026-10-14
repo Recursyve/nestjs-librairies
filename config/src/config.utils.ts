@@ -1,4 +1,4 @@
-import { Type } from "@nestjs/common";
+import type { Type } from "@nestjs/common";
 
 export class ConfigUtils {
     public static getProviderToken(config: Type): string {
