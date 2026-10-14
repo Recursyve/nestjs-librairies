@@ -1,7 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { AccessControlService, Users } from "@recursyve/nestjs-access-control";
-import { FindOptions } from "sequelize";
+import type { Users } from "@recursyve/nestjs-access-control";
+import { AccessControlService } from "@recursyve/nestjs-access-control";
+import type { FindOptions } from "sequelize";
 import { Model } from "sequelize-typescript";
+
 import { generateWhereOptionFromAccessControlResource } from "../utils/where-option-generator";
 
 @Injectable()

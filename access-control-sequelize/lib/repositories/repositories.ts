@@ -1,14 +1,20 @@
 import { Inject } from "@nestjs/common";
-import { AccessControlService, ResourceAccessControlService, Resources, Users } from "@recursyve/nestjs-access-control";
+import type { Users } from "@recursyve/nestjs-access-control";
+import { AccessControlService, ResourceAccessControlService, Resources } from "@recursyve/nestjs-access-control";
 import { SequelizeEntities, SequelizeReadRepository, SequelizeRepository } from "@recursyve/nestjs-sequelize-utils";
-import { Attributes, FindOptions, Identifier, Op, WhereOptions } from "sequelize";
+import type { Attributes, FindOptions, Identifier, WhereOptions } from "sequelize";
+import { Op } from "sequelize";
 
 export class AccessControlRepository<T extends SequelizeEntities> extends ResourceAccessControlService {
     constructor(protected repository: typeof SequelizeEntities<any, any>) {
         super({ model: repository, type: "sequelize" });
     }
 
-    public async findByPkFromUser(identifier: Identifier, resources: Resources, options?: FindOptions<Attributes<T>>): Promise<T | null> {
+    public async findByPkFromUser(
+        identifier: Identifier,
+        resources: Resources,
+        options?: FindOptions<Attributes<T>>
+    ): Promise<T | null> {
         if (resources.ids) {
             if (!resources.ids.some((resourceId) => resourceId === identifier)) {
                 return null;
@@ -25,7 +31,7 @@ export class AccessControlRepository<T extends SequelizeEntities> extends Resour
             if (options.where) {
                 options.where = {
                     [Op.and]: [options.where, resources.where]
-                }
+                };
             } else {
                 options.where = resources.where;
             }
@@ -68,9 +74,11 @@ export class AccessControlRepository<T extends SequelizeEntities> extends Resour
                 [Op.and]: [where, { id: resources.ids }]
             };
         } else if (resources.where) {
-            return where ? {
-                [Op.and]: [where, resources.where]
-            } : resources.where;
+            return where
+                ? {
+                      [Op.and]: [where, resources.where]
+                  }
+                : resources.where;
         }
 
         return where;
@@ -129,7 +137,9 @@ export abstract class SequelizeAccessControlRepository<
     }
 }
 
-export abstract class SequelizeAccessControlReadRepository<T extends SequelizeEntities> extends SequelizeReadRepository<T> {
+export abstract class SequelizeAccessControlReadRepository<
+    T extends SequelizeEntities
+> extends SequelizeReadRepository<T> {
     @Inject()
     protected accessControlService!: AccessControlService;
 
