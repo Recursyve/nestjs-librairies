@@ -5,12 +5,11 @@ export interface TransformsDecoratorOptions {
 }
 
 const transformNullOrUndefined = (value: any) => {
-    return value === "undefined" ?
-        undefined : value === "null" ?
-            null : value;
+    return value === "undefined" ? undefined : value === "null" ? null : value;
 };
 
-export const TransformNullOrUndefined = () => Transform(({ value }) => transformNullOrUndefined(value));
+export const TransformNullOrUndefined = (): PropertyDecorator =>
+    Transform(({ value }) => transformNullOrUndefined(value));
 
 const transformBoolean = (value: any) => {
     if (typeof value === "boolean") {
@@ -27,21 +26,22 @@ const transformBoolean = (value: any) => {
     }
 
     return value;
-}
+};
 
 /**
  * Transforms a form data field from string to boolean
  * If the value is null or undefined, it stays null or undefined
  * @param opts.each: If the value is an array, transforms all elements of the array
  */
-export const TransformBoolean = (opts?: TransformsDecoratorOptions) => Transform(({ value }) => {
-    const { each } = opts ?? {};
-    if (each && Array.isArray(value)) {
-        return value.map(x => transformBoolean(x));
-    }
+export const TransformBoolean = (opts?: TransformsDecoratorOptions): PropertyDecorator =>
+    Transform(({ value }) => {
+        const { each } = opts ?? {};
+        if (each && Array.isArray(value)) {
+            return value.map((x) => transformBoolean(x));
+        }
 
-    return transformBoolean(value);
-});
+        return transformBoolean(value);
+    });
 
 const transformNumber = (value: any) => {
     if (typeof value === "number") {
@@ -54,21 +54,22 @@ const transformNumber = (value: any) => {
     }
 
     return +value;
-}
+};
 
 /**
  * Transforms a form data field from string to number
  * If the value is null or undefined, it stays null or undefined
  * @param opts.each: If the value is an array, transforms all elements of the array
  */
-export const TransformNumber = (opts?: TransformsDecoratorOptions) => Transform(({ value }) => {
-    const { each } = opts ?? {};
-    if (each && Array.isArray(value)) {
-        return value.map(x => transformNumber(x));
-    }
+export const TransformNumber = (opts?: TransformsDecoratorOptions): PropertyDecorator =>
+    Transform(({ value }) => {
+        const { each } = opts ?? {};
+        if (each && Array.isArray(value)) {
+            return value.map((x) => transformNumber(x));
+        }
 
-    return transformNumber(value);
-});
+        return transformNumber(value);
+    });
 
 const transformJson = (value: any) => {
     const nullOrUndefined = transformNullOrUndefined(value);
@@ -81,33 +82,35 @@ const transformJson = (value: any) => {
     }
 
     return JSON.parse(value);
-}
+};
 
 /**
  * Transforms a form data field from string to json
  * If the value is null or undefined, it stays null or undefined
  * @param opts.each: If the value is an array, transforms all elements of the array
  */
-export const TransformJson = (opts?: TransformsDecoratorOptions) => Transform(({ value }) => {
-    const { each } = opts ?? {};
-    if (each && Array.isArray(value)) {
-        return value.map(x => transformJson(x));
-    }
+export const TransformJson = (opts?: TransformsDecoratorOptions): PropertyDecorator =>
+    Transform(({ value }) => {
+        const { each } = opts ?? {};
+        if (each && Array.isArray(value)) {
+            return value.map((x) => transformJson(x));
+        }
 
-    return transformJson(value);
-});
+        return transformJson(value);
+    });
 
 /**
  * Transforms a form data field in an array if the value is not an array.
  * If the value is null or undefined, it stays null or undefined
  */
-export const TransformArray = () => Transform(({ value }) => {
-    const nullOrUndefined = transformNullOrUndefined(value);
-    if (!nullOrUndefined) {
-        return nullOrUndefined;
-    }
+export const TransformArray = (): PropertyDecorator =>
+    Transform(({ value }) => {
+        const nullOrUndefined = transformNullOrUndefined(value);
+        if (!nullOrUndefined) {
+            return nullOrUndefined;
+        }
 
-    if (!value) return undefined;
-    if (!Array.isArray(value)) return [value];
-    return value;
-});
+        if (!value) return undefined;
+        if (!Array.isArray(value)) return [value];
+        return value;
+    });

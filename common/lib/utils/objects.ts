@@ -3,7 +3,7 @@ export class ObjectUtils {
         object: { [key: string]: any },
         valueHandle: (value: any) => any,
         objectHandle?: ((object: Object) => void) | null
-    ) {
+    ): void {
         for (const property in object) {
             if (!object.hasOwnProperty || object.hasOwnProperty(property)) {
                 const value = object[property];
@@ -25,20 +25,20 @@ export class ObjectUtils {
         const properties: any[] = [];
         ObjectUtils.forEachProperty(
             object,
-            value => {
+            (value) => {
                 properties.push(value);
                 return value;
             },
             !deep
                 ? null
-                : deepObject => {
+                : (deepObject) => {
                       properties.push(ObjectUtils.objectToArrayOfProperties(deepObject));
                   }
         );
         return properties;
     }
 
-    public static stringBoolsToBools(object: Object) {
+    public static stringBoolsToBools(object: Object): void {
         ObjectUtils.forEachProperty(
             object,
             (value: any) => {

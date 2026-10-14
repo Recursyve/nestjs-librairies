@@ -1,4 +1,6 @@
-import { ArgumentMetadata, Injectable, PipeTransform } from "@nestjs/common";
+import type { ArgumentMetadata, PipeTransform } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+
 import { ValidationPipe } from "./validation.pipe";
 
 /**
@@ -6,7 +8,7 @@ import { ValidationPipe } from "./validation.pipe";
  */
 @Injectable()
 export class FormDataPipe implements PipeTransform<any> {
-    public transform(value: any, metadata: ArgumentMetadata) {
+    public transform(value: any, metadata: ArgumentMetadata): any {
         if (value && typeof value === "object") {
             value = ValidationPipe.rebuildObjectIfBroken(value);
             for (const key in value) {

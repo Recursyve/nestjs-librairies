@@ -1,7 +1,8 @@
+import { InternalServerErrorException } from "@nestjs/common";
 // src: https://stackoverflow.com/a/53573115
 // We just added typescript typing
-import { CipherGCM, CipherGCMOptions, createCipheriv, createDecipheriv, DecipherGCM, randomBytes, scryptSync } from "crypto";
-import { InternalServerErrorException } from "@nestjs/common";
+import type { CipherGCM, CipherGCMOptions, DecipherGCM } from "crypto";
+import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "crypto";
 
 export namespace CryptoUtils {
     const ALGORITHM = {
@@ -43,7 +44,7 @@ export namespace CryptoUtils {
         } as CipherGCMOptions
     };
 
-    export const KEY_BYTE_LEN = ALGORITHM.KEY_BYTE_LEN;
+    export const KEY_BYTE_LEN: number = ALGORITHM.KEY_BYTE_LEN;
 
     function getIV(): Buffer {
         return randomBytes(ALGORITHM.IV_BYTE_LEN);
@@ -56,7 +57,7 @@ export namespace CryptoUtils {
     /**
      * To prevent rainbow table attacks
      */
-    export function getSalt() {
+    export function getSalt(): string {
         return randomBytes(ALGORITHM.SALT_BYTE_LEN).toString();
     }
 
@@ -70,7 +71,7 @@ export namespace CryptoUtils {
      * the Buffer after the key generation to prevent the password
      * from lingering in the memory
      */
-    export function getKeyFromPassword(password: Buffer, salt: string) {
+    export function getKeyFromPassword(password: Buffer, salt: string): Buffer<ArrayBufferLike> {
         return scryptSync(password, salt, ALGORITHM.KEY_BYTE_LEN);
     }
 
@@ -89,7 +90,7 @@ export namespace CryptoUtils {
      * the Buffer after the encryption to prevent the message text
      * and the key from lingering in the memory
      */
-    export function encrypt(messageText: Buffer, key = CryptoUtils.getCryptoKey()): Buffer {
+    export function encrypt(messageText: Buffer, key: Buffer<ArrayBuffer> = CryptoUtils.getCryptoKey()): Buffer {
         validateKey(key);
         const iv = getIV();
         const cipher = createCipheriv(ALGORITHM.BLOCK_CIPHER, key, iv, ALGORITHM.OPTIONS) as CipherGCM;
@@ -98,7 +99,10 @@ export namespace CryptoUtils {
         return Buffer.concat([iv, encryptedMessage, cipher.getAuthTag()]);
     }
 
-    export function encryptToHexString(messagetext: string, key = CryptoUtils.getCryptoKey()): string {
+    export function encryptToHexString(
+        messagetext: string,
+        key: Buffer<ArrayBuffer> = CryptoUtils.getCryptoKey()
+    ): string {
         const encrypted = encrypt(Buffer.from(messagetext, "utf8"), key);
         return `\\x${encrypted.toString("hex")}`;
     }
@@ -112,7 +116,7 @@ export namespace CryptoUtils {
      * the Buffer after the decryption to prevent the message text
      * and the key from lingering in the memory
      */
-    export function decrypt(cipherText: Buffer, key = CryptoUtils.getCryptoKey()): Buffer {
+    export function decrypt(cipherText: Buffer, key: Buffer<ArrayBuffer> = CryptoUtils.getCryptoKey()): Buffer {
         validateKey(key);
         const authTag = cipherText.slice(-16);
         const iv = cipherText.slice(0, 12);
@@ -123,15 +127,18 @@ export namespace CryptoUtils {
         return Buffer.concat([messagetext, decipher.final()]);
     }
 
-    export function decryptFromHexString(cipherText: string, key = CryptoUtils.getCryptoKey()): string {
+    export function decryptFromHexString(
+        cipherText: string,
+        key: Buffer<ArrayBuffer> = CryptoUtils.getCryptoKey()
+    ): string {
         if (cipherText.slice(0, 2) !== "\\x") {
             return cipherText;
         }
         return decrypt(Buffer.from(cipherText.slice(2), "hex"), key).toString("utf8");
     }
 
-    export function getCryptoKey() {
-        const keyBase64 = process.env.CRYPTO_KEY;
+    export function getCryptoKey(): Buffer<ArrayBuffer> {
+        const keyBase64 = process.env["CRYPTO_KEY"];
         if (!keyBase64) {
             throw new InternalServerErrorException("Invalid crypto key");
         }
