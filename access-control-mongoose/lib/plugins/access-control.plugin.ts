@@ -1,16 +1,21 @@
-import { ResourceEventAccessControlService } from "@recursyve/nestjs-access-control";
-import { Document, Schema } from "mongoose";
+import type { ResourceEventAccessControlService } from "@recursyve/nestjs-access-control";
+import type { Document, Schema } from "mongoose";
 
-export function accessControlPlugin(schema: Schema, { service }: { service: ResourceEventAccessControlService<any> }) {
-    schema.pre("save", function() {
-        this.$wasCreated = this.$isNew;
+export function accessControlPlugin(
+    schema: Schema,
+    { service }: { service: ResourceEventAccessControlService<any> }
+): void {
+    schema.pre("save", function () {
+        this["$wasCreated"] = this["$isNew"];
     });
 
     schema.post(["save"], async (doc: Document, next) => {
         if ((doc as any).$wasCreated) {
             const session = doc.$session();
             if (session && (session as any).afterCommit) {
-                (session as any).afterCommit.subscribe(() => service.onResourceCreated(`${doc.collection.name}-mongoose`, doc));
+                (session as any).afterCommit.subscribe(() =>
+                    service.onResourceCreated(`${doc.collection.name}-mongoose`, doc)
+                );
             } else {
                 await service.onResourceCreated(`${doc.collection.name}-mongoose`, doc);
             }
