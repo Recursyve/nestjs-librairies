@@ -1,14 +1,17 @@
-import { Test, TestingModule } from "@nestjs/testing";
-import { ConfigTransformerService } from "@recursyve/nestjs-config/services/config-transformer.service";
-import { ConfigSequelizeModule } from "../config-sequelize.module";
-import { ConfigMetadata, ConfigModule, Variable } from "@recursyve/nestjs-config";
 import { SequelizeModule } from "@nestjs/sequelize";
-import { ConfigSequelizeModel, ConfigSequelizeModelInjectionToken, ManageableSequelizeConfig } from "../models";
-import { SequelizeConfig } from "../decorators";
+import { Test, TestingModule } from "@nestjs/testing";
+import type { ConfigMetadata } from "@recursyve/nestjs-config";
+import { ConfigModule, Variable } from "@recursyve/nestjs-config";
 import { ConfigHandler } from "@recursyve/nestjs-config/handlers/config.handler";
-import { SequelizeConfigProvider } from "./sequelize.config-provider";
-import { VariableMetadata } from "@recursyve/nestjs-config/models/variable-metadata.model";
+import type { VariableMetadata } from "@recursyve/nestjs-config/models/variable-metadata.model";
+import { ConfigTransformerService } from "@recursyve/nestjs-config/services/config-transformer.service";
 import { Type } from "class-transformer";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+
+import { ConfigSequelizeModule } from "../config-sequelize.module";
+import { SequelizeConfig } from "../decorators";
+import { ConfigSequelizeModel, ConfigSequelizeModelInjectionToken, ManageableSequelizeConfig } from "../models";
+import { SequelizeConfigProvider } from "./sequelize.config-provider";
 
 @SequelizeConfig()
 class SequelizeConfigModel1 {

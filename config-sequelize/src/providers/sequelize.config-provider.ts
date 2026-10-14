@@ -1,16 +1,13 @@
-import { Injectable, Type } from "@nestjs/common";
-import {
-    ConfigSequelizeModel,
-    InjectConfigSequelizeModel,
-    ManageableSequelizeConfig,
-    ReloadSequelizeConfigOptions,
-    SequelizeConfigUpdate,
-    UpdateSequelizeConfigOptions
-} from "../models";
-import { ConfigProvider, IConfigProvider } from "@recursyve/nestjs-config";
+import type { Type } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import type { IConfigProvider } from "@recursyve/nestjs-config";
+import { ConfigProvider } from "@recursyve/nestjs-config";
+import { ConfigHandler } from "@recursyve/nestjs-config/handlers/config.handler";
 import { ConfigTransformerService } from "@recursyve/nestjs-config/services/config-transformer.service";
 import { Transaction } from "sequelize";
-import { ConfigHandler } from "@recursyve/nestjs-config/handlers/config.handler";
+
+import type { ReloadSequelizeConfigOptions, SequelizeConfigUpdate, UpdateSequelizeConfigOptions } from "../models";
+import { ConfigSequelizeModel, InjectConfigSequelizeModel, ManageableSequelizeConfig } from "../models";
 
 export interface GetSequelizeConfigValueOptions {
     transaction?: Transaction;
