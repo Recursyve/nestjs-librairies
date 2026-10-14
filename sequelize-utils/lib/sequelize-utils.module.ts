@@ -1,5 +1,7 @@
-import { Global, Module, OnModuleInit } from "@nestjs/common";
+import type { OnModuleInit } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { Sequelize } from "sequelize-typescript";
+
 import {
     AfterBulkCreateFormatDateOnlyHook,
     AfterCreateFormatDateOnlyHook
@@ -13,8 +15,8 @@ export class SequelizeUtilsHooksModule implements OnModuleInit {
     constructor(private sequelize: Sequelize) {}
 
     public onModuleInit(): void {
-       this.sequelize.addHook("afterCreate", "transform-date-only", AfterCreateFormatDateOnlyHook);
-       this.sequelize.addHook("afterFind", "transform-date-only", AfterFindFormatDateOnlyHook);
+        this.sequelize.addHook("afterCreate", "transform-date-only", AfterCreateFormatDateOnlyHook);
+        this.sequelize.addHook("afterFind", "transform-date-only", AfterFindFormatDateOnlyHook);
     }
 }
 

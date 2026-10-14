@@ -1,6 +1,8 @@
-import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize";
-import { AllowNull, Column, HasMany, } from "sequelize-typescript";
-import { MakePropertiesNullable, SequelizeEntities } from "../../lib";
+import type { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize";
+import { AllowNull, Column, HasMany } from "sequelize-typescript";
+
+import type { MakePropertiesNullable } from "../../lib";
+import { SequelizeEntities } from "../../lib";
 
 type Attributes = MakePropertiesNullable<InferAttributes<Accounts>>;
 type CreateAttributes = InferCreationAttributes<Accounts> & {

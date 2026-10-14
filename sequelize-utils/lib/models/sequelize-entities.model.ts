@@ -1,4 +1,5 @@
-import { CreationOptional, DataTypes } from "sequelize";
+import type { CreationOptional } from "sequelize";
+import { DataTypes } from "sequelize";
 import { AutoIncrement, Column, CreatedAt, DeletedAt, Model, PrimaryKey, UpdatedAt } from "sequelize-typescript";
 
 export interface SequelizeEntitiesAttributes {
@@ -15,19 +16,19 @@ export class SequelizeEntities<
     @AutoIncrement
     @PrimaryKey
     @Column(DataTypes.INTEGER)
-    id!: CreationOptional<number>;
+    declare public readonly id: CreationOptional<number>;
 
     @CreatedAt
     @Column({ field: "created_at" })
-    createdAt?: Date;
+    declare public readonly createdAt?: Date;
 
     @UpdatedAt
     @Column({ field: "updated_at" })
-    updatedAt?: Date;
+    declare public readonly updatedAt?: Date;
 
     @DeletedAt
     @Column({ field: "deleted_at" })
-    deletedAt?: Date;
+    declare public readonly deletedAt?: Date;
 }
 
 /**

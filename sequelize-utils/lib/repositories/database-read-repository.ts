@@ -1,6 +1,7 @@
-import { CountOptions, FindOptions, Identifier } from "sequelize";
-import { Attributes } from "sequelize/types/model";
-import { SequelizeEntities } from "../models/sequelize-entities.model";
+import type { CountOptions, FindOptions, Identifier } from "sequelize";
+import type { Attributes } from "sequelize/types/model";
+
+import type { SequelizeEntities } from "../models/sequelize-entities.model";
 
 export abstract class SequelizeReadRepository<T extends SequelizeEntities> {
     protected abstract repository: typeof SequelizeEntities<any, any>;

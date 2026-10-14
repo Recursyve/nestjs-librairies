@@ -7,7 +7,7 @@ export class NiceTransaction extends Transaction {
 
     /** Pretty much a copy and paste of the afterCommit of the original Transaction of Sequelize */
     public afterRollback(fn: AfterTransactionRollbackCallback): this {
-        if (typeof fn !== 'function') {
+        if (typeof fn !== "function") {
             throw new TypeError('"fn" must be a function');
         }
 
@@ -16,7 +16,7 @@ export class NiceTransaction extends Transaction {
         return this;
     }
 
-    public async rollback(): Promise<void> {
+    public override async rollback(): Promise<void> {
         await super.rollback();
 
         /** Pretty much a copy and paste of the afterCommit of the original Transaction of Sequelize */
