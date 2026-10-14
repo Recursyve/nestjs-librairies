@@ -1,30 +1,5 @@
-import type { OnModuleDestroy } from "@nestjs/common";
-import { Module } from "@nestjs/common";
-import { ModuleRef } from "@nestjs/core";
-
-import { RedisHealthIndicator } from "./health-indicators/redis-health.indicator";
-import { RedisConfigService } from "./services/redis-config.service";
-import { RedisService } from "./services/redis.service";
-
-@Module({
-    providers: [RedisConfigService, RedisService, RedisHealthIndicator],
-    exports: [RedisConfigService, RedisService, RedisHealthIndicator]
-})
-export class RedisModule implements OnModuleDestroy {
-    constructor(private readonly moduleRef: ModuleRef) {}
-
-    public async onModuleDestroy(): Promise<void> {
-        const service = await this.moduleRef.get(RedisService);
-
-        /**
-         * Disconnection causes some issues when running tests, for now we deactivate it
-         */
-        if (!process.env["CI"]) {
-            await service.disconnect();
-        }
-    }
-}
-
-export * from "./services/redis.service";
-export * from "./services/redis-config.service";
-export * from "./health-indicators/redis-health.indicator";
+export { RedisHealthIndicator } from "./health-indicators/redis-health.indicator";
+export { RedisModule } from "./redis.module";
+export { RedisConfigService } from "./services/redis-config.service";
+export { RedisService } from "./services/redis.service";
+export type { RedidSetOptions, RedisScanOptions, RedisValue } from "./services/redis.service";

@@ -1,5 +1,5 @@
-export class RedisArrayUtils {
-    public static getSlices<T = any>(items: T[], size: number): T[][] {
+export namespace RedisArrayUtils {
+    export function getSlices<T>(items: T[], size: number): T[][] {
         const res = [];
         let start = 0;
         do {
