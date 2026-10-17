@@ -1,4 +1,4 @@
-import { VariableMetadata } from "./variable-metadata.model";
+import type { VariableMetadata } from "./variable-metadata.model";
 
 export interface ConfigConfig {
     provider?: string;

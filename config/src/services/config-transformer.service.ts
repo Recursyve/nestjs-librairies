@@ -1,90 +1,92 @@
-import { Inject, Injectable, Type } from "@nestjs/common";
-import { ConfigHandler } from "../handlers/config.handler";
-import { ConfigModelNotFoundError } from "../errors/config-model-not-found.error";
-import { EnvironmentConfigProvider } from "../providers/environment.config-provider";
+import type { Type } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
-import { ConfigProviderHandler } from "../handlers/config-provider.handler";
-import { IConfigProvider } from "../providers/config.provider";
-import { ConfigProviderNotRegisteredError } from "../errors/config-provider-not-registered.error";
-import { ConfigProviderNotFoundInModuleError } from "../errors/config-provider-not-found-in-module.error";
-import { OPTIONS } from "../constant";
-import { ConfigModuleOptions } from "../config.module";
-import { ConfigVariablesNotDefinedError } from "../errors/config-variables-not-defined.error";
+import { isNotEmpty } from "@recursyve/nice-ts-utils";
 import { plainToInstance } from "class-transformer";
-import { ConfigMetadata } from "../models";
+
+import type { ConfigModuleOptions } from "../config.module.options";
+import { OPTIONS } from "../constant";
+import { ConfigModelNotFoundError } from "../errors/config-model-not-found.error";
+import { ConfigVariablesNotDefinedError } from "../errors/config-variables-not-defined.error";
+import { ConfigProviderHandler } from "../handlers/config-provider.handler";
+import { ConfigHandler } from "../handlers/config.handler";
+import type { ConfigMetadata } from "../models/config-metadata.model";
+import type { IConfigProvider } from "../providers/config.provider";
+import { EnvironmentConfigProvider } from "../providers/environment.config-provider";
 
 @Injectable()
 export class ConfigTransformerService {
-    constructor(@Inject(OPTIONS) private options: ConfigModuleOptions, private moduleRef: ModuleRef) {}
+    constructor(
+        @Inject(OPTIONS) private readonly options: ConfigModuleOptions,
+        private readonly moduleRef: ModuleRef
+    ) {}
 
     public async transform<T>(configType: Type<T>): Promise<T | null> {
         const configMetadata = this.getConfigMetadata(configType);
         const configProvider = await this.getConfigProvider(configMetadata.provider ?? EnvironmentConfigProvider.type);
 
-        const config = await this.loadConfig<T>(configType, configProvider);
-        if (configProvider.hydrate) {
-            await configProvider.hydrate(config as Object);
-        }
+        const config = await this.loadConfig(configType, configProvider);
+        await configProvider.hydrate?.(config as object);
         return config;
     }
 
-    public async reloadConfig<T extends Object, GetValueOptions>(
-        config: T,
+    public async reloadConfig(
+        config: object,
         options?: {
-            getValue?: GetValueOptions;
+            getValue?: unknown;
         }
     ): Promise<void> {
-        const configType = config.constructor as Type<T>;
+        const configType = config.constructor as Type<Record<string, unknown>>;
 
         const configMetadata = this.getConfigMetadata(configType);
-        if (!configMetadata.provider) {
+        if (!isNotEmpty(configMetadata.provider)) {
             return;
         }
         const configProvider = await this.getConfigProvider(configMetadata.provider);
 
-        const reloadedConfig = await this.loadConfig<T, GetValueOptions>(configType, configProvider, {
-            getValue: options?.getValue
-        });
+        const reloadedValues = await this.loadConfig(configType, configProvider, options);
+        const mutableConfig = config as Record<string, unknown>;
 
-        for (const key in reloadedConfig) {
+        for (const key of Object.keys(reloadedValues)) {
             if (
-                !config.hasOwnProperty(key) ||
+                !Object.hasOwn(config, key) ||
                 !configMetadata.variables.some((variable) => variable.propertyKey === key)
             ) {
                 continue;
             }
 
-            config[key] = reloadedConfig[key];
+            mutableConfig[key] = reloadedValues[key];
         }
     }
 
-    private async loadConfig<T, GetValueOptions = any>(
+    private async loadConfig<T>(
         configType: Type<T>,
         configProvider: IConfigProvider,
         options?: {
-            getValue?: GetValueOptions;
+            getValue?: unknown;
         }
     ): Promise<T> {
         const variables = ConfigHandler.getConfig(configType).variables;
-        const plainConfig: { [key: string]: any } = {};
+        const plainConfig: Record<string, unknown> = {};
 
-        const undefinedVariableNames = [];
+        const undefinedVariableNames: string[] = [];
         for (const variable of variables) {
-            if (!variable.variableName) {
+            const variableName = variable.variableName;
+            if (!isNotEmpty(variableName)) {
                 continue;
             }
 
-            const value = await configProvider.getValue(variable.variableName, options?.getValue);
-            if (variable.required && (value === null || value === undefined || value === "")) {
-                undefinedVariableNames.push(variable.variableName);
+            const value = await configProvider.getValue(variableName, options?.getValue);
+            if (variable.required === true && !isNotEmpty(value)) {
+                undefinedVariableNames.push(variableName);
                 continue;
             }
 
             plainConfig[variable.propertyKey] = value;
         }
 
-        if (undefinedVariableNames.length) {
-            if (this.options.skipRequiredFieldsCheck) {
+        if (undefinedVariableNames.length > 0) {
+            if (this.options.skipRequiredFieldsCheck === true) {
                 console.log(
                     `The following variable must be defined in config '${configType.name}': ${JSON.stringify(
                         undefinedVariableNames
@@ -100,28 +102,18 @@ export class ConfigTransformerService {
 
     private getConfigMetadata(configType: Type): ConfigMetadata {
         const configMetadata = ConfigHandler.getConfig(configType);
-        if (!configMetadata) {
+        if (configMetadata.variables.length === 0 && configMetadata.provider === undefined) {
             throw new ConfigModelNotFoundError(configType);
         }
 
         return configMetadata;
     }
 
-    private async getConfigProvider(provider: string): Promise<IConfigProvider | never> {
-        const configProviderType = ConfigProviderHandler.getConfigProvider(
-            provider ?? EnvironmentConfigProvider.type
-        );
-        if (!configProviderType) {
-            throw new ConfigProviderNotRegisteredError(provider ?? EnvironmentConfigProvider.type);
-        }
+    private async getConfigProvider(provider: string): Promise<IConfigProvider> {
+        const configProviderType = ConfigProviderHandler.getConfigProvider(provider);
 
-        const configProvider = await this.moduleRef.resolve<IConfigProvider>(configProviderType, undefined, {
+        return this.moduleRef.resolve<IConfigProvider>(configProviderType, undefined, {
             strict: false
         });
-        if (!configProvider) {
-            throw new ConfigProviderNotFoundInModuleError(configProviderType);
-        }
-
-        return configProvider;
     }
 }
