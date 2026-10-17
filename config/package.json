@@ -49,5 +49,8 @@
         "typescript": "^6.0.3",
         "typescript-eslint": "^8.70.0",
         "vitest": "^5.0.0"
+    },
+    "dependencies": {
+        "@recursyve/nice-ts-utils": "^0.0.3"
     }
 }
