@@ -7,19 +7,24 @@ import { Variable } from "./decorators/variable.decorator";
 
 class VariableEnvTest {
     @Variable(false)
-    DB_HOST!: string;
+    public DB_HOST!: string;
 
     @Variable({
         variableName: "DB_NAME",
         required: false
     })
-    dbName?: string;
+    public dbName?: string;
 
     @Variable
-    DB_PORT!: string;
+    public DB_PORT!: string;
 }
 
-describe("ConfigModule", () => {
+class FeatureEnvTest {
+    @Variable(false)
+    public FEATURE_FLAG!: string;
+}
+
+describe(ConfigModule, () => {
     let moduleRef: TestingModule;
 
     beforeAll(async () => {
@@ -30,15 +35,53 @@ describe("ConfigModule", () => {
         moduleRef = await Test.createTestingModule({
             imports: [ConfigModule.forRoot(VariableEnvTest)]
         }).compile();
+
         await moduleRef.init();
     });
 
-    it("config should contains valid environment variables", async () => {
+    it("config should contains valid environment variables", () => {
+        expect.assertions(1);
+
         const config = moduleRef.get<VariableEnvTest>(ConfigUtils.getProviderToken(VariableEnvTest));
-        expect(config).toEqual({
+
+        expect(config).toMatchObject({
             DB_HOST: "127.0.0.1",
             dbName: "test",
             DB_PORT: "4200"
+        });
+    });
+
+    it("forRoot accepts an options object with configs", async () => {
+        expect.assertions(1);
+
+        const optionsModule = await Test.createTestingModule({
+            imports: [ConfigModule.forRoot({ configs: [VariableEnvTest] })]
+        }).compile();
+        await optionsModule.init();
+
+        const config = optionsModule.get<VariableEnvTest>(ConfigUtils.getProviderToken(VariableEnvTest));
+
+        expect(config).toMatchObject({
+            DB_HOST: "127.0.0.1",
+            dbName: "test",
+            DB_PORT: "4200"
+        });
+    });
+
+    describe("forFeature", () => {
+        it("registers and resolves feature config providers", async () => {
+            expect.assertions(1);
+
+            process.env["FEATURE_FLAG"] = "on";
+
+            const featureModule = await Test.createTestingModule({
+                imports: [ConfigModule.forRoot(), ConfigModule.forFeature(FeatureEnvTest)]
+            }).compile();
+            await featureModule.init();
+
+            const config = featureModule.get<FeatureEnvTest>(ConfigUtils.getProviderToken(FeatureEnvTest));
+
+            expect(config).toMatchObject({ FEATURE_FLAG: "on" });
         });
     });
 });

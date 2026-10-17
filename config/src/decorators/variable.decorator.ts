@@ -1,58 +1,57 @@
 import type { Type } from "@nestjs/common";
 
 import { ConfigHandler } from "../handlers/config.handler";
-import type { VariableConfig, VariableMetadata } from "../models/variable-metadata.model";
+import type { VariableConfig } from "../models/variable-metadata.model";
 
-export function Variable(requiredOrVariableNameOrConfig: boolean | string | VariableConfig): PropertyDecorator;
-export function Variable(target: Object, propertyKey: string): void;
-export function Variable(...args: any[]): PropertyDecorator | void {
-    if (args.length >= 2) {
-        const [target, propertyName] = args;
-
-        annotate(target.constructor, propertyName);
+export function Variable(requiredOrVariableNameOrConfig: VariableConfig | boolean | string): PropertyDecorator;
+export function Variable(target: object, propertyKey: string | symbol): void;
+export function Variable(
+    requiredOrVariableNameOrConfigOrTarget?: VariableConfig | boolean | object | string,
+    propertyKey?: string | symbol
+): PropertyDecorator | void {
+    if (propertyKey !== undefined) {
+        annotate(getClassFromDecoratorTarget(requiredOrVariableNameOrConfigOrTarget as object), String(propertyKey));
         return;
     }
 
-    return (target: Object, propertyKey: string | symbol) => {
-        const [requiredOrVariableNameOrConfig] = args;
+    const config = parseVariableConfig(requiredOrVariableNameOrConfigOrTarget);
 
-        let config: VariableConfig;
-
-        if (typeof requiredOrVariableNameOrConfig === "object") {
-            config = requiredOrVariableNameOrConfig;
-        } else if (typeof requiredOrVariableNameOrConfig === "boolean") {
-            config = {
-                required: requiredOrVariableNameOrConfig
-            };
-        } else {
-            config = {
-                variableName: requiredOrVariableNameOrConfig
-            };
-        }
-
-        annotate(target.constructor as any, propertyKey as string, config);
+    return (target, key) => {
+        annotate(getClassFromDecoratorTarget(target), String(key), config);
     };
 }
 
-function annotate(target: Type, propertyKey: string, config: VariableConfig = {}) {
-    let variable = ConfigHandler.getVariable(target, propertyKey);
-    if (!variable) {
-        variable = {
-            propertyKey
-        } as VariableMetadata;
+function getClassFromDecoratorTarget(target: object): Type {
+    return (target as { constructor: Type }).constructor;
+}
+
+function parseVariableConfig(requiredOrVariableNameOrConfig?: VariableConfig | boolean | string): VariableConfig {
+    if (requiredOrVariableNameOrConfig === undefined) {
+        return {};
     }
-    variable = {
-        ...variable,
-        ...config
+
+    if (typeof requiredOrVariableNameOrConfig === "object") {
+        return requiredOrVariableNameOrConfig;
+    }
+
+    if (typeof requiredOrVariableNameOrConfig === "boolean") {
+        return {
+            required: requiredOrVariableNameOrConfig
+        };
+    }
+
+    return {
+        variableName: requiredOrVariableNameOrConfig
     };
+}
 
-    if (!variable.variableName) {
-        variable.variableName = propertyKey;
-    }
+function annotate(target: Type, propertyKey: string, config: VariableConfig = {}): void {
+    let variable = ConfigHandler.getVariable(target, propertyKey);
+    variable ??= { propertyKey };
+    variable = { ...variable, ...config };
 
-    if (typeof variable.required === "undefined") {
-        variable.required = true;
-    }
+    variable.variableName ??= propertyKey;
+    variable.required ??= true;
 
     ConfigHandler.saveVariable(target, variable);
 }

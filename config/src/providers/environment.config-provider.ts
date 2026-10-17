@@ -1,14 +1,14 @@
 import { Injectable } from "@nestjs/common";
 
-import { ConfigProvider } from "../decorators";
+import { ConfigProvider } from "../decorators/config-provider.decorator";
 import type { IConfigProvider } from "./config.provider";
 
 @Injectable()
 @ConfigProvider(EnvironmentConfigProvider.type)
 export class EnvironmentConfigProvider implements IConfigProvider {
-    static type = "environment" as const;
+    public static readonly type = "environment" as const;
 
-    public getValue(key: string): Promise<string | null> {
-        return Promise.resolve(process.env[key] as string);
+    public async getValue(key: string): Promise<string | null | undefined> {
+        return Promise.resolve(process.env[key]);
     }
 }
