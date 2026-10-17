@@ -14,19 +14,19 @@ type CreateAttributes = InferCreationAttributes<Accounts> & {
 export class Accounts extends SequelizeEntities<Attributes, CreateAttributes> {
     @AllowNull(false)
     @Column
-    email?: CreationOptional<string>;
+    public email?: CreationOptional<string>;
 
     @AllowNull(false)
     @Column
-    firstName?: string;
+    public firstName?: string;
 
     @AllowNull(false)
     @Column
-    lastName?: string;
+    public lastName?: string;
 
     @Column
-    phone?: string;
+    public phone?: string;
 
     @HasMany(() => Accounts)
-    accounts?: Accounts[];
+    public accounts?: Accounts[];
 }

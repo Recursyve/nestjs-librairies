@@ -1,24 +1,27 @@
-import type { CountOptions, FindOptions, Identifier } from "sequelize";
+import type { CountOptions, FindOptions, Identifier, ModelStatic } from "sequelize";
 import type { Attributes } from "sequelize/types/model";
 
 import type { SequelizeEntities } from "../models/sequelize-entities.model";
 
-export abstract class SequelizeReadRepository<T extends SequelizeEntities> {
-    protected abstract repository: typeof SequelizeEntities<any, any>;
+export abstract class SequelizeReadRepository<T extends SequelizeEntities<object, object>> {
+    protected abstract repository: ModelStatic<T>;
 
-    public findByPk(identifier: Identifier, options?: Omit<FindOptions<Attributes<T>>, "where">): Promise<T | null> {
-        return this.repository.findByPk(identifier, options) as unknown as Promise<T | null>;
+    public async findByPk(
+        identifier: Identifier,
+        options?: Omit<FindOptions<Attributes<T>>, "where">
+    ): Promise<T | null> {
+        return this.repository.findByPk(identifier, options);
     }
 
-    public findOne(options?: FindOptions<Attributes<T>>): Promise<T | null> {
-        return this.repository.findOne(options) as unknown as Promise<T | null>;
+    public async findOne(options?: FindOptions<Attributes<T>>): Promise<T | null> {
+        return this.repository.findOne(options);
     }
 
-    public findAll(options?: FindOptions<Attributes<T>>): Promise<T[]> {
-        return this.repository.findAll(options) as unknown as Promise<T[]>;
+    public async findAll(options?: FindOptions<Attributes<T>>): Promise<T[]> {
+        return this.repository.findAll(options);
     }
 
-    public count(options?: Omit<CountOptions<Attributes<T>>, "group">): Promise<number> {
+    public async count(options?: Omit<CountOptions<Attributes<T>>, "group">): Promise<number> {
         return this.repository.count(options);
     }
 }
