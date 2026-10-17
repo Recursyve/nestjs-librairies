@@ -1,9 +1,9 @@
 import { Transaction } from "sequelize";
 
-type AfterTransactionRollbackCallback = (transaction: Transaction) => void | Promise<void>;
+type AfterTransactionRollbackCallback = (transaction: Transaction) => Promise<void> | void;
 
 export class NiceTransaction extends Transaction {
-    private readonly _afterRollbackHooks: Set<AfterTransactionRollbackCallback> = new Set();
+    private readonly _afterRollbackHooks = new Set<AfterTransactionRollbackCallback>();
 
     /** Pretty much a copy and paste of the afterCommit of the original Transaction of Sequelize */
     public afterRollback(fn: AfterTransactionRollbackCallback): this {

@@ -15,7 +15,7 @@ export class AccountsService extends SequelizeReadRepository<Accounts> {
         values: CreationAttributes<Accounts>,
         options?: CreateOptions<Attributes<Accounts>>
     ): Promise<Accounts> {
-        return await this.repository.create(values, options);
+        return this.repository.create(values, options);
     }
 
     public async test(id: number): Promise<Accounts> {

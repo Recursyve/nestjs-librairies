@@ -12,7 +12,7 @@ import { SequelizeTransactionService } from "./transactions/sequelize-transactio
 /** @deprecated: Use SequelizeUtilsModule instead */
 @Module({})
 export class SequelizeUtilsHooksModule implements OnModuleInit {
-    constructor(private sequelize: Sequelize) {}
+    constructor(private readonly sequelize: Sequelize) {}
 
     public onModuleInit(): void {
         this.sequelize.addHook("afterCreate", "transform-date-only", AfterCreateFormatDateOnlyHook);
@@ -26,7 +26,7 @@ export class SequelizeUtilsHooksModule implements OnModuleInit {
     exports: [SequelizeTransactionService]
 })
 export class SequelizeUtilsModule implements OnModuleInit {
-    constructor(private sequelize: Sequelize) {}
+    constructor(private readonly sequelize: Sequelize) {}
 
     public onModuleInit(): void {
         this.sequelize.addHook("afterBulkCreate", "transform-date-only", AfterBulkCreateFormatDateOnlyHook);

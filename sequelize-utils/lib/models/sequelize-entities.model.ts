@@ -10,8 +10,8 @@ export interface SequelizeEntitiesAttributes {
 }
 
 export class SequelizeEntities<
-    TModelAttributes extends {} = any,
-    TCreationAttributes extends {} = TModelAttributes
+    TModelAttributes extends object = SequelizeEntitiesAttributes,
+    TCreationAttributes extends object = Partial<TModelAttributes>
 > extends Model<TModelAttributes, TCreationAttributes> {
     @AutoIncrement
     @PrimaryKey
