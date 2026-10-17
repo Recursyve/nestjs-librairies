@@ -135,7 +135,7 @@ export default defineConfig(
                     pattern: ".*\\.spec\\.ts$"
                 }
             ],
-            "vitest/no-hooks": ["error", { allow: ["beforeEach", "afterEach"] }]
+            "vitest/no-hooks": ["error", { allow: ["beforeAll", "afterAll", "beforeEach", "afterEach"] }]
         }
     }
 );

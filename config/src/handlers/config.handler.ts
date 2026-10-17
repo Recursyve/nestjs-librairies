@@ -6,40 +6,46 @@ import { CONFIG } from "../constant";
 import type { ConfigMetadata } from "../models/config-metadata.model";
 import type { VariableMetadata } from "../models/variable-metadata.model";
 
-export class ConfigHandler {
-    public static getVariable(target: Type, propertyKey: string): VariableMetadata | null {
-        const config = ConfigHandler.getConfig(target);
-        if (!config?.variables) {
-            return null;
-        }
+function readStoredConfig(target: Type): ConfigMetadata | undefined {
+    if (!Reflect.hasMetadata(CONFIG, target)) {
+        return undefined;
+    }
 
+    return Reflect.getMetadata(CONFIG, target) as ConfigMetadata;
+}
+
+export namespace ConfigHandler {
+    export function getVariable(target: Type, propertyKey: string): VariableMetadata | null {
+        const config = getConfig(target);
         return config.variables.find((variable) => variable.propertyKey === propertyKey) ?? null;
     }
 
-    public static saveVariable(target: Type, variableConfig: VariableMetadata): void {
-        const config = ConfigHandler.getConfig(target);
+    export function saveVariable(target: Type, variableConfig: VariableMetadata): void {
+        const config = getConfig(target);
 
         const variableIndex = config.variables.findIndex(
             (variable) => variable.propertyKey === variableConfig.propertyKey
         );
+
         if (variableIndex >= 0) {
             config.variables[variableIndex] = variableConfig;
         } else {
             config.variables.push(variableConfig);
         }
 
-        ConfigHandler.saveConfig(target, config);
+        saveConfig(target, config);
     }
 
-    public static getConfig(target: Type): ConfigMetadata {
-        const config: ConfigMetadata = Reflect.getMetadata(CONFIG, target) ?? { variables: [] };
+    export function getConfig(target: Type): ConfigMetadata {
+        const config = readStoredConfig(target) ?? { variables: [] };
+
         return {
             ...config,
-            variables: config.variables ? [...config.variables] : config.variables
+            variables: [...config.variables]
         };
     }
 
-    public static saveConfig(target: Type, config: ConfigMetadata): void {
+    export function saveConfig(target: Type, config: ConfigMetadata): void {
         Reflect.defineMetadata(CONFIG, config, target);
     }
 }
