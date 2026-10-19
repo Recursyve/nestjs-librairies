@@ -1,7 +1,7 @@
-import { Type } from "@nestjs/common";
+import type { Type } from "@nestjs/common";
 
-export class ConfigUtils {
-    public static getProviderToken(config: Type): string {
+export namespace ConfigUtils {
+    export function getProviderToken(config: Type): string {
         return `${config.name}Service`;
     }
 }
