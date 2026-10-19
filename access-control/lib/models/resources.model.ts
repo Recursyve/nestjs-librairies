@@ -1,4 +1,4 @@
-import { AccessRules } from "./access-rules.model";
+import type { AccessRules } from "./access-rules.model";
 
 export type ResourceId = number | string;
 
@@ -16,7 +16,7 @@ export interface PolicyResourcesCondition<WhereOptions> {
 export class PolicyResources {
     public wildcard?: AccessRules;
     public resources?: AccessControlResources[];
-    public condition?: PolicyResourcesCondition<any>;
+    public condition?: PolicyResourcesCondition<unknown>;
 
     public get type(): PolicyResourceTypes {
         if (this.wildcard) {
@@ -36,7 +36,7 @@ export class PolicyResources {
     }: {
         wildcard?: AccessRules;
         resources?: AccessControlResources[];
-        condition?: PolicyResourcesCondition<any>;
+        condition?: PolicyResourcesCondition<unknown>;
     }) {
         this.wildcard = wildcard;
         this.resources = resources;
@@ -51,7 +51,7 @@ export class PolicyResources {
         return new PolicyResources({ resources });
     }
 
-    public static condition(where: any, rules: AccessRules): PolicyResources {
+    public static condition(where: unknown, rules: AccessRules): PolicyResources {
         return new PolicyResources({ condition: { where, rules } });
     }
 }
@@ -64,9 +64,9 @@ export interface AccessControlResources {
 export class Resources {
     public all?: boolean;
     public ids?: ResourceId[];
-    public where?: any;
+    public where?: unknown;
 
-    private constructor({ all, ids, where }: { all?: boolean; ids?: ResourceId[]; where?: any }) {
+    private constructor({ all, ids, where }: { all?: boolean; ids?: ResourceId[]; where?: unknown }) {
         this.all = all;
         this.ids = ids;
         this.where = where;
@@ -80,7 +80,7 @@ export class Resources {
         return new Resources({ ids });
     }
 
-    public static fromCondition(where: any): Resources {
+    public static fromCondition(where: unknown): Resources {
         return new Resources({ where });
     }
 }

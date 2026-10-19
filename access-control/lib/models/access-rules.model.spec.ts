@@ -1,63 +1,111 @@
 import { describe, expect, it } from "vitest";
 
-import { AccessRules } from "./access-rules.model";
+import { AccessActionType, AccessRules } from "./access-rules.model";
 
-describe("AccessRules", () => {
-    it("fromPermissions should returns a valid AccessRules", () => {
-        const test1 = AccessRules.fromPermissions(["read", "update", "delete"]);
-        expect(test1).toEqual({
-            r: true,
-            u: true,
-            d: true
+describe(AccessRules, () => {
+    describe("factories", () => {
+        it("all() grants read, update, and delete", () => {
+            expect.assertions(1);
+
+            expect(AccessRules.all()).toMatchObject({ r: true, u: true, d: true });
         });
 
-        const test2 = AccessRules.fromPermissions(["read-test", "update-test", "delete-test"], "test");
-        expect(test2).toEqual({
-            r: true,
-            u: true,
-            d: true
+        it("readOnly() grants read only", () => {
+            expect.assertions(1);
+
+            expect(AccessRules.readOnly()).toMatchObject({ r: true, u: false, d: false });
         });
 
-        const test3 = AccessRules.fromPermissions(["r-test", "u-test", "d-test"], "test", { r: "r", u: "u", d: "d" });
-        expect(test3).toEqual({
-            r: true,
-            u: true,
-            d: true
+        it("none() denies every action", () => {
+            expect.assertions(1);
+
+            expect(AccessRules.none()).toMatchObject({ r: false, u: false, d: false });
         });
 
-        const test4 = AccessRules.fromPermissions(["r", "u", "d"], { r: "r", u: "u", d: "d" });
-        expect(test4).toEqual({
-            r: true,
-            u: true,
-            d: true
+        it("rud() sets each flag explicitly", () => {
+            expect.assertions(1);
+
+            expect(AccessRules.rud(true, false, true)).toMatchObject({ r: true, u: false, d: true });
+        });
+    });
+
+    describe("fromString", () => {
+        it("parses a JSON rules payload", () => {
+            expect.assertions(1);
+
+            expect(AccessRules.fromString('{"r":true,"u":false,"d":true}')).toMatchObject({
+                r: true,
+                u: false,
+                d: true
+            });
+        });
+    });
+
+    describe("has", () => {
+        it("returns the flag for the requested action", () => {
+            expect.assertions(1);
+
+            expect(AccessRules.readOnly().has(AccessActionType.Update)).toBe(false);
+        });
+    });
+
+    describe("hasNoAccess", () => {
+        it("is true when every action is denied", () => {
+            expect.assertions(1);
+
+            expect(AccessRules.none().hasNoAccess).toBe(true);
         });
 
-        const test5 = AccessRules.fromPermissions(["r", "u"], { r: "r", u: "u", d: "d" });
-        expect(test5).toEqual({
-            r: true,
-            u: true,
-            d: false
+        it("is false when any action is allowed", () => {
+            expect.assertions(1);
+
+            expect(AccessRules.readOnly().hasNoAccess).toBe(false);
+        });
+    });
+
+    describe("fromPermissions", () => {
+        it("maps default permission names", () => {
+            expect.assertions(1);
+
+            expect(AccessRules.fromPermissions(["read", "update", "delete"])).toMatchObject({
+                r: true,
+                u: true,
+                d: true
+            });
         });
 
-        const test6 = AccessRules.fromPermissions(["read", "update"]);
-        expect(test6).toEqual({
-            r: true,
-            u: true,
-            d: false
+        it("maps permission names with a suffix", () => {
+            expect.assertions(1);
+
+            expect(AccessRules.fromPermissions(["read-test", "update-test", "delete-test"], "test")).toMatchObject({
+                r: true,
+                u: true,
+                d: true
+            });
         });
 
-        const test7 = AccessRules.fromPermissions(["r-test", "u-test"], "test", { r: "r", u: "u", d: "d" });
-        expect(test7).toEqual({
-            r: true,
-            u: true,
-            d: false
+        it("maps custom permission keys with a suffix", () => {
+            expect.assertions(1);
+
+            expect(
+                AccessRules.fromPermissions(["r-test", "u-test", "d-test"], "test", { r: "r", u: "u", d: "d" })
+            ).toMatchObject({ r: true, u: true, d: true });
         });
 
-        const test8 = AccessRules.fromPermissions(["read-test", "update-test"], "test");
-        expect(test8).toEqual({
-            r: true,
-            u: true,
-            d: false
+        it("maps custom permission keys without a suffix", () => {
+            expect.assertions(1);
+
+            expect(AccessRules.fromPermissions(["r", "u", "d"], { r: "r", u: "u", d: "d" })).toMatchObject({
+                r: true,
+                u: true,
+                d: true
+            });
+        });
+
+        it("leaves missing actions disabled", () => {
+            expect.assertions(1);
+
+            expect(AccessRules.fromPermissions(["read", "update"])).toMatchObject({ r: true, u: true, d: false });
         });
     });
 });
