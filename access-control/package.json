@@ -35,6 +35,9 @@
         "@nestjs/cqrs": ">=12.0.0",
         "@recursyve/nestjs-redis": ">=12.0.0"
     },
+    "dependencies": {
+        "@recursyve/nice-ts-utils": "^0.0.3"
+    },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@nestjs/cli": "^12.0.11",
