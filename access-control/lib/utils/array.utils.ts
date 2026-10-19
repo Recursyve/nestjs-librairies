@@ -1,6 +1,13 @@
-export function arrayUnique<T>(array: T[], keySelector: (t: T) => any = (t) => t): T[] {
-    return array.filter((item1, index) => {
-        const item1Key = keySelector(item1);
-        return array.findIndex((item2) => keySelector(item2) === item1Key) === index;
+export function arrayUnique<T>(array: T[], keySelector: (item: T) => unknown = (item) => item): T[] {
+    const seen = new Set<unknown>();
+
+    return array.filter((item) => {
+        const key = keySelector(item);
+        if (seen.has(key)) {
+            return false;
+        }
+
+        seen.add(key);
+        return true;
     });
 }

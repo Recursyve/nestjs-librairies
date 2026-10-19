@@ -1,13 +1,15 @@
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { GetResourcesCommand } from "../commands";
-import { PolicyResources } from "../models";
-import { AccessPoliciesService } from "../services";
+import type { IQueryHandler } from "@nestjs/cqrs";
+import { QueryHandler } from "@nestjs/cqrs";
 
-@CommandHandler(GetResourcesCommand)
-export class AccessControlGetResourcesHandler implements ICommandHandler<GetResourcesCommand> {
-    constructor(private accessPolicyService: AccessPoliciesService) {}
+import { PolicyResources } from "../models/resources.model";
+import { GetResourcesQuery } from "../queries/get-resources.query";
+import { AccessPoliciesService } from "../services/access-policies.service";
 
-    public async execute(command: GetResourcesCommand): Promise<PolicyResources> {
-        return await this.accessPolicyService.execute(command.resourceName, command.user);
+@QueryHandler(GetResourcesQuery)
+export class AccessControlGetResourcesHandler implements IQueryHandler<GetResourcesQuery> {
+    constructor(private readonly accessPolicyService: AccessPoliciesService) {}
+
+    public async execute(query: GetResourcesQuery): Promise<PolicyResources> {
+        return this.accessPolicyService.execute(query.resourceName, query.user);
     }
 }

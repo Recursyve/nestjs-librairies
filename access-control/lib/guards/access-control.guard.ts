@@ -1,19 +1,25 @@
-import { CanActivate, ExecutionContext, Injectable, OnModuleInit, Type } from "@nestjs/common";
+import type { CanActivate, ExecutionContext, OnModuleInit, Type } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ModuleRef, Reflector } from "@nestjs/core";
+import { isDefined } from "@recursyve/nice-ts-utils";
+
+import type { AccessControlModel } from "../adapters/database.adapter";
 import {
     ACCESS_CONTROL_RESOURCE,
     ACCESS_CONTROL_ROUTES,
     FALLBACK_ACCESS_CONTROL_GUARDS,
     NEEDS_ACCESS_ACTIONS
 } from "../decorators/constant";
-import { UserDeserializer } from "../deserializers";
-import { AccessAction } from "../models";
-import { AccessControlResourceConfig } from "../models/access-control-resource.model";
-import { AccessControlService, DatabaseAdaptersRegistry } from "../services";
+import { UserDeserializer } from "../deserializers/user.deserializer";
+import type { AccessControlResourceConfig } from "../models/access-control-resource.model";
+import type { AccessAction } from "../models/access-rules.model";
+import { AccessControlService } from "../services/access-control.service";
+import { DatabaseAdaptersRegistry } from "../services/database-adapters.registry";
+import type { AccessControlHttpRequest } from "../types/access-control-http.types";
 
 @Injectable()
 export class AccessControlGuard implements CanActivate, OnModuleInit {
-    private resources!: { [resource: string]: unknown };
+    private resources!: Record<string, AccessControlModel>;
     private routes!: string[];
 
     constructor(
@@ -29,32 +35,40 @@ export class AccessControlGuard implements CanActivate, OnModuleInit {
     }
 
     public async canActivate(context: ExecutionContext): Promise<boolean> {
-        return (await this.validateAccessControl(context))
-            || await this.fallbackAccessControlGuards(context);
+        return (await this.validateAccessControl(context)) || (await this.fallbackAccessControlGuards(context));
     }
 
     private async validateAccessControl(context: ExecutionContext): Promise<boolean> {
-        const needsAccessActions = this.reflector.get<AccessAction[]>(NEEDS_ACCESS_ACTIONS, context.getHandler());
-        if (!needsAccessActions) {
+        const needsAccessActions = this.reflector.get<AccessAction[] | undefined>(
+            NEEDS_ACCESS_ACTIONS,
+            context.getHandler()
+        );
+        if (!isDefined(needsAccessActions)) {
             return true;
         }
 
-        const request = context.switchToHttp().getRequest();
+        const request = context.switchToHttp().getRequest<AccessControlHttpRequest>();
         const user = await this.userDeserializer.deserializeUser(request);
-        if (!user) {
+        if (!isDefined(user)) {
             return false;
         }
 
-        const controllerResource = this.reflector.get<AccessControlResourceConfig>(ACCESS_CONTROL_RESOURCE, context.getClass());
-        const methodResource = this.reflector.get<AccessControlResourceConfig>(ACCESS_CONTROL_RESOURCE, context.getHandler());
-        if (!controllerResource && !methodResource) {
+        const controllerResource = this.reflector.get<AccessControlResourceConfig | undefined>(
+            ACCESS_CONTROL_RESOURCE,
+            context.getClass()
+        );
+        const methodResource = this.reflector.get<AccessControlResourceConfig | undefined>(
+            ACCESS_CONTROL_RESOURCE,
+            context.getHandler()
+        );
+        if (!isDefined(controllerResource) && !isDefined(methodResource)) {
             request.resources = this.getModels(request.route.path, needsAccessActions);
         }
 
-        // Returns the [resource, resourceType]
-        const getResource = (action: AccessAction, index: number): [any, string?] | null => {
-            if (!controllerResource && !methodResource) {
-                return [request.resources[index]];
+        const getResource = (action: AccessAction, index: number): [AccessControlModel, string | undefined] | null => {
+            if (!isDefined(controllerResource) && !isDefined(methodResource)) {
+                const resource = request.resources?.[index];
+                return isDefined(resource) ? [resource, undefined] : null;
             }
 
             if (controllerResource?.paramId === action.resourceIdParameterName) {
@@ -68,27 +82,25 @@ export class AccessControlGuard implements CanActivate, OnModuleInit {
             return null;
         };
 
-        const data: [AccessAction, any][] = needsAccessActions.map<[AccessAction, any]>((x, i) => [
-            x,
-            getResource(x, i)
-        ]);
+        const data = needsAccessActions.map((action, index) => ({
+            action,
+            resourceInfo: getResource(action, index)
+        }));
 
-        for (const [accessAction, [resource, resourceType]] of data) {
-            if (!resource) {
+        for (const { action, resourceInfo } of data) {
+            if (!isDefined(resourceInfo)) {
                 return false;
             }
 
+            const [resource, resourceType] = resourceInfo;
             const resourceAccessControlService = this.accessControlService.forModel(resource, resourceType);
-            const accessRulesForUser = await resourceAccessControlService.getAccessRules(
-                user,
-                request.params[accessAction.resourceIdParameterName]
-            );
-
-            if (!accessRulesForUser) {
+            const resourceId = request.params[action.resourceIdParameterName];
+            if (!isDefined(resourceId)) {
                 return false;
             }
 
-            if (!accessRulesForUser[accessAction.type]) {
+            const accessRulesForUser = await resourceAccessControlService.getAccessRules(user, resourceId);
+            if (!accessRulesForUser[action.type]) {
                 return false;
             }
         }
@@ -97,17 +109,20 @@ export class AccessControlGuard implements CanActivate, OnModuleInit {
     }
 
     private async fallbackAccessControlGuards(context: ExecutionContext): Promise<boolean> {
-        const guards = this.reflector.get<Type<CanActivate>[]>(FALLBACK_ACCESS_CONTROL_GUARDS, context.getHandler()) ?? [];
-        const shouldActivate = await Promise.all(
-            guards.map(async guard =>
-                (await this.moduleRef.get<CanActivate>(guard, { strict: false }))
-                    .canActivate(context))
+        const guards = this.reflector.get<Type<CanActivate>[] | undefined>(
+            FALLBACK_ACCESS_CONTROL_GUARDS,
+            context.getHandler()
         );
-        return !!shouldActivate.length && shouldActivate.every(activate => activate);
+        const shouldActivate = await Promise.all(
+            (guards ?? []).map(async (guard) =>
+                this.moduleRef.get<CanActivate>(guard, { strict: false }).canActivate(context)
+            )
+        );
+        return shouldActivate.length > 0 && shouldActivate.every((activate) => activate === true);
     }
 
-    public getModels(path: string, actions: AccessAction[]): any[] {
-        const model = [];
+    public getModels(path: string, actions: AccessAction[]): AccessControlModel[] {
+        const model: AccessControlModel[] = [];
         for (const action of actions) {
             const param = `/:${action.resourceIdParameterName}`;
             const paramIndex = path.indexOf(param);
@@ -120,7 +135,12 @@ export class AccessControlGuard implements CanActivate, OnModuleInit {
                  * Ex: /test/coord/:id -> Resource test/coord is accepted, but not resource test or coord
                  */
                 if (index === 1 && index + key.length === paramIndex) {
-                    model.push(this.resources[key]);
+                    const matchedModel = this.resources[key];
+                    if (!isDefined(matchedModel)) {
+                        continue;
+                    }
+
+                    model.push(matchedModel);
                     path = path.slice(paramIndex + param.length);
                 }
             }
@@ -133,7 +153,7 @@ export class AccessControlGuard implements CanActivate, OnModuleInit {
         const models = this.databaseAdaptersRegistry.getModels();
         for (const model of models) {
             const routes = this.reflectModelRoutes(model);
-            if (!routes) {
+            if (!isDefined(routes)) {
                 continue;
             }
 
@@ -147,7 +167,7 @@ export class AccessControlGuard implements CanActivate, OnModuleInit {
         this.routes = Object.keys(this.resources);
     }
 
-    private reflectModelRoutes(policy: any): string[] {
-        return Reflect.getMetadata(ACCESS_CONTROL_ROUTES, policy);
+    private reflectModelRoutes(policy: AccessControlModel): string[] | undefined {
+        return Reflect.getMetadata(ACCESS_CONTROL_ROUTES, policy) as string[] | undefined;
     }
 }

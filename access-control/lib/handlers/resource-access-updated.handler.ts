@@ -1,26 +1,30 @@
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { ResourceAccessUpdatedCommand } from "../commands";
+import type { ICommandHandler } from "@nestjs/cqrs";
+import { CommandHandler } from "@nestjs/cqrs";
+import { isDefined, isNotEmpty } from "@recursyve/nice-ts-utils";
+
+import { ResourceAccessUpdatedCommand } from "../commands/resource-access-updated.command";
+import type { UserResources } from "../models/user-resources.model";
 import { ResourceAccessUpdatedPoliciesService } from "../services/resource-access-updated-policies.service";
-import { ResourceAccessService } from "../services";
-import { UserResources } from "../models";
+import { ResourceAccessService } from "../services/resource-access.service";
 
 @CommandHandler(ResourceAccessUpdatedCommand)
 export class AccessControlResourceAccessUpdatedHandler implements ICommandHandler<ResourceAccessUpdatedCommand> {
     constructor(
-        private resourceAccessUpdatedPolicyService: ResourceAccessUpdatedPoliciesService,
-        private resourceAccessService: ResourceAccessService
+        private readonly resourceAccessUpdatedPolicyService: ResourceAccessUpdatedPoliciesService,
+        private readonly resourceAccessService: ResourceAccessService
     ) {}
 
     public async execute(command: ResourceAccessUpdatedCommand): Promise<void> {
-        if (!command.userResources.length) {
+        if (command.userResources.length === 0) {
             return;
         }
 
         const userResourcesByResourceMap = new Map<string, UserResources[]>();
         for (const userResource of command.userResources) {
             const key = `${userResource.resourceName}:${userResource.resourceId}`;
-            if (userResourcesByResourceMap.has(key)) {
-                userResourcesByResourceMap.get(key)?.push(userResource);
+            const existing = userResourcesByResourceMap.get(key);
+            if (isDefined(existing)) {
+                existing.push(userResource);
             } else {
                 userResourcesByResourceMap.set(key, [userResource]);
             }
@@ -28,9 +32,9 @@ export class AccessControlResourceAccessUpdatedHandler implements ICommandHandle
 
         const userResourcesByResource = [...userResourcesByResourceMap.values()];
         const nestedUserResources = await Promise.all(
-            userResourcesByResource.map((userResources) => {
+            userResourcesByResource.map(async (userResources) => {
                 const firstUserResource = userResources[0];
-                if (!firstUserResource.resourceName || !firstUserResource.resourceId) {
+                if (!isDefined(firstUserResource?.resourceId) || !isNotEmpty(firstUserResource.resourceName)) {
                     return [];
                 }
 
@@ -38,12 +42,12 @@ export class AccessControlResourceAccessUpdatedHandler implements ICommandHandle
                     firstUserResource.resourceName,
                     firstUserResource.resourceId,
                     userResources
-                )
+                );
             })
         );
         const flattenedUserResources: UserResources[] = [];
         for (const [index, userResources] of nestedUserResources.entries()) {
-            const sourceResourceName = userResourcesByResource[index][0].resourceName;
+            const sourceResourceName = userResourcesByResource[index]?.[0]?.resourceName;
 
             for (const userResource of userResources) {
                 if (userResource.resourceName === sourceResourceName) {
@@ -54,7 +58,7 @@ export class AccessControlResourceAccessUpdatedHandler implements ICommandHandle
             }
         }
 
-        if (!flattenedUserResources?.length) {
+        if (flattenedUserResources.length === 0) {
             return;
         }
 

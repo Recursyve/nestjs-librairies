@@ -1,19 +1,21 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { QueryBus } from "@nestjs/cqrs";
 import { catchError, finalize, from, map, Observable, of } from "rxjs";
-import { PolicyResourceTypes, Resources, Users } from "../models";
-import { GetResourcesCommand } from "../commands";
-import { CommandBus } from "@nestjs/cqrs";
+
+import { PolicyResourceTypes, Resources } from "../models/resources.model";
+import type { Users } from "../models/users.model";
+import { GetResourcesQuery } from "../queries/get-resources.query";
 import { ResourceAccessService } from "./resource-access.service";
 
 @Injectable()
 export class AccessControlResourceLoaderService {
-    private logger = new Logger(AccessControlResourceLoaderService.name);
+    private readonly logger = new Logger(AccessControlResourceLoaderService.name);
 
-    private fetchingResources = new Map<string, Observable<Resources | null>>();
+    private readonly fetchingResources = new Map<string, Observable<Resources | null>>();
 
     constructor(
-        private commandBus: CommandBus,
-        private resourceAccessService: ResourceAccessService
+        private readonly queryBus: QueryBus,
+        private readonly resourceAccessService: ResourceAccessService
     ) {}
 
     public loadResources(user: Users, resourceName: string): Observable<Resources> {
@@ -23,8 +25,9 @@ export class AccessControlResourceLoaderService {
         }
 
         const resources$ = from(this.fetchResources(user, resourceName)).pipe(
-            map((res) => res === null ? Resources.fromIds([]) : res),
+            map((res) => res ?? Resources.fromIds([]))
         );
+
         this.fetchingResources.set(fetchKey, resources$);
 
         return resources$.pipe(
@@ -32,26 +35,33 @@ export class AccessControlResourceLoaderService {
                 this.logger.error(`Error while loading resources for ${resourceName}`, error);
                 return of(Resources.fromIds([]));
             }),
-            map((res) => res === null ? Resources.fromIds([]) : res),
             finalize(() => this.fetchingResources.delete(fetchKey))
         );
     }
 
     private async fetchResources(user: Users, resourceName: string): Promise<Resources | null> {
-        const policyResources = await this.commandBus.execute(new GetResourcesCommand(resourceName, user));
+        const policyResources = await this.queryBus.execute(new GetResourcesQuery(resourceName, user));
 
         await this.resourceAccessService.setUserAccessRules(user, resourceName, policyResources);
-        if (policyResources.type === PolicyResourceTypes.Resources) {
-            return Resources.fromIds(policyResources.resources.filter((x: any) => x.rules.r).map((x: any) => x.resourceId));
-        }
-        if (policyResources.type === PolicyResourceTypes.Wildcard) {
-            return Resources.all();
-        }
-        if (policyResources.type === PolicyResourceTypes.Condition) {
-            return Resources.fromCondition(policyResources.condition.where);
-        }
 
-        return null;
+        switch (policyResources.type) {
+            case PolicyResourceTypes.Condition: {
+                const condition = policyResources.condition;
+                if (!condition) {
+                    return null;
+                }
+                return Resources.fromCondition(condition.where);
+            }
+
+            case PolicyResourceTypes.Resources: {
+                const resources = policyResources.resources ?? [];
+                return Resources.fromIds(resources.filter((x) => x.rules.r).map((x) => x.resourceId));
+            }
+
+            case PolicyResourceTypes.Wildcard: {
+                return Resources.all();
+            }
+        }
     }
 
     private generateFetchKey(user: Users, resourceName: string): string {

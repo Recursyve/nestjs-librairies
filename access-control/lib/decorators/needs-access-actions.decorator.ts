@@ -1,20 +1,26 @@
+import type { CustomDecorator } from "@nestjs/common";
 import { SetMetadata } from "@nestjs/common";
-import { AccessAction, AccessActionType, accessActionTypeValues } from "../models";
+
+import type { AccessAction, AccessActionType } from "../models/access-rules.model";
+import { accessActionTypeValues } from "../models/access-rules.model";
 import { NEEDS_ACCESS_ACTIONS } from "./constant";
+
+function isAccessAction(value: AccessAction | AccessActionType): value is AccessAction {
+    return typeof value === "object" && "type" in value && "resourceIdParameterName" in value;
+}
 
 // AccessControl for a handler of a controller. You can either pass the type of access, in which case the parameter name
 // for the resource id used will default to ":id". Or you can pass and AccessAction in which you define the type and the
 // parameter name for the resource id.
-export const NeedsAccessActions = (...accessActions: (AccessActionType | AccessAction)[]) => {
+export const NeedsAccessActions = (...accessActions: (AccessAction | AccessActionType)[]): CustomDecorator => {
     const accessActionAsObjects: AccessAction[] = [];
 
-    // Convert enums to interface with default values.
     for (const accessAction of accessActions) {
-        if ((accessAction as AccessAction)["type"] !== null && (accessAction as AccessAction)["type"] !== undefined) {
-            accessActionAsObjects.push(accessAction as AccessAction);
-        } else if (accessActionTypeValues.includes(accessAction as AccessActionType)) {
+        if (isAccessAction(accessAction)) {
+            accessActionAsObjects.push(accessAction);
+        } else if (accessActionTypeValues.includes(accessAction)) {
             accessActionAsObjects.push({
-                type: accessAction as AccessActionType,
+                type: accessAction,
                 resourceIdParameterName: "id"
             });
         } else {

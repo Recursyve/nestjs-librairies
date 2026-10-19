@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { UserResources } from "../models";
+import { isDefined } from "@recursyve/nice-ts-utils";
+
+import type { UserResources } from "../models/user-resources.model";
 
 @Injectable()
 export abstract class ResourceAccessUpdatedPolicy<T> {
@@ -8,12 +10,12 @@ export abstract class ResourceAccessUpdatedPolicy<T> {
     public targetResourceName!: string;
 
     public get name(): string {
-        return (this as any).constructor.name;
+        return this.constructor.name;
     }
 
     public async handle(resourceId: T, accesses: UserResources[]): Promise<UserResources[]> {
         const policies = await this.getPolicies(resourceId, accesses);
-        const filteredPolicies = policies.filter((policy) => policy);
+        const filteredPolicies = policies.filter(isDefined);
         for (const policy of filteredPolicies) {
             policy.resourceName = this.targetResourceName;
         }
@@ -21,7 +23,8 @@ export abstract class ResourceAccessUpdatedPolicy<T> {
         return filteredPolicies;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     protected async getPolicies(resourceId: T, accesses: UserResources[]): Promise<UserResources[]> {
-        return [];
+        return Promise.resolve([]);
     }
 }

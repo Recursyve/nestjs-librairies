@@ -1,3 +1,5 @@
+import type { AccessControlModel } from "../adapters/database.adapter";
+
 export interface AccessControlModelsFactory {
-    getModels(): Promise<any[]> | any[];
+    getModels(): AccessControlModel[] | Promise<AccessControlModel[]>;
 }
