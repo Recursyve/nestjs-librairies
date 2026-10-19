@@ -1,17 +1,14 @@
-import { BulkCreateOptions, CreateOptions, Model } from "sequelize";
-import { HookReturn } from "sequelize/types/hooks";
+import type { Model } from "sequelize";
+import type { HookReturn } from "sequelize/types/hooks";
+
 import { SequelizeUtils } from "../utils/sequelize.utils";
 
-export function AfterBulkCreateFormatDateOnlyHook<M extends Model>(instances: M[], options: BulkCreateOptions): HookReturn {
+export function AfterBulkCreateFormatDateOnlyHook(instances: Model[]): HookReturn {
     for (const instance of instances) {
-        AfterCreateFormatDateOnlyHook(instance, options);
+        void AfterCreateFormatDateOnlyHook(instance);
     }
 }
 
-export function AfterCreateFormatDateOnlyHook<M extends Model>(instance: M, options: CreateOptions): HookReturn {
-    if (!instance) {
-        return;
-    }
-
+export function AfterCreateFormatDateOnlyHook(instance: Model): HookReturn {
     SequelizeUtils.formatInstanceDateOnly(instance);
 }

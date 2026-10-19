@@ -1,12 +1,9 @@
-import { FindOptions, Model } from "sequelize";
-import { HookReturn } from "sequelize/types/hooks";
+import type { Model } from "sequelize";
+import type { HookReturn } from "sequelize/types/hooks";
+
 import { SequelizeUtils } from "../utils/sequelize.utils";
 
-export function AfterFindFormatDateOnlyHook<M extends Model>(instances: M[] | M, options: FindOptions): HookReturn {
-    if (!instances) {
-        return;
-    }
-
+export function AfterFindFormatDateOnlyHook<M extends Model>(instances: M | M[]): HookReturn {
     if (Array.isArray(instances)) {
         instances.forEach(SequelizeUtils.formatInstanceDateOnly);
     } else {
