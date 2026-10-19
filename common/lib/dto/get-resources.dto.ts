@@ -1,11 +1,12 @@
 import { Expose } from "class-transformer";
 import { IsBoolean, IsOptional } from "class-validator";
-import { TransformBoolean } from "../decorators";
+
+import { TransformBoolean } from "../decorators/transform-boolean.decorator";
 
 export class GetResourcesDto {
     @Expose()
     @IsBoolean()
     @IsOptional()
     @TransformBoolean()
-    extended?: boolean;
+    public extended?: boolean;
 }
