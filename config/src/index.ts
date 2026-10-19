@@ -1,8 +1,14 @@
-// root module
 export { ConfigModule } from "./config.module";
-export * from "./config.utils";
-export * from "./decorators";
-export * from "./errors";
-export * from "./providers";
-export * from "./models";
-export * from "./handlers";
+export { ConfigUtils } from "./config.utils";
+export { ConfigProvider } from "./decorators/config-provider.decorator";
+export { Config, EnvironmentConfig } from "./decorators/config.decorator";
+export { InjectConfig } from "./decorators/inject-config.decorator";
+export { Variable } from "./decorators/variable.decorator";
+export { ConfigModelNotFoundError } from "./errors/config-model-not-found.error";
+export { ConfigProviderNotFoundInModuleError } from "./errors/config-provider-not-found-in-module.error";
+export { ConfigProviderNotRegisteredError } from "./errors/config-provider-not-registered.error";
+export { ConfigVariablesNotDefinedError } from "./errors/config-variables-not-defined.error";
+export { ConfigHandler } from "./handlers/config.handler";
+export type { ConfigConfig, ConfigMetadata } from "./models/config-metadata.model";
+export type { VariableConfig, VariableMetadata } from "./models/variable-metadata.model";
+export type { IConfigProvider } from "./providers/config.provider";
