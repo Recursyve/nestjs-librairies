@@ -1,13 +1,18 @@
 import type { Type } from "@nestjs/common";
 import { Injectable } from "@nestjs/common";
+import { ConfigTransformerService } from "@recursyve/nestjs-config";
 import type { IConfigProvider } from "@recursyve/nestjs-config";
-import { ConfigProvider } from "@recursyve/nestjs-config";
-import { ConfigHandler } from "@recursyve/nestjs-config/handlers/config.handler";
-import { ConfigTransformerService } from "@recursyve/nestjs-config/services/config-transformer.service";
+import { ConfigHandler, ConfigProvider } from "@recursyve/nestjs-config";
+import { isNotEmpty } from "@recursyve/nice-ts-utils";
 import { Transaction } from "sequelize";
 
-import type { ReloadSequelizeConfigOptions, SequelizeConfigUpdate, UpdateSequelizeConfigOptions } from "../models";
-import { ConfigSequelizeModel, InjectConfigSequelizeModel, ManageableSequelizeConfig } from "../models";
+import { InjectConfigSequelizeModel, ConfigSequelizeModel } from "../models/config-sequelize.model";
+import { ManageableSequelizeConfig } from "../models/manageable-sequelize-config.model";
+import type {
+    ReloadSequelizeConfigOptions,
+    SequelizeConfigUpdate,
+    UpdateSequelizeConfigOptions
+} from "../models/manageable-sequelize-config.model";
 
 export interface GetSequelizeConfigValueOptions {
     transaction?: Transaction;
@@ -16,13 +21,13 @@ export interface GetSequelizeConfigValueOptions {
 @Injectable()
 @ConfigProvider(SequelizeConfigProvider.type)
 export class SequelizeConfigProvider implements IConfigProvider {
-    static type = "sequelize" as const;
+    public static type = "sequelize" as const;
 
     private initialized = false;
 
     constructor(
-        @InjectConfigSequelizeModel() private repository: typeof ConfigSequelizeModel,
-        private configTransformerService: ConfigTransformerService
+        @InjectConfigSequelizeModel() private readonly repository: typeof ConfigSequelizeModel,
+        private readonly configTransformerService: ConfigTransformerService
     ) {}
 
     public async getValue(key: string, options?: GetSequelizeConfigValueOptions): Promise<string | null> {
@@ -32,21 +37,31 @@ export class SequelizeConfigProvider implements IConfigProvider {
             where: { key },
             transaction: options?.transaction
         });
-        return config?.getDataValue("value") ?? null;
+
+        const value = config?.getDataValue("value") as string | undefined;
+        return value ?? null;
     }
 
-    public async hydrate<T extends Object>(config: T): Promise<void> {
+    public async hydrate(config: object): Promise<void> {
         if (!(config instanceof ManageableSequelizeConfig)) {
             return;
         }
 
-        config.reload = async (options?: ReloadSequelizeConfigOptions) =>
-            this.configTransformerService.reloadConfig<T, GetSequelizeConfigValueOptions>(config, {
+        config.reload = async (options?: ReloadSequelizeConfigOptions) => {
+            await this.configTransformerService.reloadConfig(config, {
                 getValue: { transaction: options?.transaction }
             });
+        };
 
-        config.update = async (update: SequelizeConfigUpdate<any>, options?: UpdateSequelizeConfigOptions) =>
-            this.update(config, update, options);
+        config.update = async (
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- concrete config subclasses are only known at runtime
+            update: SequelizeConfigUpdate<any>,
+            options?: UpdateSequelizeConfigOptions
+        ) => {
+            await this.update(config, update, options);
+        };
+
+        await Promise.resolve();
     }
 
     private async update<T extends ManageableSequelizeConfig<T>>(
@@ -57,7 +72,9 @@ export class SequelizeConfigProvider implements IConfigProvider {
         const configType = config.constructor as Type<T>;
         const configMetadata = ConfigHandler.getConfig(configType);
 
-        const transactionCallback = <R>(callback: (transaction: Transaction) => Promise<R>) => {
+        const transactionCallback = async <R>(
+            callback: (transaction: Transaction) => Promise<R>
+        ): Promise<R | undefined> => {
             if (options?.transaction) {
                 return callback(options.transaction);
             }
@@ -73,16 +90,16 @@ export class SequelizeConfigProvider implements IConfigProvider {
 
             await Promise.all(
                 Object.entries(update)
-                    .filter(([key, _]) => config.hasOwnProperty(key))
-                    .map(([key, value]: [string, any]) => {
-                        const variable = configMetadata.variables.find((variable) => variable.propertyKey === key);
+                    .filter(([key]) => Object.hasOwn(config, key))
+                    .map(([key, value]) => {
+                        const variable = configMetadata.variables.find((entry) => entry.propertyKey === key);
 
                         return {
-                            key: variable?.variableName || variable?.propertyKey,
+                            key: variable?.variableName ?? variable?.propertyKey,
                             value: value?.toString()
                         };
                     })
-                    .filter(({ key }) => key)
+                    .filter(({ key }) => isNotEmpty(key))
                     .map(async ({ key, value }) => {
                         const constant = await this.repository.findOne({ where: { key }, transaction });
                         if (constant) {
@@ -99,12 +116,15 @@ export class SequelizeConfigProvider implements IConfigProvider {
                     })
             );
 
+            const mutableConfig = config as Record<string, unknown>;
+            const mutableUpdate = update as Record<string, unknown>;
+
             for (const key in update) {
-                if (!update.hasOwnProperty(key)) {
+                if (!Object.hasOwn(update, key)) {
                     continue;
                 }
 
-                (config as any)[key] = (update as any)[key];
+                mutableConfig[key] = mutableUpdate[key];
             }
         });
     }

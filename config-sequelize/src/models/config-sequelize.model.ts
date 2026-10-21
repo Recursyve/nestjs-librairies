@@ -12,11 +12,11 @@ export const InjectConfigSequelizeModel = (): ParameterDecorator & PropertyDecor
 export class ConfigSequelizeModel extends Model {
     @AllowNull(false)
     @Column
-    key!: string;
+    public key!: string;
 
     @AllowNull(false)
     @Column(DataTypes.TEXT)
-    value!: string;
+    public value!: string;
 }
 
 export const createSequelizeModel = (tableName?: string): typeof Model => {
