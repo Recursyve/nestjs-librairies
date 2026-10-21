@@ -24,6 +24,9 @@
         "publish-package:beta": "npm run publish-package -- --tag beta --access public",
         "publish-package:dry-run": "npm run publish-package -- --dry-run"
     },
+    "dependencies": {
+        "@recursyve/nice-ts-utils": "^0.0.3"
+    },
     "peerDependencies": {
         "@nestjs/common": ">=11.0.0",
         "@nestjs/core": ">=11.0.0",
