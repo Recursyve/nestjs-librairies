@@ -1,4 +1,6 @@
+import type { AccessControlModel } from "../adapters/database.adapter";
+
 export interface PolicyConfig {
-    model: any;
+    model: AccessControlModel;
     type?: string;
 }

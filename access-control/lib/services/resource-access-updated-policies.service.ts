@@ -1,32 +1,40 @@
-import { Inject, Injectable, Logger, Optional, Type } from "@nestjs/common";
-import { ACCESS_CONTROL_DEFAULT_DATABASE } from "../constant";
+import type { Type } from "@nestjs/common";
+import { Inject, Injectable, Logger, Optional } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
-import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
+import { isDefined } from "@recursyve/nice-ts-utils";
+
+import type { AccessControlModel } from "../adapters/database.adapter";
+import { ACCESS_CONTROL_DEFAULT_DATABASE } from "../constant";
+import { RESOURCE_ACCESS_UPDATED_METADATA } from "../decorators/constant";
+import type {
+    AccessControlPolicyModel,
+    AccessControlPolicyModelRef,
+    ResourceAccessUpdatedPolicyConfig
+} from "../models/resource-access-updated-policy-config.model";
+import type { ResourceId } from "../models/resources.model";
+import type { UserResources } from "../models/user-resources.model";
 import { ResourceAccessUpdatedPolicy } from "../policies/resource-access-updated-policy.service";
-import { PolicyConfig, UserResources } from "../models";
-import { RESOURCE_ACCESS_UPDATED_METADATA } from "../decorators";
-import { ResourceAccessUpdatedPolicyConfig } from "../models/resource-access-updated-policy-config.model";
-import { createInvalidObservableTypeError } from "rxjs/internal/util/throwUnobservableError";
+import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
 
 @Injectable()
 export class ResourceAccessUpdatedPoliciesService {
     private readonly logger = new Logger(ResourceAccessUpdatedPoliciesService.name);
 
     constructor(
-        @Optional() @Inject(ACCESS_CONTROL_DEFAULT_DATABASE) private type: string,
+        @Optional() @Inject(ACCESS_CONTROL_DEFAULT_DATABASE) private readonly type: string,
         private readonly moduleRef: ModuleRef,
-        private databaseAdaptersRegistry: DatabaseAdaptersRegistry
+        private readonly databaseAdaptersRegistry: DatabaseAdaptersRegistry
     ) {}
 
-    private _policies: ResourceAccessUpdatedPolicy<any>[] = [];
+    private readonly _policies: ResourceAccessUpdatedPolicy<ResourceId>[] = [];
 
-    public get policies(): ResourceAccessUpdatedPolicy<any>[] {
+    public get policies(): ResourceAccessUpdatedPolicy<ResourceId>[] {
         return this._policies;
     }
 
     public async execute(
         resourceName: string,
-        resourceId: any,
+        resourceId: ResourceId,
         resourceAccesses: UserResources[]
     ): Promise<UserResources[]> {
         const policies = this._policies.filter((policy) => policy.sourceResourceName === resourceName);
@@ -37,8 +45,8 @@ export class ResourceAccessUpdatedPoliciesService {
     }
 
     private async executePolicy(
-        policy: ResourceAccessUpdatedPolicy<any>,
-        resourceId: any,
+        policy: ResourceAccessUpdatedPolicy<ResourceId>,
+        resourceId: ResourceId,
         accesses: UserResources[]
     ): Promise<UserResources[]> {
         try {
@@ -52,30 +60,59 @@ export class ResourceAccessUpdatedPoliciesService {
         }
     }
 
-    public registerPolicies(policies: Type<ResourceAccessUpdatedPolicy<any>>[]): void {
+    public registerPolicies(policies: Type<ResourceAccessUpdatedPolicy<ResourceId>>[]): void {
         for (const policy of policies) {
             this.registerPolicy(policy);
         }
     }
 
-    private registerPolicy(policy: Type<ResourceAccessUpdatedPolicy<any>>): void {
+    private registerPolicy(policy: Type<ResourceAccessUpdatedPolicy<ResourceId>>): void {
         const instance = this.moduleRef.get(policy, { strict: false });
-        if (!instance) {
+        if (!isDefined(instance)) {
             this.logger.error(`Tried to register policy '${policy.name}', but it was not found in the module ref.`);
+            return;
         }
 
         const config = this.reflectModel(policy);
+        if (!isDefined(config)) {
+            this.logger.error(`Policy '${policy.name}' is missing @AccessUpdatedPolicy metadata.`);
+            return;
+        }
 
-        const sourceDatabaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.source.type ?? this.type);
-        instance.sourceResourceName = sourceDatabaseAdapter.getResourceName(config.source?.model ?? config.source);
+        const sourceModel = this.resolveModelForAdapter(config.source);
+        const sourceType = this.resolveTypeForAdapter(config.source, this.type);
+        const sourceDatabaseAdapter = this.databaseAdaptersRegistry.getAdapter(sourceType);
+        instance.sourceResourceName = sourceDatabaseAdapter.getResourceName(sourceModel);
 
-        const targetDatabaseAdapter = this.databaseAdaptersRegistry.getAdapter(config.target.type ?? this.type);
-        instance.targetResourceName = targetDatabaseAdapter.getResourceName(config.target?.model ?? config.target);
+        const targetModel = this.resolveModelForAdapter(config.target);
+        const targetType = this.resolveTypeForAdapter(config.target, this.type);
+        const targetDatabaseAdapter = this.databaseAdaptersRegistry.getAdapter(targetType);
+        instance.targetResourceName = targetDatabaseAdapter.getResourceName(targetModel);
 
         this._policies.push(instance);
     }
 
-    private reflectModel(policy: Type<ResourceAccessUpdatedPolicy<any>>): ResourceAccessUpdatedPolicyConfig {
-        return Reflect.getMetadata(RESOURCE_ACCESS_UPDATED_METADATA, policy) ?? {};
+    private reflectModel(
+        policy: Type<ResourceAccessUpdatedPolicy<ResourceId>>
+    ): ResourceAccessUpdatedPolicyConfig | undefined {
+        return Reflect.getMetadata(RESOURCE_ACCESS_UPDATED_METADATA, policy) as
+            | ResourceAccessUpdatedPolicyConfig
+            | undefined;
+    }
+
+    private isPolicyModelRef(value: AccessControlPolicyModel): value is AccessControlPolicyModelRef {
+        return "model" in value;
+    }
+
+    private resolveModelForAdapter(ref: AccessControlPolicyModel): AccessControlModel {
+        return this.isPolicyModelRef(ref) ? ref.model : ref;
+    }
+
+    private resolveTypeForAdapter(ref: AccessControlPolicyModel, defaultType: string): string {
+        if (this.isPolicyModelRef(ref) && isDefined(ref.type)) {
+            return ref.type;
+        }
+
+        return defaultType;
     }
 }

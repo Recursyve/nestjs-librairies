@@ -1,28 +1,24 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { CommandBus } from "@nestjs/cqrs";
 import { RedisService } from "@recursyve/nestjs-redis";
-import { ResourceAccessUpdatedCommand } from "../commands";
-import {
-    AccessActionType,
-    accessActionTypeValues,
-    AccessControlResources,
-    PolicyResources,
-    PolicyResourceTypes,
-    ResourceId,
-    UserResources,
-    Users
-} from "../models";
-import { RedisKeyUtils } from "../utils";
+import { isDefined, isNotEmpty } from "@recursyve/nice-ts-utils";
+
+import { ResourceAccessUpdatedCommand } from "../commands/resource-access-updated.command";
+import { AccessActionType, accessActionTypeValues } from "../models/access-rules.model";
+import type { AccessControlResources, ResourceId } from "../models/resources.model";
+import { PolicyResourceTypes, PolicyResources } from "../models/resources.model";
+import type { UserResources } from "../models/user-resources.model";
+import type { Users } from "../models/users.model";
+import { RedisKeyUtils } from "../utils/redis-key.utils";
 
 @Injectable()
 export class ResourceAccessService {
-    private logger = new Logger(ResourceAccessService.name);
+    private readonly logger = new Logger(ResourceAccessService.name);
 
     constructor(
-        private redisService: RedisService,
-        private commandBus: CommandBus
-    ) {
-    }
+        private readonly redisService: RedisService,
+        private readonly commandBus: CommandBus
+    ) {}
 
     public async setUserAccessRules(
         user: Users,
@@ -34,7 +30,7 @@ export class ResourceAccessService {
         switch (policyResources.type) {
             case PolicyResourceTypes.Resources:
                 await Promise.all(
-                    accessActionTypeValues.map((action) =>
+                    accessActionTypeValues.map(async (action) =>
                         this.setUserAccessActions(user, resourceName, policyResources.resources ?? [], action)
                     )
                 );
@@ -59,14 +55,14 @@ export class ResourceAccessService {
         const filteredUserResources = await this.filterOutUninitializedUserResources(userResources);
 
         await Promise.all(
-            accessActionTypeValues.map((action) => {
+            accessActionTypeValues.map(async (action) => {
                 return this.addUserResourceAccessesAction(filteredUserResources, action);
             })
         );
 
         await Promise.all(
-            filteredUserResources.map((userResource) => {
-                if (!userResource.resourceName || !userResource.resourceId) {
+            filteredUserResources.map(async (userResource) => {
+                if (!this.hasResourceTarget(userResource)) {
                     return;
                 }
 
@@ -85,9 +81,7 @@ export class ResourceAccessService {
         const filteredUserResources = await this.filterOutUninitializedUserResources(userResources);
 
         const delKeys = new Map(
-            filteredUserResources
-                .filter((userResources): userResources is UserResources & { resourceName: string, resourceId: ResourceId } => !!userResources.resourceName && !!userResources.resourceId)
-                .map((userResource) => [
+            filteredUserResources.filter(this.hasResourceTarget.bind(this)).map((userResource) => [
                 RedisKeyUtils.userResourceIdKey(userResource.resourceName, userResource.resourceId, {
                     id: userResource.userId,
                     role: userResource.userRole
@@ -100,12 +94,12 @@ export class ResourceAccessService {
         }
 
         await Promise.all(
-            accessActionTypeValues.map((a) => this.updateUserResourceAccessAction(filteredUserResources, a))
+            accessActionTypeValues.map(async (a) => this.updateUserResourceAccessAction(filteredUserResources, a))
         );
 
         await Promise.all(
-            filteredUserResources.map((userResource) => {
-                if (!userResource.resourceName || !userResource.resourceId) {
+            filteredUserResources.map(async (userResource) => {
+                if (!this.hasResourceTarget(userResource)) {
                     return;
                 }
 
@@ -138,7 +132,7 @@ export class ResourceAccessService {
     private async filterOutUninitializedUserResources(userResources: UserResources[]): Promise<UserResources[]> {
         const groupedUserResources: Record<string, UserResources[]> = {};
         for (const userResource of userResources) {
-            if (!userResource.resourceName) {
+            if (!isNotEmpty(userResource.resourceName)) {
                 continue;
             }
 
@@ -162,15 +156,15 @@ export class ResourceAccessService {
 
         const filteredUserResources: UserResources[] = [];
 
-        for (const [index, [_, userResources]] of groupedUserResourcesEntries.entries()) {
+        for (const [index, [, groupedResources]] of groupedUserResourcesEntries.entries()) {
             if (hasAccessControls[index] !== "1") {
                 this.logger.verbose(
-                    `User '${userResources[0].userId}' was filtered out from '${userResources[0].resourceName}' access changes, since his access control was not yet initialized.`
+                    `User '${groupedResources[0]?.userId}' was filtered out from '${groupedResources[0]?.resourceName}' access changes, since his access control was not yet initialized.`
                 );
                 continue;
             }
 
-            filteredUserResources.push(...userResources);
+            filteredUserResources.push(...groupedResources);
         }
 
         return filteredUserResources;
@@ -183,7 +177,7 @@ export class ResourceAccessService {
                 continue;
             }
 
-            if (!userResource.resourceName || !userResource.resourceId) {
+            if (!this.hasResourceTarget(userResource)) {
                 continue;
             }
 
@@ -200,7 +194,7 @@ export class ResourceAccessService {
         }
 
         await Promise.all(
-            [...resourceIdsByCacheKey.entries()].map(([key, resourceIds]) =>
+            [...resourceIdsByCacheKey.entries()].map(async ([key, resourceIds]) =>
                 this.redisService.lpush(key, ...resourceIds)
             )
         );
@@ -231,8 +225,8 @@ export class ResourceAccessService {
 
         const resourcesToRemove = userResources.filter((resource) => !resource.rules[action]);
         await Promise.all(
-            resourcesToRemove.map((userResource) => {
-                if (!userResource.resourceName || !userResource.resourceId) {
+            resourcesToRemove.map(async (userResource) => {
+                if (!this.hasResourceTarget(userResource)) {
                     return;
                 }
 
@@ -280,5 +274,11 @@ export class ResourceAccessService {
                 );
             })
         );
+    }
+
+    private hasResourceTarget(
+        userResource: UserResources
+    ): userResource is UserResources & { resourceName: string; resourceId: ResourceId } {
+        return isNotEmpty(userResource.resourceName) && isDefined(userResource.resourceId);
     }
 }

@@ -4,12 +4,12 @@ export enum AccessActionType {
     Delete = "d"
 }
 
-export type AccessAction = {
+export interface AccessAction {
     type: AccessActionType;
     resourceIdParameterName: string;
-};
+}
 
-export const accessActionTypeValues = Object.values(AccessActionType);
+export const accessActionTypeValues: AccessActionType[] = Object.values(AccessActionType);
 
 export interface PermissionsOption {
     r: string;
@@ -64,22 +64,26 @@ export class AccessRules {
     }
 
     public static fromString(rule: string): AccessRules {
-        return new AccessRules(JSON.parse(rule));
+        return new AccessRules(JSON.parse(rule) as Partial<AccessRules>);
     }
 
     public static fromPermissions(permissions: string[], options?: PermissionsOption): AccessRules;
+
     public static fromPermissions(permissions: string[], suffix?: string, options?: PermissionsOption): AccessRules;
+
     public static fromPermissions(
         permissions: string[],
-        suffixOrOptions?: string | PermissionsOption,
+        suffixOrOptions?: PermissionsOption | string,
         options?: PermissionsOption
     ): AccessRules {
-        const opt = options
-            ? options
-            : typeof suffixOrOptions === "string"
-            ? defaultPermissionsOption
-            : suffixOrOptions ?? defaultPermissionsOption;
         const suffix = typeof suffixOrOptions === "string" ? `-${suffixOrOptions}` : "";
+
+        let opt = defaultPermissionsOption;
+        if (options !== undefined) {
+            opt = options;
+        } else if (typeof suffixOrOptions !== "string" && suffixOrOptions !== undefined) {
+            opt = suffixOrOptions;
+        }
         return new AccessRules({
             [AccessActionType.Read]: permissions.some((x) => x === opt.r + suffix),
             [AccessActionType.Update]: permissions.some((x) => x === opt.u + suffix),
