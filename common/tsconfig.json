@@ -3,12 +3,18 @@
     "compilerOptions": {
         "module": "commonjs",
         "target": "es2018",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
+        "rootDir": "lib",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "strict": true,
         "lib": [
             "es2018"
+        ],
+        "types": [
+            "node",
+            "express",
+            "multer"
         ],
         "sourceMap": true,
         "outDir": "build"
