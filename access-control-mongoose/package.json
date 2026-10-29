@@ -27,10 +27,12 @@
         "mongoose": ">=9.0.0"
     },
     "devDependencies": {
+        "@nestjs/cli": "^12.0.11",
         "@nestjs/common": "^12.3.2",
         "@nestjs/core": "^12.3.2",
         "@nestjs/cqrs": "^12.1.2",
         "@nestjs/mongoose": "^12.0.0",
+        "@nestjs/schematics": "^12.0.12",
         "@nestjs/terminus": "^12.1.0",
         "@nestjs/testing": "^12.3.2",
         "@recursyve/eslint-config-node": "^1.0.1",
@@ -46,9 +48,9 @@
         "mongoose": "^9.8.1",
         "reflect-metadata": "^0.2.2",
         "rxjs": "^7.8.2",
-        "ts-jest": "^29.3.1",
+        "ts-jest": "^29.4.15",
         "ts-node": "^10.9.2",
-        "typescript": "^5.8.2"
+        "typescript": "^6.0.3"
     },
     "jest": {
         "moduleFileExtensions": [
