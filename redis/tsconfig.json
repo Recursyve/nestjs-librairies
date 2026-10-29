@@ -1,22 +1,28 @@
 {
-  "compileOnSave": false,
-  "compilerOptions": {
-    "module": "commonjs",
-    "target": "es2018",
-    "moduleResolution": "node",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "lib": [
-      "es2018"
+    "compileOnSave": false,
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es2018",
+        "moduleResolution": "bundler",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "lib": [
+            "es2018"
+        ],
+        "strict": true,
+        "sourceMap": true,
+        "outDir": "build",
+        "rootDir": "lib",
+        "skipLibCheck": true,
+        "types": [
+            "node",
+            "jest"
+        ]
+    },
+    "include": [
+        "lib/**/*"
     ],
-    "strict": true,
-    "sourceMap": true,
-    "outDir": "build"
-  },
-  "include": [
-    "lib/**/*"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+    "exclude": [
+        "node_modules"
+    ]
 }
