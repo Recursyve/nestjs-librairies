@@ -28,8 +28,10 @@
         "ioredis": "^5.6.0"
     },
     "devDependencies": {
+        "@nestjs/cli": "^12.0.11",
         "@nestjs/common": "^12.3.2",
         "@nestjs/core": "^12.3.2",
+        "@nestjs/schematics": "^12.0.12",
         "@nestjs/terminus": "^12.1.0",
         "@nestjs/testing": "^12.3.2",
         "@types/jest": "^29.5.14",
@@ -38,8 +40,8 @@
         "reflect-metadata": "^0.2.2",
         "rimraf": "^6.0.1",
         "rxjs": "^7.8.2",
-        "ts-jest": "^29.3.1",
-        "typescript": "^5.8.2"
+        "ts-jest": "^29.4.15",
+        "typescript": "^6.0.3"
     },
     "jest": {
         "moduleFileExtensions": [
