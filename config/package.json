@@ -25,6 +25,7 @@
         "@nestjs/testing": "^12.3.2",
         "@types/jest": "^30.0.0",
         "@types/node": "^20.8.0",
+        "class-transformer": "^0.5.1",
         "jest": "^30.5.2",
         "reflect-metadata": "^0.2.2",
         "rimraf": "^6.0.1",

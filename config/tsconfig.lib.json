@@ -3,11 +3,16 @@
     "compilerOptions": {
         "module": "commonjs",
         "target": "es2021",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
+        "rootDir": ".",
         "declaration": true,
         "strict": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
+        "skipLibCheck": true,
+        "types": [
+            "node"
+        ],
         "outDir": "dist"
     },
     "include": [
