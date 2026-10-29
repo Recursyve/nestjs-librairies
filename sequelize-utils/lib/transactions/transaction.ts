@@ -1,13 +1,13 @@
 import { Transaction } from "sequelize";
 
-type AfterTransactionRollbackCallback = (transaction: Transaction) => void | Promise<void>;
+type AfterTransactionRollbackCallback = (transaction: Transaction) => Promise<void> | void;
 
 export class NiceTransaction extends Transaction {
-    private readonly _afterRollbackHooks: Set<AfterTransactionRollbackCallback> = new Set();
+    private readonly _afterRollbackHooks = new Set<AfterTransactionRollbackCallback>();
 
     /** Pretty much a copy and paste of the afterCommit of the original Transaction of Sequelize */
     public afterRollback(fn: AfterTransactionRollbackCallback): this {
-        if (typeof fn !== 'function') {
+        if (typeof fn !== "function") {
             throw new TypeError('"fn" must be a function');
         }
 
@@ -16,7 +16,7 @@ export class NiceTransaction extends Transaction {
         return this;
     }
 
-    public async rollback(): Promise<void> {
+    public override async rollback(): Promise<void> {
         await super.rollback();
 
         /** Pretty much a copy and paste of the afterCommit of the original Transaction of Sequelize */

@@ -2,15 +2,25 @@
     "name": "@recursyve/nestjs-sequelize-utils",
     "version": "12.0.0",
     "description": "Sequelize utilities for NestJs",
-    "main": "index.js",
+    "type": "module",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.cts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        },
+        "./package.json": "./package.json"
+    },
     "scripts": {
-        "build": "rimraf dist && nest build",
-        "build:lib": "rimraf dist && nest build -p tsconfig.lib.json",
-        "copy:lib": "cp package.json .npmignore dist",
-        "pack:lib": "npm run build:lib && npm run copy:lib && cd dist && npm pack",
-        "test": "jest",
-        "publish-package": "npm run build:lib && npm run copy:lib && npm publish ./dist --access public",
-        "publish-package:beta": "npm run publish-package -- --tag beta --access public",
+        "build": "tsdown",
+        "lint": "eslint \"{lib,tests,examples}/**/*.ts\"",
+        "format": "oxfmt",
+        "format:check": "oxfmt --check",
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit",
+        "publish-package": "npm run build && npm publish --access public",
         "publish-package:dry-run": "npm run publish-package -- --dry-run"
     },
     "repository": {
@@ -27,41 +37,28 @@
         "sequelize-typescript": ">=2.1.0"
     },
     "devDependencies": {
+        "@eslint/js": "^10.0.1",
         "@nestjs/cli": "^12.0.11",
         "@nestjs/common": "^12.3.2",
         "@nestjs/core": "^12.3.2",
         "@nestjs/schematics": "^12.0.12",
         "@nestjs/sequelize": "^12.0.0",
         "@nestjs/testing": "^12.3.2",
-        "@recursyve/eslint-config-node": "^1.0.1",
-        "@types/jest": "^29.5.14",
-        "@typescript-eslint/eslint-plugin": "^5.45.0",
-        "@typescript-eslint/parser": "^5.45.0",
-        "eslint": "^8.29.0",
-        "eslint-config-prettier": "^8.5.0",
-        "eslint-plugin-prettier": "^4.2.1",
-        "jest": "^29.7.0",
+        "@softarc/eslint-plugin-sheriff": "^0.20.0",
+        "@softarc/sheriff-core": "^0.20.0",
+        "@vitest/coverage-v8": "^5.0.0",
+        "@vitest/eslint-plugin": "^1.6.27",
+        "eslint": "^10.10.0",
+        "oxfmt": "^0.67.0",
         "reflect-metadata": "^0.2.2",
         "rxjs": "^7.8.2",
         "sequelize": "^6.37.7",
         "sequelize-typescript": "^2.1.6",
         "sqlite3": "^5.1.7",
-        "ts-jest": "^29.4.15",
         "ts-node": "^10.9.2",
-        "typescript": "^6.0.3"
-    },
-    "jest": {
-        "moduleFileExtensions": [
-            "js",
-            "json",
-            "ts"
-        ],
-        "rootDir": "tests",
-        "testRegex": ".spec.ts$",
-        "transform": {
-            "^.+\\.(t|j)s$": "ts-jest"
-        },
-        "coverageDirectory": "./coverage",
-        "testEnvironment": "node"
+        "tsdown": "^0.23.0",
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.70.0",
+        "vitest": "^5.0.0"
     }
 }

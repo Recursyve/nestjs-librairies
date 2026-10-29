@@ -1,5 +1,7 @@
-import { Global, Module, OnModuleInit } from "@nestjs/common";
+import type { OnModuleInit } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { Sequelize } from "sequelize-typescript";
+
 import {
     AfterBulkCreateFormatDateOnlyHook,
     AfterCreateFormatDateOnlyHook
@@ -10,11 +12,11 @@ import { SequelizeTransactionService } from "./transactions/sequelize-transactio
 /** @deprecated: Use SequelizeUtilsModule instead */
 @Module({})
 export class SequelizeUtilsHooksModule implements OnModuleInit {
-    constructor(private sequelize: Sequelize) {}
+    constructor(private readonly sequelize: Sequelize) {}
 
     public onModuleInit(): void {
-       this.sequelize.addHook("afterCreate", "transform-date-only", AfterCreateFormatDateOnlyHook);
-       this.sequelize.addHook("afterFind", "transform-date-only", AfterFindFormatDateOnlyHook);
+        this.sequelize.addHook("afterCreate", "transform-date-only", AfterCreateFormatDateOnlyHook);
+        this.sequelize.addHook("afterFind", "transform-date-only", AfterFindFormatDateOnlyHook);
     }
 }
 
@@ -24,7 +26,7 @@ export class SequelizeUtilsHooksModule implements OnModuleInit {
     exports: [SequelizeTransactionService]
 })
 export class SequelizeUtilsModule implements OnModuleInit {
-    constructor(private sequelize: Sequelize) {}
+    constructor(private readonly sequelize: Sequelize) {}
 
     public onModuleInit(): void {
         this.sequelize.addHook("afterBulkCreate", "transform-date-only", AfterBulkCreateFormatDateOnlyHook);
