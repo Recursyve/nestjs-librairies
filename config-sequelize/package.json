@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-config-sequelize",
-    "version": "11.0.1",
+    "version": "12.0.0",
     "scripts": {
         "build": "rimraf dist && nest build",
         "build:lib": "rimraf dist && nest build -p tsconfig.lib.json",
@@ -12,19 +12,19 @@
         "publish-package:dry-run": "npm run publish-package -- --dry-run"
     },
     "peerDependencies": {
-        "@nestjs/common": ">=11.0.0",
-        "@nestjs/core": ">=11.0.0",
-        "@nestjs/sequelize": ">=11.0.0",
-        "@recursyve/nestjs-config": "^11.0.0",
+        "@nestjs/common": ">=12.0.0",
+        "@nestjs/core": ">=12.0.0",
+        "@nestjs/sequelize": ">=12.0.0",
+        "@recursyve/nestjs-config": ">=12.0.0",
         "sequelize": "^6.37.6",
         "sequelize-typescript": "^2.1.6"
     },
     "devDependencies": {
-        "@nestjs/common": "^11.0.12",
-        "@nestjs/core": "^11.0.12",
-        "@nestjs/sequelize": "^11.0.0",
-        "@nestjs/testing": "^11.0.12",
-        "@recursyve/nestjs-config": "^11.0.0",
+        "@nestjs/common": "^12.3.2",
+        "@nestjs/core": "^12.3.2",
+        "@nestjs/sequelize": "^12.0.0",
+        "@nestjs/testing": "^12.3.2",
+        "@recursyve/nestjs-config": "^12.0.0",
         "@types/jest": "^29.5.14",
         "@types/node": "^22.13.13",
         "class-transformer": "^0.5.1",
