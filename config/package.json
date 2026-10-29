@@ -1,6 +1,6 @@
 {
     "name": "@recursyve/nestjs-config",
-    "version": "11.0.0",
+    "version": "12.0.0",
     "scripts": {
         "build": "rimraf dist && nest build",
         "build:lib": "rimraf dist && nest build -p tsconfig.lib.json",
@@ -12,15 +12,15 @@
         "publish-package:dry-run": "npm run publish-package -- --dry-run"
     },
     "peerDependencies": {
-        "@nestjs/common": ">=11.0.0",
-        "@nestjs/core": ">=11.0.0",
+        "@nestjs/common": ">=12.0.0",
+        "@nestjs/core": ">=12.0.0",
         "class-transformer": "^0.5.1",
         "reflect-metadata": "^0.1.12 || ^0.2.0"
     },
     "devDependencies": {
-        "@nestjs/common": "^11.0.10",
-        "@nestjs/core": "^11.0.10",
-        "@nestjs/testing": "^11.0.10",
+        "@nestjs/common": "^12.3.2",
+        "@nestjs/core": "^12.3.2",
+        "@nestjs/testing": "^12.3.2",
         "@types/jest": "^29.5.5",
         "@types/node": "^20.8.0",
         "jest": "^29.7.0",
