@@ -4,7 +4,7 @@
         "module": "commonjs",
         "target": "es2021",
         "moduleResolution": "bundler",
-        "rootDir": ".",
+        "rootDir": "src",
         "declaration": true,
         "strict": true,
         "experimentalDecorators": true,
@@ -16,8 +16,7 @@
         "outDir": "dist"
     },
     "include": [
-        "src/**/*",
-        "index.ts"
+        "src/**/*"
     ],
     "exclude": [
         "node_modules",
