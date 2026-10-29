@@ -3,26 +3,22 @@ import { Global, Module } from "@nestjs/common";
 import { CqrsModule } from "@nestjs/cqrs";
 import { RedisModule } from "@recursyve/nestjs-redis";
 
-import {
-    AccessControlGetResourcesHandler,
-    AccessControlResourceCreatedHandler,
-    AccessControlResourceDeletedHandler,
-    AccessControlResourceUpdatedHandler
-} from "./handlers";
+import { AccessControlGetResourcesHandler } from "./handlers/get-resources.handler";
 import { AccessControlResourceAccessUpdatedHandler } from "./handlers/resource-access-updated.handler";
-import {
-    AccessControlExplorerService,
-    AccessControlService,
-    AccessPoliciesService,
-    DatabaseAdaptersRegistry,
-    ResourceCreatedPoliciesService,
-    ResourceDeletedPoliciesService,
-    ResourceEventAccessControlService,
-    ResourceAccessService,
-    ResourceUpdatedPoliciesService
-} from "./services";
+import { AccessControlResourceCreatedHandler } from "./handlers/resource-created.handler";
+import { AccessControlResourceDeletedHandler } from "./handlers/resource-deleted.handler";
+import { AccessControlResourceUpdatedHandler } from "./handlers/resource-updated.handler";
+import { AccessControlExplorerService } from "./services/access-control-explorer.service";
 import { AccessControlResourceLoaderService } from "./services/access-control-resource-loader.service";
+import { AccessControlService } from "./services/access-control.service";
+import { AccessPoliciesService } from "./services/access-policies.service";
+import { DatabaseAdaptersRegistry } from "./services/database-adapters.registry";
 import { ResourceAccessUpdatedPoliciesService } from "./services/resource-access-updated-policies.service";
+import { ResourceAccessService } from "./services/resource-access.service";
+import { ResourceCreatedPoliciesService } from "./services/resource-created-policies.service";
+import { ResourceDeletedPoliciesService } from "./services/resource-deleted-policies.service";
+import { ResourceEventAccessControlService } from "./services/resource-event-access-control.service";
+import { ResourceUpdatedPoliciesService } from "./services/resource-updated-policies.service";
 
 @Global()
 @Module({
@@ -55,13 +51,13 @@ import { ResourceAccessUpdatedPoliciesService } from "./services/resource-access
 })
 export class AccessControlCoreModule implements OnModuleInit {
     constructor(
-        private accessPoliciesService: AccessPoliciesService,
-        private databaseAdaptersRegistry: DatabaseAdaptersRegistry,
-        private resourceCreatedPoliciesService: ResourceCreatedPoliciesService,
-        private resourceDeletedPoliciesService: ResourceDeletedPoliciesService,
-        private resourceUpdatedPoliciesService: ResourceUpdatedPoliciesService,
-        private resourceAccessUpdatedPoliciesService: ResourceAccessUpdatedPoliciesService,
-        private explorer: AccessControlExplorerService
+        private readonly accessPoliciesService: AccessPoliciesService,
+        private readonly databaseAdaptersRegistry: DatabaseAdaptersRegistry,
+        private readonly resourceCreatedPoliciesService: ResourceCreatedPoliciesService,
+        private readonly resourceDeletedPoliciesService: ResourceDeletedPoliciesService,
+        private readonly resourceUpdatedPoliciesService: ResourceUpdatedPoliciesService,
+        private readonly resourceAccessUpdatedPoliciesService: ResourceAccessUpdatedPoliciesService,
+        private readonly explorer: AccessControlExplorerService
     ) {}
 
     public onModuleInit(): void {

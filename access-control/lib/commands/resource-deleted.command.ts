@@ -1,11 +1,13 @@
-import type { ICommand } from "@nestjs/cqrs";
+import { Command } from "@nestjs/cqrs";
 
-import type { ResourceId } from "../models";
+import type { ResourceId } from "../models/resources.model";
 
-export class ResourceDeletedCommand<T> implements ICommand {
+export class ResourceDeletedCommand<T> extends Command<void> {
     constructor(
         public resourceName: string,
         public resource: T,
         public resourceId: ResourceId
-    ) {}
+    ) {
+        super();
+    }
 }

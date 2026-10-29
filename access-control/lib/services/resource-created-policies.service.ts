@@ -1,27 +1,33 @@
 import type { Type } from "@nestjs/common";
 import { Inject, Injectable, Logger, Optional } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
+import { isDefined, isNotEmpty } from "@recursyve/nice-ts-utils";
 
 import { ACCESS_CONTROL_DEFAULT_DATABASE } from "../constant";
 import { CREATED_POLICY_METADATA, FROM_POLICY_METADATA } from "../decorators/constant";
-import type { UserResources } from "../models";
 import type { PolicyConfig } from "../models/policy-config.model";
-import { ResourceCreatedPolicy } from "../policies";
+import type { ResourceId } from "../models/resources.model";
+import type { UserResources } from "../models/user-resources.model";
+import { ResourceCreatedPolicy } from "../policies/resource-created-policy.service";
 import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
+
+interface CreatedResource {
+    id: ResourceId;
+}
 
 @Injectable()
 export class ResourceCreatedPoliciesService {
     private readonly logger = new Logger();
 
     constructor(
-        @Optional() @Inject(ACCESS_CONTROL_DEFAULT_DATABASE) private type: string,
+        @Optional() @Inject(ACCESS_CONTROL_DEFAULT_DATABASE) private readonly type: string,
         private readonly moduleRef: ModuleRef,
-        private databaseAdaptersRegistry: DatabaseAdaptersRegistry
+        private readonly databaseAdaptersRegistry: DatabaseAdaptersRegistry
     ) {}
 
-    private _policies: ResourceCreatedPolicy<any>[] = [];
+    private readonly _policies: ResourceCreatedPolicy<CreatedResource>[] = [];
 
-    public get policies(): ResourceCreatedPolicy<any>[] {
+    public get policies(): ResourceCreatedPolicy<CreatedResource>[] {
         return this._policies;
     }
 
@@ -32,8 +38,10 @@ export class ResourceCreatedPoliciesService {
         );
     }
 
-    public async execute(resourceName: string, resource: any): Promise<UserResources[]> {
-        const policies = this._policies.filter((x) => x.resourceName === resourceName && !x.parentResourceName);
+    public async execute(resourceName: string, resource: CreatedResource): Promise<UserResources[]> {
+        const policies = this._policies.filter(
+            (x) => x.resourceName === resourceName && !isNotEmpty(x.parentResourceName)
+        );
 
         const policiesRes = await Promise.all(
             policies.map(async (policy) => {
@@ -50,7 +58,7 @@ export class ResourceCreatedPoliciesService {
         ).then((res) => res.flat().map((x) => ({ ...x, resourceId: resource.id })));
 
         const parentPolicies = this._policies.filter(
-            (x) => x.parentResourceName && x.parentResourceName === resourceName
+            (x) => isNotEmpty(x.parentResourceName) && x.parentResourceName === resourceName
         );
         const parentPoliciesRes = await Promise.all(
             parentPolicies.map(async (policy) => {
@@ -69,13 +77,15 @@ export class ResourceCreatedPoliciesService {
         return [...policiesRes, ...parentPoliciesRes.flat()];
     }
 
-    public registerPolicies(...policies: Type<ResourceCreatedPolicy<any>>[]): void {
-        policies.forEach((policy) => this.registerPolicy(policy));
+    public registerPolicies(...policies: Type<ResourceCreatedPolicy<CreatedResource>>[]): void {
+        policies.forEach((policy) => {
+            this.registerPolicy(policy);
+        });
     }
 
-    private registerPolicy(policy: Type<ResourceCreatedPolicy<any>>): void {
+    private registerPolicy(policy: Type<ResourceCreatedPolicy<CreatedResource>>): void {
         const instance = this.moduleRef.get(policy, { strict: false });
-        if (!instance) {
+        if (!isDefined(instance)) {
             return;
         }
 
@@ -86,19 +96,19 @@ export class ResourceCreatedPoliciesService {
         instance.resourceName = databaseAdapter.getResourceName(config.model);
 
         const parent = this.reflectParentModel(policy);
-        if (parent) {
-            const databaseAdapter = this.databaseAdaptersRegistry.getAdapter(parent.type ?? this.type);
-            instance.parentResourceName = databaseAdapter.getResourceName(parent.model);
+        if (isDefined(parent)) {
+            const parentDatabaseAdapter = this.databaseAdaptersRegistry.getAdapter(parent.type ?? this.type);
+            instance.parentResourceName = parentDatabaseAdapter.getResourceName(parent.model);
         }
 
         this._policies.push(instance);
     }
 
-    private reflectModel(policy: Type<ResourceCreatedPolicy<any>>): PolicyConfig {
-        return Reflect.getMetadata(CREATED_POLICY_METADATA, policy);
+    private reflectModel(policy: Type<ResourceCreatedPolicy<CreatedResource>>): PolicyConfig {
+        return Reflect.getMetadata(CREATED_POLICY_METADATA, policy) as PolicyConfig;
     }
 
-    private reflectParentModel(policy: Type<ResourceCreatedPolicy<any>>): PolicyConfig {
-        return Reflect.getMetadata(FROM_POLICY_METADATA, policy);
+    private reflectParentModel(policy: Type<ResourceCreatedPolicy<CreatedResource>>): PolicyConfig | undefined {
+        return Reflect.getMetadata(FROM_POLICY_METADATA, policy) as PolicyConfig | undefined;
     }
 }

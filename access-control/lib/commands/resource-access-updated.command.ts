@@ -1,7 +1,9 @@
-import type { ICommand } from "@nestjs/cqrs";
+import { Command } from "@nestjs/cqrs";
 
-import type { UserResources } from "../models";
+import type { UserResources } from "../models/user-resources.model";
 
-export class ResourceAccessUpdatedCommand implements ICommand {
-    constructor(public userResources: UserResources[]) {}
+export class ResourceAccessUpdatedCommand extends Command<void> {
+    constructor(public userResources: UserResources[]) {
+        super();
+    }
 }

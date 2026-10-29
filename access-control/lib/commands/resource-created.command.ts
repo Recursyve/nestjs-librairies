@@ -1,8 +1,10 @@
-import type { ICommand } from "@nestjs/cqrs";
+import { Command } from "@nestjs/cqrs";
 
-export class ResourceCreatedCommand<T> implements ICommand {
+export class ResourceCreatedCommand<T> extends Command<void> {
     constructor(
         public resourceName: string,
         public resource: T
-    ) {}
+    ) {
+        super();
+    }
 }

@@ -1,13 +1,14 @@
 import type { Type } from "@nestjs/common";
 import { Inject, Injectable, Logger, Optional } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
+import { isDefined } from "@recursyve/nice-ts-utils";
 
 import { ACCESS_CONTROL_DEFAULT_DATABASE } from "../constant";
 import { POLICY_METADATA } from "../decorators/constant";
-import type { Users } from "../models";
-import { PolicyResources } from "../models";
 import type { PolicyConfig } from "../models/policy-config.model";
-import { AccessPolicy } from "../policies";
+import { PolicyResources } from "../models/resources.model";
+import type { Users } from "../models/users.model";
+import { AccessPolicy } from "../policies/access.policy";
 import { DatabaseAdaptersRegistry } from "./database-adapters.registry";
 
 @Injectable()
@@ -15,12 +16,12 @@ export class AccessPoliciesService {
     private readonly logger = new Logger();
 
     constructor(
-        @Optional() @Inject(ACCESS_CONTROL_DEFAULT_DATABASE) private type: string,
+        @Optional() @Inject(ACCESS_CONTROL_DEFAULT_DATABASE) private readonly type: string,
         private readonly moduleRef: ModuleRef,
-        private databaseAdaptersRegistry: DatabaseAdaptersRegistry
+        private readonly databaseAdaptersRegistry: DatabaseAdaptersRegistry
     ) {}
 
-    private _policies: AccessPolicy[] = [];
+    private readonly _policies: AccessPolicy[] = [];
 
     public get policies(): AccessPolicy[] {
         return this._policies;
@@ -50,12 +51,14 @@ export class AccessPoliciesService {
     }
 
     public registerPolicies(...policies: Type<AccessPolicy>[]): void {
-        policies.forEach((policy) => this.registerPolicy(policy));
+        policies.forEach((policy) => {
+            this.registerPolicy(policy);
+        });
     }
 
     private registerPolicy(policy: Type<AccessPolicy>): void {
         const instance = this.moduleRef.get(policy, { strict: false });
-        if (!instance) {
+        if (!isDefined(instance)) {
             return;
         }
 
@@ -68,6 +71,6 @@ export class AccessPoliciesService {
     }
 
     private reflectModel(policy: Type<AccessPolicy>): PolicyConfig {
-        return Reflect.getMetadata(POLICY_METADATA, policy);
+        return Reflect.getMetadata(POLICY_METADATA, policy) as PolicyConfig;
     }
 }

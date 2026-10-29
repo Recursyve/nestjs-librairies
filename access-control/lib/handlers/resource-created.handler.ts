@@ -1,20 +1,22 @@
 import type { ICommandHandler } from "@nestjs/cqrs";
 import { CommandHandler } from "@nestjs/cqrs";
 
-import { ResourceCreatedCommand } from "../commands";
-import { ResourceCreatedPoliciesService, ResourceAccessService } from "../services";
+import { ResourceCreatedCommand } from "../commands/resource-created.command";
+import type { IdentifiedResource } from "../models/identified-resource.model";
+import { ResourceAccessService } from "../services/resource-access.service";
+import { ResourceCreatedPoliciesService } from "../services/resource-created-policies.service";
 
 @CommandHandler(ResourceCreatedCommand)
-export class AccessControlResourceCreatedHandler implements ICommandHandler<ResourceCreatedCommand<any>> {
+export class AccessControlResourceCreatedHandler implements ICommandHandler<
+    ResourceCreatedCommand<IdentifiedResource>
+> {
     constructor(
-        private resourceCreatedPolicyService: ResourceCreatedPoliciesService,
-        private resourceAccessService: ResourceAccessService
+        private readonly resourceCreatedPolicyService: ResourceCreatedPoliciesService,
+        private readonly resourceAccessService: ResourceAccessService
     ) {}
 
-    public async execute(command: ResourceCreatedCommand<any>): Promise<void> {
+    public async execute(command: ResourceCreatedCommand<IdentifiedResource>): Promise<void> {
         const results = await this.resourceCreatedPolicyService.execute(command.resourceName, command.resource);
-        if (results) {
-            await this.resourceAccessService.addUserResources(results);
-        }
+        await this.resourceAccessService.addUserResources(results);
     }
 }

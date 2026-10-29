@@ -1,24 +1,27 @@
 import type { Type } from "@nestjs/common";
 import { Injectable } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
+import { isDefined, isNotEmpty } from "@recursyve/nice-ts-utils";
 
-import type { IDatabaseAdapter } from "../adapters";
+import type { AccessControlModel, IDatabaseAdapter } from "../adapters/database.adapter";
 import { DATABASE_ADAPTER_METADATA } from "../decorators/constant";
 import type { DatabaseAdapterConfig } from "../models/database-adapter-config.model";
 
 @Injectable()
 export class DatabaseAdaptersRegistry {
-    private registry: Map<string, IDatabaseAdapter> = new Map<string, IDatabaseAdapter>();
+    private readonly registry: Map<string, IDatabaseAdapter> = new Map<string, IDatabaseAdapter>();
 
     constructor(private readonly moduleRef: ModuleRef) {}
 
     public registerAdapters(...adapters: Type<IDatabaseAdapter>[]): void {
-        adapters.forEach((policy) => this.registerAdapter(policy));
+        adapters.forEach((policy) => {
+            this.registerAdapter(policy);
+        });
     }
 
     private registerAdapter(adapter: Type<IDatabaseAdapter>): void {
         const instance = this.moduleRef.get(adapter, { strict: false });
-        if (!instance) {
+        if (!isDefined(instance)) {
             return;
         }
 
@@ -27,25 +30,25 @@ export class DatabaseAdaptersRegistry {
     }
 
     private reflectModel(policy: Type<IDatabaseAdapter>): DatabaseAdapterConfig {
-        return Reflect.getMetadata(DATABASE_ADAPTER_METADATA, policy);
+        return Reflect.getMetadata(DATABASE_ADAPTER_METADATA, policy) as DatabaseAdapterConfig;
     }
 
     public getAdapter(type?: string): IDatabaseAdapter {
-        if (!type) {
+        if (!isNotEmpty(type)) {
             throw new Error(`You must provide a type`);
         }
 
         const adapter = this.registry.get(type);
-        if (!adapter) {
+        if (!isDefined(adapter)) {
             throw new Error(`No database adapters found for type ${type}`);
         }
 
         return adapter;
     }
 
-    public getModels(): any[] {
-        const models = [];
-        for (const [_, adapter] of this.registry) {
+    public getModels(): AccessControlModel[] {
+        const models: AccessControlModel[] = [];
+        for (const adapter of this.registry.values()) {
             models.push(...adapter.getModels());
         }
         return models;
