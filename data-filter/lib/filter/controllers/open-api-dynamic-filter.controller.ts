@@ -11,8 +11,7 @@ import {
     UseGuards,
     UseInterceptors
 } from "@nestjs/common";
-import { ApiOkResponse, ApiOperation, ApiParam } from "@nestjs/swagger";
-import { ApiParamOptions } from "@nestjs/swagger/dist/decorators/api-param.decorator";
+import { ApiOkResponse, ApiOperation, ApiParam, ApiParamOptions } from "@nestjs/swagger";
 import {
     DynamicFilterController,
     ExportTypes,
