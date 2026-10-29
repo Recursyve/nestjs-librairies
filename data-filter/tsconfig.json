@@ -3,7 +3,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es2019",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "lib": [
@@ -11,7 +11,13 @@
     ],
     "strict": true,
     "sourceMap": true,
-    "outDir": "build"
+    "outDir": "build",
+    "rootDir": "lib",
+    "skipLibCheck": true,
+    "types": [
+      "node",
+      "jest"
+    ]
   },
   "include": [
     "lib/**/*"

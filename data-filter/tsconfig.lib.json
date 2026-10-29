@@ -3,12 +3,17 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es2019",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "declaration": true,
     "strict": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": ".",
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "lib/**/*",
@@ -17,6 +22,7 @@
   "exclude": [
     "node_modules",
     "lib/test/**/*",
-    "lib/**/*.spec.ts"
+    "lib/**/*.spec.ts",
+    "**/*.spec.ts"
   ]
 }
