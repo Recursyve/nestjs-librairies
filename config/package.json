@@ -6,7 +6,7 @@
         "build:lib": "rimraf dist && nest build -p tsconfig.lib.json",
         "copy:lib": "cp package.json .npmignore dist",
         "pack:lib": "npm run build:lib && cd dist && npm pack",
-        "test": "jest",
+        "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
         "publish-package": "npm run build:lib && npm run copy:lib && npm publish ./dist --access public",
         "publish-package:beta": "npm run publish-package -- --tag beta --access public",
         "publish-package:dry-run": "npm run publish-package -- --dry-run"
@@ -40,18 +40,8 @@
         "rootDir": "src",
         "testRegex": ".spec.ts$",
         "transform": {
-            "^.+\\.(t|j)s$": [
-                "ts-jest",
-                {
-                    "tsconfig": {
-                        "allowJs": true
-                    }
-                }
-            ]
+            "^.+\\.ts$": "ts-jest"
         },
-        "transformIgnorePatterns": [
-            "node_modules/(?!@nestjs)"
-        ],
         "coverageDirectory": "./coverage",
         "testEnvironment": "node"
     }
