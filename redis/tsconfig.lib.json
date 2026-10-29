@@ -1,26 +1,26 @@
 {
-    "compileOnSave": false,
-    "compilerOptions": {
-        "module": "commonjs",
-        "target": "es2018",
-        "moduleResolution": "bundler",
-        "declaration": true,
-        "strict": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "outDir": "dist",
-        "rootDir": ".",
-        "skipLibCheck": true,
-        "types": [
-            "node"
-        ]
-    },
-    "include": [
-        "lib/**/*",
-        "index.ts"
+  "compileOnSave": false,
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2018",
+    "moduleResolution": "bundler",
+    "rootDir": ".",
+    "declaration": true,
+    "strict": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "types": [
+      "node"
     ],
-    "exclude": [
-        "node_modules",
-        "**/*.spec.ts"
-    ]
+    "outDir": "dist"
+  },
+  "include": [
+    "lib/**/*",
+    "index.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts"
+  ]
 }
