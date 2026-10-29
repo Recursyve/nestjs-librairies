@@ -13,6 +13,9 @@ describe("SequelizeHooksModule", () => {
     beforeAll(async () => {
         resourceEventAccessControlService = {
             commandBus: null,
+            hasCreatedPolicies: jest.fn().mockReturnValue(true),
+            hasUpdatedPolicies: jest.fn().mockReturnValue(true),
+            hasDeletedPolicies: jest.fn().mockReturnValue(true),
             onResourceCreated: jest.fn(),
             onResourceUpdated: jest.fn(),
             onResourceDeleted: jest.fn(),
