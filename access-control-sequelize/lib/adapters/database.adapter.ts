@@ -1,14 +1,15 @@
-import { EntitiesMetadataStorage } from "@nestjs/sequelize/dist/entities-metadata.storage";
-import { DEFAULT_CONNECTION_NAME } from "@nestjs/sequelize/dist/sequelize.constants";
+import { InjectConnection } from "@nestjs/sequelize";
 import { DatabaseAdapter, IDatabaseAdapter, ResourceId } from "@recursyve/nestjs-access-control";
 import { SequelizeEntities } from "@recursyve/nestjs-sequelize-utils";
 import { AbstractDataType } from "sequelize";
-import { Model } from "sequelize-typescript";
+import { Model, Sequelize } from "sequelize-typescript";
 
 @DatabaseAdapter({ type: "sequelize" })
 export class SequelizeDatabaseAdapter implements IDatabaseAdapter {
+    constructor(@InjectConnection() private readonly sequelize: Sequelize) {}
+
     public getModels(): any[] {
-        return EntitiesMetadataStorage.getEntitiesByConnection(DEFAULT_CONNECTION_NAME) as any[];
+        return Object.values(this.sequelize.models);
     }
 
     public getResourceName(model: typeof Model): string {
