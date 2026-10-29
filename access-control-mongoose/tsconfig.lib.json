@@ -3,18 +3,24 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es2018",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "declaration": true,
     "strict": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": ".",
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "lib/**/*",
     "index.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "**/*.spec.ts"
   ]
 }
