@@ -65,7 +65,7 @@ describe("SequelizeHooksModule", () => {
             name: "User 1"
         });
         expect(account).toBeDefined();
-        expect(resourceEventAccessControlService.onResourceCreated).toBeCalled();
+        expect(resourceEventAccessControlService.onResourceCreated).toHaveBeenCalled();
     });
 
     it("Updating an account should call the onResourceUpdated function", async () => {
@@ -87,7 +87,7 @@ describe("SequelizeHooksModule", () => {
             }
         });
 
-        expect(resourceEventAccessControlService.onResourceUpdated).toBeCalledTimes(2);
+        expect(resourceEventAccessControlService.onResourceUpdated).toHaveBeenCalledTimes(2);
     });
 
     it("Deleting an account should call the onResourceDeleted function", async () => {
@@ -102,7 +102,7 @@ describe("SequelizeHooksModule", () => {
                 userId: "user_to_delete"
             }
         });
-        expect(resourceEventAccessControlService.onResourceDeleted).toBeCalled();
+        expect(resourceEventAccessControlService.onResourceDeleted).toHaveBeenCalled();
     });
 
     it("Creating a device from an account instance should call the onResourceCreated function", async () => {
@@ -115,6 +115,6 @@ describe("SequelizeHooksModule", () => {
         const device = await account.$create("device", { uniqueId: "unique_id_1", name: "Device 1" });
         expect(device).toBeDefined();
 
-        expect(resourceEventAccessControlService.onResourceCreated).toBeCalled();
+        expect(resourceEventAccessControlService.onResourceCreated).toHaveBeenCalled();
     });
 });
