@@ -1,56 +1,73 @@
-export class ObjectUtils {
-    public static forEachProperty(
-        object: { [key: string]: any },
-        valueHandle: (value: any) => any,
-        objectHandle?: ((object: Object) => void) | null
-    ) {
-        for (const property in object) {
-            if (!object.hasOwnProperty || object.hasOwnProperty(property)) {
-                const value = object[property];
-                if (value instanceof Array) {
-                    for (let i = 0; i < value.length; ++i) {
-                        value[i] = valueHandle(value[i]);
-                    }
-                } else if (objectHandle && value instanceof Object) {
-                    objectHandle(object[property]);
-                } else {
-                    object[property] = valueHandle(object[property]);
-                }
+type LeafValue<V> = V extends readonly (infer Element)[] ? Element : V;
+
+function isNestedRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseStringBool(value: unknown): unknown {
+    if (value === "true") {
+        return true;
+    }
+
+    if (value === "false") {
+        return false;
+    }
+
+    return value;
+}
+
+export namespace ObjectUtils {
+    export function forEachProperty<V>(
+        object: Record<string, V>,
+        valueHandle: (value: LeafValue<V>) => unknown,
+        objectHandle?: ((object: Record<string, unknown>) => void) | null
+    ): void {
+        for (const property of Object.keys(object)) {
+            if (!Object.hasOwn(object, property)) {
+                continue;
             }
+
+            const value = object[property];
+
+            if (Array.isArray(value)) {
+                for (let index = 0; index < value.length; index++) {
+                    value[index] = valueHandle(value[index] as LeafValue<V>) as (typeof value)[number];
+                }
+
+                continue;
+            }
+
+            if (objectHandle && isNestedRecord(value)) {
+                objectHandle(value);
+                continue;
+            }
+
+            object[property] = valueHandle(value as LeafValue<V>) as V;
         }
     }
 
-    public static objectToArrayOfProperties(object: Object, deep = false): any[] {
-        // Convert object properties to array.
-        const properties: any[] = [];
+    export function objectToArrayOfProperties(object: object, deep = false): unknown[] {
+        const properties: unknown[] = [];
+
         ObjectUtils.forEachProperty(
-            object,
-            value => {
+            object as Record<string, unknown>,
+            (value) => {
                 properties.push(value);
                 return value;
             },
-            !deep
-                ? null
-                : deepObject => {
-                      properties.push(ObjectUtils.objectToArrayOfProperties(deepObject));
+            deep
+                ? (nested) => {
+                      properties.push(ObjectUtils.objectToArrayOfProperties(nested));
                   }
+                : null
         );
+
         return properties;
     }
 
-    public static stringBoolsToBools(object: Object) {
-        ObjectUtils.forEachProperty(
-            object,
-            (value: any) => {
-                if (value === "true") {
-                    return true;
-                }
-                if (value === "false") {
-                    return false;
-                }
-                return value;
-            },
-            ObjectUtils.stringBoolsToBools
-        );
+    export function stringBoolsToBools(object: object): void {
+        ObjectUtils.forEachProperty(object as Record<string, unknown>, parseStringBool, (nested) => {
+            ObjectUtils.stringBoolsToBools(nested);
+        });
     }
 }

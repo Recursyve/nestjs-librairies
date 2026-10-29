@@ -6,8 +6,8 @@ export enum FileSizes {
     TB = "tb"
 }
 
-export class FileSizeUtils {
-    private static bytesTransform: { [size: string]: number } = {
+export namespace FileSizeUtils {
+    const bytesTransform: Record<FileSizes, number> = {
         [FileSizes.Bytes]: 1,
         [FileSizes.KB]: 1024,
         [FileSizes.MB]: 1024 * 1024,
@@ -15,8 +15,8 @@ export class FileSizeUtils {
         [FileSizes.TB]: 1024 * 1024 * 1024 * 1024
     };
 
-    public static inBytes(value: number, sizes: FileSizes): number {
-        const size = this.bytesTransform[sizes];
+    export function inBytes(value: number, sizes: FileSizes): number {
+        const size = bytesTransform[sizes];
         if (!size) {
             return 0;
         }

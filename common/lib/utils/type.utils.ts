@@ -1,8 +1,9 @@
-export class TypeUtils {
-    public static isNullOrUndefined(obj: any): boolean {
+export namespace TypeUtils {
+    export function isNullOrUndefined(obj: unknown): obj is null | undefined {
         return obj === null || obj === undefined;
     }
-    public static isNotNullOrUndefined(obj: any): boolean {
+
+    export function isNotNullOrUndefined<T>(obj: T | null | undefined): obj is T {
         return obj !== null && obj !== undefined;
     }
 }
