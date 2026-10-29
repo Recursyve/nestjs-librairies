@@ -3,7 +3,8 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es2018",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "rootDir": "lib",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "lib": [
@@ -11,6 +12,11 @@
     ],
     "strict": true,
     "sourceMap": true,
+    "skipLibCheck": true,
+    "types": [
+      "node",
+      "jest"
+    ],
     "outDir": "build"
   },
   "include": [
