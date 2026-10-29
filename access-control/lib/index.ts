@@ -1,5 +1,4 @@
-import { DynamicModule, Global, Module, Provider } from "@nestjs/common";
-import { ModuleMetadata } from "@nestjs/common/interfaces";
+import { DynamicModule, Global, Module, ModuleMetadata, Provider } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { AccessControlCoreModule } from "./access-control-core.module";
 import { ACCESS_CONTROL_DEFAULT_DATABASE } from "./constant";
