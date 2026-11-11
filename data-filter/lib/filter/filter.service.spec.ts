@@ -19,7 +19,9 @@ import { FilterService } from "./filter.service";
 import { NumberFilter, TextFilter } from "./filters";
 import { DefaultFilter } from "./filters/default.filter";
 import { DefaultOrderRule } from "./order-rules/default.order-rule";
+import { OrderTiebreakerRule } from "./order-rules/order-tiebreaker.rule";
 import { FilterOperatorTypes } from "./operators";
+import { databaseFactory } from "../test/database.factory";
 
 @Data(ContractSystems)
 @Attributes(["active"])
@@ -434,5 +436,208 @@ describe("FilterService resolveOrderColumns", () => {
         expect(service.resolveOrderColumns([{ column: "active", direction: "asc" }])).toEqual([
             { column: "active", direction: "asc" }
         ]);
+    });
+});
+
+@Injectable()
+export class OrderTiebreakerTestFilter extends BaseFilter<ContractSystemsTest> {
+    public dataDefinition = ContractSystemsTest;
+
+    public orderTiebreakerRule = new OrderTiebreakerRule({ column: "id" });
+}
+
+describe("FilterService orderTiebreakerRule", () => {
+    let filterService: FilterService<ContractSystemsTest>;
+
+    beforeAll(() => {
+        filterService = new FilterService<ContractSystemsTest>(
+            new DefaultAccessControlAdapter(),
+            new DefaultTranslateAdapter(),
+            new OrderTiebreakerTestFilter(),
+            new SequelizeModelScanner(),
+            new DataFilterService(
+                new DataFilterScanner(),
+                new SequelizeModelScanner(),
+                new DefaultAccessControlAdapter(),
+                new DefaultTranslateAdapter(),
+                new DefaultExportAdapter()
+            )
+        );
+    });
+
+    it("appends the tiebreaker after the user order", () => {
+        const service = filterService as unknown as {
+            resolveOrderColumns: (
+                orders: Array<{ column: string; direction: string }>
+            ) => Array<{ column: string; direction: string }>;
+        };
+
+        expect(service.resolveOrderColumns([{ column: "name", direction: "desc" }])).toEqual([
+            { column: "name", direction: "desc" },
+            { column: "id", direction: "desc" }
+        ]);
+    });
+
+    it("inherits the last effective direction when the tiebreaker omits direction", () => {
+        const service = filterService as unknown as {
+            resolveOrderColumns: (
+                orders: Array<{ column: string; direction: string }>
+            ) => Array<{ column: string; direction: string }>;
+        };
+
+        expect(
+            service.resolveOrderColumns([
+                { column: "status", direction: "asc" },
+                { column: "name", direction: "desc" }
+            ])
+        ).toEqual([
+            { column: "status", direction: "asc" },
+            { column: "name", direction: "desc" },
+            { column: "id", direction: "desc" }
+        ]);
+    });
+
+    it("defaults to id ASC when there is no order", () => {
+        const service = filterService as unknown as {
+            resolveOrderColumns: (
+                orders: Array<{ column: string; direction: string }>
+            ) => Array<{ column: string; direction: string }>;
+        };
+
+        expect(service.resolveOrderColumns([])).toEqual([{ column: "id", direction: "asc" }]);
+    });
+
+    it("does not duplicate id when the user already ordered by it", () => {
+        const service = filterService as unknown as {
+            resolveOrderColumns: (
+                orders: Array<{ column: string; direction: string }>
+            ) => Array<{ column: string; direction: string }>;
+        };
+
+        expect(service.resolveOrderColumns([{ column: "id", direction: "desc" }])).toEqual([
+            { column: "id", direction: "desc" }
+        ]);
+    });
+
+    it("does not append the tiebreaker when groupBy is set", () => {
+        const service = filterService as unknown as {
+            resolveOrderColumns: (
+                orders: Array<{ column: string; direction: string }>,
+                groupBy?: string
+            ) => Array<{ column: string; direction: string }>;
+        };
+
+        expect(service.resolveOrderColumns([{ column: "name", direction: "desc" }], "status")).toEqual([
+            { column: "name", direction: "desc" }
+        ]);
+        expect(service.resolveOrderColumns([], "status")).toEqual([]);
+    });
+});
+
+@Injectable()
+export class CombinedOrderRulesTestFilter extends BaseFilter<ContractSystemsTest> {
+    public dataDefinition = ContractSystemsTest;
+
+    public defaultOrderRule = new DefaultOrderRule({ column: "active", direction: "desc" });
+    public orderTiebreakerRule = new OrderTiebreakerRule({ column: "id" });
+}
+
+describe("FilterService defaultOrderRule and orderTiebreakerRule", () => {
+    let filterService: FilterService<ContractSystemsTest>;
+
+    beforeAll(async () => {
+        await databaseFactory();
+        filterService = new FilterService<ContractSystemsTest>(
+            new DefaultAccessControlAdapter(),
+            new DefaultTranslateAdapter(),
+            new CombinedOrderRulesTestFilter(),
+            new SequelizeModelScanner(),
+            new DataFilterService(
+                new DataFilterScanner(),
+                new SequelizeModelScanner(),
+                new DefaultAccessControlAdapter(),
+                new DefaultTranslateAdapter(),
+                new DefaultExportAdapter()
+            )
+        );
+    });
+
+    it("prepends defaultOrderRule and still appends the tiebreaker", () => {
+        const service = filterService as unknown as {
+            resolveOrderColumns: (
+                orders: Array<{ column: string; direction: string }>
+            ) => Array<{ column: string; direction: string }>;
+        };
+
+        expect(service.resolveOrderColumns([{ column: "name", direction: "asc" }])).toEqual([
+            { column: "active", direction: "desc" },
+            { column: "name", direction: "asc" },
+            { column: "id", direction: "asc" }
+        ]);
+    });
+
+    it("uses the same resolved order for filter and downloadData", () => {
+        const service = filterService as unknown as {
+            resolveOrderColumns: (
+                orders: Array<{ column: string; direction: string }>
+            ) => Array<{ column: string; direction: string }>;
+            getOrderOptions: (
+                orders: Array<{ column: string; direction: string }>,
+                context: object
+            ) => unknown[];
+        };
+        const orders = [{ column: "name", direction: "desc" }];
+        const resolved = service.resolveOrderColumns(orders);
+
+        expect(resolved).toEqual([
+            { column: "active", direction: "desc" },
+            { column: "name", direction: "desc" },
+            { column: "id", direction: "desc" }
+        ]);
+        expect(service.getOrderOptions(orders, {})).toHaveLength(resolved.length);
+    });
+});
+
+@Injectable()
+export class OrderTiebreakerSelectTestFilter extends BaseFilter<ContractSystemsTest> {
+    public dataDefinition = ContractSystemsTest;
+
+    public orderTiebreakerRule = new OrderTiebreakerRule([{ column: "active" }, { column: "id" }]);
+}
+
+describe("FilterService orderTiebreakerRule select attributes", () => {
+    let filterService: FilterService<ContractSystemsTest>;
+
+    beforeAll(async () => {
+        await databaseFactory();
+        filterService = new FilterService<ContractSystemsTest>(
+            new DefaultAccessControlAdapter(),
+            new DefaultTranslateAdapter(),
+            new OrderTiebreakerSelectTestFilter(),
+            new SequelizeModelScanner(),
+            new DataFilterService(
+                new DataFilterScanner(),
+                new SequelizeModelScanner(),
+                new DefaultAccessControlAdapter(),
+                new DefaultTranslateAdapter(),
+                new DefaultExportAdapter()
+            )
+        );
+    });
+
+    it("selects non-id tiebreaker columns for the DISTINCT page query and skips id", () => {
+        const service = filterService as unknown as {
+            getOrderSelectAttributes: (
+                orders: Array<{ column: string; direction: string }>,
+                context: object
+            ) => Array<[unknown, string]>;
+        };
+
+        const attributes = service.getOrderSelectAttributes([{ column: "name", direction: "desc" }], {});
+        const aliases = attributes.map((attribute) => attribute[1]);
+
+        expect(aliases).toContain("name");
+        expect(aliases).toContain("active");
+        expect(aliases).not.toContain("id");
     });
 });

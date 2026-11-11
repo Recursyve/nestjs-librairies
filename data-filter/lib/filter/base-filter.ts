@@ -5,6 +5,7 @@ import { DefaultFilterDefinition } from "./filters/default.filter";
 import { FilterConfig, FilterModel } from "./models";
 import { ExportTypes } from "../models/export-types.model";
 import { DefaultOrderRule } from "./order-rules/default.order-rule";
+import { OrderTiebreakerRule } from "./order-rules/order-tiebreaker.rule";
 
 export abstract class BaseFilter<T> implements FilterModel<T> {
     private _translateService!: TranslateAdapter;
@@ -14,6 +15,7 @@ export abstract class BaseFilter<T> implements FilterModel<T> {
     public exportDataDefinition?: Type<T>;
     public defaultFilter?: DefaultFilterDefinition;
     public defaultOrderRule?: DefaultOrderRule;
+    public orderTiebreakerRule?: OrderTiebreakerRule;
 
     public set translateService(translateService: TranslateAdapter) {
         this._translateService = translateService;
