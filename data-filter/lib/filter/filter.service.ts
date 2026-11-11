@@ -13,7 +13,7 @@ import {
 } from "sequelize";
 import { Sequelize } from "sequelize-typescript";
 import { GroupOption, ProjectionAlias } from "sequelize/types/model";
-import { ExportTypes, FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../";
+import { Direction, ExportTypes, FilterQueryModel, FilterResultModel, FilterSearchModel, OrderModel } from "../";
 import { AccessControlAdapter } from "../adapters/access-control.adapter";
 import { TranslateAdapter } from "../adapters/translate.adapter";
 import { DataFilterRepository } from "../data-filter.repository";
@@ -185,7 +185,7 @@ export class FilterService<Data> {
             this.addSearchCondition(options.search, countOptions, user?.language ?? null);
         }
         if (options.order) {
-            this.addOrderCondition(options.order, countOptions, options.data);
+            this.addOrderCondition(options.order, countOptions, options.data, options.groupBy);
         }
 
         if (options.groupBy) {
@@ -216,7 +216,7 @@ export class FilterService<Data> {
             this.addSearchCondition(options.search, findOptions, user?.language ?? null);
         }
         if (options.order) {
-            this.addOrderCondition(options.order, findOptions, options.data);
+            this.addOrderCondition(options.order, findOptions, options.data, options.groupBy);
         }
         delete options.page;
 
@@ -445,20 +445,12 @@ export class FilterService<Data> {
         this.repository.addSearchCondition(search.value, options, language);
     }
 
-    private addOrderCondition(orders: OrderModel[], options: CountOptions, data?: object): void {
+    private addOrderCondition(orders: OrderModel[], options: CountOptions, data?: object, groupBy?: string): void {
         if (orders.every(order => !order.direction)) {
             return;
         }
 
-        if (this.model.defaultOrderRule) {
-            const defaultOrders = Array.isArray(this.model.defaultOrderRule.order)
-                ? this.model.defaultOrderRule.order
-                : [this.model.defaultOrderRule.order];
-
-            orders = [...defaultOrders, ...orders];
-        }
-
-        for (const order of orders) {
+        for (const order of this.resolveOrderColumns(orders, groupBy)) {
             const rule = this.definitions[order.column] as OrderRuleDefinition;
             const includes = rule && OrderRule.validate(rule) ?
                 rule.path ? this.sequelizeModelScanner.getIncludes(this.repository.model, { path: rule.path }, []) : [] :
@@ -528,8 +520,8 @@ export class FilterService<Data> {
         }
 
         const orderContext: OrderRuleContext = { request, user };
-        const order = this.getOrderOptions(filter.order ?? [], orderContext);
-        const orderSelectAttributes = this.getOrderSelectAttributes(filter.order ?? [], orderContext, filter.data);
+        const order = this.getOrderOptions(filter.order ?? [], orderContext, filter.groupBy);
+        const orderSelectAttributes = this.getOrderSelectAttributes(filter.order ?? [], orderContext, filter.data, filter.groupBy);
 
         const values = await repository.model.findAll({
             ...options,
@@ -621,7 +613,7 @@ export class FilterService<Data> {
         ];
     }
 
-    private resolveOrderColumns(orders: OrderModel | OrderModel[]): OrderModel[] {
+    private resolveOrderColumns(orders: OrderModel | OrderModel[], groupBy?: string): OrderModel[] {
         let orderColumns = Array.isArray(orders) ? [...orders] : [orders];
 
         if (this.model.defaultOrderRule) {
@@ -636,11 +628,49 @@ export class FilterService<Data> {
             orderColumns = [...applicableDefaultOrderRule, ...orderColumns];
         }
 
+        orderColumns = this.addOrderTiebreakers(orderColumns, groupBy);
+
         return orderColumns.filter((order) => order?.column && order.direction);
     }
 
-    private getOrderOptions(orders: OrderModel | OrderModel[], context: OrderRuleContext): Order {
-        const orderColumns = this.resolveOrderColumns(orders);
+    private addOrderTiebreakers(orderColumns: OrderModel[], groupBy?: string): OrderModel[] {
+        if (groupBy || !this.model.orderTiebreakerRule) {
+            return orderColumns;
+        }
+
+        const lastDirection = this.getLastOrderDirection(orderColumns);
+        const tiebreakers = Array.isArray(this.model.orderTiebreakerRule.order)
+            ? this.model.orderTiebreakerRule.order
+            : [this.model.orderTiebreakerRule.order];
+
+        const applicableTiebreakers: OrderModel[] = [];
+        for (const order of tiebreakers) {
+            if (!order.column || orderColumns.some((o) => o.column === order.column)) {
+                continue;
+            }
+
+            applicableTiebreakers.push({
+                ...order,
+                direction: order.direction || lastDirection
+            });
+        }
+
+        return [...orderColumns, ...applicableTiebreakers];
+    }
+
+    private getLastOrderDirection(orders: OrderModel[]): Direction {
+        for (let i = orders.length - 1; i >= 0; i--) {
+            const order = orders[i];
+            if (order?.column && order.direction) {
+                return order.direction;
+            }
+        }
+
+        return "asc";
+    }
+
+    private getOrderOptions(orders: OrderModel | OrderModel[], context: OrderRuleContext, groupBy?: string): Order {
+        const orderColumns = this.resolveOrderColumns(orders, groupBy);
         const generatedOrder: Order = [];
 
         for (const order of orderColumns) {
@@ -689,9 +719,10 @@ export class FilterService<Data> {
     private getOrderSelectAttributes(
         orders: OrderModel | OrderModel[],
         context: OrderRuleContext,
-        data?: object
+        data?: object,
+        groupBy?: string
     ): ProjectionAlias[] {
-        const orderColumns = this.resolveOrderColumns(orders);
+        const orderColumns = this.resolveOrderColumns(orders, groupBy);
         const attributes: ProjectionAlias[] = [];
         const seenColumns = new Set<string>();
 
