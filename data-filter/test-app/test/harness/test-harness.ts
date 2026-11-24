@@ -44,6 +44,21 @@ export class TestHarness {
         await this.app.close();
     }
 
+    public async captureSql<T>(run: () => Promise<T>): Promise<{ result: T; sql: string[] }> {
+        const sequelize = this.app.get<Sequelize>(getConnectionToken());
+        const sql: string[] = [];
+        const previous = sequelize.options.logging;
+        sequelize.options.logging = (query: string) => {
+            sql.push(query);
+        };
+
+        try {
+            return { result: await run(), sql };
+        } finally {
+            sequelize.options.logging = previous;
+        }
+    }
+
     private withUser(request: SupertestTest, user?: TestAccessControlUser | null): SupertestTest {
         if (user === undefined || user === null) {
             return request;
