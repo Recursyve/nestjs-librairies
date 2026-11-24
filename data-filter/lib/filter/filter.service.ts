@@ -657,7 +657,10 @@ export class FilterService<Data> {
 
             const rule = this.definitions[order.column] as OrderRuleDefinition;
             if (!rule || !OrderRule.validate(rule)) {
-                generatedOrder.push(this.sequelizeModelScanner.getOrder(this.repository.model, order) as OrderItem);
+                const orderItem = this.sequelizeModelScanner.getOrder(this.repository.model, order);
+                if (orderItem) {
+                    generatedOrder.push(orderItem as OrderItem);
+                }
             } else {
                 generatedOrder.push([rule.getOrderOption(this.repository.model, context), order.direction.toUpperCase()]);
             }
