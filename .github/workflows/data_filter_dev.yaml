@@ -38,3 +38,9 @@ jobs:
         env:
           TZ: UTC
         run: npm run test
+
+      - name: Run e2e tests
+        working-directory: data-filter
+        env:
+          TZ: UTC
+        run: npm run test:e2e

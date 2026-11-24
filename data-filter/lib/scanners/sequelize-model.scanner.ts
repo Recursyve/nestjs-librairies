@@ -156,15 +156,29 @@ export class SequelizeModelScanner {
 
         const pathSegments = orderObj.column.split(".");
         const column = pathSegments.pop() as string;
-        for (const segment of pathSegments) {
-            const association = this.findAssociation(model, segment);
-            model = association.getAssociatedClass() as unknown as typeof Model;
+        if (!this.isSafeIdentifier(column) || pathSegments.some((segment) => !this.isSafeIdentifier(segment))) {
+            return;
         }
 
-        const col = SequelizeUtils.findColumnFieldName(model as typeof M, column);
-        return pathSegments.length
-            ? SequelizeUtils.getLiteralFullName(col, pathSegments)
-            : `\`${model.name}\`.\`${col}\``;
+        try {
+            for (const segment of pathSegments) {
+                const association = this.findAssociation(model, segment);
+                model = association.getAssociatedClass() as unknown as typeof Model;
+            }
+
+            if (!this.hasColumn(model, column)) {
+                return;
+            }
+
+            const col = SequelizeUtils.findColumnFieldName(model as typeof M, column);
+            if (pathSegments.length) {
+                return SequelizeUtils.getLiteralFullName(col, pathSegments);
+            }
+
+            return `\`${model.name}\`.\`${col}\``;
+        } catch {
+            return;
+        }
     }
 
     public getOrder(model: typeof Model, orderObj: OrderModel): Order | undefined {
@@ -193,6 +207,10 @@ export class SequelizeModelScanner {
             return [];
         }
 
+        if (!this.getOrderColumnLiteral(model, orderObj)) {
+            return [];
+        }
+
         const group: string[] = [];
         const values = orderObj.column.split(".");
         const column = values.pop() as string;
@@ -213,7 +231,7 @@ export class SequelizeModelScanner {
         }
 
         const values = orderObj.column.split(".");
-        if (values.length <= 1) {
+        if (values.length <= 1 || values.some((segment) => !this.isSafeIdentifier(segment))) {
             return [];
         }
 
@@ -242,6 +260,20 @@ export class SequelizeModelScanner {
 
         includes[0].attributes = [column];
         return result;
+    }
+
+    private isSafeIdentifier(value: string): boolean {
+        return /^[A-Za-z_][A-Za-z0-9_]*$/.test(value);
+    }
+
+    private hasColumn(model: typeof Model, name: string): boolean {
+        return Object.keys(model.rawAttributes ?? {}).some((key) => {
+            if (key === name) {
+                return true;
+            }
+
+            return (model.rawAttributes as any)[key]?.field === name;
+        });
     }
 
     private findAssociation(model: typeof Model, obj: string): BaseAssociation<any, any> {
